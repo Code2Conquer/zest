@@ -96,16 +96,6 @@ export function LiveKitchen() {
         </svg>
       </motion.div>
 
-      {/* The owner's message */}
-      <motion.p
-        initial={reduce ? false : { opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 0.4 }}
-        className="absolute right-0 top-0 max-w-[75%] sm:right-[2%] sm:top-[8%] sm:max-w-[50%] rounded-2xl rounded-br-md bg-ink px-4 py-2.5 text-[0.95rem] text-paper shadow-lg"
-      >
-        Paneer khatam ho gaya, band kar do
-      </motion.p>
-
       {/* Agent tickets printing */}
       <ol className="relative -mt-10 w-full space-y-2 sm:absolute sm:-bottom-[6%] sm:right-0 sm:mt-0 sm:w-[64%]" aria-live="polite">
         <AnimatePresence initial={false} mode="popLayout">
