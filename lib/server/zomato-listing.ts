@@ -8,6 +8,22 @@ import { HttpError } from "./approvals";
 // ratings, FSSAI number and the full delivery menu. Both are fetched together.
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36";
+// What Chrome sends for a top-level page load.
+const BROWSER_HEADERS = {
+  "User-Agent": UA,
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  "Accept-Language": "en-IN,en-GB;q=0.9,en;q=0.8",
+  "Cache-Control": "no-cache",
+  Pragma: "no-cache",
+  "Sec-Ch-Ua": '"Google Chrome";v="141", "Chromium";v="141", "Not.A/Brand";v="24"',
+  "Sec-Ch-Ua-Mobile": "?0",
+  "Sec-Ch-Ua-Platform": '"Windows"',
+  "Sec-Fetch-Dest": "document",
+  "Sec-Fetch-Mode": "navigate",
+  "Sec-Fetch-Site": "none",
+  "Sec-Fetch-User": "?1",
+  "Upgrade-Insecure-Requests": "1",
+};
 const CACHE_MS = 10 * 60_000;
 const cache = new Map<string, { at: number; data: ZomatoListing }>();
 
@@ -149,20 +165,33 @@ export async function fetchZomatoListing(raw: string): Promise<ZomatoListing> {
   const hit = cache.get(link.url);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.data;
 
-  const page = async (path: string) => {
-    const res = await fetch(`${link.url}${path}`, {
-      headers: { "User-Agent": UA, Accept: "text/html,application/xhtml+xml", "Accept-Language": "en-IN,en;q=0.9" },
-      signal: AbortSignal.timeout(15_000),
-      redirect: "follow",
+  const path = new URL(link.url).pathname;
+  // The page itself, or failing that the JSON route Zomato's own web app loads pages from.
+  const page = async (suffix: string) => {
+    const res = await fetch(`${link.url}${suffix}`, { headers: BROWSER_HEADERS, signal: AbortSignal.timeout(12_000), redirect: "follow" });
+    const state = res.ok ? preloadedState(await res.text()) : null;
+    if (state || res.status === 404) return { status: res.status, state };
+    const api = await fetch(`https://www.zomato.com/webroutes/getPage?page_url=${encodeURIComponent(path + suffix)}&location=&isMobile=0`, {
+      headers: { ...BROWSER_HEADERS, Accept: "application/json", "Sec-Fetch-Dest": "empty", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Site": "same-origin", Referer: link.url },
+      signal: AbortSignal.timeout(12_000),
     });
-    return { status: res.status, state: res.ok ? preloadedState(await res.text()) : null };
+    const data = api.ok ? obj(await api.json().catch(() => null)) : {};
+    const resId = str(obj(data.page_info).resId);
+    return {
+      status: api.ok ? api.status : res.status,
+      state: resId && data.page_data ? { pages: { restaurant: { [resId]: data.page_data } }, entities: data.entities } : null,
+      tried: `${res.status}/${api.status}`,
+    };
   };
   const [main, order] = await Promise.allSettled([page(""), page("/order")]);
   const got = [main, order].flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
   if (!got.length) throw new HttpError(502, "Couldn't reach Zomato just now. Try again in a minute.");
   if (got.every((g) => g.status === 404)) throw new HttpError(404, "Zomato says that page doesn't exist. Check the link.");
   const states = got.flatMap((g) => (g.state ? [g.state] : []));
-  if (!states.length) throw new HttpError(502, `Zomato didn't return the page (${got.map((g) => g.status).join(", ")}). Try again in a minute.`);
+  if (!states.length) {
+    console.warn("zomato listing blocked", link.url, got.map((g) => ("tried" in g ? g.tried : g.status)));
+    throw new HttpError(502, `Zomato didn't return the page (${got.map((g) => ("tried" in g ? g.tried : g.status)).join(", ")}). Try again in a minute.`);
+  }
   const data = readListing(states, link.url);
   if (!data) throw new HttpError(422, "Couldn't read that Zomato page. Is it a restaurant page?");
   cache.set(link.url, { at: Date.now(), data });
