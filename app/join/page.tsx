@@ -9,7 +9,8 @@ import { api, refreshAll } from "@/lib/api";
 import { cityName, parseListing } from "@/lib/listing";
 import { PLATFORMS, type Platform } from "@/lib/platforms";
 import { useApp } from "@/lib/state";
-import type { OutletDTO } from "@/lib/types";
+import { ListingPreview } from "@/components/listing-preview";
+import type { OutletDTO, ZomatoListing } from "@/lib/types";
 
 type Journey = "new" | "notlive" | "live";
 
@@ -68,16 +69,36 @@ function JoinForm({ journey, platforms, initial }: { journey: Journey; platforms
   const [docsOpen, setDocsOpen] = useState(!!(initial.fssai || initial.gstin));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [zomato, setZomato] = useState<{ url: string; state: "loading" } | { url: string; state: "ok"; listing: ZomatoListing } | { url: string; state: "error"; message: string } | null>(null);
   const set = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     setF((x) => ({ ...x, [k]: e.target.value }));
   };
 
-  /** Fills area and city from a listing link when the owner hasn't typed them. */
-  function fillFromLink(p: Platform) {
+  /** Fills empty fields from a listing link: from the Zomato page itself, or from the link's words. */
+  async function fillFromLink(p: Platform) {
     const link = parseListing(f.listings[p] ?? "", f.name);
     if (!link || link.platform !== p) return;
     setF((x) => ({ ...x, city: x.city || (link.city ? cityName(link.city) : ""), area: x.area || link.areaHint || "" }));
+    if (p !== "zomato" || zomato?.url === link.url) return;
+    setZomato({ url: link.url, state: "loading" });
+    try {
+      const listing = await api<ZomatoListing>("/api/listing/preview", { method: "POST", json: { url: link.url } });
+      setZomato({ url: link.url, state: "ok", listing });
+      const keep = (mine: string, theirs: string | null) => (mine.trim() ? mine : (theirs ?? ""));
+      setF((x) => ({
+        ...x,
+        name: keep(x.name, listing.name),
+        // The page's locality beats a guess from the link's words.
+        area: x.area && x.area !== link.areaHint ? x.area : listing.area || x.area,
+        city: x.city && x.city !== (link.city ? cityName(link.city) : "") ? x.city : listing.city || x.city,
+        address: keep(x.address, listing.address),
+        fssai: keep(x.fssai, listing.fssai),
+      }));
+      if (listing.fssai) setDocsOpen(true);
+    } catch (err) {
+      setZomato({ url: link.url, state: "error", message: (err as Error).message });
+    }
   }
 
   const missing = [!f.ownerName.trim() && "ownerName", !f.name.trim() && "name", !f.area.trim() && "area", !f.city.trim() && "city"].filter(Boolean);
@@ -134,23 +155,11 @@ function JoinForm({ journey, platforms, initial }: { journey: Journey; platforms
         />
       </fieldset>
 
-      <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-3 text-xl font-medium">{hi ? "आपका रेस्टोरेंट" : "Your restaurant"}</legend>
-        <div className="sm:col-span-2">
-          <Field label={hi ? "रेस्टोरेंट का नाम" : "Restaurant name"} value={f.name} onChange={set("name")} autoComplete="organization" required />
-        </div>
-        <Field label={hi ? "इलाक़ा" : "Area or locality"} value={f.area} onChange={set("area")} placeholder={hi ? "जैसे कोरमंगला" : "e.g. Koramangala"} required />
-        <Field label={hi ? "शहर" : "City"} value={f.city} onChange={set("city")} autoComplete="address-level2" required />
-        <div className="sm:col-span-2">
-          <Field label={hi ? "पूरा पता" : "Full address"} hint={hi ? "ज़रूरी नहीं" : "Optional"} value={f.address} onChange={set("address")} autoComplete="street-address" placeholder={hi ? "दुकान नं., गली, लैंडमार्क" : "Shop no., street, landmark"} />
-        </div>
-      </fieldset>
-
       {platforms.length > 0 && (
         <fieldset className="space-y-4">
           <legend className="text-xl font-medium">{hi ? "आपकी लिस्टिंग" : "Your listing"}</legend>
           <p className="-mt-2 max-w-[56ch] text-ink-2">
-            {hi ? "ऐप में अपना रेस्टोरेंट खोलें, शेयर करें और लिंक यहाँ पेस्ट करें। ज़रूरी नहीं।" : "Open your restaurant in the app, tap share and paste the link here. Optional."}
+            {hi ? "Zomato पर अपना रेस्टोरेंट खोलें, शेयर करें और लिंक यहाँ पेस्ट करें। बाक़ी हम भर देंगे। ज़रूरी नहीं।" : "Open your restaurant on Zomato, tap share and paste the link here. We'll fill in the rest. Optional."}
           </p>
           {platforms.map((p) => {
             const value = f.listings[p] ?? "";
@@ -180,11 +189,45 @@ function JoinForm({ journey, platforms, initial }: { journey: Journey; platforms
                       : [link.city && cityName(link.city), link.nameMatches && (hi ? "नाम मेल खाता है" : "matches your name")].filter(Boolean).join(" · ") || (hi ? "लिंक सही है" : "Looks right")}
                   </p>
                 ) : null}
+                {p === "zomato" && zomato && zomato.url === link?.url && (
+                  <div className="mt-3">
+                    {zomato.state === "loading" ? (
+                      <p className="flex items-center gap-2 text-sm text-muted">
+                        <Loader2 aria-hidden className="size-4 animate-spin" />
+                        {hi ? "Zomato से आपकी लिस्टिंग पढ़ रहे हैं…" : "Reading your listing from Zomato…"}
+                      </p>
+                    ) : zomato.state === "error" ? (
+                      <p className="text-sm text-turmeric">{zomato.message} {hi ? "आप बाक़ी ख़ुद भर सकते हैं।" : "You can fill in the rest yourself."}</p>
+                    ) : (
+                      <>
+                        <ListingPreview listing={zomato.listing} />
+                        <p className="mt-2 text-sm text-leaf">
+                          {hi
+                            ? `खाली जगहें Zomato से भर दीं। रेस्टोरेंट बनने पर ${zomato.listing.menu.length} डिश फ़ोटो के साथ आपके मेन्यू में आ जाएँगी।`
+                            : `We filled in the empty fields from Zomato. Your ${zomato.listing.menu.length} dishes, with photos, come into your menu when you create the restaurant.`}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
         </fieldset>
       )}
+
+      <fieldset className="grid gap-4 sm:grid-cols-2">
+        <legend className="mb-3 text-xl font-medium">{hi ? "आपका रेस्टोरेंट" : "Your restaurant"}</legend>
+        <div className="sm:col-span-2">
+          <Field label={hi ? "रेस्टोरेंट का नाम" : "Restaurant name"} value={f.name} onChange={set("name")} autoComplete="organization" required />
+        </div>
+        <Field label={hi ? "इलाक़ा" : "Area or locality"} value={f.area} onChange={set("area")} placeholder={hi ? "जैसे कोरमंगला" : "e.g. Koramangala"} required />
+        <Field label={hi ? "शहर" : "City"} value={f.city} onChange={set("city")} autoComplete="address-level2" required />
+        <div className="sm:col-span-2">
+          <Field label={hi ? "पूरा पता" : "Full address"} hint={hi ? "ज़रूरी नहीं" : "Optional"} value={f.address} onChange={set("address")} autoComplete="street-address" placeholder={hi ? "दुकान नं., गली, लैंडमार्क" : "Shop no., street, landmark"} />
+        </div>
+      </fieldset>
+
 
       <fieldset>
         <legend className="sr-only">{hi ? "दस्तावेज़" : "Documents"}</legend>

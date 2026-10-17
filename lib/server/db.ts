@@ -93,6 +93,7 @@ const COLUMNS = [
   "ALTER TABLE outlets ADD COLUMN fssai TEXT",
   "ALTER TABLE outlets ADD COLUMN gstin TEXT",
   "ALTER TABLE outlets ADD COLUMN listings TEXT NOT NULL DEFAULT '{}'",
+  "ALTER TABLE outlets ADD COLUMN listing_data TEXT NOT NULL DEFAULT '{}'",
 ];
 const INDEXES = "CREATE UNIQUE INDEX IF NOT EXISTS emails_outlet_external ON emails (outlet_id, external_id);";
 

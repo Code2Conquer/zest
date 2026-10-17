@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { ChannelTag } from "@/components/bits";
+import { ZomatoListingCard } from "@/components/listing-preview";
 import { MailboxCard } from "@/components/mailbox-card";
 import { PlatformConnector } from "@/components/platform-connector";
 import { api, refreshAll, useApi } from "@/lib/api";
@@ -102,6 +103,16 @@ export default function Connections() {
           ))}
         </div>
       </section>
+
+      {outlet && !outlet.isDemo && (
+        <section className="mt-10">
+          <h2 className="font-medium">{hi ? "Zomato लिस्टिंग" : "Zomato listing"}</h2>
+          <p className="mt-0.5 text-sm text-muted">{hi ? "रेटिंग, पता, समय और मेन्यू आपके Zomato पेज से।" : "Rating, address, hours and menu from your Zomato page."}</p>
+          <div className="mt-3">
+            <ZomatoListingCard />
+          </div>
+        </section>
+      )}
 
       <section className="mt-10">
         <h2 className="font-medium">{hi ? "प्लेटफ़ॉर्म" : "Platforms"}</h2>

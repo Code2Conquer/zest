@@ -71,6 +71,8 @@ Browser (Next.js pages)  ──►  /api/* route handlers  ──►  lib/server
 
 **Copilot.** With `ANTHROPIC_API_KEY`, the copilot runs Claude (`claude-opus-5-5`, server-side refusal fallback on) with nine tools: five that read the database (sales, orders, payouts, reviews, menu) and four that draft approvals (menu change, review reply, dispute, promo). Without a key it answers from the same data with keyword rules. Conversations are stored per restaurant.
 
+**Zomato listing.** When an owner pastes their Zomato link (full or `zoma.to` share link), Zest reads the restaurant's public page and order page, fills in their profile, saves the rating and details, and imports the menu with photos if they have none. "Read again" in Connections refreshes the rating. Results are cached for 10 minutes per link.
+
 **Gmail.** Owners connect Gmail with read-only access. Zest searches only Zomato and Swiggy senders (`GMAIL_SENDERS`), reads the last 30 days on first connect, then new mail on each sync. Each mail is sorted into payout, report, complaint, onboarding or other; payouts are extracted from the body (rules) or, with Claude, from PDF and CSV attachments. Tokens are stored encrypted. Disconnecting revokes access and deletes everything read, including payouts. While the Google app is in Testing mode, owners must be listed as test users and reconnect every 7 days.
 
 **Data in.** Payout emails also go through `POST /api/ingest/email` (paste on the Money page, or a mail-forwarding rule). Orders arrive by `POST /api/sync` (pull from MCP/API connectors; run it on a schedule) or signed webhooks at `/api/webhooks/{platform}`.
@@ -87,6 +89,7 @@ Browser (Next.js pages)  ──►  /api/* route handlers  ──►  lib/server
 | `GET /api/orders`, `POST /api/sync`, `POST /api/webhooks/[platform]` | Orders in |
 | `GET /api/payouts`, `POST /api/ingest/email` | Payouts and email ingestion |
 | `GET/DELETE /api/mail`, `POST /api/mail/sync` | Connected inbox status, disconnect, sync now |
+| `POST /api/listing/preview`, `POST /api/listing/zomato` | Read a Zomato listing link (preview only / save to the restaurant: rating, address, hours, FSSAI, cost for two, and the menu with photos if the menu is empty) |
 | `GET /api/mail/insights` | Payouts per platform, commission/ads/deduction shares, complaints and listing mails from the last 30 days |
 | `GET /api/mail/google/start`, `/callback` | Google sign-in for Gmail |
 | `GET /api/cron` | Scheduled sync of every inbox and platform (needs `CRON_SECRET`) |
@@ -104,7 +107,7 @@ Browser (Next.js pages)  ──►  /api/* route handlers  ──►  lib/server
 - **Partner-app browser worker**, and real partner API paths (see Connectors).
 - **Scheduling.** Vercel Cron calls `/api/cron` daily (Hobby limit); `.github/workflows/sync.yml` calls it every 15 minutes once the `ZEST_URL` and `CRON_SECRET` repository secrets are set.
 - **Dining and Growth screens** (Growth works through the copilot's promo drafts).
-- **Listing details from Zomato/Swiggy.** Listing links are parsed (city, slug, name match) but never fetched; scraping is against both platforms' terms. Ratings, cuisines and menu should come from partner data once available.
+- **Swiggy listing details.** Zomato listings are read (below); Swiggy links are only parsed.
 
 ## Design notes
 

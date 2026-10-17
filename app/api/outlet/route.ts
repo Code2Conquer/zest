@@ -3,6 +3,8 @@ import { z } from "zod";
 import { parseListing } from "@/lib/listing";
 import { audit, HttpError } from "@/lib/server/approvals";
 import { db } from "@/lib/server/db";
+import { applyZomatoListing } from "@/lib/server/listing-sync";
+import { fetchZomatoListing } from "@/lib/server/zomato-listing";
 import { handler } from "@/lib/server/http";
 import { outletDTO } from "@/lib/server/queries";
 import { outlets } from "@/lib/server/schema";
@@ -47,15 +49,28 @@ const Start = Profile.partial().extend({
 export const POST = handler(async (req, outlet) => {
   const { journey, live, listings, ...profile } = Start.parse(await req.json());
   const fields = { ...profile, journey, livePlatforms: live, ...(listings ? { listings: cleanListings(listings) } : {}) };
+  let row;
   if (!outlet.isDemo) {
-    const [row] = await db.update(outlets).set(fields).where(eq(outlets.id, outlet.id)).returning();
+    [row] = await db.update(outlets).set(fields).where(eq(outlets.id, outlet.id)).returning();
     await audit(outlet.id, "owner", "outlet.updated", { fields: Object.keys(fields) });
-    return outletDTO(row);
+  } else {
+    [row] = await db.insert(outlets).values({ ...fields, name: fields.name || "My restaurant" }).returning();
+    await setCurrentOutlet(row.id);
+    await audit(row.id, "owner", "outlet.created", { journey, live, documents: { fssai: !!profile.fssai, gstin: !!profile.gstin } });
   }
-  const [row] = await db.insert(outlets).values({ ...fields, name: fields.name || "My restaurant" }).returning();
-  await setCurrentOutlet(row.id);
-  await audit(row.id, "owner", "outlet.created", { journey, live, documents: { fssai: !!profile.fssai, gstin: !!profile.gstin } });
-  return outletDTO(row);
+  // Read the Zomato page if the link is new. A failure here never blocks sign-up.
+  const zomato = row.listings.zomato;
+  let listing: { imported: number } | { error: string } | null = null;
+  if (zomato && row.listingData.zomato?.url !== zomato) {
+    try {
+      const applied = await applyZomatoListing(row, await fetchZomatoListing(zomato));
+      row = applied.outlet;
+      listing = { imported: applied.imported };
+    } catch (err) {
+      listing = { error: (err as Error).message };
+    }
+  }
+  return { ...(await outletDTO(row)), listing };
 });
 
 const Update = Profile.extend({

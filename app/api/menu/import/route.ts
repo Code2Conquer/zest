@@ -3,6 +3,7 @@ import { z } from "zod";
 import { audit } from "@/lib/server/approvals";
 import { db } from "@/lib/server/db";
 import { assertWritable, handler } from "@/lib/server/http";
+import { guessKind } from "@/lib/server/listing-sync";
 import { getMenu } from "@/lib/server/queries";
 import { menuItems } from "@/lib/server/schema";
 
@@ -12,19 +13,6 @@ const Body = z.object({
     .min(1)
     .max(300),
 });
-
-// Picks an illustration until the owner adds a photo.
-function guessKind(name: string) {
-  const s = name.toLowerCase();
-  if (s.includes("biryani") || s.includes("pulao")) return "biryani";
-  if (s.includes("tikka") || s.includes("kebab") || s.includes("paneer")) return "paneer-tikka";
-  if (s.includes("dal")) return "dal-makhani";
-  if (s.includes("thali")) return "thali";
-  if (s.includes("chole") || s.includes("bhature")) return "chole-bhature";
-  if (s.includes("rajma") || s.includes("chawal")) return "rajma-chawal";
-  if (s.includes("jamun") || s.includes("sweet") || s.includes("kheer")) return "gulab-jamun";
-  return "butter-naan";
-}
 
 /** Adds dishes read from a menu photo to the master menu. */
 export const POST = handler(async (req, outlet) => {

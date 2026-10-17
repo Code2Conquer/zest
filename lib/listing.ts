@@ -13,6 +13,8 @@ export type ListingLink = {
   areaHint: string | null;
   /** True when the slug starts with the restaurant name the owner typed. */
   nameMatches: boolean | null;
+  /** A zoma.to share link: the server follows it to the real page. */
+  short?: boolean;
 };
 
 // Zomato's city segments that don't read well as a city name.
@@ -52,6 +54,11 @@ export function parseListing(raw: string, restaurantName = ""): ListingLink | nu
   let slug: string;
   let url: string;
 
+  if (host === "zoma.to") {
+    // Share links from the app: zoma.to/r/{res_id}
+    if (parts[0] !== "r" || !/^\d+$/.test(parts[1] ?? "")) return null;
+    return { platform: "zomato", url: `https://zoma.to/r/${parts[1]}`, city: null, slug: `r-${parts[1]}`, areaHint: null, nameMatches: null, short: true };
+  }
   if (host === "zomato.com" || host.endsWith(".zomato.com")) {
     // /{city}/{slug}[/order|/info|/reviews…]
     if (parts.length < 2 || !/^[a-z0-9-]+$/.test(parts[1])) return null;

@@ -22,6 +22,7 @@ export type OutletDTO = {
   fssai: string | null;
   gstin: string | null;
   listings: Partial<Record<Platform, string>>;
+  zomato: ListingSummary | null;
   cuisines: string;
   ownerName: string;
   ownerPhone: string | null;
@@ -157,3 +158,30 @@ export type MailInsightsDTO = {
   actions: { id: string; subject: string; receivedAt: string; platform: Platform | null }[];
   highlights: { tone: "good" | "warn" | "info"; text: { en: string; hi: string } }[];
 };
+
+/** What a restaurant's public Zomato page says about it. */
+export type ZomatoListing = {
+  resId: string;
+  url: string;
+  name: string;
+  cuisines: string[];
+  rating: { delivery: { value: number; count: number } | null; dining: { value: number; count: number } | null };
+  address: string;
+  locality: string;
+  area: string;
+  city: string;
+  pincode: string | null;
+  location: { lat: number; lng: number } | null;
+  phone: string | null;
+  hours: string[];
+  costForTwo: number | null;
+  highlights: string[];
+  status: "open" | "temporarily_closed" | "closed";
+  deliveryOnly: boolean;
+  fssai: string | null;
+  photos: string[];
+  menu: { name: string; category: string; price: number; description: string; veg: boolean; photo: string | null; available: boolean; bestseller: boolean }[];
+  fetchedAt: string;
+};
+
+export type ListingSummary = Omit<ZomatoListing, "menu"> & { menuCount: number };

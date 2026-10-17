@@ -59,6 +59,16 @@ export default function Connect() {
               <div className="min-w-0">
                 <p className="font-medium">{outlet.name}</p>
                 <p className="text-sm text-muted">{[outlet.ownerName, [outlet.area, outlet.city].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}</p>
+                {outlet.zomato && (
+                  <p className="mt-1 text-sm text-leaf">
+                    {[
+                      outlet.zomato.rating.delivery && `★ ${outlet.zomato.rating.delivery.value.toFixed(1)} ${hi ? "Zomato पर" : "on Zomato"}`,
+                      hi ? `${outlet.zomato.menuCount} डिश Zomato से` : `${outlet.zomato.menuCount} dishes from Zomato`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                )}
               </div>
               <Link href={`/join?journey=${outlet.journey ?? "live"}&live=${outlet.live.join(",")}`} className="inline-flex shrink-0 items-center gap-1.5 text-sm text-ink-2 hover:text-ink">
                 <Pencil aria-hidden className="size-3.5" />
