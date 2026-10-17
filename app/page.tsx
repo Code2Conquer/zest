@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { BookOpen, ChefHat, IndianRupee, ReceiptText, ShieldCheck, Star, TrendingUp } from "lucide-react";
@@ -93,9 +92,16 @@ export default function Landing() {
               <button type="button" onClick={() => setRouterOpen(true)} className="rounded-full bg-ink px-7 py-3.5 text-[1.05rem] font-medium text-paper shadow-[0_12px_30px_-12px_rgba(20,30,20,0.6)] transition-transform hover:-translate-y-0.5">
                 {hi ? "शुरू करें" : "Get started"}
               </button>
-              <Link href="/app" className="rounded-full px-6 py-3.5 text-[1.05rem] font-medium shadow-[inset_0_0_0_1.5px_var(--ink)] transition-colors hover:bg-ink hover:text-paper">
+              <button
+                type="button"
+                onClick={async () => {
+                  await fetch("/api/outlet/demo", { method: "POST" });
+                  window.location.href = "/app";
+                }}
+                className="rounded-full px-6 py-3.5 text-[1.05rem] font-medium shadow-[inset_0_0_0_1.5px_var(--ink)] transition-colors hover:bg-ink hover:text-paper"
+              >
                 {t("landing.demo")}
-              </Link>
+              </button>
             </motion.div>
           </div>
           <LiveKitchen />

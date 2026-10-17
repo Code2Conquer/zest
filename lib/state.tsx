@@ -1,94 +1,68 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { ConnectMethod, Platform } from "./platforms";
+import { api, refreshAll, useApi } from "./api";
 import { translate, type Key, type Lang } from "./i18n";
-
-export type Journey = "new" | "notlive" | "live";
-
-export type Connection = { method: ConnectMethod; at: number };
-
-export type AppState = {
-  lang: Lang;
-  journey: Journey | null;
-  live: Platform[];
-  connections: Partial<Record<Platform, Connection>>;
-  email: "gmail" | "outlook" | null;
-  whatsapp: boolean;
-};
-
-// Used when someone opens the dashboard without going through connect:
-// a restaurant live on both platforms with everything connected.
-export const DEMO_STATE: AppState = {
-  lang: "en",
-  journey: "live",
-  live: ["zomato", "swiggy"],
-  connections: {
-    zomato: { method: "api", at: Date.now() - 3 * 60_000 },
-    swiggy: { method: "portal", at: Date.now() - 4 * 60_000 },
-  },
-  email: "gmail",
-  whatsapp: true,
-};
-
-const EMPTY: AppState = {
-  lang: "en",
-  journey: null,
-  live: [],
-  connections: {},
-  email: null,
-  whatsapp: false,
-};
-
-const STORAGE_KEY = "zest:state";
+import type { OutletDTO } from "./types";
 
 type Ctx = {
-  state: AppState;
-  ready: boolean;
-  update: (patch: Partial<AppState>) => void;
+  lang: Lang;
+  /** Kept for components that read state.lang. */
+  state: { lang: Lang };
+  setLang: (lang: Lang) => void;
+  outlet: OutletDTO | null;
+  outletError: string | null;
+  /** Patches the outlet on the server and refreshes every view. */
+  updateOutlet: (patch: Record<string, unknown>) => Promise<OutletDTO>;
   t: (key: Key) => string;
   pick: <T>(bi: { en: T; hi: T }) => T;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
+const LANG_KEY = "zest:lang";
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AppState>(EMPTY);
-  const [ready, setReady] = useState(false);
+  const [lang, setLangState] = useState<Lang>("en");
+  const { data: outlet, error: outletError, setData } = useApi<OutletDTO>("/api/outlet");
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setState({ ...EMPTY, ...JSON.parse(raw) });
+      const saved = localStorage.getItem(LANG_KEY);
+      if (saved === "en" || saved === "hi") setLangState(saved);
     } catch {
-      // Storage can be blocked; the app still works for this visit.
+      // Storage can be blocked; English it is.
     }
-    setReady(true);
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = state.lang === "hi" ? "hi" : "en";
-  }, [state.lang]);
+    document.documentElement.lang = lang;
+  }, [lang]);
 
-  const update = useCallback((patch: Partial<AppState>) => {
-    setState((prev) => {
-      const next = { ...prev, ...patch };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {}
+  const updateOutlet = useCallback(
+    async (patch: Record<string, unknown>) => {
+      const next = await api<OutletDTO>("/api/outlet", { method: "PATCH", json: patch });
+      setData(next);
+      refreshAll();
       return next;
-    });
-  }, []);
+    },
+    [setData],
+  );
+
+  const setLang = useCallback(
+    (l: Lang) => {
+      setLangState(l);
+      try {
+        localStorage.setItem(LANG_KEY, l);
+      } catch {}
+      // The owner's language also decides WhatsApp messages.
+      if (outlet && !outlet.isDemo) void api("/api/outlet", { method: "PATCH", json: { lang: l } }).catch(() => {});
+    },
+    [outlet],
+  );
 
   const value = useMemo<Ctx>(
-    () => ({
-      state,
-      ready,
-      update,
-      t: (key) => translate(state.lang, key),
-      pick: (bi) => bi[state.lang],
-    }),
-    [state, ready, update],
+    () => ({ lang, state: { lang }, setLang, outlet, outletError, updateOutlet, t: (key) => translate(lang, key), pick: (bi) => bi[lang] }),
+    [lang, setLang, outlet, outletError, updateOutlet],
   );
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;
@@ -100,11 +74,14 @@ export function useApp() {
   return ctx;
 }
 
-/** The dashboard falls back to the demo restaurant when nothing is connected yet. */
+/** The current outlet's live platforms and connections, with safe defaults while loading. */
 export function useOutlet() {
-  const { state, ready } = useApp();
-  const isDemo = ready && state.live.length === 0;
-  const live = isDemo ? DEMO_STATE.live : state.live;
-  const connections = isDemo ? DEMO_STATE.connections : state.connections;
-  return { live, connections, isDemo, email: isDemo ? DEMO_STATE.email : state.email };
+  const { outlet } = useApp();
+  return {
+    outlet,
+    live: outlet?.live ?? [],
+    connections: outlet?.connections ?? [],
+    isDemo: outlet?.isDemo ?? false,
+    ready: !!outlet,
+  };
 }

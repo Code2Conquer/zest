@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Armchair, BookOpen, Home, IndianRupee, Menu as MenuIcon, MessageSquareText, Plug, ReceiptText, Sparkles, Star, TrendingUp, X } from "lucide-react";
 import type { Key } from "@/lib/i18n";
-import { OUTLET } from "@/lib/data";
 import { useApp, useOutlet } from "@/lib/state";
 import { Copilot } from "./copilot";
 import { LangToggle, Wordmark } from "./bits";
@@ -27,7 +26,7 @@ const MOBILE_TABS = ["/app", "/app/orders", "copilot", "/app/money", "more"] as 
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const { t, state } = useApp();
-  const { isDemo } = useOutlet();
+  const { isDemo, outlet } = useOutlet();
   const path = usePathname();
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -46,8 +45,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <Wordmark className="text-[#eef2ec]" />
         </Link>
         <div className="mt-6 px-3">
-          <p className="font-medium">{OUTLET.name}</p>
-          <p className="text-sm text-[#eef2ec]/60">{OUTLET.area}</p>
+          <p className="font-medium">{outlet?.name ?? "\u00a0"}</p>
+          <p className="text-sm text-[#eef2ec]/60">{outlet?.area || (outlet ? (state.lang === "hi" ? "पता जोड़ें" : "Add your area in Connections") : "\u00a0")}</p>
         </div>
         <ul className="mt-6 space-y-0.5">
           {NAV.map((n) => (
@@ -76,9 +75,21 @@ export function Shell({ children }: { children: React.ReactNode }) {
         {isDemo && (
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-turmeric-soft px-4 py-2 text-sm sm:px-8">
             <span>{state.lang === "hi" ? "आप एक सैंपल रेस्टोरेंट देख रहे हैं।" : "You're looking at a sample restaurant."}</span>
-            <Link href="/" className="font-medium underline underline-offset-2">
-              {state.lang === "hi" ? "अपना रेस्टोरेंट जोड़ें" : "Connect yours"}
-            </Link>
+            <span className="flex gap-4">
+              <button
+                type="button"
+                onClick={async () => {
+                  await fetch("/api/outlet/demo", { method: "DELETE" });
+                  window.location.reload();
+                }}
+                className="text-ink-2 underline-offset-2 hover:underline"
+              >
+                {state.lang === "hi" ? "सैंपल डेटा रीसेट करें" : "Reset sample data"}
+              </button>
+              <Link href="/" className="font-medium underline underline-offset-2">
+                {state.lang === "hi" ? "अपना रेस्टोरेंट जोड़ें" : "Connect yours"}
+              </Link>
+            </span>
           </div>
         )}
         <header className="flex items-center justify-between border-b border-line px-4 py-3 lg:hidden">

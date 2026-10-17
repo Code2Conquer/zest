@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { api } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronRight, X } from "lucide-react";
 import { ChannelTag } from "@/components/bits";
 import type { Key } from "@/lib/i18n";
 import { PLATFORMS, type Platform } from "@/lib/platforms";
-import { useApp, type Journey } from "@/lib/state";
+import { useApp } from "@/lib/state";
+
+type Journey = "new" | "notlive" | "live";
 
 const JOURNEYS: { id: Journey; title: Key; sub: Key }[] = [
   { id: "live", title: "journey.live", sub: "journey.live.sub" },
@@ -17,16 +20,33 @@ const JOURNEYS: { id: Journey; title: Key; sub: Key }[] = [
 
 /** The three ways in. Live owners pick their platforms inline, then connect. */
 export function JourneyRouter({ tone = "light" }: { tone?: "light" | "haldi" }) {
-  const { t, state, update } = useApp();
+  const { t, lang } = useApp();
   const router = useRouter();
+  const [journey, setJourney] = useState<Journey | null>(null);
+  const [live, setLive] = useState<Platform[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /** Creates the owner's restaurant on the server, then moves on. */
+  async function start(j: Journey, platforms: Platform[]) {
+    setBusy(true);
+    setError(null);
+    try {
+      await api("/api/outlet", { method: "POST", json: { journey: j, live: platforms, lang } });
+      router.push(j === "live" ? "/connect" : `/start?track=${j}`);
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  }
 
   function choose(j: Journey) {
-    update({ journey: j });
-    if (j !== "live") router.push(`/start?track=${j}`);
+    setJourney(j);
+    if (j !== "live") void start(j, ["zomato", "swiggy"]);
   }
 
   function togglePlatform(p: Platform) {
-    update({ live: state.live.includes(p) ? state.live.filter((x) => x !== p) : [...state.live, p] });
+    setLive((l) => (l.includes(p) ? l.filter((x) => x !== p) : [...l, p]));
   }
 
   const line = tone === "haldi" ? "divide-ink/20 border-ink/20" : "divide-line border-line";
@@ -34,7 +54,7 @@ export function JourneyRouter({ tone = "light" }: { tone?: "light" | "haldi" }) 
   return (
     <ul className={`divide-y border-y ${line}`} role="radiogroup" aria-label={t("landing.title")}>
       {JOURNEYS.map((j) => {
-        const selected = state.journey === j.id;
+        const selected = journey === j.id;
         return (
           <li key={j.id}>
             <button type="button" role="radio" aria-checked={selected} onClick={() => choose(j.id)} className="group flex w-full items-center gap-4 py-5 text-left">
@@ -65,7 +85,7 @@ export function JourneyRouter({ tone = "light" }: { tone?: "light" | "haldi" }) 
                     <p className={`mt-0.5 text-sm ${tone === "haldi" ? "text-ink/70" : "text-muted"}`}>{t("landing.where.sub")}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {PLATFORMS.map((p) => {
-                        const on = state.live.includes(p);
+                        const on = live.includes(p);
                         return (
                           <button
                             key={p}
@@ -82,8 +102,8 @@ export function JourneyRouter({ tone = "light" }: { tone?: "light" | "haldi" }) 
                     </div>
                     <button
                       type="button"
-                      disabled={state.live.length === 0}
-                      onClick={() => router.push("/connect")}
+                      disabled={live.length === 0 || busy}
+                      onClick={() => start("live", live)}
                       className="mt-5 rounded-full bg-ink px-6 py-3 font-medium text-paper transition-opacity disabled:opacity-30"
                     >
                       {t("landing.continue")}
@@ -95,6 +115,7 @@ export function JourneyRouter({ tone = "light" }: { tone?: "light" | "haldi" }) 
           </li>
         );
       })}
+      {error && <li className="py-3 text-sm text-chilli">{error}</li>}
     </ul>
   );
 }

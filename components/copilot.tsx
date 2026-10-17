@@ -2,13 +2,12 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
-import { ArrowUp, Mic, X } from "lucide-react";
-import { AGENT_NAME, STARTER_SUGGESTIONS, type AgentReply } from "@/lib/agents";
-import type { Bi, Lang } from "@/lib/i18n";
-import { useApp, useOutlet } from "@/lib/state";
-import { AgentCard } from "./cards";
-
-type Msg = { id: number; role: "owner"; text: string } | { id: number; role: "agent"; reply: AgentReply; lang: Lang };
+import { ArrowUp, Mic, RotateCcw, X } from "lucide-react";
+import { agentName, STARTER_SUGGESTIONS } from "@/lib/agents";
+import { api, refreshAll, useApi } from "@/lib/api";
+import { useApp } from "@/lib/state";
+import type { ChatEntry, CopilotReply } from "@/lib/types";
+import { CopilotCardView } from "./cards";
 
 type SpeechRecognitionLike = {
   lang: string;
@@ -19,54 +18,44 @@ type SpeechRecognitionLike = {
 };
 
 export function Copilot({ onClose }: { onClose?: () => void }) {
-  const { t, pick, state } = useApp();
-  const { live } = useOutlet();
-  const [messages, setMessages] = useState<Msg[]>([]);
+  const { t, pick, lang, outlet } = useApp();
+  const { data: history, setData: setHistory } = useApi<ChatEntry[]>(outlet ? `/api/copilot?o=${outlet.id}` : null);
+  const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
-  const nextId = useRef(1);
   // The panel can be mounted twice (side panel and mobile sheet), so ids must be unique.
   const inputId = useId();
+  const messages = history ?? [];
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
-  }, [messages, busy]);
+  }, [messages.length, busy]);
 
   async function send(text: string) {
     const message = text.trim();
     if (!message || busy) return;
     setInput("");
-    setMessages((m) => [...m, { id: nextId.current++, role: "owner", text: message }]);
+    const userEntry: ChatEntry = { id: `u-${Date.now()}`, role: "user", text: message };
+    setHistory([...messages, userEntry]);
     setBusy(true);
     try {
-      const res = await fetch("/api/copilot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, lang: state.lang, live }),
-      });
-      if (!res.ok) throw new Error(String(res.status));
-      const data = (await res.json()) as { reply: AgentReply; lang: Lang };
-      setMessages((m) => [...m, { id: nextId.current++, role: "agent", reply: data.reply, lang: data.lang }]);
-    } catch {
-      setMessages((m) => [
-        ...m,
-        {
-          id: nextId.current++,
-          role: "agent",
-          lang: state.lang,
-          reply: {
-            agent: "orchestrator",
-            text: { en: "I couldn't reach the server. Check your connection and send it again.", hi: "सर्वर से जुड़ नहीं पाया। इंटरनेट देखकर दोबारा भेजें।" },
-            cards: [],
-            suggestions: [],
-          },
-        },
-      ]);
+      const reply = await api<CopilotReply>("/api/copilot", { method: "POST", json: { message, lang } });
+      const id = `a-${Date.now()}`;
+      setFresh((s) => new Set(s).add(id));
+      setHistory([...messages, userEntry, { id, role: "assistant", reply }]);
+      if (reply.cards.length) refreshAll();
+    } catch (e) {
+      setHistory([...messages, userEntry, { id: `e-${Date.now()}`, role: "assistant", reply: { agent: "orchestrator", text: (e as Error).message, cards: [], suggestions: [], engine: "rules" } }]);
     } finally {
       setBusy(false);
     }
+  }
+
+  async function clear() {
+    await api("/api/copilot", { method: "DELETE" }).catch(() => {});
+    setHistory([]);
   }
 
   function listen() {
@@ -74,7 +63,7 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
     const Rec = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     if (!Rec) return;
     const rec = new Rec();
-    rec.lang = state.lang === "hi" ? "hi-IN" : "en-IN";
+    rec.lang = lang === "hi" ? "hi-IN" : "en-IN";
     rec.interimResults = false;
     rec.onresult = (e) => setInput(e.results[0][0].transcript);
     rec.onend = () => setListening(false);
@@ -82,8 +71,8 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
     rec.start();
   }
 
-  const lastAgent = [...messages].reverse().find((m) => m.role === "agent") as Extract<Msg, { role: "agent" }> | undefined;
-  const suggestions: Bi[] = lastAgent ? lastAgent.reply.suggestions : STARTER_SUGGESTIONS;
+  const last = [...messages].reverse().find((m) => m.role === "assistant");
+  const suggestions = last && last.role === "assistant" && last.reply.suggestions.length ? last.reply.suggestions : STARTER_SUGGESTIONS.map((s) => pick(s));
 
   return (
     <section aria-label={t("nav.copilot")} className="flex h-full min-h-0 flex-col bg-paper">
@@ -91,26 +80,34 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
         <div>
           <h2 className="text-base font-semibold">{t("nav.copilot")}</h2>
           <p className="text-[0.8rem] text-muted">
-            {state.lang === "hi" ? "आपके सभी एजेंट, एक जगह" : "All your agents in one place"}
+            {lang === "hi" ? "आपके सभी एजेंट, एक जगह" : "All your agents in one place"}
+            {outlet && !outlet.claude && <span> {lang === "hi" ? "(बेसिक मोड)" : "(basic mode)"}</span>}
           </p>
         </div>
-        {onClose && (
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-2 text-muted hover:bg-sunken hover:text-ink">
-            <X className="size-5" />
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          {messages.length > 0 && (
+            <button type="button" onClick={clear} aria-label={lang === "hi" ? "बातचीत साफ़ करें" : "Clear conversation"} className="rounded-full p-2 text-muted hover:bg-sunken hover:text-ink">
+              <RotateCcw className="size-4" />
+            </button>
+          )}
+          {onClose && (
+            <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-2 text-muted hover:bg-sunken hover:text-ink">
+              <X className="size-5" />
+            </button>
+          )}
+        </div>
       </header>
 
       <div ref={scroller} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 py-4" aria-live="polite">
         <p className="max-w-[46ch] text-[0.98rem] leading-relaxed text-ink-2">{t("copilot.hello")}</p>
 
         {messages.map((m) =>
-          m.role === "owner" ? (
+          m.role === "user" ? (
             <p key={m.id} className="my-4 ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-ink px-4 py-2.5 text-[0.98rem] text-paper">
               {m.text}
             </p>
           ) : (
-            <AgentMessage key={m.id} reply={m.reply} lang={m.lang} onProgress={() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight })} />
+            <AgentMessage key={m.id} reply={m.reply} animate={fresh.has(m.id)} onProgress={() => scroller.current?.scrollTo({ top: scroller.current.scrollHeight })} />
           ),
         )}
 
@@ -121,7 +118,7 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
                 <span key={i} className="size-1.5 animate-pulse rounded-full bg-turmeric" style={{ animationDelay: `${i * 150}ms` }} />
               ))}
             </span>
-            {state.lang === "hi" ? "देख रहा हूँ…" : "Looking into it…"}
+            {lang === "hi" ? "देख रहा हूँ…" : "Looking into it…"}
           </p>
         )}
       </div>
@@ -131,12 +128,12 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
           <div className="scrollbar-thin -mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1">
             {suggestions.map((s) => (
               <button
-                key={s.en}
+                key={s}
                 type="button"
-                onClick={() => send(pick(s))}
+                onClick={() => send(s)}
                 className="shrink-0 rounded-full bg-surface px-3.5 py-1.5 text-sm text-ink-2 shadow-[0_0_0_1px_var(--line)] hover:text-ink hover:shadow-[0_0_0_1px_var(--ink-2)]"
               >
-                {pick(s)}
+                {s}
               </button>
             ))}
           </div>
@@ -174,12 +171,7 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
           >
             <Mic className="size-5" />
           </button>
-          <button
-            type="submit"
-            aria-label={t("copilot.send")}
-            disabled={!input.trim() || busy}
-            className="rounded-full bg-ink p-2.5 text-paper disabled:opacity-30"
-          >
+          <button type="submit" aria-label={t("copilot.send")} disabled={!input.trim() || busy} className="rounded-full bg-ink p-2.5 text-paper disabled:opacity-30">
             <ArrowUp className="size-5" />
           </button>
         </form>
@@ -188,11 +180,12 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
   );
 }
 
-/** Types the reply out word by word, then prints its cards. */
-function AgentMessage({ reply, lang, onProgress }: { reply: AgentReply; lang: Lang; onProgress: () => void }) {
+/** Types a fresh reply out word by word, then prints its cards. History renders instantly. */
+function AgentMessage({ reply, animate, onProgress }: { reply: CopilotReply; animate: boolean; onProgress: () => void }) {
+  const { pick } = useApp();
   const reduce = useReducedMotion();
-  const words = reply.text[lang].split(" ");
-  const [shown, setShown] = useState(reduce ? words.length : 0);
+  const words = reply.text.split(" ");
+  const [shown, setShown] = useState(animate && !reduce ? 0 : words.length);
   const done = shown >= words.length;
 
   useEffect(() => {
@@ -201,19 +194,21 @@ function AgentMessage({ reply, lang, onProgress }: { reply: AgentReply; lang: La
     return () => clearTimeout(id);
   }, [shown, done]);
 
-  useEffect(onProgress, [shown, onProgress]);
+  useEffect(() => {
+    if (animate) onProgress();
+  }, [shown, animate, onProgress]);
 
   return (
     <div className="my-4">
-      <p className="mb-1 text-[0.8rem] text-muted">{AGENT_NAME[reply.agent][lang]}</p>
-      <p className="max-w-[52ch] text-[0.98rem] leading-relaxed">
+      <p className="mb-1 text-[0.8rem] text-muted">{pick(agentName(reply.agent))}</p>
+      <p className="max-w-[52ch] whitespace-pre-line text-[0.98rem] leading-relaxed">
         {words.slice(0, shown).join(" ")}
         {!done && <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-turmeric" />}
       </p>
       {done && reply.cards.length > 0 && (
         <div className="mt-3 space-y-3">
           {reply.cards.map((c, i) => (
-            <AgentCard key={i} card={c} print />
+            <CopilotCardView key={i} card={c} print={animate} />
           ))}
         </div>
       )}

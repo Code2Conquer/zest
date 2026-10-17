@@ -1,15 +1,23 @@
-import { NextResponse } from "next/server";
-import { orchestrate, replyLang, type CopilotRequest } from "@/lib/agents";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
+import { chatHistory, runCopilot } from "@/lib/server/copilot";
+import { db } from "@/lib/server/db";
+import { handler } from "@/lib/server/http";
+import { chatMessages } from "@/lib/server/schema";
 
-export async function POST(request: Request) {
-  const body = (await request.json()) as Partial<CopilotRequest>;
-  if (!body.message?.trim()) {
-    return NextResponse.json({ error: "Message is empty." }, { status: 400 });
-  }
-  const req: CopilotRequest = {
-    message: body.message,
-    lang: body.lang === "hi" ? "hi" : "en",
-    live: Array.isArray(body.live) ? body.live.filter((p) => p === "zomato" || p === "swiggy") : [],
-  };
-  return NextResponse.json({ reply: orchestrate(req), lang: replyLang(req) });
-}
+export const maxDuration = 120;
+
+export const GET = handler(async (_req, outlet) => chatHistory(outlet.id));
+
+const Body = z.object({ message: z.string().trim().min(1).max(2000), lang: z.enum(["en", "hi"]).default("en") });
+
+export const POST = handler(async (req, outlet) => {
+  const { message, lang } = Body.parse(await req.json());
+  return runCopilot(outlet, message, lang);
+});
+
+/** Clears the conversation. */
+export const DELETE = handler(async (_req, outlet) => {
+  await db.delete(chatMessages).where(eq(chatMessages.outletId, outlet.id));
+  return { ok: true };
+});

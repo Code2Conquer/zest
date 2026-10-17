@@ -4,11 +4,14 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { ChannelTag } from "@/components/bits";
 import { Dish, type DishKind } from "@/components/dishes";
-import { ORDERS, rupees, type Order } from "@/lib/data";
+import { Loader2, RefreshCw } from "lucide-react";
+import { rupees } from "@/components/cards";
+import { api, refreshAll, useApi } from "@/lib/api";
+import type { OrderDTO } from "@/lib/types";
 import type { Channel } from "@/lib/platforms";
 import { useApp, useOutlet } from "@/lib/state";
 
-const STATUS: Record<Order["status"], { en: string; hi: string; tone: string }> = {
+const STATUS: Record<OrderDTO["status"], { en: string; hi: string; tone: string }> = {
   preparing: { en: "Preparing", hi: "बन रहा है", tone: "text-ink" },
   delayed: { en: "Running late", hi: "देर हो रही है", tone: "text-chilli font-medium" },
   ready: { en: "Ready for pickup", hi: "पिकअप के लिए तैयार", tone: "text-leaf" },
@@ -34,18 +37,54 @@ const TARGET_MINS = 15;
 
 export default function Orders() {
   const { t, pick, state } = useApp();
-  const { live } = useOutlet();
+  const { live, outlet } = useOutlet();
+  const { data, error } = useApi<OrderDTO[]>(outlet ? `/api/orders?o=${outlet.id}` : null);
+  const [syncing, setSyncing] = useState(false);
+  const [syncNote, setSyncNote] = useState<string | null>(null);
   const channels: Channel[] = [...live, "dine"];
   const [filter, setFilter] = useState<Channel | "all">("all");
   const hi = state.lang === "hi";
-  const rows = ORDERS.filter((o) => channels.includes(o.channel) && (filter === "all" || o.channel === filter));
+  const rows = (data ?? []).filter((o) => channels.includes(o.channel) && (filter === "all" || o.channel === filter));
   const active = rows.filter((o) => ["preparing", "delayed", "ready"].includes(o.status));
-  const done = rows.filter((o) => !active.includes(o));
+  const done = rows.filter((o) => !active.includes(o)).slice(0, 30);
+  const time = (iso: string) => new Date(iso).toLocaleTimeString(hi ? "hi-IN" : "en-IN", { hour: "numeric", minute: "2-digit" });
+
+  async function sync() {
+    setSyncing(true);
+    setSyncNote(null);
+    try {
+      const { results } = await api<{ results: { platform: string; orders: number; error?: string }[] }>("/api/sync", { method: "POST" });
+      const got = results.reduce((s, r) => s + r.orders, 0);
+      const failed = results.filter((r) => r.error);
+      setSyncNote(
+        failed.length
+          ? failed.map((f) => `${f.platform}: ${f.error}`).join(" ")
+          : results.length
+            ? hi ? `${got} ऑर्डर अपडेट हुए।` : `${got} order${got === 1 ? "" : "s"} updated.`
+            : hi ? "सिंक करने के लिए कोई प्लेटफ़ॉर्म जुड़ा नहीं है।" : "No connected platform to sync from.",
+      );
+      refreshAll();
+    } catch (e) {
+      setSyncNote((e as Error).message);
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-4xl">
-      <h1 className="text-[clamp(1.9rem,4vw,2.6rem)] font-semibold tracking-[-0.03em]">{t("nav.orders")}</h1>
-      <p className="mt-1 text-muted">{hi ? "सभी प्लेटफ़ॉर्म और डाइन-इन, एक जगह" : "Every platform and dine-in, in one list"}</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[clamp(1.9rem,4vw,2.6rem)] font-semibold tracking-[-0.03em]">{t("nav.orders")}</h1>
+          <p className="mt-1 text-muted">{hi ? "सभी प्लेटफ़ॉर्म और डाइन-इन, एक जगह" : "Every platform and dine-in, in one list"}</p>
+        </div>
+        <button type="button" onClick={sync} disabled={syncing} className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm shadow-[inset_0_0_0_1px_var(--line)] hover:bg-sunken disabled:opacity-60">
+          {syncing ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <RefreshCw aria-hidden className="size-4" />}
+          {hi ? "अभी सिंक करें" : "Sync now"}
+        </button>
+      </div>
+      {syncNote && <p className="mt-3 text-sm text-ink-2" role="status">{syncNote}</p>}
+      {error && <p className="mt-3 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}
 
       <div role="group" aria-label="Filter by channel" className="mt-6 flex flex-wrap gap-2">
         {(["all", ...channels] as const).map((c) => (
@@ -62,6 +101,7 @@ export default function Orders() {
       </div>
 
       <h2 className="mt-8 font-medium">{hi ? `किचन में (${active.length})` : `In the kitchen (${active.length})`}</h2>
+      {data && active.length === 0 && <p className="mt-3 rounded-xl bg-sunken px-4 py-6 text-center text-muted">{hi ? "अभी किचन में कोई ऑर्डर नहीं।" : "No orders in the kitchen right now."}</p>}
       <ul className="mt-4 grid gap-5 sm:grid-cols-2">
         {active.map((o, i) => {
           const late = o.status === "delayed";
@@ -77,7 +117,7 @@ export default function Orders() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2">
                   <ChannelTag channel={o.channel} />
-                  <span className="text-sm text-muted">#{o.id}, {o.placedAt}</span>
+                  <span className="text-sm text-muted">#{o.externalId}, {time(o.placedAt)}</span>
                 </div>
                 <p className="mt-1.5 font-medium leading-snug">{o.items}</p>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-sunken" aria-hidden>
@@ -100,7 +140,7 @@ export default function Orders() {
         })}
       </ul>
 
-      <h2 className="mt-10 font-medium">{hi ? "पहले के" : "Earlier tonight"}</h2>
+      <h2 className="mt-10 font-medium">{hi ? "पहले के" : "Earlier"}</h2>
       <table className="mt-3 w-full text-left text-[0.95rem]">
         <thead className="text-sm text-muted">
           <tr className="border-b border-line">
@@ -115,7 +155,7 @@ export default function Orders() {
             <tr key={o.id} className="border-b border-line">
               <td className="py-2.5">
                 <ChannelTag channel={o.channel} />
-                <span className="ml-2 text-sm text-muted">#{o.id}</span>
+                <span className="ml-2 text-sm text-muted">#{o.externalId}</span>
               </td>
               <td className="hidden py-2.5 text-ink-2 sm:table-cell">{o.items}</td>
               <td className={`py-2.5 text-sm ${STATUS[o.status].tone}`}>{pick(STATUS[o.status])}</td>

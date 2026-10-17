@@ -23,16 +23,16 @@ export function Wordmark({ className = "" }: { className?: string }) {
 }
 
 export function LangToggle() {
-  const { state, update } = useApp();
+  const { lang, setLang } = useApp();
   return (
     <div role="group" aria-label="Language" className="inline-flex rounded-full bg-sunken p-0.5 text-sm">
       {(["en", "hi"] as const).map((l) => (
         <button
           key={l}
           type="button"
-          aria-pressed={state.lang === l}
-          onClick={() => update({ lang: l })}
-          className={`rounded-full px-3 py-1 transition-colors ${state.lang === l ? "bg-surface text-ink shadow-[0_0_0_1px_var(--line)]" : "text-muted hover:text-ink"}`}
+          aria-pressed={lang === l}
+          onClick={() => setLang(l)}
+          className={`rounded-full px-3 py-1 transition-colors ${lang === l ? "bg-surface text-ink shadow-[0_0_0_1px_var(--line)]" : "text-muted hover:text-ink"}`}
         >
           {l === "en" ? "English" : "हिंदी"}
         </button>

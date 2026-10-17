@@ -5,16 +5,18 @@ import { AnimatePresence, motion } from "motion/react";
 import { Camera, Check, Search, Sparkles, X } from "lucide-react";
 import { ChannelTag } from "@/components/bits";
 import { Dish } from "@/components/dishes";
-import { Ticket } from "@/components/ticket";
-import { AGENT_NAME } from "@/lib/agents";
-import { MENU, MENU_CATEGORIES, OUTLET, RATINGS, rupees, type MenuItem } from "@/lib/data";
+import { ApprovalTicket } from "@/components/approval-ticket";
+import { rupees } from "@/components/cards";
+import { api, refreshAll, useApi } from "@/lib/api";
+import type { ApprovalDTO, MenuItemDTO } from "@/lib/types";
 import { CHANNEL_NAME, type Platform } from "@/lib/platforms";
 import { useApp, useOutlet } from "@/lib/state";
 
-type Item = MenuItem & { photo?: string };
+type Item = MenuItemDTO;
 
+// Keyed by dish name; in production these come from the menu agent.
 const SUGGESTED_DESCRIPTION: Record<string, string> = {
-  m8: "Kidney beans simmered overnight in an onion-tomato masala with ginger and garam masala, served with steamed basmati rice.",
+  "Rajma chawal": "Kidney beans simmered overnight in an onion-tomato masala with ginger and garam masala, served with steamed basmati rice.",
 };
 
 /** What changed on each dish, in words an owner would use. */
@@ -38,18 +40,24 @@ function describeChanges(before: Item, after: Item, live: Platform[], hi: boolea
 
 export default function MenuPage() {
   const { state } = useApp();
-  const { live } = useOutlet();
+  const { live, outlet } = useOutlet();
   const hi = state.lang === "hi";
 
-  const [published, setPublished] = useState<Item[]>(MENU);
-  const [draft, setDraft] = useState<Item[]>(MENU);
+  const { data: menu, error: loadError } = useApi<Item[]>(outlet ? `/api/menu?o=${outlet.id}` : null);
+  const published = useMemo(() => menu ?? [], [menu]);
+  const [draft, setDraft] = useState<Item[]>([]);
+  const [approval, setApproval] = useState<ApprovalDTO | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  // Start from the published menu whenever it reloads.
+  useEffect(() => setDraft(published), [published]);
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [previewOn, setPreviewOn] = useState<Platform>(live[0] ?? "zomato");
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [activeCat, setActiveCat] = useState<string>(MENU_CATEGORIES[0]);
+  const [activeCat, setActiveCat] = useState<string>("");
   const sections = useRef<Record<string, HTMLElement | null>>({});
 
   useEffect(() => {
@@ -60,8 +68,8 @@ export default function MenuPage() {
     () =>
       draft
         .map((d) => {
-          const before = published.find((p) => p.id === d.id)!;
-          return { item: d, lines: describeChanges(before, d, live, hi) };
+          const before = published.find((p) => p.id === d.id);
+          return { item: d, before, lines: before ? describeChanges(before, d, live, hi) : [] };
         })
         .filter((c) => c.lines.length > 0),
     [draft, published, live, hi],
@@ -69,14 +77,14 @@ export default function MenuPage() {
 
   const q = query.trim().toLowerCase();
   const visible = draft.filter((m) => !q || m.name.toLowerCase().includes(q) || m.description.toLowerCase().includes(q));
-  const categories = MENU_CATEGORIES.filter((c) => visible.some((m) => m.category === c));
+  const categories = [...new Set(draft.map((m) => m.category))].filter((c) => visible.some((m) => m.category === c));
 
   // Highlight the category being read, as the customer apps do.
   useEffect(() => {
     const io = new IntersectionObserver(
       (entries) => {
         const top = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (top) setActiveCat(top.target.getAttribute("data-cat") ?? MENU_CATEGORIES[0]);
+        if (top) setActiveCat(top.target.getAttribute("data-cat") ?? "");
       },
       { rootMargin: "-10% 0px -75% 0px" },
     );
@@ -104,7 +112,7 @@ export default function MenuPage() {
     setDraft((all) =>
       all.map((m) => {
         let next = m;
-        if (!m.description.trim() && SUGGESTED_DESCRIPTION[m.id]) next = { ...next, description: SUGGESTED_DESCRIPTION[m.id] };
+        if (!m.description.trim() && SUGGESTED_DESCRIPTION[m.name]) next = { ...next, description: SUGGESTED_DESCRIPTION[m.name] };
         if (priceGaps.some((g) => g.id === m.id)) {
           const top = Math.max(...live.map((p) => m.price[p]));
           const price = { ...m.price };
@@ -116,11 +124,43 @@ export default function MenuPage() {
     );
   }
 
-  function publish() {
-    setPublished(draft);
-    setReviewOpen(false);
-    setToast(hi ? `${live.map((p) => CHANNEL_NAME[p]).join(" और ")} पर पब्लिश हो गया` : `Published to ${live.map((p) => CHANNEL_NAME[p]).join(" and ")}`);
-    setTimeout(() => setToast(null), 3200);
+  /** Sends the edits to the server as one approval, then shows it for the owner to approve. */
+  async function review() {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const payload = changes.map(({ item: d, before: b }) => {
+        const available: Partial<Record<Platform, boolean>> = {};
+        const price: Partial<Record<Platform, number>> = {};
+        for (const p of live) {
+          if (d.available[p] !== b!.available[p]) available[p] = d.available[p];
+          if (d.price[p] !== b!.price[p]) price[p] = d.price[p];
+        }
+        const fields: Record<string, unknown> = {};
+        if (d.name !== b!.name) fields.name = d.name;
+        if (d.description !== b!.description) fields.description = d.description;
+        if (d.veg !== b!.veg) fields.veg = d.veg;
+        if (d.bestseller !== b!.bestseller) fields.bestseller = d.bestseller;
+        if (d.photo !== b!.photo) fields.photoUrl = d.photo ?? null;
+        return { itemId: d.id, ...(Object.keys(available).length ? { available } : {}), ...(Object.keys(price).length ? { price } : {}), ...(Object.keys(fields).length ? { fields } : {}) };
+      });
+      setApproval(await api<ApprovalDTO>("/api/menu/changes", { method: "POST", json: { changes: payload } }));
+      setReviewOpen(true);
+    } catch (e) {
+      setSubmitError((e as Error).message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function onDecided(a: ApprovalDTO) {
+    if (a.status === "executed") {
+      setToast(hi ? `${live.map((p) => CHANNEL_NAME[p]).join(" और ")} पर पब्लिश हो गया` : `Published to ${live.map((p) => CHANNEL_NAME[p]).join(" and ")}`);
+      setTimeout(() => setToast(null), 3200);
+      setTimeout(() => setReviewOpen(false), 1400);
+    }
+    if (a.status === "skipped") setReviewOpen(false);
+    refreshAll();
   }
 
   const editItem = draft.find((m) => m.id === editing) ?? null;
@@ -130,31 +170,40 @@ export default function MenuPage() {
       {/* Restaurant header, as customers see it */}
       <header className="flex flex-wrap items-end justify-between gap-6 border-b border-line pb-6">
         <div>
-          <h1 className="text-[clamp(2rem,4vw,2.7rem)] font-semibold leading-tight tracking-[-0.03em]">{OUTLET.name}</h1>
-          <p className="mt-1 text-ink-2">North Indian, Biryani, Desserts</p>
-          <p className="text-sm text-muted">
-            {OUTLET.area}. {hi ? "दो लोगों के लिए ₹600" : "₹600 for two"}
-          </p>
+          <h1 className="text-[clamp(2rem,4vw,2.7rem)] font-semibold leading-tight tracking-[-0.03em]">{outlet?.name}</h1>
+          {outlet?.cuisines && <p className="mt-1 text-ink-2">{outlet.cuisines}</p>}
+          {outlet?.area && <p className="text-sm text-muted">{outlet.area}</p>}
         </div>
         <div className="flex gap-4">
-          {live.map((p) => (
-            <div key={p} className="text-center">
-              <span className="inline-flex items-center gap-1 rounded-lg bg-veg px-2.5 py-1 text-[1.05rem] font-semibold text-white">
-                {RATINGS[p].value.toFixed(1)}
-                <svg aria-hidden viewBox="0 0 20 20" className="size-3.5 fill-white">
-                  <path d="M10 1.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L10 15l-5.2 2.7 1-5.9L1.5 7.7l5.9-.8z" />
-                </svg>
-              </span>
-              <p className="mt-1 text-[0.8rem] text-muted">
-                <ChannelTag channel={p} className="text-[0.8rem] text-muted" />
-              </p>
-              <p className="text-[0.75rem] text-muted">
-                {RATINGS[p].count.toLocaleString("en-IN")} {hi ? "रेटिंग" : "ratings"}
-              </p>
-            </div>
-          ))}
+          {live.map((p) => {
+            const r = outlet?.ratings[p];
+            return (
+              <div key={p} className="text-center">
+                <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[1.05rem] font-semibold ${r ? "bg-veg text-white" : "bg-sunken text-muted"}`}>
+                  {r ? r.value.toFixed(1) : "–"}
+                  <svg aria-hidden viewBox="0 0 20 20" className="size-3.5 fill-current">
+                    <path d="M10 1.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L10 15l-5.2 2.7 1-5.9L1.5 7.7l5.9-.8z" />
+                  </svg>
+                </span>
+                <p className="mt-1 text-[0.8rem] text-muted">
+                  <ChannelTag channel={p} className="text-[0.8rem] text-muted" />
+                </p>
+                <p className="text-[0.75rem] text-muted">{r ? `${r.count.toLocaleString("en-IN")} ${hi ? "रेटिंग" : "ratings"}` : hi ? "अभी नहीं" : "No ratings yet"}</p>
+              </div>
+            );
+          })}
         </div>
       </header>
+
+      {loadError && <p className="mt-4 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{loadError}</p>}
+      {menu && menu.length === 0 && (
+        <p className="mt-6 rounded-xl bg-sunken px-4 py-6 text-center text-muted">
+          {hi ? "मेन्यू खाली है। ऑनबोर्डिंग में अपने पेपर मेन्यू की फ़ोटो से डिश जोड़ें।" : "Your menu is empty. Add dishes from a photo of your paper menu in onboarding."}{" "}
+          <a href="/start?track=notlive" className="text-ink underline underline-offset-2">
+            {hi ? "फ़ोटो से जोड़ें" : "Add from a photo"}
+          </a>
+        </p>
+      )}
 
       {/* Mode + search */}
       <div className="sticky top-0 z-20 -mx-4 flex flex-wrap items-center gap-3 bg-paper/95 px-4 py-3 backdrop-blur sm:-mx-8 sm:px-8">
@@ -267,12 +316,26 @@ export default function MenuPage() {
           >
             <span className="grid size-7 place-items-center rounded-full bg-haldi text-sm font-semibold text-ink">{changes.length}</span>
             <span className="flex-1 text-[0.95rem]">{hi ? "बदलाव आपकी मंज़ूरी का इंतज़ार कर रहे हैं" : `change${changes.length === 1 ? "" : "s"} waiting for your OK`}</span>
-            <button type="button" onClick={() => setDraft(published)} className="text-sm text-paper/70 hover:text-paper">
+            <button
+              type="button"
+              onClick={() => {
+                if (approval?.status === "pending") void api(`/api/approvals/${approval.id}`, { method: "POST", json: { action: "skip" } }).then(refreshAll);
+                setApproval(null);
+                setDraft(published);
+              }}
+              className="text-sm text-paper/70 hover:text-paper"
+            >
               {hi ? "रद्द करें" : "Discard"}
             </button>
-            <button type="button" onClick={() => setReviewOpen(true)} className="rounded-full bg-haldi px-4 py-2 text-sm font-semibold text-ink">
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={() => (approval?.status === "pending" ? setReviewOpen(true) : review())}
+              className="rounded-full bg-haldi px-4 py-2 text-sm font-semibold text-ink disabled:opacity-60"
+            >
               {hi ? "देखें और पब्लिश करें" : "Review and publish"}
             </button>
+            {submitError && <p className="w-full text-sm text-haldi">{submitError}</p>}
           </motion.div>
         )}
       </AnimatePresence>
@@ -290,20 +353,14 @@ export default function MenuPage() {
               exit={{ y: 40 }}
               className="max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-paper p-5 sm:max-w-lg sm:rounded-3xl"
             >
-              <Ticket
-                agent={AGENT_NAME.menu}
-                title={hi ? `${live.map((p) => CHANNEL_NAME[p]).join(" और ")} पर ${changes.length} बदलाव` : `${changes.length} change${changes.length === 1 ? "" : "s"} for ${live.map((p) => CHANNEL_NAME[p]).join(" and ")}`}
-                onApproveLabel={{ en: "Publish", hi: "पब्लिश करें" }}
-                onApprove={publish}
-              >
-                <ul className="mt-1 space-y-2">
-                  {changes.map((c) => (
-                    <li key={c.item.id}>
-                      <span className="font-medium text-ink">{c.item.name}</span>: {c.lines.join(", ")}
-                    </li>
-                  ))}
-                </ul>
-              </Ticket>
+              <ul className="mb-3 space-y-1.5 px-1 text-[0.95rem] text-ink-2">
+                {changes.map((c) => (
+                  <li key={c.item.id}>
+                    <span className="font-medium text-ink">{c.item.name}</span>: {c.lines.join(", ")}
+                  </li>
+                ))}
+              </ul>
+              {approval && <ApprovalTicket key={approval.id} approval={approval} onDone={onDecided} />}
             </motion.div>
           </motion.div>
         )}
@@ -328,6 +385,24 @@ export default function MenuPage() {
       </AnimatePresence>
     </div>
   );
+}
+
+/** Scales a photo to at most 800px and returns a JPEG data URL small enough to store. */
+function shrinkPhoto(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 800 / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(img.src);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 function RatingStars({ value, votes }: { value: number; votes: number }) {
@@ -523,7 +598,7 @@ function EditDrawer({ item, live, onClose, onSave }: { item: Item; live: Platfor
                   className="sr-only"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
-                    if (f) setD({ ...d, photo: URL.createObjectURL(f) });
+                    if (f) void shrinkPhoto(f).then((photo) => setD({ ...d, photo }));
                   }}
                 />
               </label>
@@ -547,7 +622,7 @@ function EditDrawer({ item, live, onClose, onSave }: { item: Item; live: Platfor
                   setD({
                     ...d,
                     description:
-                      SUGGESTED_DESCRIPTION[d.id] ??
+                      SUGGESTED_DESCRIPTION[d.name] ??
                       (d.description ? d.description.replace(/\.$/, "") + ". Made fresh to order." : `${d.name}, made fresh to order in our kitchen.`),
                   })
                 }

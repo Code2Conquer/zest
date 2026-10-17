@@ -3,69 +3,89 @@
 import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Camera, Check, ChevronLeft, Loader2 } from "lucide-react";
+import { AlertCircle, Camera, Check, ChevronLeft, Loader2 } from "lucide-react";
+import { ApprovalTicket } from "@/components/approval-ticket";
 import { ChannelTag, LangToggle, Wordmark } from "@/components/bits";
-import { Ticket } from "@/components/ticket";
-import { AGENT_NAME } from "@/lib/agents";
-import { MENU, rupees } from "@/lib/data";
+import { api, ApiError, refreshAll } from "@/lib/api";
 import type { Bi } from "@/lib/i18n";
 import { PLATFORMS, type Platform } from "@/lib/platforms";
 import { useApp } from "@/lib/state";
+import type { ApprovalDTO, MenuItemDTO } from "@/lib/types";
 
-type Doc = { id: string; name: Bi; why: Bi; result: Bi; optional?: boolean };
+type DocKind = "fssai" | "pan" | "bank" | "gst";
+type Doc = { id: DocKind; name: Bi; why: Bi; optional?: boolean };
 
 const DOCS: Doc[] = [
-  {
-    id: "fssai",
-    name: { en: "FSSAI licence", hi: "FSSAI लाइसेंस" },
-    why: { en: "Every food business needs one to be listed.", hi: "लिस्टिंग के लिए हर फ़ूड बिज़नेस को चाहिए।" },
-    result: { en: "Licence 2241xxxx0187, valid till 3 Dec 2027", hi: "लाइसेंस 2241xxxx0187, 3 दिसंबर 2027 तक मान्य" },
-  },
-  {
-    id: "pan",
-    name: { en: "PAN card", hi: "PAN कार्ड" },
-    why: { en: "Yours or the business's, for payouts and TDS.", hi: "आपका या बिज़नेस का, पेआउट और TDS के लिए।" },
-    result: { en: "PAN ABCxx1234x, name matches the FSSAI licence", hi: "PAN ABCxx1234x, नाम FSSAI लाइसेंस से मेल खाता है" },
-  },
-  {
-    id: "bank",
-    name: { en: "Cancelled cheque or bank statement", hi: "कैंसल चेक या बैंक स्टेटमेंट" },
-    why: { en: "This is where your payouts will land.", hi: "आपके पेआउट इसी खाते में आएँगे।" },
-    result: { en: "HDFC Bank, account ending 4471, IFSC HDFC0001234", hi: "HDFC बैंक, खाता 4471 पर ख़त्म, IFSC HDFC0001234" },
-  },
-  {
-    id: "gst",
-    name: { en: "GST certificate", hi: "GST सर्टिफ़िकेट" },
-    why: { en: "Only if you're registered for GST.", hi: "सिर्फ़ अगर आप GST में रजिस्टर्ड हैं।" },
-    result: { en: "GSTIN 29ABCxx1234x1Zx, active", hi: "GSTIN 29ABCxx1234x1Zx, सक्रिय" },
-    optional: true,
-  },
+  { id: "fssai", name: { en: "FSSAI licence", hi: "FSSAI लाइसेंस" }, why: { en: "Every food business needs one to be listed.", hi: "लिस्टिंग के लिए हर फ़ूड बिज़नेस को चाहिए।" } },
+  { id: "pan", name: { en: "PAN card", hi: "PAN कार्ड" }, why: { en: "Yours or the business's, for payouts and TDS.", hi: "आपका या बिज़नेस का, पेआउट और TDS के लिए।" } },
+  { id: "bank", name: { en: "Cancelled cheque or bank statement", hi: "कैंसल चेक या बैंक स्टेटमेंट" }, why: { en: "This is where your payouts will land.", hi: "आपके पेआउट इसी खाते में आएँगे।" } },
+  { id: "gst", name: { en: "GST certificate", hi: "GST सर्टिफ़िकेट" }, why: { en: "Only if you're registered for GST.", hi: "सिर्फ़ अगर आप GST में रजिस्टर्ड हैं।" }, optional: true },
 ];
 
-type DocState = "empty" | "checking" | "ok";
+type DocResult = { is_expected_document: boolean; problem: string; holder_name: string; number: string; valid_until: string; extra: string };
+type DocState = { status: "empty" | "checking" | "ok" | "problem" | "manual"; result?: DocResult; error?: string };
+type MenuDraft = { name: string; category: string; price: number; veg: boolean; description: string };
 
 function StartInner() {
-  const { state, pick } = useApp();
+  const { lang, pick, outlet, updateOutlet } = useApp();
   const params = useSearchParams();
   const track = params.get("track") === "new" ? "new" : "notlive";
-  const hi = state.lang === "hi";
+  const hi = lang === "hi";
   const [targets, setTargets] = useState<Platform[]>(["zomato", "swiggy"]);
-  const [docs, setDocs] = useState<Record<string, DocState>>({});
-  const [menu, setMenu] = useState<DocState>("empty");
+  const [docs, setDocs] = useState<Partial<Record<DocKind, DocState>>>({});
+  const [menuState, setMenuState] = useState<"empty" | "reading" | "review" | "added" | "error">("empty");
+  const [menuError, setMenuError] = useState<string | null>(null);
+  const [menuDraft, setMenuDraft] = useState<MenuDraft[]>([]);
+  const [application, setApplication] = useState<ApprovalDTO | null>(null);
+  const [name, setName] = useState<string | null>(null);
 
-  // Stand-in for the vision pipeline: the photo is read, checked and summarised.
-  function upload(id: string) {
-    setDocs((d) => ({ ...d, [id]: "checking" }));
-    setTimeout(() => setDocs((d) => ({ ...d, [id]: "ok" })), 1100);
+  async function upload(kind: DocKind, file: File) {
+    setDocs((d) => ({ ...d, [kind]: { status: "checking" } }));
+    const form = new FormData();
+    form.set("kind", kind);
+    form.set("file", file);
+    try {
+      const result = await api<DocResult>("/api/onboarding/document", { method: "POST", body: form });
+      setDocs((d) => ({ ...d, [kind]: { status: result.is_expected_document ? "ok" : "problem", result } }));
+    } catch (e) {
+      const unavailable = e instanceof ApiError && e.status === 503;
+      setDocs((d) => ({ ...d, [kind]: { status: "problem", error: unavailable ? (hi ? "इस सर्वर पर दस्तावेज़ पढ़ना चालू नहीं है।" : "Document reading isn't switched on for this server.") : (e as Error).message } }));
+    }
   }
-  function uploadMenu() {
-    setMenu("checking");
-    setTimeout(() => setMenu("ok"), 1500);
+
+  async function uploadMenu(file: File) {
+    setMenuState("reading");
+    setMenuError(null);
+    const form = new FormData();
+    form.set("file", file);
+    try {
+      const { items } = await api<{ items: MenuDraft[] }>("/api/onboarding/menu", { method: "POST", body: form });
+      setMenuDraft(items);
+      setMenuState("review");
+    } catch (e) {
+      setMenuError(e instanceof ApiError && e.status === 503 ? (hi ? "इस सर्वर पर मेन्यू पढ़ना चालू नहीं है। आप बाद में मेन्यू में डिश जोड़ सकते हैं।" : "Menu reading isn't switched on for this server. You can add dishes in Menu later.") : (e as Error).message);
+      setMenuState("error");
+    }
+  }
+
+  async function addMenu() {
+    try {
+      await api<MenuItemDTO[]>("/api/menu/import", { method: "POST", json: { items: menuDraft.filter((m) => m.name.trim()) } });
+      setMenuState("added");
+      refreshAll();
+    } catch (e) {
+      setMenuError((e as Error).message);
+    }
+  }
+
+  async function submit() {
+    setApplication(await api<ApprovalDTO>("/api/onboarding/submit", { method: "POST", json: { platforms: targets } }));
   }
 
   const required = DOCS.filter((d) => !d.optional);
-  const ready = required.every((d) => docs[d.id] === "ok") && menu === "ok" && targets.length > 0;
-  const doneCount = DOCS.filter((d) => docs[d.id] === "ok").length + (menu === "ok" ? 1 : 0);
+  const docDone = (k: DocKind) => docs[k]?.status === "ok" || docs[k]?.status === "manual";
+  const ready = required.every((d) => docDone(d.id)) && (menuState === "added" || menuState === "error") && targets.length > 0;
+  const doneCount = DOCS.filter((d) => docDone(d.id)).length + (menuState === "added" ? 1 : 0);
 
   return (
     <div className="min-h-dvh">
@@ -82,10 +102,18 @@ function StartInner() {
           {track === "new" ? (hi ? "चलिए आपका रेस्टोरेंट शुरू करते हैं" : "Let's get your restaurant started") : hi ? "चलिए आपको ऑनलाइन लाते हैं" : "Let's get you online"}
         </h1>
         <p className="mt-3 max-w-[58ch] text-lg leading-relaxed text-ink-2">
-          {hi
-            ? "दस्तावेज़ों और मेन्यू की फ़ोटो लें। हम उन्हें पढ़कर जाँचेंगे और आपकी लिस्टिंग का फ़ॉर्म भर देंगे।"
-            : "Take photos of your documents and menu. We'll read and check them, then fill in your listing forms for you."}
+          {hi ? "दस्तावेज़ों और मेन्यू की फ़ोटो लें। Zest उन्हें पढ़कर जाँचेगा और आपकी लिस्टिंग तैयार करेगा।" : "Take photos of your documents and menu. Zest reads and checks them, then gets your listing ready."}
         </p>
+
+        <label className="mt-8 block max-w-md">
+          <span className="mb-1 block text-sm text-ink-2">{hi ? "रेस्टोरेंट का नाम" : "Restaurant name"}</span>
+          <input
+            value={name ?? (outlet && !outlet.isDemo ? outlet.name : "")}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={() => name?.trim() && void updateOutlet({ name: name.trim() })}
+            className="w-full rounded-lg bg-surface px-3 py-2.5 text-lg outline-none shadow-[inset_0_0_0_1px_var(--line)] focus:shadow-[inset_0_0_0_2px_var(--turmeric)]"
+          />
+        </label>
 
         <section className="mt-10">
           <h2 className="text-xl font-medium">{hi ? "कहाँ लिस्ट होना है?" : "Where do you want to sell?"}</h2>
@@ -116,78 +144,113 @@ function StartInner() {
             </span>
           </div>
           <ul className="mt-3 divide-y divide-line border-y border-line">
-            {DOCS.map((d) => (
-              <DocRow key={d.id} title={pick(d.name)} why={pick(d.why)} result={pick(d.result)} optional={d.optional} status={docs[d.id] ?? "empty"} onUpload={() => upload(d.id)} />
-            ))}
+            {DOCS.map((d) => {
+              const st = docs[d.id] ?? { status: "empty" as const };
+              const r = st.result;
+              const summary = r && r.is_expected_document ? [r.holder_name, r.number, r.valid_until && (hi ? `${r.valid_until} तक मान्य` : `valid till ${r.valid_until}`), r.extra].filter(Boolean).join(", ") : "";
+              return (
+                <DocRow
+                  key={d.id}
+                  title={pick(d.name)}
+                  optional={d.optional}
+                  status={st.status}
+                  message={st.status === "ok" ? summary : st.status === "manual" ? (hi ? "आपने ख़ुद जाँचा" : "Checked by you") : st.status === "problem" ? (st.error ?? r?.problem ?? (hi ? "यह सही दस्तावेज़ नहीं लगा।" : "That didn't look like the right document.")) : st.status === "checking" ? (hi ? "पढ़ रहे हैं और जाँच रहे हैं…" : "Reading and checking…") : pick(d.why)}
+                  onFile={(f) => upload(d.id, f)}
+                  onManual={st.status === "problem" ? () => setDocs((x) => ({ ...x, [d.id]: { status: "manual" } })) : undefined}
+                />
+              );
+            })}
             <DocRow
               title={hi ? "आपका मेन्यू" : "Your menu"}
-              why={hi ? "पेपर मेन्यू या बोर्ड की फ़ोटो काफ़ी है।" : "A photo of your paper menu or board is enough."}
-              result={hi ? `${MENU.length} डिश मिलीं, 4 कैटेगरी में` : `Found ${MENU.length} dishes in 4 categories`}
-              status={menu}
-              onUpload={uploadMenu}
+              status={menuState === "added" ? "ok" : menuState === "reading" ? "checking" : menuState === "error" ? "problem" : "empty"}
+              message={
+                menuState === "added"
+                  ? hi ? `${menuDraft.length} डिश मेन्यू में जुड़ गईं` : `${menuDraft.length} dishes added to your menu`
+                  : menuState === "reading"
+                    ? hi ? "मेन्यू पढ़ रहे हैं… इसमें आधा मिनट लग सकता है।" : "Reading your menu… this can take half a minute."
+                    : menuState === "review"
+                      ? hi ? `${menuDraft.length} डिश मिलीं। नीचे जाँच लें।` : `Found ${menuDraft.length} dishes. Check them below.`
+                      : (menuError ?? (hi ? "पेपर मेन्यू या बोर्ड की फ़ोटो काफ़ी है।" : "A photo of your paper menu or board is enough."))
+              }
+              onFile={uploadMenu}
             />
           </ul>
 
-          {menu === "ok" && (
+          {menuState === "review" && (
             <div className="mt-4 rounded-xl bg-surface p-4 shadow-[0_0_0_1px_var(--line)]">
-              <p className="text-sm text-muted">{hi ? "फ़ोटो से पढ़ा गया, जाँच लें" : "Read from your photo. Check it over."}</p>
-              <ul className="mt-2 grid gap-x-6 sm:grid-cols-2">
-                {MENU.map((m) => (
-                  <li key={m.id} className="flex justify-between border-b border-line py-1.5 text-[0.95rem]">
-                    <span>{m.name}</span>
-                    <span className="text-ink-2">{rupees(m.price.zomato)}</span>
+              <p className="text-sm text-muted">{hi ? "फ़ोटो से पढ़ा गया। नाम या क़ीमत ठीक कर लें।" : "Read from your photo. Fix any name or price."}</p>
+              <ul className="mt-2 divide-y divide-line">
+                {menuDraft.map((m, i) => (
+                  <li key={i} className="flex items-center gap-3 py-2 text-[0.95rem]">
+                    <span className={`food-mark ${m.veg ? "text-veg" : "nonveg text-nonveg"}`} />
+                    <input value={m.name} onChange={(e) => setMenuDraft((all) => all.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} className="min-w-0 flex-1 bg-transparent outline-none focus:underline" aria-label="Dish name" />
+                    <span className="hidden text-sm text-muted sm:inline">{m.category}</span>
+                    <span className="text-muted">₹</span>
+                    <input type="number" value={m.price} onChange={(e) => setMenuDraft((all) => all.map((x, j) => (j === i ? { ...x, price: Number(e.target.value) } : x)))} className="w-16 bg-transparent text-right outline-none focus:underline" aria-label="Price" />
                   </li>
                 ))}
               </ul>
+              {menuError && <p className="mt-2 text-sm text-chilli">{menuError}</p>}
+              <button type="button" onClick={addMenu} className="mt-3 rounded-full bg-ink px-4 py-2 text-sm font-medium text-paper">
+                {hi ? `${menuDraft.length} डिश मेन्यू में जोड़ें` : `Add ${menuDraft.length} dishes to my menu`}
+              </button>
             </div>
           )}
         </section>
 
-        {ready && (
-          <section className="mt-10 max-w-xl">
-            <Ticket
-              print
-              agent={AGENT_NAME.onboarding}
-              title={hi ? `${targets.map((p) => (p === "zomato" ? "Zomato" : "Swiggy")).join(" और ")} पर लिस्टिंग के लिए आवेदन` : `Apply for listing on ${targets.map((p) => (p === "zomato" ? "Zomato" : "Swiggy")).join(" and ")}`}
-              onApproveLabel={{ en: "Submit applications", hi: "आवेदन भेजें" }}
-              doneLabel={{ en: "Submitted. I'll follow up and message you on WhatsApp.", hi: "भेज दिया। मैं फ़ॉलो-अप करूँगा और WhatsApp पर बताऊँगा।" }}
-            >
-              {hi
-                ? "सारे दस्तावेज़ जाँचे गए और मेन्यू तैयार है। मंज़ूरी दें तो मैं हर प्लेटफ़ॉर्म का फ़ॉर्म भरकर भेज दूँगा।"
-                : "All documents are checked and your menu is ready. Approve, and I'll fill in and send each platform's form."}
-            </Ticket>
-          </section>
-        )}
+        <section className="mt-10 max-w-xl">
+          {application ? (
+            <ApprovalTicket approval={application} print />
+          ) : (
+            <button type="button" disabled={!ready} onClick={submit} className="rounded-full bg-ink px-6 py-3 font-medium text-paper disabled:opacity-30">
+              {hi ? "लिस्टिंग आवेदन तैयार करें" : "Prepare my listing application"}
+            </button>
+          )}
+          {!ready && !application && <p className="mt-2 text-sm text-muted">{hi ? "ज़रूरी दस्तावेज़ और मेन्यू पूरे होने पर।" : "Once the required documents and your menu are done."}</p>}
+        </section>
       </main>
     </div>
   );
 }
 
-function DocRow({ title, why, result, optional, status, onUpload }: { title: string; why: string; result: string; optional?: boolean; status: DocState; onUpload: () => void }) {
-  const { state } = useApp();
-  const hi = state.lang === "hi";
+function DocRow({ title, message, optional, status, onFile, onManual }: { title: string; message: string; optional?: boolean; status: DocState["status"]; onFile: (f: File) => void; onManual?: () => void }) {
+  const { lang } = useApp();
+  const hi = lang === "hi";
+  const done = status === "ok" || status === "manual";
   return (
     <li className="flex flex-wrap items-center gap-4 py-4">
-      <span
-        aria-hidden
-        className={`grid size-8 shrink-0 place-items-center rounded-full ${status === "ok" ? "bg-leaf text-paper" : "bg-surface text-muted shadow-[0_0_0_1px_var(--line)]"}`}
-      >
-        {status === "ok" ? <Check className="size-4" /> : status === "checking" ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
+      <span aria-hidden className={`grid size-8 shrink-0 place-items-center rounded-full ${done ? "bg-leaf text-paper" : status === "problem" ? "bg-chilli-soft text-chilli" : "bg-surface text-muted shadow-[0_0_0_1px_var(--line)]"}`}>
+        {done ? <Check className="size-4" /> : status === "checking" ? <Loader2 className="size-4 animate-spin" /> : status === "problem" ? <AlertCircle className="size-4" /> : <Camera className="size-4" />}
       </span>
       <div className="min-w-0 flex-1">
         <p className="font-medium">
           {title}
           {optional && <span className="ml-2 text-sm font-normal text-muted">{hi ? "अगर लागू हो" : "if applicable"}</span>}
         </p>
-        <p className={`text-[0.95rem] ${status === "ok" ? "text-leaf" : "text-muted"}`}>
-          {status === "ok" ? result : status === "checking" ? (hi ? "पढ़ रहे हैं और जाँच रहे हैं…" : "Reading and checking…") : why}
-        </p>
+        <p className={`text-[0.95rem] ${done ? "text-leaf" : status === "problem" ? "text-chilli" : "text-muted"}`}>{message}</p>
       </div>
-      {status !== "ok" && (
-        <label className={`cursor-pointer rounded-full px-4 py-2 text-sm shadow-[inset_0_0_0_1px_var(--line)] hover:bg-sunken ${status === "checking" ? "pointer-events-none opacity-40" : ""}`}>
-          {hi ? "फ़ोटो जोड़ें" : "Add photo"}
-          <input type="file" accept="image/*,application/pdf" capture="environment" className="sr-only" onChange={(e) => e.target.files?.length && onUpload()} />
-        </label>
+      {!done && (
+        <div className="flex items-center gap-3">
+          {onManual && (
+            <button type="button" onClick={onManual} className="text-sm text-ink-2 underline-offset-2 hover:underline">
+              {hi ? "मैंने ख़ुद जाँच लिया" : "I've checked it myself"}
+            </button>
+          )}
+          <label className={`cursor-pointer rounded-full px-4 py-2 text-sm shadow-[inset_0_0_0_1px_var(--line)] hover:bg-sunken ${status === "checking" ? "pointer-events-none opacity-40" : ""}`}>
+            {status === "problem" ? (hi ? "दूसरी फ़ोटो" : "Try another photo") : hi ? "फ़ोटो जोड़ें" : "Add photo"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              capture="environment"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onFile(f);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
       )}
     </li>
   );
