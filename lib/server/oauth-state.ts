@@ -25,5 +25,10 @@ export async function finishState(nonce: string | null) {
 /** Only same-site paths, so the callback can't be used to bounce people elsewhere. */
 export const safeReturn = (p: string | null) => (p && p.startsWith("/") && !p.startsWith("//") ? p : "/connect");
 
-/** Must match an authorised redirect URI in the Google Cloud OAuth client. APP_URL pins it behind proxies. */
-export const callbackUrl = (req: Request) => `${process.env.APP_URL ?? new URL(req.url).origin}/api/mail/google/callback`;
+/**
+ * Must match an authorised redirect URI in the Google Cloud OAuth client. APP_URL pins it; on Vercel the
+ * production domain is used, so preview deployments still return to an address Google knows.
+ */
+const appUrl = (req: Request) =>
+  process.env.APP_URL ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : new URL(req.url).origin);
+export const callbackUrl = (req: Request) => `${appUrl(req)}/api/mail/google/callback`;
