@@ -5,7 +5,8 @@ import { db } from "@/lib/server/db";
 import { handler } from "@/lib/server/http";
 import { chatMessages } from "@/lib/server/schema";
 
-export const maxDuration = 120;
+// Fits the Vercel Hobby limit; a copilot turn with several tool calls can take a while.
+export const maxDuration = 60;
 
 export const GET = handler(async (_req, outlet) => chatHistory(outlet.id));
 

@@ -22,6 +22,28 @@ node scripts/mock-partner-mcp.mjs     # a stand-in partner MCP server on :8787
 
 Then in Connections pick a platform → "MCP server" → `http://localhost:8787/mcp`. Approving a menu change calls its tools; `http://localhost:8787/log` shows what it received.
 
+## Deploy (Vercel + Turso)
+
+The pages and the API are one Next.js app, so one Vercel project serves both. The database lives on Turso (hosted SQLite).
+
+1. **Database.** In [Turso](https://turso.tech), create a database (pick the Mumbai region). Copy its URL (`libsql://…`) and create a token.
+2. **Project.** In [Vercel](https://vercel.com/new), import this GitHub repository. Framework is detected as Next.js; leave the build settings as they are.
+3. **Environment variables** (Project → Settings → Environment Variables, then redeploy):
+
+   | Name | Value |
+   |---|---|
+   | `DATABASE_URL` | the Turso URL |
+   | `DATABASE_AUTH_TOKEN` | the Turso token |
+   | `ZEST_SECRET_KEY` | output of `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. Keep it safe: changing it makes stored platform credentials unreadable. |
+   | `ANTHROPIC_API_KEY` | optional, for the full copilot and document reading |
+   | `ZEST_DEMO_WRITABLE` | optional, `1` to let visitors change the sample restaurant |
+
+4. Open the deployment URL. The first request creates the tables and the sample restaurant.
+
+Without `DATABASE_URL` the app still starts on Vercel, but on a temporary database that resets whenever the server restarts.
+
+**Other hosts.** `Dockerfile` builds a self-contained server (data on `/data`), and `render.yaml` is a Render blueprint with a persistent disk.
+
 ## How it works
 
 ```
