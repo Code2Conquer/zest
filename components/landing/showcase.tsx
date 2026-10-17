@@ -5,7 +5,6 @@ import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/rea
 import { useRef } from "react";
 import { BookOpen, Check, IndianRupee, MessageCircle, ReceiptText, Star } from "lucide-react";
 import { ChannelTag, Stars } from "@/components/bits";
-import { Dish, type DishKind } from "@/components/dishes";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
@@ -75,10 +74,10 @@ function MenuScene() {
   const hi = state.lang === "hi";
   const step = useSteps(4, 1100);
   const off = step >= 2;
-  const rows: { name: string; kind: DishKind; price: number; veg: boolean; best?: boolean; paneer?: boolean }[] = [
-    { name: "Paneer tikka", kind: "paneer-tikka", price: 289, veg: true, best: true, paneer: true },
-    { name: "Malai tikka", kind: "paneer-tikka", price: 309, veg: true, paneer: true },
-    { name: "Dal makhani", kind: "dal-makhani", price: 249, veg: true, best: true },
+  const rows: { name: string; photo: string; price: number; veg: boolean; best?: boolean; paneer?: boolean }[] = [
+    { name: "Paneer tikka", photo: "hero-sizzler", price: 289, veg: true, best: true, paneer: true },
+    { name: "Paneer butter masala", photo: "dish-butter-chicken", price: 309, veg: true, paneer: true },
+    { name: "Masala dosa", photo: "dish-dosa", price: 149, veg: true, best: true },
   ];
   return (
     <Frame title={hi ? "मेन्यू" : "Menu"}>
@@ -87,9 +86,10 @@ function MenuScene() {
           <motion.p
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute right-5 top-3 z-10 rounded-2xl rounded-br-md bg-ink px-3.5 py-2 text-sm text-paper shadow-lg"
+            className="absolute right-5 top-3 z-10 inline-flex items-center gap-2 rounded-full bg-chilli-soft px-3.5 py-1.5 text-sm font-medium text-chilli shadow-sm"
           >
-            Paneer khatam, band kar do
+            <span aria-hidden className="size-1.5 rounded-full bg-chilli" />
+            {hi ? "स्टॉक अलर्ट: पनीर 0 kg" : "Stock alert: paneer at 0 kg"}
           </motion.p>
         )}
       </AnimatePresence>
@@ -108,7 +108,7 @@ function MenuScene() {
               </div>
               <div className="relative">
                 <motion.div animate={{ filter: out ? "grayscale(1)" : "grayscale(0)", opacity: out ? 0.55 : 1 }} transition={{ duration: 0.5 }}>
-                  <Dish kind={r.kind} size={72} />
+                  <img src={`/photos/${r.photo}.webp`} alt="" width={160} height={120} loading="lazy" decoding="async" className="h-[64px] w-[84px] rounded-xl object-cover shadow-[0_8px_16px_-10px_rgba(0,0,0,0.5)]" />
                 </motion.div>
                 <motion.span
                   layout

@@ -28,7 +28,7 @@ const dict = {
     hi: "हम सिर्फ़ वही प्लेटफ़ॉर्म दिखाएँगे जो आप चुनेंगे। बाद में और जोड़ सकते हैं।",
   },
   "landing.continue": { en: "Continue to connect", hi: "जोड़ने के लिए आगे बढ़ें" },
-  "landing.demo": { en: "Look around with sample data", hi: "सैंपल डेटा के साथ देखें" },
+  "landing.demo": { en: "Explore a demo kitchen", hi: "डेमो किचन देखें" },
   "landing.stages": { en: "From first licence to fiftieth outlet", hi: "पहले लाइसेंस से पचासवें आउटलेट तक" },
   "stage.1": { en: "Get onboarded", hi: "ऑनबोर्ड हों" },
   "stage.1.sub": {

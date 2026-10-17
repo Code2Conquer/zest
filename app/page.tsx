@@ -2,49 +2,61 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { BookOpen, ChefHat, IndianRupee, ReceiptText, ShieldCheck, Star, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, ChefHat, IndianRupee, Play, ReceiptText, ShieldCheck, Star, TrendingUp } from "lucide-react";
 import { LangToggle, Wordmark } from "@/components/bits";
-import { Dish } from "@/components/dishes";
-import { LiveKitchen } from "@/components/landing/live-kitchen";
+import { DishStrip } from "@/components/landing/dish-strip";
+import { HeroStage } from "@/components/landing/hero-stage";
 import { JourneyRouter, RouterDialog } from "@/components/landing/router";
 import { Showcase } from "@/components/landing/showcase";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
-const BRIGADE: { icon: typeof Star; role: Bi; name: Bi; does: Bi }[] = [
+const BRIGADE: { icon: typeof Star; photo: string; alt: string; role: Bi; name: Bi; does: Bi }[] = [
   {
     icon: ChefHat,
     role: { en: "Head chef", hi: "हेड शेफ़" },
+    photo: "team-chef",
+    alt: "A chef finishing plates under copper pass lamps",
     name: { en: "Zest", hi: "Zest" },
     does: { en: "Takes your message, decides who handles it, and checks the work before it reaches you.", hi: "आपका मैसेज लेता है, तय करता है कौन संभालेगा, और काम आप तक पहुँचने से पहले जाँचता है।" },
   },
   {
     icon: BookOpen,
     role: { en: "Menu", hi: "मेन्यू" },
+    photo: "team-menu",
+    alt: "A South Indian meal on a banana leaf",
     name: { en: "Menu agent", hi: "मेन्यू एजेंट" },
     does: { en: "Keeps prices, photos and stock in sync on every platform. Pauses dishes the moment you run out.", hi: "हर प्लेटफ़ॉर्म पर क़ीमत, फ़ोटो और स्टॉक एक जैसा रखता है। सामान ख़त्म होते ही डिश रोक देता है।" },
   },
   {
     icon: ReceiptText,
     role: { en: "Pass", hi: "पास" },
+    photo: "team-pass",
+    alt: "Plates lined up at the pass, ready to go out",
     name: { en: "Orders agent", hi: "ऑर्डर एजेंट" },
     does: { en: "Watches every ticket, flags late ones, and tells riders and customers before they ask.", hi: "हर टिकट पर नज़र, देर वाले पकड़ता है, और राइडर व ग्राहक को पूछने से पहले बताता है।" },
   },
   {
     icon: Star,
     role: { en: "Front of house", hi: "फ़्रंट ऑफ़ हाउस" },
+    photo: "team-guests",
+    alt: "Guests eating together at a long table",
     name: { en: "Reviews agent", hi: "रिव्यू एजेंट" },
     does: { en: "Replies to every review and complaint in your voice, and spots patterns like cold dal on Fridays.", hi: "हर रिव्यू और शिकायत का आपके अंदाज़ में जवाब, और पैटर्न पकड़ता है, जैसे शुक्रवार को ठंडी दाल।" },
   },
   {
     icon: IndianRupee,
     role: { en: "Galla", hi: "गल्ला" },
+    photo: "team-money",
+    alt: "Tandoori chicken with naan and chutneys",
     name: { en: "Money agent", hi: "पैसे वाला एजेंट" },
     does: { en: "Matches payouts to orders and your bank, explains every deduction, and disputes the wrong ones.", hi: "पेआउट को ऑर्डर और बैंक से मिलाता है, हर कटौती समझाता है, और ग़लत वाली पर डिस्प्यूट करता है।" },
   },
   {
     icon: TrendingUp,
     role: { en: "Growth", hi: "ग्रोथ" },
+    photo: "team-rider",
+    alt: "A delivery rider heading down a narrow street",
     name: { en: "Growth agent", hi: "ग्रोथ एजेंट" },
     does: { en: "Plans promos and ads with a spend cap, then stops them on its own if they aren't paying off.", hi: "ख़र्च सीमा के साथ प्रोमो और ऐड प्लान करता है, और फ़ायदा न हो तो अपने-आप रोक देता है।" },
   },
@@ -60,61 +72,101 @@ export default function Landing() {
   const reduce = useReducedMotion();
   const hi = state.lang === "hi";
 
+  async function openDemo() {
+    await fetch("/api/outlet/demo", { method: "POST" });
+    window.location.href = "/app";
+  }
+
   const rise = (delay: number) =>
     reduce ? {} : { initial: { opacity: 0, y: 18 }, animate: { opacity: 1, y: 0 }, transition: { delay, duration: 0.6, ease: [0.2, 0.7, 0.2, 1] as const } };
 
   return (
     <div className="min-h-dvh overflow-x-clip">
-      {/* Hero, on haldi */}
-      <section className="relative bg-haldi text-ink">
+      {/* Hero: warm, dark, photographic */}
+      <section className="relative isolate overflow-hidden bg-[#0e1511] text-[#f4efe6]">
+        <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_80%_40%,rgba(242,176,53,0.16),transparent_70%),radial-gradient(40%_50%_at_10%_90%,rgba(178,58,42,0.18),transparent_70%)]" />
+        <div aria-hidden className="grain absolute inset-0 -z-10 opacity-[0.07]" />
         <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-8">
-          <Wordmark className="text-[1.9rem] [&_.bg-turmeric]:bg-chilli" />
-          <nav aria-label="Sections" className="hidden items-center gap-8 text-[0.95rem] md:flex">
-            <a href="#product" className="hover:underline hover:underline-offset-4">{hi ? "प्रोडक्ट" : "Product"}</a>
-            <a href="#agents" className="hover:underline hover:underline-offset-4">{hi ? "एजेंट" : "Agents"}</a>
-            <a href="#journey" className="hover:underline hover:underline-offset-4">{hi ? "कैसे काम करता है" : "How it works"}</a>
+          <Wordmark className="text-[1.9rem] text-[#f4efe6] [&_.bg-turmeric]:bg-haldi" />
+          <nav aria-label="Sections" className="hidden items-center gap-8 text-[0.95rem] text-[#f4efe6]/80 md:flex">
+            <a href="#product" className="hover:text-[#f4efe6]">{hi ? "प्रोडक्ट" : "Product"}</a>
+            <a href="#agents" className="hover:text-[#f4efe6]">{hi ? "एजेंट" : "Agents"}</a>
+            <a href="#journey" className="hover:text-[#f4efe6]">{hi ? "कैसे काम करता है" : "How it works"}</a>
           </nav>
           <div className="flex items-center gap-3">
             <LangToggle />
-            <button type="button" onClick={() => setRouterOpen(true)} className="hidden rounded-full bg-ink px-5 py-2.5 text-[0.95rem] font-medium text-paper sm:block">
+            <button type="button" onClick={() => setRouterOpen(true)} className="hidden rounded-full bg-haldi px-5 py-2.5 text-[0.95rem] font-medium text-[#17201c] transition-colors hover:bg-[#f6c25a] sm:block">
               {hi ? "शुरू करें" : "Get started"}
             </button>
           </div>
         </header>
 
-        <div className="mx-auto grid max-w-7xl items-center gap-6 px-4 pb-16 pt-6 sm:px-8 lg:grid-cols-[1fr_1fr] lg:pb-24 lg:pt-10">
+        <div className="mx-auto grid max-w-7xl items-center gap-16 px-4 pb-24 pt-8 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:pb-32 lg:pt-14">
           <div>
-            <motion.h1 {...rise(0.05)} className="font-sign max-w-[11ch] text-[clamp(2.9rem,7.4vw,5.6rem)] leading-[0.92]">
-              {hi ? "आपकी किचन, सँभली हुई।" : "Your kitchen, sorted."}
+            <motion.p {...rise(0)} className="inline-flex items-center gap-2 rounded-full bg-white/[0.07] px-3.5 py-1.5 text-sm text-[#f4efe6]/80 ring-1 ring-white/10">
+              <span aria-hidden className="size-1.5 rounded-full bg-haldi" />
+              {hi ? "Zomato और Swiggy रेस्टोरेंट पार्टनर्स के लिए" : "For Zomato and Swiggy restaurant partners"}
+            </motion.p>
+            <motion.h1 {...rise(0.08)} className="font-sign mt-6 max-w-[11ch] text-[clamp(3rem,7.6vw,6rem)] leading-[0.9]">
+              {hi ? (
+                <>
+                  आपकी किचन, <span className="text-haldi">सँभली हुई।</span>
+                </>
+              ) : (
+                <>
+                  Your kitchen, <span className="text-haldi">sorted.</span>
+                </>
+              )}
             </motion.h1>
-            <motion.p {...rise(0.18)} className="mt-6 max-w-[46ch] text-[1.2rem] leading-relaxed text-ink/80">
+            <motion.p {...rise(0.2)} className="mt-7 max-w-[46ch] text-[1.2rem] leading-relaxed text-[#f4efe6]/75">
               {hi
                 ? "Zest एजेंटों की एक टीम है जो आपका Zomato और Swiggy का काम चलाती है: मेन्यू, ऑर्डर, रिव्यू और पेआउट। हिंदी या अंग्रेज़ी में बात करें, यहाँ या WhatsApp पर।"
                 : "Zest is a team of AI agents that runs your Zomato and Swiggy business: menu, orders, reviews and payouts. Talk to it in Hindi or English, here or on WhatsApp."}
             </motion.p>
-            <motion.div {...rise(0.3)} className="mt-9 flex flex-wrap items-center gap-3">
-              <button type="button" onClick={() => setRouterOpen(true)} className="rounded-full bg-ink px-7 py-3.5 text-[1.05rem] font-medium text-paper shadow-[0_12px_30px_-12px_rgba(20,30,20,0.6)] transition-transform hover:-translate-y-0.5">
-                {hi ? "शुरू करें" : "Get started"}
+            <motion.div {...rise(0.32)} className="mt-10 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setRouterOpen(true)}
+                className="group inline-flex items-center gap-2 rounded-full bg-haldi px-7 py-4 text-[1.05rem] font-semibold text-[#17201c] shadow-[0_18px_40px_-14px_rgba(242,176,53,0.6)] transition-transform hover:-translate-y-0.5"
+              >
+                {hi ? "अपना रेस्टोरेंट जोड़ें" : "Set up my restaurant"}
+                <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
               </button>
               <button
                 type="button"
-                onClick={async () => {
-                  await fetch("/api/outlet/demo", { method: "POST" });
-                  window.location.href = "/app";
-                }}
-                className="rounded-full px-6 py-3.5 text-[1.05rem] font-medium shadow-[inset_0_0_0_1.5px_var(--ink)] transition-colors hover:bg-ink hover:text-paper"
+                onClick={openDemo}
+                className="group inline-flex items-center gap-3 rounded-full py-2 pl-2 pr-5 text-[1.05rem] font-medium text-[#f4efe6] ring-1 ring-white/20 transition-colors hover:bg-white/[0.06]"
               >
-                {t("landing.demo")}
+                <span className="grid size-10 place-items-center rounded-full bg-white/10 transition-colors group-hover:bg-white/20">
+                  <Play aria-hidden className="size-4 fill-current" />
+                </span>
+                <span className="text-left leading-tight">
+                  {t("landing.demo")}
+                  <span className="block text-[0.8rem] font-normal text-[#f4efe6]/60">{hi ? "Rasoi 27, बिना साइन-अप" : "Rasoi 27, no sign-up needed"}</span>
+                </span>
               </button>
             </motion.div>
+            <motion.ul {...rise(0.44)} className="mt-12 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#f4efe6]/60">
+              {(hi ? ["हिंदी और अंग्रेज़ी", "WhatsApp पर भी", "कोई नया हार्डवेयर नहीं"] : ["Hindi and English", "Works on WhatsApp", "No new hardware"]).map((x) => (
+                <li key={x} className="inline-flex items-center gap-2">
+                  <span aria-hidden className="text-haldi">✓</span>
+                  {x}
+                </li>
+              ))}
+            </motion.ul>
           </div>
-          <LiveKitchen />
+          <HeroStage />
         </div>
+      </section>
 
-        {/* Scalloped edge, like a banana-leaf border */}
-        <svg aria-hidden viewBox="0 0 1440 28" preserveAspectRatio="none" className="absolute inset-x-0 -bottom-px block h-6 w-full text-paper">
-          <path fill="currentColor" d="M0 28 V14 Q30 0 60 14 T120 14 T180 14 T240 14 T300 14 T360 14 T420 14 T480 14 T540 14 T600 14 T660 14 T720 14 T780 14 T840 14 T900 14 T960 14 T1020 14 T1080 14 T1140 14 T1200 14 T1260 14 T1320 14 T1380 14 T1440 14 V28z" />
-        </svg>
+      {/* Real dishes, priced on both platforms */}
+      <section className="pt-16">
+        <p className="mx-auto max-w-7xl px-4 text-sm font-medium uppercase tracking-wider text-muted sm:px-8">
+          {hi ? "एक मेन्यू, हर प्लेटफ़ॉर्म पर एक जैसा" : "One menu, in sync on every platform"}
+        </p>
+        <div className="mt-5">
+          <DishStrip />
+        </div>
       </section>
 
       {/* Where it works */}
@@ -162,18 +214,30 @@ export default function Landing() {
                   : "Each agent has one station, the way a big kitchen works. Zest is the head chef: it hears what you need and hands it to the right station."}
               </p>
             </div>
-            <Dish kind="biryani" size={170} steam className="hidden lg:block" />
           </div>
-          <ul className="mt-14 grid gap-px overflow-hidden rounded-3xl bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {BRIGADE.map((b, i) => (
-              <li key={b.name.en} className={`bg-curry p-7 ${i === 0 ? "bg-curry-2" : ""}`}>
-                <span className="grid size-11 place-items-center rounded-full bg-haldi text-ink">
-                  <b.icon aria-hidden className="size-5" />
-                </span>
-                <p className="mt-5 text-sm text-[#eef2ec]/60">{pick(b.role)}</p>
-                <h3 className="text-[1.3rem] font-semibold">{pick(b.name)}</h3>
-                <p className="mt-2 leading-relaxed text-[#eef2ec]/80">{pick(b.does)}</p>
-              </li>
+              <motion.li
+                key={b.name.en}
+                initial={reduce ? false : { opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ delay: (i % 3) * 0.08, duration: 0.6, ease: [0.2, 0.7, 0.2, 1] }}
+                className="group overflow-hidden rounded-3xl bg-curry-2 ring-1 ring-white/10"
+              >
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  <img src={`/photos/${b.photo}.webp`} alt={b.alt} width={800} height={600} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105" />
+                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-curry-2 via-curry-2/10 to-transparent" />
+                  <span className="absolute bottom-4 left-5 grid size-11 place-items-center rounded-full bg-haldi text-ink shadow-lg">
+                    <b.icon aria-hidden className="size-5" />
+                  </span>
+                </div>
+                <div className="px-6 pb-7 pt-3">
+                  <p className="text-sm text-[#eef2ec]/60">{pick(b.role)}</p>
+                  <h3 className="text-[1.3rem] font-semibold">{pick(b.name)}</h3>
+                  <p className="mt-2 leading-relaxed text-[#eef2ec]/80">{pick(b.does)}</p>
+                </div>
+              </motion.li>
             ))}
           </ul>
         </div>
@@ -185,9 +249,9 @@ export default function Landing() {
         <ol className="mt-14 grid gap-12 md:grid-cols-3">
           {(
             [
-              { n: "1", dish: "butter-naan", title: "stage.1", sub: "stage.1.sub" },
-              { n: "2", dish: "dal-makhani", title: "stage.2", sub: "stage.2.sub" },
-              { n: "3", dish: "thali", title: "stage.3", sub: "stage.3.sub" },
+              { n: "01", photo: "stage-new", alt: "Samosas with chutneys on a wooden board", title: "stage.1", sub: "stage.1.sub" },
+              { n: "02", photo: "stage-operate", alt: "A chef tossing a flaming pan in a busy kitchen", title: "stage.2", sub: "stage.2.sub" },
+              { n: "03", photo: "stage-scale", alt: "A warm, busy restaurant dining room", title: "stage.3", sub: "stage.3.sub" },
             ] as const
           ).map((s, i) => (
             <motion.li
@@ -197,11 +261,12 @@ export default function Landing() {
               viewport={{ once: true, amount: 0.4 }}
               transition={{ delay: i * 0.15, duration: 0.5 }}
             >
-              <div className="flex h-[150px] items-end">
-                <Dish kind={s.dish} size={96 + i * 24} />
+              <div className="group relative aspect-[4/5] overflow-hidden rounded-3xl bg-sunken">
+                <img src={`/photos/${s.photo}.webp`} alt={s.alt} width={800} height={600} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105" />
+                <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                <span className="font-sign absolute bottom-4 left-5 text-[3.2rem] leading-none text-white/90">{s.n}</span>
               </div>
-              <div className="mt-6 border-t-2 border-ink pt-4">
-                <span className="text-sm text-muted">{s.n}</span>
+              <div className="mt-5">
                 <h3 className="mt-1 text-[1.35rem] font-semibold">{t(s.title)}</h3>
                 <p className="mt-2 max-w-[38ch] leading-relaxed text-ink-2">{t(s.sub)}</p>
               </div>
@@ -241,16 +306,24 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Get started, on haldi */}
-      <section className="bg-haldi text-ink">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
+      {/* Get started, over a table of curries */}
+      <section className="relative isolate overflow-hidden text-[#f4efe6]">
+        <img src="/photos/cta-curries.webp" alt="" width={1800} height={900} loading="lazy" decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover" />
+        <div aria-hidden className="absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgba(14,21,17,0.94)_25%,rgba(14,21,17,0.6)_60%,rgba(14,21,17,0.35))]" />
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-24 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
           <div>
             <h2 className="font-sign max-w-[12ch] text-[clamp(2.2rem,5vw,3.8rem)] leading-[0.95]">{t("landing.title")}</h2>
-            <p className="mt-4 max-w-[44ch] text-lg leading-relaxed text-ink/80">
+            <p className="mt-4 max-w-[44ch] text-lg leading-relaxed text-[#f4efe6]/75">
               {hi ? "दो मिनट में शुरू करें। कोई POS या नया सिस्टम नहीं चाहिए।" : "Start in two minutes. No POS or new hardware needed."}
             </p>
+            <button type="button" onClick={openDemo} className="mt-8 inline-flex items-center gap-2 text-[#f4efe6]/80 underline-offset-4 hover:text-[#f4efe6] hover:underline">
+              <Play aria-hidden className="size-3.5 fill-current" />
+              {t("landing.demo")}
+            </button>
           </div>
-          <JourneyRouter tone="haldi" />
+          <div className="rounded-3xl bg-paper p-6 text-ink shadow-[0_30px_60px_-30px_rgba(0,0,0,0.8)] sm:p-8">
+            <JourneyRouter />
+          </div>
         </div>
       </section>
 
@@ -258,6 +331,14 @@ export default function Landing() {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm sm:px-8">
           <Wordmark className="text-xl text-[#eef2ec]" />
           <span>{hi ? "Zomato, Swiggy और डाइन-इन के साथ काम करता है। किसी एक प्लेटफ़ॉर्म से जुड़ा नहीं।" : "Works with Zomato, Swiggy and dine-in. Not tied to any one platform."}</span>
+          <span className="text-[#eef2ec]/50">
+            {hi ? "फ़ोटो: " : "Photos: "}
+            <a href="https://unsplash.com" className="underline-offset-2 hover:underline">Unsplash</a>
+            {hi ? "; डेमो मेन्यू में कुछ फ़ोटो CC BY: " : "; some demo menu photos CC BY: "}
+            <a href="https://www.flickr.com/photos/153337965@N04/38596696581" className="underline-offset-2 hover:underline">ravimadhuscooking</a>,{" "}
+            <a href="https://www.flickr.com/photos/90155432@N02/9411207170" className="underline-offset-2 hover:underline">Thriving Vegetarian</a>,{" "}
+            <a href="https://www.flickr.com/photos/75001512@N00/4120363635" className="underline-offset-2 hover:underline">Joelk75</a>
+          </span>
         </div>
       </footer>
 

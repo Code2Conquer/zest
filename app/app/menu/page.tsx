@@ -522,11 +522,7 @@ function DishRow({
             <span className="absolute bottom-0 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-surface px-3 py-1.5 text-[0.78rem] font-medium text-muted shadow-md">
               {hi ? "अभी उपलब्ध नहीं" : "Unavailable"}
             </span>
-          ) : (
-            <span className="absolute bottom-0 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-lg bg-surface px-6 py-1.5 text-[0.9rem] font-semibold text-chilli shadow-[0_0_0_1px_var(--chilli),0_6px_14px_-6px_rgba(0,0,0,0.25)]">
-              ADD <span className="text-[0.75rem]">+</span>
-            </span>
-          )
+          ) : null
         ) : (
           <button
             type="button"

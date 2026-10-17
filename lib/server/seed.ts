@@ -1,5 +1,5 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { MENU, ORDERS, OUTLET, PAYOUTS, RATINGS, REVIEWS, SALES_YESTERDAY } from "../data";
 import type { Channel } from "../platforms";
 import { createApproval } from "./approvals";
@@ -11,7 +11,7 @@ export const DEMO_OUTLET_ID = "demo";
 /** A sample restaurant so the app has something to show before anything is connected. */
 export async function seedDemo() {
   const existing = await db.select({ id: outlets.id }).from(outlets).where(eq(outlets.id, DEMO_OUTLET_ID));
-  if (existing.length) return;
+  if (existing.length) return backfillDemoPhotos();
 
   await db.insert(outlets).values({
     id: DEMO_OUTLET_ID,
@@ -32,6 +32,15 @@ export async function seedDemo() {
     { outletId: DEMO_OUTLET_ID, platform: "swiggy", method: "sandbox", publicInfo: { note: "Sample data" }, lastSyncAt: new Date().toISOString() },
   ]);
   await seedDemoApprovals(DEMO_OUTLET_ID);
+}
+
+/** Gives sample dishes seeded before photos existed their photo. Leaves any photo already set. */
+async function backfillDemoPhotos() {
+  const missing = await db.select({ id: menuItems.id, name: menuItems.name }).from(menuItems).where(and(eq(menuItems.outletId, DEMO_OUTLET_ID), isNull(menuItems.photoUrl)));
+  for (const row of missing) {
+    const photo = MENU.find((m) => m.name === row.name)?.photo;
+    if (photo) await db.update(menuItems).set({ photoUrl: photo }).where(eq(menuItems.id, row.id));
+  }
 }
 
 /** The drafts the agents "made overnight" for the demo. */
@@ -115,6 +124,7 @@ export async function seedRestaurantData(outletId: string) {
       veg: m.veg,
       bestseller: !!m.bestseller,
       description: m.description,
+      photoUrl: m.photo ?? null,
       rating: m.rating,
       votes: m.votes,
       price: m.price,
