@@ -5,8 +5,14 @@ import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 
 // Local SQLite file by default; set DATABASE_URL (and DATABASE_AUTH_TOKEN) to
-// point at a hosted libSQL/Turso database in production.
-const url = process.env.DATABASE_URL ?? "file:.data/zest.db";
+// point at a hosted libSQL/Turso database in production. ZEST_DATA_DIR moves the
+// file, e.g. onto a mounted disk. Serverless hosts only allow writing to /tmp,
+// which is wiped between instances, so use DATABASE_URL there.
+const dataDir = process.env.ZEST_DATA_DIR ?? (process.env.VERCEL ? "/tmp" : ".data");
+const url = process.env.DATABASE_URL ?? `file:${dataDir}/zest.db`;
+if (process.env.VERCEL && !process.env.DATABASE_URL) {
+  console.warn("DATABASE_URL isn't set: using a temporary database that resets when the server restarts.");
+}
 
 const TABLES = `
 CREATE TABLE IF NOT EXISTS outlets (
@@ -76,7 +82,7 @@ const globalForDb = globalThis as unknown as { zestClient?: Client; zestDb?: Db;
 
 function client(): Client {
   if (!globalForDb.zestClient) {
-    if (url.startsWith("file:")) mkdirSync(".data", { recursive: true });
+    if (url.startsWith("file:")) mkdirSync(dataDir, { recursive: true });
     globalForDb.zestClient = createClient({ url, authToken: process.env.DATABASE_AUTH_TOKEN });
   }
   return globalForDb.zestClient;

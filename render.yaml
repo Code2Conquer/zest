@@ -1,0 +1,18 @@
+# Render Blueprint: New > Blueprint > pick this repository.
+services:
+  - type: web
+    name: zest
+    runtime: docker
+    plan: starter # a persistent disk needs a paid plan
+    healthCheckPath: /api/outlet
+    disk:
+      name: zest-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: ZEST_SECRET_KEY
+        generateValue: true # random 256-bit value, base64
+      - key: ANTHROPIC_API_KEY
+        sync: false # set in the dashboard
+      - key: ZEST_DEMO_WRITABLE
+        value: "0"

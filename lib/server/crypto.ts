@@ -12,9 +12,10 @@ function loadKey(): Buffer {
     return key;
   }
   if (process.env.NODE_ENV === "production") throw new Error("Set ZEST_SECRET_KEY in production.");
-  const path = ".data/secret.key";
+  const dir = process.env.ZEST_DATA_DIR ?? ".data";
+  const path = `${dir}/secret.key`;
   if (!existsSync(path)) {
-    mkdirSync(".data", { recursive: true });
+    mkdirSync(dir, { recursive: true });
     writeFileSync(path, randomBytes(32).toString("base64"), { mode: 0o600 });
   }
   return Buffer.from(readFileSync(path, "utf8"), "base64");
