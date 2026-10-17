@@ -25,6 +25,12 @@ const BROWSER_HEADERS = {
   "Upgrade-Insecure-Requests": "1",
 };
 const CACHE_MS = 10 * 60_000;
+
+// Zomato blocks data-centre IPs (Vercel, AWS). ZOMATO_FETCH_VIA routes the requests
+// through a scraping relay instead, as a URL template with {url} for the page, e.g.
+//   https://api.scraperapi.com/?api_key=KEY&country_code=in&url={url}
+const relay = process.env.ZOMATO_FETCH_VIA?.trim();
+const via = (url: string) => (relay ? relay.replace("{url}", encodeURIComponent(url)) : url);
 const cache = new Map<string, { at: number; data: ZomatoListing }>();
 
 type Json = Record<string, unknown>;
@@ -148,6 +154,7 @@ export function readListing(states: Json[], url: string): ZomatoListing | null {
 async function resolveShortLink(url: string) {
   const fail = new HttpError(400, "Couldn't open that share link. Paste the full zomato.com link from your browser instead.");
   try {
+    // Only the final address matters, so a blocked (403) landing page is fine.
     const res = await fetch(url, { headers: { "User-Agent": UA }, redirect: "follow", signal: AbortSignal.timeout(10_000) });
     const link = parseListing(res.url);
     if (link?.platform !== "zomato" || link.short) throw fail;
@@ -168,11 +175,11 @@ export async function fetchZomatoListing(raw: string): Promise<ZomatoListing> {
   const path = new URL(link.url).pathname;
   // The page itself, or failing that the JSON route Zomato's own web app loads pages from.
   const page = async (suffix: string) => {
-    const res = await fetch(`${link.url}${suffix}`, { headers: BROWSER_HEADERS, signal: AbortSignal.timeout(12_000), redirect: "follow" });
+    const res = await fetch(via(`${link.url}${suffix}`), { headers: relay ? { Accept: "text/html" } : BROWSER_HEADERS, signal: AbortSignal.timeout(12_000), redirect: "follow" });
     const state = res.ok ? preloadedState(await res.text()) : null;
     if (state || res.status === 404) return { status: res.status, state };
-    const api = await fetch(`https://www.zomato.com/webroutes/getPage?page_url=${encodeURIComponent(path + suffix)}&location=&isMobile=0`, {
-      headers: { ...BROWSER_HEADERS, Accept: "application/json", "Sec-Fetch-Dest": "empty", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Site": "same-origin", Referer: link.url },
+    const api = await fetch(via(`https://www.zomato.com/webroutes/getPage?page_url=${encodeURIComponent(path + suffix)}&location=&isMobile=0`), {
+      headers: relay ? { Accept: "application/json" } : { ...BROWSER_HEADERS, Accept: "application/json", "Sec-Fetch-Dest": "empty", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Site": "same-origin", Referer: link.url },
       signal: AbortSignal.timeout(12_000),
     });
     const data = api.ok ? obj(await api.json().catch(() => null)) : {};
@@ -190,7 +197,11 @@ export async function fetchZomatoListing(raw: string): Promise<ZomatoListing> {
   const states = got.flatMap((g) => (g.state ? [g.state] : []));
   if (!states.length) {
     console.warn("zomato listing blocked", link.url, got.map((g) => ("tried" in g ? g.tried : g.status)));
-    throw new HttpError(502, `Zomato didn't return the page (${got.map((g) => ("tried" in g ? g.tried : g.status)).join(", ")}). Try again in a minute.`);
+    const blocked = got.every((g) => g.status === 403);
+    throw new HttpError(
+      502,
+      blocked ? "Zomato didn't let our server read the page right now." : `Zomato didn't return the page (${got.map((g) => ("tried" in g ? g.tried : g.status)).join(", ")}). Try again in a minute.`,
+    );
   }
   const data = readListing(states, link.url);
   if (!data) throw new HttpError(422, "Couldn't read that Zomato page. Is it a restaurant page?");
