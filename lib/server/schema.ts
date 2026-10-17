@@ -199,6 +199,74 @@ export const chatMessages = sqliteTable("chat_messages", {
   createdAt: text("created_at").notNull().$defaultFn(now),
 });
 
+export const diningTables = sqliteTable("dining_tables", {
+  id: text("id").primaryKey().$defaultFn(id),
+  outletId: text("outlet_id").notNull(),
+  label: text("label").notNull(),
+  seats: integer("seats").notNull().default(4),
+  zone: text("zone").notNull().default("Indoor"),
+  sort: integer("sort").notNull().default(0),
+});
+
+export type TabLine = { itemId: string | null; name: string; price: number; qty: number; veg: boolean };
+
+/** A table's running bill. Closing it records a dine-in order. */
+export const dineTabs = sqliteTable("dine_tabs", {
+  id: text("id").primaryKey().$defaultFn(id),
+  outletId: text("outlet_id").notNull(),
+  tableId: text("table_id").notNull(),
+  partyName: text("party_name").notNull().default(""),
+  partySize: integer("party_size").notNull().default(2),
+  lines: text("lines", { mode: "json" }).$type<TabLine[]>().notNull().default([]),
+  status: text("status", { enum: ["open", "billed", "closed", "cancelled"] }).notNull().default("open"),
+  paidVia: text("paid_via", { enum: ["cash", "upi", "card"] }),
+  total: integer("total").notNull().default(0),
+  reservationId: text("reservation_id"),
+  openedAt: text("opened_at").notNull().$defaultFn(now),
+  closedAt: text("closed_at"),
+});
+
+/** Bookings and the walk-in waitlist. */
+export const reservations = sqliteTable("reservations", {
+  id: text("id").primaryKey().$defaultFn(id),
+  outletId: text("outlet_id").notNull(),
+  kind: text("kind", { enum: ["booking", "waitlist"] }).notNull(),
+  name: text("name").notNull(),
+  phone: text("phone"),
+  partySize: integer("party_size").notNull(),
+  // Booking time; for the waitlist, when they joined.
+  at: text("at").notNull(),
+  quotedMins: integer("quoted_mins"),
+  status: text("status", { enum: ["booked", "waiting", "notified", "seated", "cancelled", "no_show"] }).notNull(),
+  tableId: text("table_id"),
+  note: text("note").notNull().default(""),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+});
+
+/** A promo or ad on one platform, from approval to end. */
+export const campaigns = sqliteTable("campaigns", {
+  id: text("id").primaryKey().$defaultFn(id),
+  outletId: text("outlet_id").notNull(),
+  platform: text("platform", { enum: ["zomato", "swiggy"] }).notNull(),
+  kind: text("kind", { enum: ["promo", "ad"] }).notNull().default("promo"),
+  goal: text("goal").notNull().default("new_customers"),
+  title: text("title").notNull(),
+  window: text("window").notNull().default(""),
+  spendCap: integer("spend_cap").notNull(),
+  spent: integer("spent").notNull().default(0),
+  orders: integer("orders").notNull().default(0),
+  revenue: integer("revenue").notNull().default(0),
+  expectedOrders: integer("expected_orders").notNull().default(0),
+  // Paused automatically when revenue / spend falls below this after the first ₹500.
+  minReturn: real("min_return").notNull().default(3),
+  status: text("status", { enum: ["live", "paused", "ended"] }).notNull().default("live"),
+  statusDetail: text("status_detail"),
+  approvalId: text("approval_id"),
+  startsAt: text("starts_at").notNull().$defaultFn(now),
+  endsAt: text("ends_at"),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+});
+
 export type Outlet = typeof outlets.$inferSelect;
 export type Connection = typeof connections.$inferSelect;
 export type MenuItemRow = typeof menuItems.$inferSelect;
@@ -208,3 +276,7 @@ export type ReviewRow = typeof reviews.$inferSelect;
 export type ApprovalRow = typeof approvals.$inferSelect;
 export type Mailbox = typeof mailboxes.$inferSelect;
 export type EmailRow = typeof emails.$inferSelect;
+export type DiningTable = typeof diningTables.$inferSelect;
+export type DineTab = typeof dineTabs.$inferSelect;
+export type Reservation = typeof reservations.$inferSelect;
+export type Campaign = typeof campaigns.$inferSelect;

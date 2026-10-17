@@ -17,8 +17,8 @@ const NAV: NavItem[] = [
   { href: "/app/menu", key: "nav.menu", icon: BookOpen },
   { href: "/app/reviews", key: "nav.reviews", icon: Star },
   { href: "/app/money", key: "nav.money", icon: IndianRupee },
-  { href: "/app/dining", key: "nav.dining", icon: Armchair, soon: true },
-  { href: "/app/growth", key: "nav.growth", icon: TrendingUp, soon: true },
+  { href: "/app/dining", key: "nav.dining", icon: Armchair },
+  { href: "/app/growth", key: "nav.growth", icon: TrendingUp },
   { href: "/app/connections", key: "nav.connections", icon: Plug },
 ];
 

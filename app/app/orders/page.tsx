@@ -28,7 +28,7 @@ function dishFor(items: string): DishKind {
   if (s.includes("thali")) return "thali";
   if (s.includes("chole")) return "chole-bhature";
   if (s.includes("rajma")) return "rajma-chawal";
-  if (s.includes("jamun")) return "gulab-jamun";
+  if (s.includes("jamun") || s.includes("halwa")) return "gulab-jamun";
   return "butter-naan";
 }
 

@@ -78,6 +78,32 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL, role TEXT NOT NULL, content TEXT NOT NULL, created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS chat_messages_outlet ON chat_messages (outlet_id, created_at);
+CREATE TABLE IF NOT EXISTS dining_tables (
+  id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL, label TEXT NOT NULL, seats INTEGER NOT NULL DEFAULT 4,
+  zone TEXT NOT NULL DEFAULT 'Indoor', sort INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS dining_tables_outlet ON dining_tables (outlet_id);
+CREATE TABLE IF NOT EXISTS dine_tabs (
+  id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL, table_id TEXT NOT NULL, party_name TEXT NOT NULL DEFAULT '',
+  party_size INTEGER NOT NULL DEFAULT 2, lines TEXT NOT NULL DEFAULT '[]', status TEXT NOT NULL DEFAULT 'open',
+  paid_via TEXT, total INTEGER NOT NULL DEFAULT 0, reservation_id TEXT, opened_at TEXT NOT NULL, closed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS dine_tabs_outlet_status ON dine_tabs (outlet_id, status);
+CREATE TABLE IF NOT EXISTS reservations (
+  id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL, kind TEXT NOT NULL, name TEXT NOT NULL, phone TEXT,
+  party_size INTEGER NOT NULL, at TEXT NOT NULL, quoted_mins INTEGER, status TEXT NOT NULL, table_id TEXT,
+  note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reservations_outlet_at ON reservations (outlet_id, at);
+CREATE TABLE IF NOT EXISTS campaigns (
+  id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL, platform TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'promo',
+  goal TEXT NOT NULL DEFAULT 'new_customers', title TEXT NOT NULL, "window" TEXT NOT NULL DEFAULT '',
+  spend_cap INTEGER NOT NULL, spent INTEGER NOT NULL DEFAULT 0, orders INTEGER NOT NULL DEFAULT 0,
+  revenue INTEGER NOT NULL DEFAULT 0, expected_orders INTEGER NOT NULL DEFAULT 0, min_return REAL NOT NULL DEFAULT 3,
+  status TEXT NOT NULL DEFAULT 'live', status_detail TEXT, approval_id TEXT, starts_at TEXT NOT NULL, ends_at TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS campaigns_outlet ON campaigns (outlet_id, status);
 `;
 
 // Columns added after the first release. Each runs once; "duplicate column" means it's already there.

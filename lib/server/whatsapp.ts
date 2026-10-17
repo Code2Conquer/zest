@@ -9,16 +9,18 @@ import { notifications, outlets } from "./schema";
  * must use a pre-approved template (WHATSAPP_TEMPLATE, one text parameter).
  * Without credentials, messages are kept in the outbox as "queued".
  */
-export async function notify(outletId: string, kind: string, body: string) {
+export async function notify(outletId: string, kind: string, body: string, to?: string) {
   const [outlet] = await db.select().from(outlets).where(eq(outlets.id, outletId));
-  if (!outlet?.whatsapp) return null;
+  // Owner updates follow the owner's WhatsApp switch; a message to a guest is sent because staff asked for it.
+  if (!outlet || (!to && !outlet.whatsapp)) return null;
+  const phone = to ?? outlet.ownerPhone;
 
   const token = process.env.WHATSAPP_TOKEN;
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const [row] = await db.insert(notifications).values({ outletId, kind, body, status: "queued" }).returning();
 
-  if (!token || !phoneId || !outlet.ownerPhone) {
-    const why = !outlet.ownerPhone ? "No owner phone number on file." : "WhatsApp isn't configured on this server.";
+  if (!token || !phoneId || !phone) {
+    const why = !phone ? "No phone number on file." : "WhatsApp isn't configured on this server.";
     await db.update(notifications).set({ error: why }).where(eq(notifications.id, row.id));
     return { ...row, error: why };
   }
@@ -32,7 +34,7 @@ export async function notify(outletId: string, kind: string, body: string) {
     const res = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ messaging_product: "whatsapp", to: outlet.ownerPhone.replace(/\D/g, ""), ...message }),
+      body: JSON.stringify({ messaging_product: "whatsapp", to: phone.replace(/\D/g, ""), ...message }),
     });
     if (!res.ok) throw new Error(`WhatsApp API returned ${res.status}`);
     const [sent] = await db.update(notifications).set({ status: "sent", sentAt: new Date().toISOString() }).where(eq(notifications.id, row.id)).returning();

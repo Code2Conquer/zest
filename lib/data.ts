@@ -107,9 +107,9 @@ export const ORDERS: Order[] = [
   { id: "T4", channel: "dine", items: "Thali x3, masala chaas x3", amount: 1170, placedAt: "8:37 pm", status: "preparing", prepMins: 12 },
   { id: "7838", channel: "zomato", items: "Chicken biryani", amount: 389, placedAt: "8:35 pm", status: "ready", prepMins: 14 },
   { id: "3387", channel: "swiggy", items: "Chole bhature x2", amount: 298, placedAt: "8:31 pm", status: "picked", prepMins: 11 },
-  { id: "7833", channel: "zomato", items: "Veg thali, gulab jamun", amount: 315, placedAt: "8:22 pm", status: "delivered", prepMins: 13 },
+  { id: "7833", channel: "zomato", items: "Veg thali, gajar halwa", amount: 315, placedAt: "8:22 pm", status: "delivered", prepMins: 13 },
   { id: "3381", channel: "swiggy", items: "Paneer butter masala, 3 roti", amount: 402, placedAt: "8:15 pm", status: "cancelled", prepMins: 0 },
-  { id: "7829", channel: "zomato", items: "Rajma chawal", amount: 229, placedAt: "8:09 pm", status: "delivered", prepMins: 10 },
+  { id: "7829", channel: "zomato", items: "Dal tadka with rice", amount: 229, placedAt: "8:09 pm", status: "delivered", prepMins: 10 },
 ];
 
 export type Review = {
@@ -184,13 +184,13 @@ export const MENU: MenuItem[] = [
   { id: "m7", photo: "/photos/menu-malai-tikka.webp", name: "Malai tikka", category: "Starters", kind: "paneer-tikka", veg: true, description: "Soft paneer in a cream, cashew and green cardamom marinade, finished on charcoal.", rating: 4.1, votes: 188, price: { zomato: 309, swiggy: 309 }, available: { zomato: true, swiggy: true }, ordersLast7: 41 },
   { id: "m3", photo: "/photos/menu-dal-makhani.webp", name: "Dal makhani", category: "Main course", kind: "dal-makhani", veg: true, bestseller: true, description: "Black urad and rajma slow-cooked for 12 hours, finished with white butter and cream.", rating: 4.5, votes: 904, price: { zomato: 249, swiggy: 249 }, available: { zomato: true, swiggy: true }, ordersLast7: 121 },
   { id: "m5", photo: "/photos/menu-chole-bhature.webp", name: "Chole bhature", category: "Main course", kind: "chole-bhature", veg: true, description: "Spiced Pindi chole with two fluffy bhature, pickled onions and achaar.", rating: 4.2, votes: 377, price: { zomato: 199, swiggy: 189 }, available: { zomato: true, swiggy: true }, ordersLast7: 77 },
-  { id: "m8", photo: "/photos/menu-rajma.webp", name: "Rajma chawal", category: "Main course", kind: "rajma-chawal", veg: true, description: "", rating: 4.0, votes: 143, price: { zomato: 229, swiggy: 229 }, available: { zomato: true, swiggy: true }, ordersLast7: 58 },
+  { id: "m8", photo: "/photos/menu-dal-tadka.webp", name: "Dal tadka with rice", category: "Main course", kind: "rajma-chawal", veg: true, description: "", rating: 4.0, votes: 143, price: { zomato: 229, swiggy: 229 }, available: { zomato: true, swiggy: true }, ordersLast7: 58 },
   { id: "m2", photo: "/photos/menu-chicken-biryani.webp", name: "Chicken biryani", category: "Biryani", kind: "biryani", veg: false, bestseller: true, description: "Long-grain basmati layered with bone-in chicken, saffron, fried onions and mint, sealed and cooked dum style.", rating: 4.3, votes: 1240, price: { zomato: 349, swiggy: 359 }, available: { zomato: true, swiggy: true }, ordersLast7: 188 },
   { id: "m9", photo: "/photos/menu-veg-biryani.webp", name: "Veg dum biryani", category: "Biryani", kind: "biryani", veg: true, description: "Seasonal vegetables and paneer layered with saffron rice, served with burani raita.", rating: 3.9, votes: 211, price: { zomato: 279, swiggy: 279 }, available: { zomato: true, swiggy: true }, ordersLast7: 36 },
   { id: "m4", photo: "/photos/menu-thali.webp", name: "Veg thali", category: "Thalis", kind: "thali", veg: true, bestseller: true, description: "Dal, seasonal sabzi, paneer of the day, raita, jeera rice, two rotis and a sweet.", rating: 4.3, votes: 530, price: { zomato: 279, swiggy: 279 }, available: { zomato: true, swiggy: false }, ordersLast7: 96 },
   { id: "m10", photo: "/photos/menu-naan.webp", name: "Butter naan", category: "Breads", kind: "butter-naan", veg: true, description: "Tandoor-baked naan brushed with salted butter.", rating: 4.2, votes: 702, price: { zomato: 59, swiggy: 59 }, available: { zomato: true, swiggy: true }, ordersLast7: 214 },
   { id: "m11", photo: "/photos/menu-garlic-naan.webp", name: "Garlic naan", category: "Breads", kind: "butter-naan", veg: true, description: "Naan topped with chopped garlic and coriander.", rating: 4.1, votes: 356, price: { zomato: 69, swiggy: 69 }, available: { zomato: true, swiggy: true }, ordersLast7: 133 },
-  { id: "m6", photo: "/photos/menu-gulab-jamun.webp", name: "Gulab jamun (2 pc)", category: "Desserts", kind: "gulab-jamun", veg: true, description: "Khoya dumplings fried slow and soaked in rose and cardamom syrup. Served warm.", rating: 4.6, votes: 488, price: { zomato: 99, swiggy: 99 }, available: { zomato: true, swiggy: true }, ordersLast7: 64 },
+  { id: "m6", photo: "/photos/menu-gajar-halwa.webp", name: "Gajar halwa", category: "Desserts", kind: "gulab-jamun", veg: true, description: "Red carrots slow-cooked in milk with ghee, khoya and cardamom, topped with almonds. Served warm.", rating: 4.6, votes: 488, price: { zomato: 99, swiggy: 99 }, available: { zomato: true, swiggy: true }, ordersLast7: 64 },
 ];
 
 /** Top sellers from yesterday, for the Today screen. */

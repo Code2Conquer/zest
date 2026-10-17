@@ -101,7 +101,7 @@ export async function getReviews(outletId: string) {
   return (await db.select().from(reviews).where(eq(reviews.outletId, outletId)).orderBy(desc(reviews.postedAt))).map(reviewDTO);
 }
 
-function dayBounds(offsetDays: number) {
+export function dayBounds(offsetDays: number) {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
   start.setDate(start.getDate() + offsetDays);

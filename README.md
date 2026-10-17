@@ -73,6 +73,10 @@ Browser (Next.js pages)  ──►  /api/* route handlers  ──►  lib/server
 
 **Zomato and Swiggy listings.** When an owner pastes their Zomato link (full or `zoma.to` share link) or Swiggy link, Zest reads it (Zomato: the public page and order page; Swiggy: the menu API its mobile site uses), fills in their profile, saves the rating and details, and brings in the menu with photos. The first read of a platform imports the menu if there is none, or sets that platform's prices and stock on dishes with the same name, adds the rest for that platform only, and marks dishes the listing doesn't have as off on that platform. Reading again (Connections) refreshes rating and details but never the menu. Results are cached for 10 minutes per link. Zomato blocks data-centre IPs, Vercel's included, so production needs `LISTING_FETCH_VIA`, a scraping relay URL template (see `.env.example`); without it the owner fills the form in by hand.
 
+**Dining.** Tables grouped by area, each free, seated, bill printed or reserved, with party, time at the table and the running bill. Staff seat walk-ins, bookings or waitlisted guests, add dishes from the master menu at the dine-in price (the lowest platform price), print, and settle by cash, UPI or card; settling records a dine-in order so it counts in Today's sales. Bookings and the waitlist live alongside, with a WhatsApp "table ready" message to the guest. Each restaurant gets a public QR menu page. New restaurants get a starter floor plan to edit; the demo floor is rebuilt each day.
+
+**Growth.** Promos and ads per platform with a hard spend cap (`MAX_PROMO_SPEND`). The builder estimates extra orders, spend, sales and return from the outlet's last 14 days of orders (or stated typical numbers when there is no history) and sends the plan for approval; approving it starts it through the platform connector and tracks it as a campaign. Suggestions come from the slowest open hours, a well-rated dish that sells little, new customers and upcoming festivals. The daily cron (and "Check now") ends campaigns at their cap or end date and pauses any returning less than its floor (3×) after ₹500, with a WhatsApp note. Campaign results need the platform's attribution data, so real outlets show spend and results once connectors report them; pausing on the platform side also waits on connector support.
+
 **Gmail.** Owners connect Gmail with read-only access. Zest searches only Zomato and Swiggy senders (`GMAIL_SENDERS`), reads the last 30 days on first connect, then new mail on each sync. Each mail is sorted into payout, report, complaint, onboarding or other; payouts are extracted from the body (rules) or, with Claude, from PDF and CSV attachments. Tokens are stored encrypted. Disconnecting revokes access and deletes everything read, including payouts. While the Google app is in Testing mode, owners must be listed as test users and reconnect every 7 days.
 
 **Data in.** Payout emails also go through `POST /api/ingest/email` (paste on the Money page, or a mail-forwarding rule). Orders arrive by `POST /api/sync` (pull from MCP/API connectors; run it on a schedule) or signed webhooks at `/api/webhooks/{platform}`.
@@ -90,6 +94,11 @@ Browser (Next.js pages)  ──►  /api/* route handlers  ──►  lib/server
 | `GET /api/payouts`, `POST /api/ingest/email` | Payouts and email ingestion |
 | `GET/DELETE /api/mail`, `POST /api/mail/sync` | Connected inbox status, disconnect, sync now |
 | `POST /api/listing/preview`, `POST /api/listing/{zomato\|swiggy}` | Read a listing link (preview only / save to the restaurant: rating, address, hours, FSSAI, cost for two, and the menu with photos and per-platform prices) |
+| `GET /api/dining`; `POST /api/dining/tables`, `DELETE /api/dining/tables/{id}` | Floor, open bills, today's bookings and waitlist, today's dine-in numbers; edit the floor plan |
+| `POST /api/dining/tabs`, `PATCH /api/dining/tabs/{id}` | Seat a party; change dishes, print, reopen, settle (cash/UPI/card, records a dine-in order) or clear |
+| `POST /api/dining/reservations`, `PATCH /api/dining/reservations/{id}` | Add a booking or waitlist entry; tell a guest their table is ready on WhatsApp, cancel, no-show |
+| `GET /api/dining/qr`, page `/m/{outletId}` | Table QR code and the public dine-in menu it opens |
+| `GET /api/growth`; `POST /api/growth/estimate`, `/propose`, `/check`; `PATCH /api/growth/campaigns/{id}` | Campaigns and suggestions; estimate a plan from the outlet's orders; send it for approval; run the automatic pause; pause, resume or end |
 | `GET /api/mail/insights` | Payouts per platform, commission/ads/deduction shares, complaints and listing mails from the last 30 days |
 | `GET /api/mail/google/start`, `/callback` | Google sign-in for Gmail |
 | `GET /api/cron` | Scheduled sync of every inbox and platform (needs `CRON_SECRET`) |
@@ -106,7 +115,6 @@ Browser (Next.js pages)  ──►  /api/* route handlers  ──►  lib/server
 - **Outlook sign-in.** Gmail is done; Outlook is next if owners ask for it.
 - **Partner-app browser worker**, and real partner API paths (see Connectors).
 - **Scheduling.** Vercel Cron calls `/api/cron` daily (Hobby limit); `.github/workflows/sync.yml` calls it every 15 minutes once the `ZEST_URL` and `CRON_SECRET` repository secrets are set.
-- **Dining and Growth screens** (Growth works through the copilot's promo drafts).
 
 ## Design notes
 

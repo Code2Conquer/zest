@@ -59,7 +59,7 @@ export function ApprovalTicket({ approval: initial, print = false, onDone }: { a
     menu_change: hi ? "पब्लिश करें" : "Publish",
     review_reply: hi ? "जवाब पोस्ट करें" : "Post reply",
     dispute: hi ? "डिस्प्यूट भेजें" : "Raise dispute",
-    promo: hi ? "प्रोमो शेड्यूल करें" : "Schedule promo",
+    promo: hi ? "कैंपेन शुरू करें" : "Start campaign",
     listing_application: hi ? "आवेदन भेजें" : "Submit applications",
   };
 

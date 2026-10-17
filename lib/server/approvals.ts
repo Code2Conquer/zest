@@ -3,7 +3,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import type { Platform } from "../platforms";
 import { connectorFor, type ActionResult } from "./connectors";
 import { db } from "./db";
-import { approvals, auditLog, connections, menuItems, outlets, reviews, type ApprovalKind, type ApprovalRow, type MenuItemRow, type Outlet } from "./schema";
+import { approvals, auditLog, campaigns, connections, menuItems, outlets, reviews, type ApprovalKind, type ApprovalRow, type MenuItemRow, type Outlet } from "./schema";
 
 export type MenuChange = {
   itemId: string;
@@ -16,7 +16,7 @@ export type ApprovalPayload = {
   menu_change: { changes: MenuChange[] };
   review_reply: { reviewId: string; text: string };
   dispute: { platform: Platform; orderId: string; amount: number; reason: string };
-  promo: { platform: Platform; offer: string; window: string; spendCap: number; expectedOrders: number };
+  promo: { platform: Platform; offer: string; window: string; spendCap: number; expectedOrders: number; kind?: "promo" | "ad"; goal?: string; days?: number; minReturn?: number };
   listing_application: { platforms: Platform[] };
 };
 
@@ -168,7 +168,24 @@ async function execute(outlet: Outlet, row: ApprovalRow): Promise<{ steps: Step[
     if (p.spendCap > MAX_PROMO_SPEND) return { steps: [{ ok: false, error: `Above the ₹${MAX_PROMO_SPEND} limit`, what: "promo" }] };
     const conn = (await connectorsFor(outlet, [p.platform])).get(p.platform);
     if (!conn) return { steps: [{ platform: p.platform, ok: false, error: `${p.platform} isn't connected`, what: "promo" }] };
-    return { steps: [{ platform: p.platform, what: p.offer, ...(await conn.createPromo(p)) }] };
+    const result = await conn.createPromo(p);
+    if (result.ok) {
+      // Track it as a campaign: spend against the cap, results, and the automatic pause.
+      await db.insert(campaigns).values({
+        outletId: outlet.id,
+        platform: p.platform,
+        kind: p.kind ?? "promo",
+        goal: p.goal ?? "new_customers",
+        title: p.offer,
+        window: p.window,
+        spendCap: p.spendCap,
+        expectedOrders: p.expectedOrders,
+        minReturn: p.minReturn ?? 3,
+        approvalId: row.id,
+        endsAt: p.days ? new Date(Date.now() + p.days * 86_400_000).toISOString() : null,
+      });
+    }
+    return { steps: [{ platform: p.platform, what: p.offer, ...result }] };
   }
   // listing_application: neither platform exposes an onboarding API, so the
   // application is queued with everything checked for the onboarding team.

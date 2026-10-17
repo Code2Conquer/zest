@@ -1,7 +1,9 @@
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db, ready } from "@/lib/server/db";
 import { syncMailbox } from "@/lib/server/gmail";
-import { mailboxes } from "@/lib/server/schema";
+import { checkCampaigns } from "@/lib/server/growth";
+import { campaigns, mailboxes } from "@/lib/server/schema";
 import { syncOutlet } from "@/lib/server/sync";
 
 export const maxDuration = 60;
@@ -22,5 +24,9 @@ export async function GET(req: Request) {
     if (left < 5_000) break;
     results[outletId] = { mail: await syncMailbox(outletId, Math.min(20_000, left - 3_000)), platforms: await syncOutlet(outletId) };
   }
-  return NextResponse.json({ outlets: Object.keys(results).length, results });
+  // Spend caps, end dates and the automatic pause, for every outlet with a live campaign.
+  const live = await db.selectDistinct({ outletId: campaigns.outletId }).from(campaigns).where(eq(campaigns.status, "live"));
+  const paused: Record<string, unknown> = {};
+  for (const { outletId } of live) paused[outletId] = await checkCampaigns(outletId);
+  return NextResponse.json({ outlets: Object.keys(results).length, results, campaigns: paused });
 }

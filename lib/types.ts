@@ -190,3 +190,84 @@ export type PlatformListing = {
 };
 
 export type ListingSummary = Omit<PlatformListing, "menu"> & { menuCount: number };
+
+export type TabLineDTO = { itemId: string | null; name: string; price: number; qty: number; veg: boolean };
+export type TabDTO = { id: string; tableId: string; partyName: string; partySize: number; lines: TabLineDTO[]; status: "open" | "billed" | "closed" | "cancelled"; total: number; openedAt: string };
+export type ReservationDTO = {
+  id: string;
+  kind: "booking" | "waitlist";
+  name: string;
+  phone: string | null;
+  partySize: number;
+  at: string;
+  quotedMins: number | null;
+  status: "booked" | "waiting" | "notified" | "seated" | "cancelled" | "no_show";
+  tableId: string | null;
+  note: string;
+};
+export type DiningDTO = {
+  tables: {
+    id: string;
+    label: string;
+    seats: number;
+    zone: string;
+    status: "free" | "seated" | "billing" | "reserved";
+    tab: TabDTO | null;
+    booking: ReservationDTO | null;
+  }[];
+  bookings: ReservationDTO[];
+  waitlist: ReservationDTO[];
+  stats: { covers: number; sales: number; bills: number; avgMins: number | null; openTables: number; seatedGuests: number };
+  menu: { id: string; name: string; category: string; price: number; veg: boolean; photo: string | null; available: boolean }[];
+};
+
+export type CampaignDTO = {
+  id: string;
+  platform: Platform;
+  kind: "promo" | "ad";
+  goal: string;
+  title: string;
+  window: string;
+  spendCap: number;
+  spent: number;
+  orders: number;
+  revenue: number;
+  expectedOrders: number;
+  minReturn: number;
+  status: "live" | "paused" | "ended";
+  statusDetail: string | null;
+  startsAt: string;
+  endsAt: string | null;
+};
+
+export type GrowthGoal = "new_customers" | "slow_hours" | "bigger_orders" | "dish" | "festival";
+export type CampaignInput = {
+  platform: Platform;
+  goal: GrowthGoal;
+  offer: "percent" | "flat" | "freebie" | "ads";
+  value: number; // percent, or rupees off, or rupee cost of the free item; for ads, unused
+  upTo: number; // max discount for percent offers
+  minOrder: number;
+  budget: number;
+  days: number;
+  window: string; // e.g. "3 to 6 pm, Mon to Thu" or "All day"
+  dish?: string;
+};
+export type EstimateDTO = {
+  basis: { ordersPerDay: number; avgOrder: number; days: number; fromHistory: boolean };
+  extraOrders: number;
+  redeemedOrders: number;
+  spend: number;
+  revenue: number;
+  returnOnSpend: number;
+  daysCovered: number;
+  offerText: string;
+  notes: { en: string; hi: string }[];
+};
+export type SuggestionDTO = { id: string; title: { en: string; hi: string }; why: { en: string; hi: string }; input: CampaignInput };
+export type GrowthDTO = {
+  campaigns: CampaignDTO[];
+  summary: { spent: number; revenue: number; orders: number; live: number };
+  suggestions: SuggestionDTO[];
+  limit: number;
+};

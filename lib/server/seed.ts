@@ -1,10 +1,12 @@
 import "server-only";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, gte, lt } from "drizzle-orm";
 import { MENU, ORDERS, OUTLET, PAYOUTS, RATINGS, REVIEWS, SALES_YESTERDAY } from "../data";
 import type { Channel } from "../platforms";
 import { createApproval } from "./approvals";
 import { db } from "./db";
-import { connections, menuItems, orders, outlets, payouts, reviews } from "./schema";
+import { dinePrice, ensureTables } from "./dining";
+import { dayBounds } from "./queries";
+import { campaigns, connections, diningTables, dineTabs, menuItems, orders, outlets, payouts, reservations, reviews, type TabLine } from "./schema";
 
 export const DEMO_OUTLET_ID = "demo";
 
@@ -34,12 +36,24 @@ export async function seedDemo() {
   await seedDemoApprovals(DEMO_OUTLET_ID);
 }
 
-/** Gives sample dishes seeded before photos existed their photo. Leaves any photo already set. */
+// Demo dishes renamed since the live demo was seeded, so their photos need no credit line.
+const RENAMED: Record<string, string> = { "Rajma chawal": "Dal tadka with rice", "Gulab jamun (2 pc)": "Gajar halwa" };
+
+/** Brings the live demo's dishes in line with MENU: renamed dishes, and the current photo for each. */
 async function backfillDemoPhotos() {
-  const missing = await db.select({ id: menuItems.id, name: menuItems.name }).from(menuItems).where(and(eq(menuItems.outletId, DEMO_OUTLET_ID), isNull(menuItems.photoUrl)));
-  for (const row of missing) {
-    const photo = MENU.find((m) => m.name === row.name)?.photo;
-    if (photo) await db.update(menuItems).set({ photoUrl: photo }).where(eq(menuItems.id, row.id));
+  const rows = await db.select({ id: menuItems.id, name: menuItems.name, photoUrl: menuItems.photoUrl }).from(menuItems).where(eq(menuItems.outletId, DEMO_OUTLET_ID));
+  for (const row of rows) {
+    const name = RENAMED[row.name] ?? row.name;
+    const m = MENU.find((x) => x.name === name);
+    if (!m) continue;
+    // Only sample photos are replaced; a photo someone uploaded stays.
+    const stale = !row.photoUrl || (row.photoUrl.startsWith("/photos/menu-") && row.photoUrl !== m.photo);
+    if (name !== row.name || stale) {
+      await db
+        .update(menuItems)
+        .set({ name, ...(name !== row.name ? { description: m.description } : {}), ...(stale ? { photoUrl: m.photo ?? null } : {}) })
+        .where(eq(menuItems.id, row.id));
+    }
   }
 }
 
@@ -156,4 +170,66 @@ export async function seedRestaurantData(outletId: string) {
   await db.insert(reviews).values(
     REVIEWS.map((r, i) => ({ outletId, platform: r.platform, externalId: r.id, author: r.author, stars: r.stars, text: r.text, postedAt: new Date(Date.now() - (i + 1) * 3 * 3600_000).toISOString(), draftReply: r.draft })),
   );
+}
+
+/**
+ * The demo floor for today: a few tables seated, one waiting for the bill, a booking
+ * coming up, two walk-ins waiting, and the lunch service already settled. Rebuilt the
+ * first time Dining is opened each day so the sample always looks like a live service.
+ */
+export async function refreshDemoDining(outletId: string) {
+  const [from, to] = dayBounds(0);
+  const [today] = await db.select({ id: reservations.id }).from(reservations).where(and(eq(reservations.outletId, outletId), gte(reservations.at, from), lt(reservations.at, to))).limit(1);
+  if (today) return;
+  await db.delete(dineTabs).where(eq(dineTabs.outletId, outletId));
+  await db.delete(reservations).where(eq(reservations.outletId, outletId));
+  await ensureTables(outletId);
+  const tables = await db.select().from(diningTables).where(eq(diningTables.outletId, outletId)).orderBy(asc(diningTables.sort));
+  const menu = await db.select().from(menuItems).where(eq(menuItems.outletId, outletId));
+  const dish = (name: string, qty: number): TabLine => {
+    const m = menu.find((x) => x.name === name)!;
+    return { itemId: m.id, name: m.name, price: dinePrice(m), qty, veg: m.veg };
+  };
+  const ago = (mins: number) => new Date(Date.now() - mins * 60_000).toISOString();
+  const ahead = (mins: number) => new Date(Date.now() + mins * 60_000).toISOString();
+  const byLabel = (l: string) => tables.find((t) => t.label === l)!;
+  const total = (lines: TabLine[]) => lines.reduce((s, l) => s + l.price * l.qty, 0);
+
+  const open: { table: string; party: string; size: number; mins: number; lines: TabLine[]; status: "open" | "billed" }[] = [
+    { table: "T3", party: "Mehta family", size: 4, mins: 34, lines: [dish("Paneer tikka", 1), dish("Dal makhani", 1), dish("Butter naan", 4)], status: "open" },
+    { table: "T6", party: "Office lunch", size: 6, mins: 52, lines: [dish("Veg thali", 4), dish("Chicken biryani", 2), dish("Gajar halwa", 3)], status: "billed" },
+    { table: "O1", party: "", size: 2, mins: 12, lines: [dish("Chole bhature", 2)], status: "open" },
+  ];
+  for (const t of open) {
+    await db.insert(dineTabs).values({ outletId, tableId: byLabel(t.table).id, partyName: t.party, partySize: t.size, lines: t.lines, status: t.status, total: total(t.lines), openedAt: ago(t.mins) });
+  }
+  const settled: [string, number, number, TabLine[], "cash" | "upi" | "card"][] = [
+    ["T1", 2, 240, [dish("Veg thali", 2)], "upi"],
+    ["T4", 3, 220, [dish("Chicken biryani", 2), dish("Malai tikka", 1)], "card"],
+    ["T2", 2, 200, [dish("Dal tadka with rice", 2), dish("Gajar halwa", 2)], "cash"],
+    ["T5", 4, 170, [dish("Paneer tikka", 2), dish("Veg dum biryani", 2), dish("Garlic naan", 2)], "upi"],
+  ];
+  for (const [label, size, mins, lines, paidVia] of settled) {
+    await db.insert(dineTabs).values({ outletId, tableId: byLabel(label).id, partySize: size, lines, status: "closed", paidVia, total: total(lines), openedAt: ago(mins), closedAt: ago(mins - 48) });
+  }
+  await db.insert(reservations).values([
+    { outletId, kind: "booking", name: "Priya Nair", phone: "+91 98450 11223", partySize: 4, at: ahead(40), status: "booked", tableId: byLabel("T5").id, note: "Birthday, a candle with dessert" },
+    { outletId, kind: "booking", name: "Arjun Rao", phone: "+91 99001 44567", partySize: 2, at: ahead(150), status: "booked", tableId: null, note: "" },
+    { outletId, kind: "waitlist", name: "Sana", phone: "+91 90080 77821", partySize: 2, at: ago(9), quotedMins: 10, status: "waiting", tableId: null, note: "" },
+    { outletId, kind: "waitlist", name: "Kapoor", phone: null, partySize: 5, at: ago(4), quotedMins: 25, status: "waiting", tableId: null, note: "Needs a high chair" },
+  ]);
+}
+
+/** Demo campaigns: two running well, one paused automatically, one finished at its cap. */
+export async function refreshDemoGrowth(outletId: string) {
+  const [any] = await db.select({ id: campaigns.id }).from(campaigns).where(eq(campaigns.outletId, outletId)).limit(1);
+  if (any) return;
+  const day = 86_400_000;
+  const at = (d: number) => new Date(Date.now() + d * day).toISOString();
+  await db.insert(campaigns).values([
+    { outletId, platform: "swiggy", kind: "promo", goal: "new_customers", title: "20% off up to ₹80 for new customers", window: "All day", spendCap: 3000, spent: 1840, orders: 41, revenue: 15500, expectedOrders: 48, status: "live", startsAt: at(-4), endsAt: at(3) },
+    { outletId, platform: "swiggy", kind: "ad", goal: "dish", title: "Ad boost for Chicken biryani", window: "Lunch and dinner", spendCap: 1500, spent: 730, orders: 14, revenue: 5040, expectedOrders: 12, status: "live", startsAt: at(-3), endsAt: at(4) },
+    { outletId, platform: "zomato", kind: "promo", goal: "slow_hours", title: "15% off up to ₹75, 3 to 6 pm", window: "3 to 6 pm, Mon to Thu", spendCap: 2000, spent: 620, orders: 9, revenue: 1550, expectedOrders: 22, status: "paused", statusDetail: "Paused automatically: returning 2.5× against a 3× floor", startsAt: at(-6), endsAt: at(8) },
+    { outletId, platform: "zomato", kind: "promo", goal: "bigger_orders", title: "Flat ₹60 off on orders above ₹499", window: "Fri to Sun, 7 to 11 pm", spendCap: 2500, spent: 2500, orders: 52, revenue: 27100, expectedOrders: 45, status: "ended", statusDetail: "Spend cap reached", startsAt: at(-12), endsAt: at(-5) },
+  ]);
 }

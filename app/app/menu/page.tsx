@@ -16,7 +16,7 @@ type Item = MenuItemDTO;
 
 // Keyed by dish name; in production these come from the menu agent.
 const SUGGESTED_DESCRIPTION: Record<string, string> = {
-  "Rajma chawal": "Kidney beans simmered overnight in an onion-tomato masala with ginger and garam masala, served with steamed basmati rice.",
+  "Dal tadka with rice": "Yellow toor dal tempered with ghee, cumin, garlic and red chilli, served with steamed basmati rice.",
 };
 
 /** What changed on each dish, in words an owner would use. */

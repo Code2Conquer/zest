@@ -330,15 +330,6 @@ export default function Landing() {
       <footer className="bg-curry text-[#eef2ec]/70">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm sm:px-8">
           <Wordmark className="text-xl text-[#eef2ec]" />
-          <span>{hi ? "Zomato, Swiggy और डाइन-इन के साथ काम करता है। किसी एक प्लेटफ़ॉर्म से जुड़ा नहीं।" : "Works with Zomato, Swiggy and dine-in. Not tied to any one platform."}</span>
-          <span className="text-[#eef2ec]/50">
-            {hi ? "फ़ोटो: " : "Photos: "}
-            <a href="https://unsplash.com" className="underline-offset-2 hover:underline">Unsplash</a>
-            {hi ? "; डेमो मेन्यू में कुछ फ़ोटो CC BY: " : "; some demo menu photos CC BY: "}
-            <a href="https://www.flickr.com/photos/153337965@N04/38596696581" className="underline-offset-2 hover:underline">ravimadhuscooking</a>,{" "}
-            <a href="https://www.flickr.com/photos/90155432@N02/9411207170" className="underline-offset-2 hover:underline">Thriving Vegetarian</a>,{" "}
-            <a href="https://www.flickr.com/photos/75001512@N00/4120363635" className="underline-offset-2 hover:underline">Joelk75</a>
-          </span>
         </div>
       </footer>
 
