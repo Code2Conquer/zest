@@ -3,6 +3,9 @@ import { describeClaudeError, hasClaude } from "@/lib/server/claude";
 import { handler } from "@/lib/server/http";
 import { readMenu } from "@/lib/server/vision";
 
+// Reading with Claude can take tens of seconds; fits the Vercel Hobby limit.
+export const maxDuration = 60;
+
 /** Turns a photo of a paper menu into dishes. The owner reviews them before importing. */
 export const POST = handler(async (req, outlet) => {
   if (!hasClaude()) throw new HttpError(503, "Menu reading needs ANTHROPIC_API_KEY on the server.");

@@ -3,6 +3,9 @@ import { z } from "zod";
 import { handler } from "@/lib/server/http";
 import { ingestEmail } from "@/lib/server/ingest";
 
+// Reading with Claude can take tens of seconds; fits the Vercel Hobby limit.
+export const maxDuration = 60;
+
 const Body = z.object({ from: z.string().min(3), subject: z.string(), text: z.string().max(200_000), receivedAt: z.string().optional() });
 
 /**

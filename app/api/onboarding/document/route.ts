@@ -4,6 +4,9 @@ import { describeClaudeError, hasClaude } from "@/lib/server/claude";
 import { handler } from "@/lib/server/http";
 import { DOC_KINDS, readDocument } from "@/lib/server/vision";
 
+// Reading with Claude can take tens of seconds; fits the Vercel Hobby limit.
+export const maxDuration = 60;
+
 const MAX_BYTES = 8 * 1024 * 1024;
 const TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
