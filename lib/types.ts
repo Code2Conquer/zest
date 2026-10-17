@@ -125,6 +125,8 @@ export type ChatEntry = { id: string; role: "user"; text: string } | { id: strin
 
 export type MailboxDTO = {
   configured: boolean;
+  missing: string[];
+  deployment: { env: string; commit: string | null };
   senders: string[];
   mailbox: null | {
     provider: "gmail";

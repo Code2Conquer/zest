@@ -1,6 +1,6 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/server/db";
-import { disconnectGmail, gmailConfigured, SENDERS } from "@/lib/server/gmail";
+import { disconnectGmail, gmailConfigured, gmailMissing, SENDERS } from "@/lib/server/gmail";
 import { assertWritable, handler } from "@/lib/server/http";
 import { emails, mailboxes } from "@/lib/server/schema";
 import type { MailboxDTO } from "@/lib/types";
@@ -15,6 +15,9 @@ export const GET = handler(async (_req, outlet): Promise<MailboxDTO> => {
   const recent = await db.select().from(emails).where(eq(emails.outletId, outlet.id)).orderBy(desc(emails.receivedAt)).limit(15);
   return {
     configured: gmailConfigured(),
+    missing: gmailMissing(),
+    // Which deployment answered, to tell a stale or preview build from production.
+    deployment: { env: process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "unknown", commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null },
     senders: SENDERS,
     mailbox: box
       ? { provider: box.provider, address: box.address, status: box.status, statusDetail: box.statusDetail, backfillDone: box.backfillDone, lastSyncAt: box.lastSyncAt, counts }

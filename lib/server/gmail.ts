@@ -31,14 +31,24 @@ export class GmailError extends Error {
   }
 }
 
+// Tolerates the spaces and quotes that often come along when values are pasted into a dashboard.
+const envValue = (name: string) => process.env[name]?.trim().replace(/^["']|["']$/g, "").trim() || undefined;
+const clientId = () => envValue("GOOGLE_CLIENT_ID");
+const clientSecret = () => envValue("GOOGLE_CLIENT_SECRET");
+
+/** Names of the Google settings this deployment can't see. Names only, never values. */
+export function gmailMissing(): string[] {
+  return [!clientId() && "GOOGLE_CLIENT_ID", !clientSecret() && "GOOGLE_CLIENT_SECRET"].filter(Boolean) as string[];
+}
+
 export function gmailConfigured() {
-  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+  return gmailMissing().length === 0;
 }
 
 export function authorizeUrl(redirectUri: string, state: string) {
   const u = new URL(AUTH_URL);
   u.search = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID!,
+    client_id: clientId()!,
     redirect_uri: redirectUri,
     response_type: "code",
     scope: SCOPES.join(" "),
@@ -56,7 +66,7 @@ async function tokenRequest(body: Record<string, string>) {
   const res = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ client_id: process.env.GOOGLE_CLIENT_ID!, client_secret: process.env.GOOGLE_CLIENT_SECRET!, ...body }),
+    body: new URLSearchParams({ client_id: clientId()!, client_secret: clientSecret()!, ...body }),
   });
   const data = (await res.json().catch(() => ({}))) as { access_token?: string; refresh_token?: string; expires_in?: number; error?: string; error_description?: string };
   if (!res.ok || !data.access_token) {

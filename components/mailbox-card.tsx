@@ -118,8 +118,24 @@ export function MailboxCard({ returnTo }: { returnTo: string }) {
             <span className="font-medium text-ink">{data.senders.join(", ")}</span>
             {hi ? "। पिछले 90 दिनों से शुरू करते हैं। बाक़ी इनबॉक्स कभी नहीं खोला जाता।" : ", starting with the last 90 days. Nothing else in your inbox is opened."}
           </p>
-          {!data.configured && <p className="mt-2 text-sm text-turmeric">{pick(NOTICE["not-configured"])}</p>}
-          {outlet?.isDemo && <p className="mt-2 text-sm text-turmeric">{pick(NOTICE.demo)}</p>}
+          {outlet?.isDemo ? (
+            <p className="mt-3 flex flex-wrap items-center gap-3 text-sm text-turmeric">
+              {pick(NOTICE.demo)}
+              <a href="/?start=1" className="rounded-full bg-turmeric-soft px-3.5 py-1.5 font-medium text-ink shadow-[inset_0_0_0_1px_var(--turmeric)]">
+                {hi ? "अपना रेस्टोरेंट शुरू करें" : "Start your own restaurant"}
+              </a>
+            </p>
+          ) : (
+            !data.configured && (
+              <p className="mt-3 text-sm text-turmeric">
+                {pick(NOTICE["not-configured"])}{" "}
+                <span className="text-muted">
+                  {hi ? "नहीं मिला" : "Missing"}: {data.missing.join(", ")} ({data.deployment.env}
+                  {data.deployment.commit ? `, ${data.deployment.commit}` : ""})
+                </span>
+              </p>
+            )
+          )}
           <div className="mt-4">
             <EmailIngest compact />
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { BookOpen, ChefHat, IndianRupee, ReceiptText, ShieldCheck, Star, TrendingUp } from "lucide-react";
 import { LangToggle, Wordmark } from "@/components/bits";
@@ -53,6 +53,10 @@ const BRIGADE: { icon: typeof Star; role: Bi; name: Bi; does: Bi }[] = [
 export default function Landing() {
   const { t, pick, state } = useApp();
   const [routerOpen, setRouterOpen] = useState(false);
+  // Links elsewhere in the app use /?start=1 to open "Where is your restaurant today?" directly.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("start") === "1") setRouterOpen(true);
+  }, []);
   const reduce = useReducedMotion();
   const hi = state.lang === "hi";
 
