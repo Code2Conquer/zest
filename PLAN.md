@@ -245,3 +245,77 @@ Third-party skills worth evaluating (not installed, unverified): UI/UX Pro Max, 
 2. **Neutrality.** No platform is favoured. The product shows only the platforms the owner is live on.
 3. **First segment.** Small owners who use the partner apps directly. Email plus portal sign-in is the main path, and POS support comes later.
 4. **Languages at launch.** Hindi and English.
+
+---
+
+## 12. Progress, 17 October 2026
+
+Live at https://zest-dusky.vercel.app (Vercel, Mumbai region; database on Turso, Mumbai). Code: github.com/Code2Conquer/zest.
+
+Key: ✅ done · 🟡 partly done · ❌ not started
+
+### Phase 0, Foundations: done, with deviations
+| Item | Status | Notes |
+|---|---|---|
+| Next.js + TypeScript + Tailwind | ✅ | Custom design system instead of shadcn/ui |
+| Database | 🟡 | libSQL/SQLite on Turso instead of Postgres + pgvector + Redis. Enough for the pilot; revisit if we need vector search or heavy analytics |
+| Durable workflow engine | ❌ | Long-running work (onboarding follow-ups, reconciliation) not yet needed |
+| Design system and generative-UI card kit | ✅ | Tokens, dish illustrations, approval tickets, payout and sales cards |
+| Orchestrator, tool registry, action tiers, audit log | ✅ | Claude tool runner with 9 tools; every write is an approval; full audit log |
+| Eval harness | ❌ | **Gap.** No golden conversations yet |
+| Phone OTP auth and roles | ❌ | **Gap.** A signed browser cookie identifies the restaurant today |
+| Legal and policy track | ❓ | Owned outside engineering; status unknown |
+| Exit: clickable prototype on seeded data | ✅ | Exceeded: real backend, deployed |
+
+### Phase 1, MVP for app-only owners: about 60%
+| Item | Status | Notes |
+|---|---|---|
+| Landing page and entry router, Hindi and English | ✅ | |
+| Email connect | 🟡 | Payout-mail parser works (rules, Claude fallback) by paste or forwarding. No Gmail/Outlook sign-in, no PDF statements, no weekly reports |
+| Platform connectors | 🟡 | MCP works end to end; partner API adapter has placeholder paths; partner-app sign-in stores credentials but the browser worker isn't built |
+| Today, Money, Orders | ✅ | |
+| Copilot Q&A over owner data | 🟡 | Built and tested against a stand-in API; needs `ANTHROPIC_API_KEY` and a real-model check |
+| WhatsApp summary, payout alerts, leaderboard | 🟡 | Cloud API client, outbox and summary endpoint built; not configured, no scheduler, no leaderboard |
+| Exit: 20–50 pilot outlets | ❌ | No pilots yet |
+
+### Phase 2, Onboarding: about 50%
+✅ Wizard · ✅ Document reading and checks (Claude vision) · ✅ Menu from photo · ❌ Variants and add-ons · ❌ Dish photo QA · ❌ Licence expiry reminders · ❌ Application status tracking (applications are only queued)
+
+### Phase 3, Operate: about 40% (pulled forward)
+✅ Write actions behind approval (via MCP) · ✅ Menu editor laid out like Zomato, with customer preview · ✅ Reviews inbox with drafted replies · ✅ Orders board with late flags · ❌ Live alerts pushed to the owner · ❌ Auto-reply policy · ❌ Payout reconciliation per order (disputes are drafted by hand or by the copilot) · ❌ POS connectors
+
+### Phases 4–6
+❌ Not started, apart from promo drafts with hard spend caps through the copilot (Phase 5).
+
+---
+
+## 13. Next steps
+
+The goal for the next six weeks is the Phase 1 exit: **20–50 pilot outlets using Zest weekly.** Everything below serves that.
+
+### Weeks 1–2: make it pilot-ready
+1. **Turn on Claude.** Add `ANTHROPIC_API_KEY`, check the copilot, document reading and menu reading against the real model, and set a monthly spend limit.
+2. **Eval harness.** 10–20 golden conversations per agent (Hindi, English, Hinglish), run in CI on every push, so prompt or model changes can't quietly break answers.
+3. **Phone OTP login** and roles (owner, manager). Replaces the cookie; needed before any real owner data goes in.
+4. **Gmail sign-in** (read-only, filtered to Zomato, Swiggy and bank senders) with push notifications into the existing ingest endpoint, plus **PDF statement reading** with Claude.
+5. **Scheduling.** Run order sync every 5 minutes and the 8 am summary daily. Vercel Hobby crons run at most once a day, so use Vercel Pro, GitHub Actions, or a queue service.
+6. **Start WhatsApp approval now.** Meta business verification and template approval (daily summary, payout credited) take one to two weeks.
+7. **Ops basics.** Error monitoring, rate limits on the API, database backups, and rotate the Turso token that was shared in chat.
+
+### Weeks 3–6: connect real restaurants
+8. **Partner-app sign-in worker, read-only.** A Playwright worker on a container host (Vercel can't run browsers) that reads orders, ratings, reviews and payouts, with the OTP hand-off. Ships only after legal sign-off.
+9. **Partner access.** Pursue Zomato's internal merchant API and an MCP endpoint, and the Swiggy partner programme, so fewer owners depend on sign-in.
+10. **Recruit and run the pilot.** 20–50 app-only outlets in one city. Measure time to first insight (target under 5 minutes), weekly WhatsApp activity (target 40%), and how often owners approve drafts unchanged.
+11. **Licence expiry reminders and the weekly leaderboard.** Both are small and they drive WhatsApp engagement.
+
+### After the pilot: Phase 3 depth
+12. Payout reconciliation per order, with wrong deductions flagged automatically.
+13. Opt-in auto-reply for 4–5 star reviews.
+14. Live order alerts pushed to the owner.
+15. First POS connector (UrbanPiper or Petpooja).
+
+### Decisions needed
+- **Legal sign-off** on storing partner-app credentials (blocks step 8).
+- **Providers:** OTP (e.g. MSG91) and WhatsApp (Meta Cloud API directly, or a BSP).
+- **Hosting tier:** Vercel Pro for frequent crons and longer functions, or keep Hobby and schedule from GitHub Actions.
+- **Database:** stay on Turso for the pilot (recommended), or move to Postgres now.
