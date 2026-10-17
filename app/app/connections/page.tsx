@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { ChannelTag } from "@/components/bits";
-import { ZomatoListingCard } from "@/components/listing-preview";
+import { ListingCard } from "@/components/listing-preview";
 import { MailboxCard } from "@/components/mailbox-card";
 import { PlatformConnector } from "@/components/platform-connector";
 import { api, refreshAll, useApi } from "@/lib/api";
@@ -106,10 +106,12 @@ export default function Connections() {
 
       {outlet && !outlet.isDemo && (
         <section className="mt-10">
-          <h2 className="font-medium">{hi ? "Zomato लिस्टिंग" : "Zomato listing"}</h2>
-          <p className="mt-0.5 text-sm text-muted">{hi ? "रेटिंग, पता, समय और मेन्यू आपके Zomato पेज से।" : "Rating, address, hours and menu from your Zomato page."}</p>
-          <div className="mt-3">
-            <ZomatoListingCard />
+          <h2 className="font-medium">{hi ? "आपकी लिस्टिंग" : "Your listings"}</h2>
+          <p className="mt-0.5 text-sm text-muted">{hi ? "रेटिंग, पता, समय और मेन्यू आपके Zomato और Swiggy पेज से।" : "Rating, address, hours and menu from your Zomato and Swiggy pages."}</p>
+          <div className="mt-3 space-y-6">
+            {(outlet.live.length ? outlet.live : PLATFORMS).map((p) => (
+              <ListingCard key={p} platform={p} />
+            ))}
           </div>
         </section>
       )}

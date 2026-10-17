@@ -7,12 +7,13 @@ import { Check, ChevronLeft, Loader2 } from "lucide-react";
 import { ChannelTag, LangToggle, Wordmark } from "@/components/bits";
 import { api, refreshAll } from "@/lib/api";
 import { cityName, parseListing } from "@/lib/listing";
-import { PLATFORMS, type Platform } from "@/lib/platforms";
+import { CHANNEL_NAME, PLATFORMS, type Platform } from "@/lib/platforms";
 import { useApp } from "@/lib/state";
 import { ListingPreview } from "@/components/listing-preview";
-import type { OutletDTO, ZomatoListing } from "@/lib/types";
+import type { OutletDTO, PlatformListing } from "@/lib/types";
 
 type Journey = "new" | "notlive" | "live";
+type ListingRead = { url: string; state: "loading" } | { url: string; state: "ok"; listing: PlatformListing } | { url: string; state: "error"; message: string };
 
 type Form = {
   ownerName: string;
@@ -69,22 +70,22 @@ function JoinForm({ journey, platforms, initial }: { journey: Journey; platforms
   const [docsOpen, setDocsOpen] = useState(!!(initial.fssai || initial.gstin));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [zomato, setZomato] = useState<{ url: string; state: "loading" } | { url: string; state: "ok"; listing: ZomatoListing } | { url: string; state: "error"; message: string } | null>(null);
+  const [read, setRead] = useState<Partial<Record<Platform, ListingRead>>>({});
   const set = (k: keyof Form) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
     setF((x) => ({ ...x, [k]: e.target.value }));
   };
 
-  /** Fills empty fields from a listing link: from the Zomato page itself, or from the link's words. */
+  /** Fills empty fields from a listing link: from the listing page itself, or from the link's words. */
   async function fillFromLink(p: Platform) {
     const link = parseListing(f.listings[p] ?? "", f.name);
     if (!link || link.platform !== p) return;
     setF((x) => ({ ...x, city: x.city || (link.city ? cityName(link.city) : ""), area: x.area || link.areaHint || "" }));
-    if (p !== "zomato" || zomato?.url === link.url) return;
-    setZomato({ url: link.url, state: "loading" });
+    if (read[p]?.url === link.url) return;
+    setRead((r) => ({ ...r, [p]: { url: link.url, state: "loading" } }));
     try {
-      const listing = await api<ZomatoListing>("/api/listing/preview", { method: "POST", json: { url: link.url } });
-      setZomato({ url: link.url, state: "ok", listing });
+      const listing = await api<PlatformListing>("/api/listing/preview", { method: "POST", json: { url: link.url } });
+      setRead((r) => ({ ...r, [p]: { url: link.url, state: "ok", listing } }));
       const keep = (mine: string, theirs: string | null) => (mine.trim() ? mine : (theirs ?? ""));
       setF((x) => ({
         ...x,
@@ -97,7 +98,7 @@ function JoinForm({ journey, platforms, initial }: { journey: Journey; platforms
       }));
       if (listing.fssai) setDocsOpen(true);
     } catch (err) {
-      setZomato({ url: link.url, state: "error", message: (err as Error).message });
+      setRead((r) => ({ ...r, [p]: { url: link.url, state: "error", message: (err as Error).message } }));
     }
   }
 
@@ -159,7 +160,7 @@ function JoinForm({ journey, platforms, initial }: { journey: Journey; platforms
         <fieldset className="space-y-4">
           <legend className="text-xl font-medium">{hi ? "आपकी लिस्टिंग" : "Your listing"}</legend>
           <p className="-mt-2 max-w-[56ch] text-ink-2">
-            {hi ? "Zomato पर अपना रेस्टोरेंट खोलें, शेयर करें और लिंक यहाँ पेस्ट करें। बाक़ी हम भर देंगे। ज़रूरी नहीं।" : "Open your restaurant on Zomato, tap share and paste the link here. We'll fill in the rest. Optional."}
+            {hi ? "Zomato या Swiggy पर अपना रेस्टोरेंट खोलें, लिंक कॉपी करें और यहाँ पेस्ट करें। बाक़ी हम भर देंगे। ज़रूरी नहीं।" : "Open your restaurant on Zomato or Swiggy, copy the link and paste it here. We'll fill in the rest. Optional."}
           </p>
           {platforms.map((p) => {
             const value = f.listings[p] ?? "";
@@ -177,7 +178,7 @@ function JoinForm({ journey, platforms, initial }: { journey: Journey; platforms
                   onBlur={() => fillFromLink(p)}
                   type="url"
                   inputMode="url"
-                  placeholder={p === "zomato" ? "https://www.zomato.com/ncr/your-restaurant-area" : "https://www.swiggy.com/restaurants/your-restaurant-area-12345"}
+                  placeholder={p === "zomato" ? "https://www.zomato.com/ncr/your-restaurant-area" : "https://www.swiggy.com/city/delhi/your-restaurant-area-rest12345"}
                 />
                 {wrong ? (
                   <p className="mt-1 text-sm text-chilli">{hi ? `यह ${p === "zomato" ? "Zomato" : "Swiggy"} रेस्टोरेंट का लिंक नहीं लगता।` : `That doesn't look like a ${p === "zomato" ? "Zomato" : "Swiggy"} restaurant link.`}</p>
@@ -189,22 +190,22 @@ function JoinForm({ journey, platforms, initial }: { journey: Journey; platforms
                       : [link.city && cityName(link.city), link.nameMatches && (hi ? "नाम मेल खाता है" : "matches your name")].filter(Boolean).join(" · ") || (hi ? "लिंक सही है" : "Looks right")}
                   </p>
                 ) : null}
-                {p === "zomato" && zomato && zomato.url === link?.url && (
+                {read[p] && read[p].url === link?.url && (
                   <div className="mt-3">
-                    {zomato.state === "loading" ? (
+                    {read[p].state === "loading" ? (
                       <p className="flex items-center gap-2 text-sm text-muted">
                         <Loader2 aria-hidden className="size-4 animate-spin" />
-                        {hi ? "Zomato से आपकी लिस्टिंग पढ़ रहे हैं…" : "Reading your listing from Zomato…"}
+                        {hi ? `${CHANNEL_NAME[p]} से आपकी लिस्टिंग पढ़ रहे हैं…` : `Reading your listing from ${CHANNEL_NAME[p]}…`}
                       </p>
-                    ) : zomato.state === "error" ? (
-                      <p className="text-sm text-turmeric">{zomato.message} {hi ? "आप बाक़ी ख़ुद भर सकते हैं।" : "You can fill in the rest yourself."}</p>
+                    ) : read[p].state === "error" ? (
+                      <p className="text-sm text-turmeric">{read[p].message} {hi ? "आप बाक़ी ख़ुद भर सकते हैं।" : "You can fill in the rest yourself."}</p>
                     ) : (
                       <>
-                        <ListingPreview listing={zomato.listing} />
+                        <ListingPreview listing={read[p].listing} />
                         <p className="mt-2 text-sm text-leaf">
                           {hi
-                            ? `खाली जगहें Zomato से भर दीं। रेस्टोरेंट बनने पर ${zomato.listing.menu.length} डिश फ़ोटो के साथ आपके मेन्यू में आ जाएँगी।`
-                            : `We filled in the empty fields from Zomato. Your ${zomato.listing.menu.length} dishes, with photos, come into your menu when you create the restaurant.`}
+                            ? `खाली जगहें ${CHANNEL_NAME[p]} से भर दीं। रेस्टोरेंट बनने पर ${read[p].listing.menu.length} डिश, फ़ोटो और ${CHANNEL_NAME[p]} के दाम के साथ, आपके मेन्यू में आ जाएँगी।`
+                            : `We filled in the empty fields from ${CHANNEL_NAME[p]}. Your ${read[p].listing.menu.length} dishes, with photos and ${CHANNEL_NAME[p]} prices, come into your menu when you create the restaurant.`}
                         </p>
                       </>
                     )}

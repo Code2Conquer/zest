@@ -1,9 +1,21 @@
 import "server-only";
-import { count, eq } from "drizzle-orm";
-import type { ZomatoListing } from "../types";
-import { audit } from "./approvals";
+import { and, eq } from "drizzle-orm";
+import { parseListing } from "../listing";
+import { PLATFORMS } from "../platforms";
+import type { PlatformListing } from "../types";
+import { audit, HttpError } from "./approvals";
 import { db } from "./db";
 import { menuItems, outlets, type Outlet } from "./schema";
+import { fetchSwiggyListing } from "./swiggy-listing";
+import { fetchZomatoListing } from "./zomato-listing";
+
+/** Reads a Zomato or Swiggy listing link. */
+export function fetchListing(raw: string): Promise<PlatformListing> {
+  const link = parseListing(raw);
+  if (link?.platform === "zomato") return fetchZomatoListing(raw);
+  if (link?.platform === "swiggy") return fetchSwiggyListing(raw);
+  return Promise.reject(new HttpError(400, "That isn't a Zomato or Swiggy restaurant link."));
+}
 
 // Picks an illustration until the owner adds a photo.
 export function guessKind(name: string) {
@@ -18,21 +30,27 @@ export function guessKind(name: string) {
   return "butter-naan";
 }
 
+const dishKey = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, "");
+
 /**
- * Saves what the Zomato page says: the rating, the listing details, and any
- * profile field the owner left empty. Imports the menu only if the outlet has none,
- * so dishes the owner already manages are never overwritten.
+ * Saves what a listing page says: the rating, the listing details, and any profile
+ * field the owner left empty. The menu is touched only the first time a platform is
+ * read: an empty menu is imported whole; an existing one gets this platform's prices
+ * and stock on matching dishes, and its other dishes added for this platform only.
+ * Reading again later refreshes the rating and details, never the owner's menu.
  */
-export async function applyZomatoListing(outlet: Outlet, listing: ZomatoListing) {
+export async function applyListing(outlet: Outlet, listing: PlatformListing) {
   const { menu, ...rest } = listing;
+  const p = listing.platform;
+  const firstRead = !outlet.listingData[p];
   const fill = (current: string | null, next: string | null) => (current?.trim() ? current : (next ?? current));
   const delivery = listing.rating.delivery;
   const [row] = await db
     .update(outlets)
     .set({
-      listingData: { ...outlet.listingData, zomato: { ...rest, menuCount: menu.length } },
-      listings: { ...outlet.listings, zomato: listing.url },
-      ratings: delivery ? { ...outlet.ratings, zomato: { value: delivery.value, count: delivery.count, change: outlet.ratings.zomato?.change ?? 0 } } : outlet.ratings,
+      listingData: { ...outlet.listingData, [p]: { ...rest, menuCount: menu.length } },
+      listings: { ...outlet.listings, [p]: listing.url },
+      ratings: delivery ? { ...outlet.ratings, [p]: { value: delivery.value, count: delivery.count, change: outlet.ratings[p]?.change ?? 0 } } : outlet.ratings,
       name: outlet.name === "My restaurant" ? listing.name : outlet.name,
       area: fill(outlet.area, listing.area) ?? "",
       city: fill(outlet.city, listing.city) ?? "",
@@ -44,25 +62,49 @@ export async function applyZomatoListing(outlet: Outlet, listing: ZomatoListing)
     .returning();
 
   let imported = 0;
-  const [{ n }] = await db.select({ n: count() }).from(menuItems).where(eq(menuItems.outletId, outlet.id));
-  if (n === 0 && menu.length) {
-    await db.insert(menuItems).values(
-      menu.slice(0, 300).map((it, i) => ({
-        outletId: outlet.id,
-        name: it.name,
-        category: it.category,
-        kind: guessKind(it.name),
-        veg: it.veg,
-        bestseller: it.bestseller,
-        description: it.description,
-        photoUrl: it.photo,
-        price: { zomato: it.price, swiggy: it.price },
-        available: { zomato: it.available, swiggy: it.available },
-        sort: i + 1,
-      })),
-    );
-    imported = Math.min(menu.length, 300);
+  let matched = 0;
+  if (firstRead && menu.length) {
+    const existing = await db.select().from(menuItems).where(eq(menuItems.outletId, outlet.id));
+    const byName = new Map(existing.map((m) => [dishKey(m.name), m]));
+    const fresh: typeof menu = [];
+    for (const it of menu.slice(0, 300)) {
+      const mine = byName.get(dishKey(it.name));
+      if (!mine) {
+        fresh.push(it);
+        continue;
+      }
+      matched++;
+      byName.delete(dishKey(it.name));
+      await db
+        .update(menuItems)
+        .set({ price: { ...mine.price, [p]: it.price }, available: { ...mine.available, [p]: it.available }, photoUrl: mine.photoUrl ?? it.photo, description: mine.description || it.description })
+        .where(and(eq(menuItems.id, mine.id), eq(menuItems.outletId, outlet.id)));
+    }
+    // The listing is the truth for its platform: dishes it doesn't have aren't sold there.
+    for (const mine of byName.values()) {
+      if (mine.available[p]) await db.update(menuItems).set({ available: { ...mine.available, [p]: false } }).where(eq(menuItems.id, mine.id));
+    }
+    if (fresh.length) {
+      // With no menu yet, a dish is offered everywhere; otherwise only where it was found.
+      const everywhere = existing.length === 0;
+      await db.insert(menuItems).values(
+        fresh.map((it, i) => ({
+          outletId: outlet.id,
+          name: it.name,
+          category: it.category,
+          kind: guessKind(it.name),
+          veg: it.veg,
+          bestseller: it.bestseller,
+          description: it.description,
+          photoUrl: it.photo,
+          price: Object.fromEntries(PLATFORMS.map((q) => [q, it.price])) as Record<(typeof PLATFORMS)[number], number>,
+          available: Object.fromEntries(PLATFORMS.map((q) => [q, q === p ? it.available : everywhere && it.available])) as Record<(typeof PLATFORMS)[number], boolean>,
+          sort: existing.length + i + 1,
+        })),
+      );
+      imported = fresh.length;
+    }
   }
-  await audit(outlet.id, "zomato-listing", "listing.read", { url: listing.url, resId: listing.resId, rating: delivery?.value ?? null, menuImported: imported });
-  return { outlet: row, imported };
+  await audit(outlet.id, `${p}-listing`, "listing.read", { url: listing.url, resId: listing.resId, rating: delivery?.value ?? null, menuImported: imported, menuMatched: matched });
+  return { outlet: row, imported, matched };
 }

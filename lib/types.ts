@@ -22,7 +22,7 @@ export type OutletDTO = {
   fssai: string | null;
   gstin: string | null;
   listings: Partial<Record<Platform, string>>;
-  zomato: ListingSummary | null;
+  listing: Partial<Record<Platform, ListingSummary>>;
   cuisines: string;
   ownerName: string;
   ownerPhone: string | null;
@@ -159,8 +159,9 @@ export type MailInsightsDTO = {
   highlights: { tone: "good" | "warn" | "info"; text: { en: string; hi: string } }[];
 };
 
-/** What a restaurant's public Zomato page says about it. */
-export type ZomatoListing = {
+/** What a restaurant's public Zomato or Swiggy page says about it. */
+export type PlatformListing = {
+  platform: Platform;
   resId: string;
   url: string;
   name: string;
@@ -184,4 +185,4 @@ export type ZomatoListing = {
   fetchedAt: string;
 };
 
-export type ListingSummary = Omit<ZomatoListing, "menu"> & { menuCount: number };
+export type ListingSummary = Omit<PlatformListing, "menu"> & { menuCount: number };

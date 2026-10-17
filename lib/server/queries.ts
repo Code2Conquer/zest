@@ -23,7 +23,7 @@ export async function outletDTO(o: Outlet): Promise<OutletDTO> {
     fssai: o.fssai,
     gstin: o.gstin,
     listings: o.listings,
-    zomato: o.listingData.zomato ?? null,
+    listing: o.listingData,
     cuisines: o.cuisines,
     ownerName: o.ownerName,
     ownerPhone: o.ownerPhone,

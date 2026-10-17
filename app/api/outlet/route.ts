@@ -3,8 +3,7 @@ import { z } from "zod";
 import { parseListing } from "@/lib/listing";
 import { audit, HttpError } from "@/lib/server/approvals";
 import { db } from "@/lib/server/db";
-import { applyZomatoListing } from "@/lib/server/listing-sync";
-import { fetchZomatoListing } from "@/lib/server/zomato-listing";
+import { applyListing, fetchListing } from "@/lib/server/listing-sync";
 import { handler } from "@/lib/server/http";
 import { outletDTO } from "@/lib/server/queries";
 import { outlets } from "@/lib/server/schema";
@@ -58,19 +57,20 @@ export const POST = handler(async (req, outlet) => {
     await setCurrentOutlet(row.id);
     await audit(row.id, "owner", "outlet.created", { journey, live, documents: { fssai: !!profile.fssai, gstin: !!profile.gstin } });
   }
-  // Read the Zomato page if the link is new. A failure here never blocks sign-up.
-  const zomato = row.listings.zomato;
-  let listing: { imported: number } | { error: string } | null = null;
-  if (zomato && row.listingData.zomato?.url !== zomato) {
+  // Read each listing page whose link is new. A failure here never blocks sign-up.
+  const read: Partial<Record<"zomato" | "swiggy", { imported: number; matched: number } | { error: string }>> = {};
+  for (const p of ["zomato", "swiggy"] as const) {
+    const link = row.listings[p];
+    if (!link || row.listingData[p]?.url === link) continue;
     try {
-      const applied = await applyZomatoListing(row, await fetchZomatoListing(zomato));
+      const applied = await applyListing(row, await fetchListing(link));
       row = applied.outlet;
-      listing = { imported: applied.imported };
+      read[p] = { imported: applied.imported, matched: applied.matched };
     } catch (err) {
-      listing = { error: (err as Error).message };
+      read[p] = { error: (err as Error).message };
     }
   }
-  return { ...(await outletDTO(row)), listing };
+  return { ...(await outletDTO(row)), read };
 });
 
 const Update = Profile.extend({

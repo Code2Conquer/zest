@@ -8,7 +8,7 @@ import { LangToggle, Wordmark } from "@/components/bits";
 import { MailInsights } from "@/components/mail-insights";
 import { MailboxCard } from "@/components/mailbox-card";
 import { PlatformConnector } from "@/components/platform-connector";
-import { PLATFORMS } from "@/lib/platforms";
+import { CHANNEL_NAME, PLATFORMS } from "@/lib/platforms";
 import { useApp } from "@/lib/state";
 
 export default function Connect() {
@@ -59,16 +59,16 @@ export default function Connect() {
               <div className="min-w-0">
                 <p className="font-medium">{outlet.name}</p>
                 <p className="text-sm text-muted">{[outlet.ownerName, [outlet.area, outlet.city].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}</p>
-                {outlet.zomato && (
-                  <p className="mt-1 text-sm text-leaf">
+                {Object.values(outlet.listing).map((l) => (
+                  <p key={l.platform} className="mt-1 text-sm text-leaf">
                     {[
-                      outlet.zomato.rating.delivery && `★ ${outlet.zomato.rating.delivery.value.toFixed(1)} ${hi ? "Zomato पर" : "on Zomato"}`,
-                      hi ? `${outlet.zomato.menuCount} डिश Zomato से` : `${outlet.zomato.menuCount} dishes from Zomato`,
+                      l.rating.delivery && `★ ${l.rating.delivery.value.toFixed(1)} ${hi ? `${CHANNEL_NAME[l.platform]} पर` : `on ${CHANNEL_NAME[l.platform]}`}`,
+                      hi ? `${l.menuCount} डिश ${CHANNEL_NAME[l.platform]} से` : `${l.menuCount} dishes from ${CHANNEL_NAME[l.platform]}`,
                     ]
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
-                )}
+                ))}
               </div>
               <Link href={`/join?journey=${outlet.journey ?? "live"}&live=${outlet.live.join(",")}`} className="inline-flex shrink-0 items-center gap-1.5 text-sm text-ink-2 hover:text-ink">
                 <Pencil aria-hidden className="size-3.5" />

@@ -25,7 +25,7 @@ export const outlets = sqliteTable("outlets", {
   // The owner's own listing links, e.g. https://www.zomato.com/ncr/yummy-milkshake-ip-extension-new-delhi
   listings: text("listings", { mode: "json" }).$type<Partial<Record<Platform, string>>>().notNull().default({}),
   // What the public listing pages said when last read (menu excluded; it goes to menu_items).
-  listingData: text("listing_data", { mode: "json" }).$type<{ zomato?: ListingSummary }>().notNull().default({}),
+  listingData: text("listing_data", { mode: "json" }).$type<Partial<Record<Platform, ListingSummary>>>().notNull().default({}),
   ratings: text("ratings", { mode: "json" }).$type<Partial<Record<Platform, { value: number; count: number; change: number }>>>().notNull().default({}),
   isDemo: integer("is_demo", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").notNull().$defaultFn(now),

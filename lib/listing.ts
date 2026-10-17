@@ -15,6 +15,8 @@ export type ListingLink = {
   nameMatches: boolean | null;
   /** A zoma.to share link: the server follows it to the real page. */
   short?: boolean;
+  /** Swiggy's restaurant id, the number at the end of its links. */
+  id?: string;
 };
 
 // Zomato's city segments that don't read well as a city name.
@@ -53,6 +55,7 @@ export function parseListing(raw: string, restaurantName = ""): ListingLink | nu
   let city: string | null = null;
   let slug: string;
   let url: string;
+  let id: string | undefined;
 
   if (host === "zoma.to") {
     // Share links from the app: zoma.to/r/{res_id}
@@ -76,6 +79,8 @@ export function parseListing(raw: string, restaurantName = ""): ListingLink | nu
     } else return null;
     platform = "swiggy";
     url = `https://www.swiggy.com${u.pathname}`.replace(/\/$/, "");
+    id = slug.match(/-(?:rest)?(\d+)$/)?.[1];
+    if (!id) return null;
     slug = slug.replace(/-(?:rest)?\d+$/, "");
   } else return null;
 
@@ -89,5 +94,6 @@ export function parseListing(raw: string, restaurantName = ""): ListingLink | nu
     slug,
     areaHint: rest ? title(rest) : null,
     nameMatches,
+    ...(id ? { id } : {}),
   };
 }
