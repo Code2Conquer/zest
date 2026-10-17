@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { api, refreshAll } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronRight, X } from "lucide-react";
@@ -20,31 +19,19 @@ const JOURNEYS: { id: Journey; title: Key; sub: Key }[] = [
 
 /** The three ways in. Live owners pick their platforms inline, then connect. */
 export function JourneyRouter({ tone = "light" }: { tone?: "light" | "haldi" }) {
-  const { t, lang } = useApp();
+  const { t } = useApp();
   const router = useRouter();
   const [journey, setJourney] = useState<Journey | null>(null);
   const [live, setLive] = useState<Platform[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  /** Creates the owner's restaurant on the server, then moves on. */
-  async function start(j: Journey, platforms: Platform[]) {
-    setBusy(true);
-    setError(null);
-    try {
-      await api("/api/outlet", { method: "POST", json: { journey: j, live: platforms, lang } });
-      // The browser now points at the new restaurant; reload everything that was showing the old one.
-      refreshAll();
-      router.push(j === "live" ? "/connect" : `/start?track=${j}`);
-    } catch (e) {
-      setError((e as Error).message);
-      setBusy(false);
-    }
+  /** On to the profile step, which creates the restaurant. */
+  function start(j: Journey, platforms: Platform[]) {
+    router.push(`/join?journey=${j}${platforms.length ? `&live=${platforms.join(",")}` : ""}`);
   }
 
   function choose(j: Journey) {
     setJourney(j);
-    if (j !== "live") void start(j, ["zomato", "swiggy"]);
+    if (j !== "live") start(j, []);
   }
 
   function togglePlatform(p: Platform) {
@@ -104,7 +91,7 @@ export function JourneyRouter({ tone = "light" }: { tone?: "light" | "haldi" }) 
                     </div>
                     <button
                       type="button"
-                      disabled={live.length === 0 || busy}
+                      disabled={live.length === 0}
                       onClick={() => start("live", live)}
                       className="mt-5 rounded-full bg-ink px-6 py-3 font-medium text-paper transition-opacity disabled:opacity-30"
                     >
@@ -117,7 +104,6 @@ export function JourneyRouter({ tone = "light" }: { tone?: "light" | "haldi" }) 
           </li>
         );
       })}
-      {error && <li className="py-3 text-sm text-chilli">{error}</li>}
     </ul>
   );
 }

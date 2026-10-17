@@ -8,6 +8,8 @@ export const outlets = sqliteTable("outlets", {
   id: text("id").primaryKey().$defaultFn(id),
   name: text("name").notNull(),
   area: text("area").notNull().default(""),
+  city: text("city").notNull().default(""),
+  address: text("address").notNull().default(""),
   cuisines: text("cuisines").notNull().default(""),
   ownerName: text("owner_name").notNull().default(""),
   ownerPhone: text("owner_phone"),
@@ -16,6 +18,11 @@ export const outlets = sqliteTable("outlets", {
   livePlatforms: text("live_platforms", { mode: "json" }).$type<Platform[]>().notNull().default([]),
   email: text("email", { enum: ["gmail", "outlook"] }),
   whatsapp: integer("whatsapp", { mode: "boolean" }).notNull().default(false),
+  // Optional at sign-up: FSSAI licence number and GSTIN as the owner typed them.
+  fssai: text("fssai"),
+  gstin: text("gstin"),
+  // The owner's own listing links, e.g. https://www.zomato.com/ncr/yummy-milkshake-ip-extension-new-delhi
+  listings: text("listings", { mode: "json" }).$type<Partial<Record<Platform, string>>>().notNull().default({}),
   ratings: text("ratings", { mode: "json" }).$type<Partial<Record<Platform, { value: number; count: number; change: number }>>>().notNull().default({}),
   isDemo: integer("is_demo", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").notNull().$defaultFn(now),

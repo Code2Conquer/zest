@@ -17,6 +17,11 @@ export type OutletDTO = {
   id: string;
   name: string;
   area: string;
+  city: string;
+  address: string;
+  fssai: string | null;
+  gstin: string | null;
+  listings: Partial<Record<Platform, string>>;
   cuisines: string;
   ownerName: string;
   ownerPhone: string | null;
@@ -141,3 +146,14 @@ export type MailboxDTO = {
 };
 
 export type MailSyncResult = { checked: number; added: number; payouts: number; done: boolean; error?: string };
+
+export type MailInsightsDTO = {
+  days: number;
+  since: string;
+  mails: { total: number; byKind: Record<"payout" | "report" | "complaint" | "onboarding" | "other", number>; byPlatform: Record<Platform, number> };
+  platforms: { platform: Platform; payouts: number; gross: number; commission: number; ads: number; deductions: number; net: number; upcoming: number }[];
+  unreadPayouts: number;
+  complaints: { id: string; subject: string; receivedAt: string; platform: Platform | null }[];
+  actions: { id: string; subject: string; receivedAt: string; platform: Platform | null }[];
+  highlights: { tone: "good" | "warn" | "info"; text: { en: string; hi: string } }[];
+};

@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Check, ChevronLeft, Lock } from "lucide-react";
+import { Check, ChevronLeft, Lock, Pencil } from "lucide-react";
 import { LangToggle, Wordmark } from "@/components/bits";
+import { MailInsights } from "@/components/mail-insights";
 import { MailboxCard } from "@/components/mailbox-card";
 import { PlatformConnector } from "@/components/platform-connector";
 import { PLATFORMS } from "@/lib/platforms";
@@ -16,7 +17,6 @@ export default function Connect() {
   const hi = lang === "hi";
   const live = outlet?.live.length ? outlet.live : PLATFORMS;
   const connections = outlet?.connections ?? [];
-  const [name, setName] = useState<string | null>(null);
   const [phone, setPhone] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
@@ -41,7 +41,8 @@ export default function Connect() {
 
       <main className="mx-auto grid max-w-6xl gap-12 px-4 pb-24 pt-6 sm:px-8 lg:grid-cols-[1fr_300px]">
         <div>
-          <h1 className="text-[clamp(2rem,4.5vw,3rem)] font-semibold leading-tight tracking-[-0.03em]">{t("connect.title")}</h1>
+          {outlet && !outlet.isDemo && <p className="text-sm font-medium uppercase tracking-wider text-muted">{hi ? "दूसरा क़दम" : "Step 2"}</p>}
+          <h1 className="mt-1 text-[clamp(2rem,4.5vw,3rem)] font-semibold leading-tight tracking-[-0.03em]">{t("connect.title")}</h1>
           <p className="mt-3 max-w-[58ch] text-lg leading-relaxed text-ink-2">{t("connect.sub")}</p>
           {outlet?.isDemo && (
             <p className="mt-4 rounded-xl bg-turmeric-soft px-4 py-3 text-sm">
@@ -53,20 +54,26 @@ export default function Connect() {
             </p>
           )}
 
-          <label className="mt-8 block max-w-md">
-            <span className="mb-1 block text-sm text-ink-2">{hi ? "रेस्टोरेंट का नाम" : "Restaurant name"}</span>
-            <input
-              value={name ?? outlet?.name ?? ""}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={() => name !== null && name.trim() && name !== outlet?.name && save({ name: name.trim() })}
-              className="w-full rounded-lg bg-surface px-3 py-2.5 text-lg outline-none shadow-[inset_0_0_0_1px_var(--line)] focus:shadow-[inset_0_0_0_2px_var(--turmeric)]"
-            />
-          </label>
+          {outlet && !outlet.isDemo && (
+            <div className="mt-8 flex max-w-xl items-start justify-between gap-4 rounded-2xl bg-surface p-4 shadow-[0_0_0_1px_var(--line)]">
+              <div className="min-w-0">
+                <p className="font-medium">{outlet.name}</p>
+                <p className="text-sm text-muted">{[outlet.ownerName, [outlet.area, outlet.city].filter(Boolean).join(", ")].filter(Boolean).join(" · ")}</p>
+              </div>
+              <Link href={`/join?journey=${outlet.journey ?? "live"}&live=${outlet.live.join(",")}`} className="inline-flex shrink-0 items-center gap-1.5 text-sm text-ink-2 hover:text-ink">
+                <Pencil aria-hidden className="size-3.5" />
+                {hi ? "बदलें" : "Edit"}
+              </Link>
+            </div>
+          )}
 
           <ol className="mt-10 space-y-12">
             <Step n={1} title={t("connect.email")} done={!!outlet?.email}>
               <p className="mb-4 max-w-[56ch] text-ink-2">{t("connect.email.sub")}</p>
               <MailboxCard returnTo="/connect" />
+              <div className="mt-3">
+                <MailInsights />
+              </div>
             </Step>
 
             <Step n={2} title={t("connect.platforms")} done={live.every((p) => connections.some((c) => c.platform === p))}>

@@ -19,7 +19,7 @@ const SCOPES = ["openid", "email", "https://www.googleapis.com/auth/gmail.readon
 export const SENDERS = (process.env.GMAIL_SENDERS ?? "zomato.com,swiggy.in,swiggy.com").split(",").map((s) => s.trim()).filter(Boolean);
 const senderQuery = () => `from:(${SENDERS.join(" OR ")})`;
 
-const BACKFILL_DAYS = 90;
+const BACKFILL_DAYS = 30;
 const MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
 
 export class GmailError extends Error {
@@ -186,7 +186,7 @@ async function toInbound(token: string, m: GmailMessage) {
 export type SyncResult = { checked: number; added: number; payouts: number; done: boolean; error?: string };
 
 /**
- * Reads new Zomato and Swiggy mail. The first run backfills the last 90 days;
+ * Reads new Zomato and Swiggy mail. The first run backfills the last 30 days;
  * later runs look back a day from the last sync. Stops before the time budget
  * so it fits a serverless request, and carries on next time.
  */

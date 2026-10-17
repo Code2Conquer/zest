@@ -3,6 +3,7 @@
 import { ChannelTag } from "@/components/bits";
 import { rupees } from "@/components/cards";
 import { EmailIngest } from "@/components/email-ingest";
+import { MailInsights } from "@/components/mail-insights";
 import { useApi } from "@/lib/api";
 import { useApp, useOutlet } from "@/lib/state";
 import type { PayoutDTO } from "@/lib/types";
@@ -25,6 +26,10 @@ export default function Money() {
           <p className="mt-1 max-w-[60ch] text-muted">{hi ? "पेआउट, कमीशन और कटौती, आपके ईमेल से मिलाकर।" : "Payouts, commission and deductions, read from your email."}</p>
         </div>
         <EmailIngest compact />
+      </div>
+
+      <div className="mt-6">
+        <MailInsights />
       </div>
 
       {error && <p className="mt-6 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}

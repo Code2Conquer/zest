@@ -46,7 +46,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="mt-6 px-3">
           <p className="font-medium">{outlet?.name ?? "\u00a0"}</p>
-          <p className="text-sm text-[#eef2ec]/60">{outlet?.area || (outlet ? (state.lang === "hi" ? "पता जोड़ें" : "Add your area in Connections") : "\u00a0")}</p>
+          <p className="text-sm text-[#eef2ec]/60">{[outlet?.area, outlet?.city].filter(Boolean).join(", ") || (outlet ? (state.lang === "hi" ? "पता जोड़ें" : "Add your area in Connections") : "\u00a0")}</p>
         </div>
         <ul className="mt-6 space-y-0.5">
           {NAV.map((n) => (

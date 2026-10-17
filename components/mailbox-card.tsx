@@ -48,7 +48,7 @@ export function MailboxCard({ returnTo }: { returnTo: string }) {
 
   const box = data?.mailbox;
 
-  // Keep reading the 90-day backfill until it's done.
+  // Keep reading the 30-day backfill until it's done.
   useEffect(() => {
     if (!box || box.backfillDone || box.status === "error" || busy) return;
     const id = setTimeout(() => void sync(true), 1500);
@@ -116,7 +116,7 @@ export function MailboxCard({ returnTo }: { returnTo: string }) {
           <p className="mt-3 max-w-[60ch] text-sm leading-relaxed text-ink-2">
             {hi ? "हम सिर्फ़ इन भेजने वालों के मेल पढ़ते हैं: " : "We only read mail from "}
             <span className="font-medium text-ink">{data.senders.join(", ")}</span>
-            {hi ? "। पिछले 90 दिनों से शुरू करते हैं। बाक़ी इनबॉक्स कभी नहीं खोला जाता।" : ", starting with the last 90 days. Nothing else in your inbox is opened."}
+            {hi ? "। पिछले 30 दिनों से शुरू करते हैं। बाक़ी इनबॉक्स कभी नहीं खोला जाता।" : ", starting with the last 30 days. Nothing else in your inbox is opened."}
           </p>
           {outlet?.isDemo ? (
             <p className="mt-3 flex flex-wrap items-center gap-3 text-sm text-turmeric">
@@ -155,7 +155,7 @@ export function MailboxCard({ returnTo }: { returnTo: string }) {
                 {box.status === "error"
                   ? box.statusDetail
                   : !box.backfillDone
-                    ? hi ? "पिछले 90 दिनों के मेल पढ़ रहे हैं…" : "Reading the last 90 days…"
+                    ? hi ? "पिछले 30 दिनों के मेल पढ़ रहे हैं…" : "Reading the last 30 days…"
                     : box.lastSyncAt
                       ? (hi ? "आख़िरी सिंक " : "Last synced ") + time(box.lastSyncAt)
                       : hi ? "जुड़ा हुआ" : "Connected"}

@@ -82,8 +82,12 @@ export default function Connections() {
             [
               ["name", hi ? "नाम" : "Name"],
               ["ownerName", hi ? "आपका नाम" : "Your name"],
-              ["area", hi ? "इलाक़ा और शहर" : "Area and city"],
+              ["area", hi ? "इलाक़ा" : "Area"],
+              ["city", hi ? "शहर" : "City"],
+              ["address", hi ? "पूरा पता" : "Full address"],
               ["cuisines", hi ? "क्विज़ीन" : "Cuisines"],
+              ["fssai", hi ? "FSSAI लाइसेंस नंबर" : "FSSAI licence number"],
+              ["gstin", "GSTIN"],
             ] as const
           ).map(([key, label]) => (
             <label key={key} className="block">
@@ -91,7 +95,7 @@ export default function Connections() {
               <input
                 value={details[key] ?? outlet?.[key] ?? ""}
                 onChange={(e) => setDetails((d) => ({ ...d, [key]: e.target.value }))}
-                onBlur={() => details[key] !== undefined && details[key] !== outlet?.[key] && save({ [key]: details[key] })}
+                onBlur={() => details[key] !== undefined && details[key] !== (outlet?.[key] ?? "") && save({ [key]: (key === "fssai" || key === "gstin") && !details[key].trim() ? null : details[key] })}
                 className={field}
               />
             </label>

@@ -18,7 +18,7 @@ export function handler<P = Record<string, string>>(fn: (req: Request, outlet: O
       return result instanceof Response ? result : NextResponse.json(result);
     } catch (err) {
       if (err instanceof HttpError) return NextResponse.json({ error: err.message }, { status: err.status });
-      if (err instanceof ZodError) return NextResponse.json({ error: "Invalid request.", issues: err.issues }, { status: 400 });
+      if (err instanceof ZodError) return NextResponse.json({ error: err.issues[0]?.message ?? "Invalid request.", issues: err.issues }, { status: 400 });
       console.error(err);
       return NextResponse.json({ error: (err as Error).message || "Something went wrong." }, { status: 500 });
     }

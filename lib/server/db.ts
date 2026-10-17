@@ -88,6 +88,11 @@ const COLUMNS = [
   "ALTER TABLE emails ADD COLUMN snippet TEXT",
   "ALTER TABLE emails ADD COLUMN attachments TEXT",
   "ALTER TABLE payouts ADD COLUMN email_id TEXT",
+  "ALTER TABLE outlets ADD COLUMN city TEXT NOT NULL DEFAULT ''",
+  "ALTER TABLE outlets ADD COLUMN address TEXT NOT NULL DEFAULT ''",
+  "ALTER TABLE outlets ADD COLUMN fssai TEXT",
+  "ALTER TABLE outlets ADD COLUMN gstin TEXT",
+  "ALTER TABLE outlets ADD COLUMN listings TEXT NOT NULL DEFAULT '{}'",
 ];
 const INDEXES = "CREATE UNIQUE INDEX IF NOT EXISTS emails_outlet_external ON emails (outlet_id, external_id);";
 
