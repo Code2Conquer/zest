@@ -33,12 +33,15 @@ export function ListingPreview({ listing }: { listing: PlatformListing | Listing
             )}
             {r ? (
               <span className="text-sm text-muted">
-                {r.count} {listing.rating.delivery ? (hi ? "डिलीवरी रिव्यू" : "delivery reviews") : hi ? "रिव्यू" : "reviews"}
+                {r.count} {listing.rating.delivery ? (hi ? "डिलीवरी रिव्यू" : "delivery reviews") : listing.dineout ? (hi ? "Google रेटिंग" : "Google ratings") : hi ? "डाइनिंग रिव्यू" : "dining reviews"}
               </span>
             ) : (
               <span className="rounded-md bg-turmeric-soft px-1.5 py-0.5 text-sm">{hi ? "अभी रेटिंग नहीं" : "No rating yet"}</span>
             )}
-            <ChannelTag channel={listing.platform} className="ml-auto" />
+            <span className="ml-auto inline-flex items-center gap-2">
+              <ChannelTag channel={listing.platform} />
+              {listing.dineout && <span className="rounded bg-sunken px-1.5 py-0.5 text-xs text-ink-2">Dineout</span>}
+            </span>
           </div>
           {listing.cuisines.length > 0 && <p className="mt-0.5 truncate text-sm text-ink-2">{listing.cuisines.join(", ")}</p>}
           <p className="mt-1 flex items-start gap-1.5 text-sm text-muted">
@@ -53,13 +56,15 @@ export function ListingPreview({ listing }: { listing: PlatformListing | Listing
         </p>
       )}
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line px-4 py-3 text-sm sm:grid-cols-4">
-        <div>
-          <dt className="text-muted">{hi ? "मेन्यू" : "Menu"}</dt>
-          <dd className="flex items-center gap-1 font-medium">
-            <UtensilsCrossed aria-hidden className="size-3.5" />
-            {dishes} {hi ? "डिश" : "dishes"}
-          </dd>
-        </div>
+        {dishes > 0 && (
+          <div>
+            <dt className="text-muted">{hi ? "मेन्यू" : "Menu"}</dt>
+            <dd className="flex items-center gap-1 font-medium">
+              <UtensilsCrossed aria-hidden className="size-3.5" />
+              {dishes} {hi ? "डिश" : "dishes"}
+            </dd>
+          </div>
+        )}
         {listing.costForTwo && (
           <div>
             <dt className="text-muted">{hi ? "दो लोगों का" : "Cost for two"}</dt>
@@ -82,6 +87,19 @@ export function ListingPreview({ listing }: { listing: PlatformListing | Listing
           </div>
         )}
       </dl>
+      {dishes === 0 && !!listing.popularDishes?.length && (
+        <p className="border-t border-line px-4 py-3 text-sm">
+          <span className="text-muted">{hi ? "लोकप्रिय डिश: " : "Popular dishes: "}</span>
+          {listing.popularDishes.join(", ")}
+        </p>
+      )}
+      {dishes === 0 && listing.photos.length > 1 && (
+        <div className="flex gap-2 border-t border-line px-4 py-3">
+          {listing.photos.slice(1, 5).map((src) => (
+            <img key={src} src={src} alt="" className="size-14 rounded-lg bg-sunken object-cover" />
+          ))}
+        </div>
+      )}
       {dishPhotos.length > 0 && (
         <div className="flex gap-2 border-t border-line px-4 py-3">
           {dishPhotos.map((src) => (

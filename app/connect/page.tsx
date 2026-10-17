@@ -62,8 +62,8 @@ export default function Connect() {
                 {Object.values(outlet.listing).map((l) => (
                   <p key={l.platform} className="mt-1 text-sm text-leaf">
                     {[
-                      l.rating.delivery && `★ ${l.rating.delivery.value.toFixed(1)} ${hi ? `${CHANNEL_NAME[l.platform]} पर` : `on ${CHANNEL_NAME[l.platform]}`}`,
-                      hi ? `${l.menuCount} डिश ${CHANNEL_NAME[l.platform]} से` : `${l.menuCount} dishes from ${CHANNEL_NAME[l.platform]}`,
+                      (l.rating.delivery ?? l.rating.dining) && `★ ${(l.rating.delivery ?? l.rating.dining)!.value.toFixed(1)} ${hi ? `${CHANNEL_NAME[l.platform]} पर` : `on ${CHANNEL_NAME[l.platform]}`}`,
+                      l.menuCount > 0 && (hi ? `${l.menuCount} डिश ${CHANNEL_NAME[l.platform]} से` : `${l.menuCount} dishes from ${CHANNEL_NAME[l.platform]}`),
                     ]
                       .filter(Boolean)
                       .join(" · ")}

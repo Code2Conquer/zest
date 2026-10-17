@@ -4,10 +4,12 @@ import type { PlatformListing } from "../types";
 import { HttpError } from "./approvals";
 import { arr, cached, num, obj, relay, str, UA, via, type Json } from "./scrape";
 
-// Reads a restaurant's Swiggy listing from the menu API Swiggy's mobile site uses.
-// The web page sits behind a bot check; the API answers with the details, rating,
-// FSSAI number and the full menu. It wants a location, but returns the menu even
-// when that location is outside the delivery area, so a rough city centre is enough.
+// Reads a restaurant's Swiggy listing. Delivery listings come from the menu API
+// Swiggy's mobile site uses (the desktop page sits behind a bot check): details,
+// rating, FSSAI number and the full menu. It wants a location, but returns the menu
+// even outside the delivery area, so a rough city centre is enough. Dineout (table
+// booking) listings have no dish list; their page, which loads for a mobile browser,
+// carries the details, Google rating, amenities and popular dishes.
 
 const CITY_CENTRES: Record<string, [number, number]> = {
   delhi: [28.6139, 77.209],
@@ -26,7 +28,8 @@ const CITY_CENTRES: Record<string, [number, number]> = {
 };
 
 const IMAGE = "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_300,h_300,c_fit/";
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DINEOUT_IMAGE = "https://dineout-media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_600/";
+const MOBILE_UA = "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Mobile Safari/537.36";
 
 /** "1K+ ratings" -> 1000, "120 ratings" -> 120. */
 function ratingCount(s: string) {
@@ -81,10 +84,6 @@ export function readSwiggy(data: Json, url: string): PlatformListing | null {
     else if (type.endsWith(".RestaurantAddress")) address = str(c.completeAddress);
   }
 
-  // Hours: one line when every day is the same, else one line per day.
-  const days = arr(obj(obj(info.timingsInfo).outletTiming).infoList).map(obj);
-  const slots = days.map((d) => str(d.subtitle));
-  const hours = days.length === 7 && new Set(slots).size === 1 ? [`Mon-Sun ${slots[0]}`] : days.map((d) => `${str(d.title).slice(0, 3)} ${str(d.subtitle)}`);
 
   const value = num(info.avgRating) ?? num(info.avgRatingString);
   const [lat, lng] = str(info.latLong).split(",").map(Number);
@@ -105,7 +104,7 @@ export function readSwiggy(data: Json, url: string): PlatformListing | null {
     pincode: str(info.postalCode) || null,
     location: Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null,
     phone: str(info.phone) || null,
-    hours: hours.filter((h) => h.trim()),
+    hours: hoursFrom(info.timingsInfo),
     costForTwo: num(info.costForTwo) !== null ? Math.round(num(info.costForTwo)! / 100) : null,
     highlights: [info.veg === true ? "Pure veg" : "", ...arr(obj(info.aggregatedDiscountInfo).descriptionList).map((d) => str(obj(d).meta)).filter((m) => m && m !== "freedel")].filter(Boolean),
     status: str(closed.reason) && /permanent/i.test(str(closed.reason)) ? "closed" : "open",
@@ -117,11 +116,106 @@ export function readSwiggy(data: Json, url: string): PlatformListing | null {
   };
 }
 
+/** Condenses Swiggy's seven-day timings list. */
+function hoursFrom(timingsInfo: unknown) {
+  const days = arr(obj(obj(timingsInfo).outletTiming).infoList).map(obj);
+  const slots = days.map((d) => str(d.subtitle));
+  const hours = days.length === 7 && new Set(slots).size === 1 ? [`Mon-Sun ${slots[0]}`] : days.map((d) => `${str(d.title).slice(0, 3)} ${str(d.subtitle)}`);
+  return hours.filter((h) => h.trim());
+}
+
+/** Reads a Dineout page: its Next.js page data plus the schema.org block. */
+export function readDineout(html: string, url: string): PlatformListing | null {
+  const next = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)?.[1];
+  let cards: Json[] = [];
+  try {
+    cards = arr(obj(obj(obj(obj(JSON.parse(next ?? "{}")).props).pageProps).widgetResponse).cards).map((c) => obj(obj(obj(c).card).card));
+  } catch {
+    return null;
+  }
+  let ld: Json = {};
+  for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+    try {
+      const j = obj(JSON.parse(m[1]));
+      if (str(j["@type"]) === "Restaurant") ld = j;
+    } catch {}
+  }
+  const masthead = cards.find((c) => str(c["@type"]).endsWith(".EntityInfoWithMasthead"));
+  const info = obj(masthead?.info);
+  const name = str(info.name) || str(ld.name);
+  if (!name) return null;
+
+  const location = obj(info.locationInfo);
+  const attrs = obj(obj(info.entityAttributes).restaurantEntityAttributes);
+  const ratings = obj(info.ratingsInfo);
+  const aggregate = obj(ld.aggregateRating);
+  const value = num(ratings.value) ?? num(aggregate.ratingValue);
+  const count = num(ratings.count) ?? num(aggregate.reviewCount) ?? 0;
+  const highlights = (title: RegExp) => arr(cards.find((c) => str(c["@type"]).endsWith(".RestaurantHighlights") && title.test(str(c.title)))?.element).map(str).filter(Boolean);
+  const text = (title: string) => str(obj(cards.find((c) => str(c["@type"]).endsWith(".TextInfoWidget") && str(obj(c.title).info) === title)?.description).info);
+  // "12615.3 km • B 14/1-6, Middle Circle, Connaught Place, 110001": drop the distance from wherever we asked.
+  const address = text("Location").replace(/^[\d.]+\s*km\s*•\s*/, "") || str(location.formattedAddress);
+  const cuisines = (text("Cuisines") || arr(attrs.cuisines).map(str).join(", ") || arr(ld.servesCuisine).map(str).join(", ")).split(",").map((c) => c.trim()).filter(Boolean);
+  const photos = arr(obj(cards.find((c) => str(c["@type"]).endsWith(".StaggeredGrid"))).info)
+    .map((p) => str(obj(obj(p).imageCardInfo).imageId))
+    .filter(Boolean)
+    .map((id) => DINEOUT_IMAGE + id);
+  const lat = num(location.lat);
+  const lng = num(location.long);
+  const ldAddress = obj(ld.address);
+  const area = address.split(",").map((p) => p.trim()).filter((p) => p && !/^\d{6}$/.test(p)).at(-1) ?? "";
+  const phone = str(ld.telephone).replace(/[^\d+]/g, "") || str(arr(obj(info.callDetail).actions).map(obj)[0]?.text) || null;
+
+  return {
+    platform: "swiggy",
+    resId: str(masthead?.id) || (url.match(/(\d+)\/dineout/)?.[1] ?? ""),
+    url,
+    name,
+    cuisines,
+    rating: { delivery: null, dining: value ? { value, count } : null },
+    address,
+    locality: [area, str(obj(location.city).name)].filter(Boolean).join(", "),
+    area,
+    city: str(obj(location.city).name) || str(ldAddress.addressLocality),
+    pincode: str(ldAddress.postalCode) || address.match(/\b\d{6}\b/)?.[0] || null,
+    location: lat !== null && lng !== null ? { lat, lng } : null,
+    phone,
+    hours: hoursFrom(info.timingsInfo),
+    costForTwo: num((str(attrs.costForTwo) || str(ld.priceRange)).replace(/[^\d]/g, "")),
+    highlights: highlights(/amenities/i),
+    status: "open",
+    deliveryOnly: false,
+    dineout: true,
+    popularDishes: highlights(/popular dishes/i),
+    fssai: null,
+    photos: photos.length ? photos.slice(0, 6) : str(ld.image) ? [str(ld.image)] : [],
+    menu: [],
+    fetchedAt: new Date().toISOString(),
+  };
+}
+
+async function loadDineout(url: string): Promise<PlatformListing> {
+  let res: Response;
+  try {
+    res = await fetch(via(url), { headers: relay ? { Accept: "text/html" } : { "User-Agent": MOBILE_UA, Accept: "text/html", "Accept-Language": "en-IN,en;q=0.9" }, redirect: "follow", signal: AbortSignal.timeout(12_000) });
+  } catch {
+    throw new HttpError(502, "Couldn't reach Swiggy just now. Try again in a minute.");
+  }
+  if (res.status === 404) throw new HttpError(404, "Swiggy says that page doesn't exist. Check the link.");
+  const listing = res.ok ? readDineout(await res.text(), url) : null;
+  if (!listing) {
+    console.warn("swiggy dineout unavailable", url, res.status);
+    throw new HttpError(502, res.status === 403 || res.status === 202 ? "Swiggy didn't let our server read the page right now." : `Couldn't read that Swiggy Dineout page (${res.status}).`);
+  }
+  return listing;
+}
+
 /** Fetches and reads a Swiggy listing link. Throws HttpError with a message the owner can act on. */
 export async function fetchSwiggyListing(raw: string): Promise<PlatformListing> {
   const link = parseListing(raw);
   if (link?.platform !== "swiggy" || !link.id) throw new HttpError(400, "That isn't a Swiggy restaurant link.");
   const { url, id, city } = link;
+  if (link.dineout) return cached(url, () => loadDineout(url));
   return cached(url, async () => {
     const [lat, lng] = CITY_CENTRES[city ?? ""] ?? CITY_CENTRES.delhi;
     const api = `https://www.swiggy.com/mapi/menu/pl?page-type=REGULAR_MENU&complete-menu=true&lat=${lat}&lng=${lng}&restaurantId=${id}`;
@@ -132,6 +226,8 @@ export async function fetchSwiggyListing(raw: string): Promise<PlatformListing> 
       throw new HttpError(502, "Couldn't reach Swiggy just now. Try again in a minute.");
     }
     const data = res.ok ? obj(await res.json().catch(() => null)) : null;
+    // No delivery menu for this id: it may be a Dineout-only restaurant.
+    if (data && res.ok && !arr(obj(data.data).cards).length) return loadDineout(`https://www.swiggy.com/restaurants/${id}/dineout`);
     if (!data || !arr(obj(data.data).cards).length) {
       console.warn("swiggy listing unavailable", url, res.status);
       throw new HttpError(502, res.status === 403 || res.status === 202 ? "Swiggy didn't let our server read the page right now." : `Swiggy didn't return the restaurant (${res.status}). Try again in a minute.`);

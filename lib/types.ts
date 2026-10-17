@@ -179,6 +179,10 @@ export type PlatformListing = {
   highlights: string[];
   status: "open" | "temporarily_closed" | "closed";
   deliveryOnly: boolean;
+  /** Set for a Swiggy Dineout (table booking) page, which has no dish list. */
+  dineout?: boolean;
+  /** Dish names the page calls popular, when it has no full menu. */
+  popularDishes?: string[];
   fssai: string | null;
   photos: string[];
   menu: { name: string; category: string; price: number; description: string; veg: boolean; photo: string | null; available: boolean; bestseller: boolean }[];

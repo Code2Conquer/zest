@@ -17,6 +17,8 @@ export type ListingLink = {
   short?: boolean;
   /** Swiggy's restaurant id, the number at the end of its links. */
   id?: string;
+  /** A Swiggy Dineout (table booking) page rather than a delivery menu. */
+  dineout?: boolean;
 };
 
 // Zomato's city segments that don't read well as a city name.
@@ -56,6 +58,8 @@ export function parseListing(raw: string, restaurantName = ""): ListingLink | nu
   let slug: string;
   let url: string;
   let id: string | undefined;
+  let dineout = false;
+  let pathArea: string | null = null;
 
   if (host === "zoma.to") {
     // Share links from the app: zoma.to/r/{res_id}
@@ -70,30 +74,34 @@ export function parseListing(raw: string, restaurantName = ""): ListingLink | nu
     slug = parts[1];
     url = `https://www.zomato.com/${city}/${slug}`;
   } else if (host === "swiggy.com" || host.endsWith(".swiggy.com")) {
-    // /restaurants/{slug}-{id} or /city/{city}/{slug}-rest{id}
-    const i = parts.indexOf("restaurants");
-    if (i >= 0 && parts[i + 1]) slug = parts[i + 1];
-    else if (parts[0] === "city" && parts[2]) {
-      city = parts[1];
-      slug = parts[2];
-    } else return null;
+    // Delivery: /restaurants/{slug}-{id} or /city/{city}/{slug}-rest{id}
+    // Dineout: /restaurants/{city}/{area}/{slug}-{id}/dineout[/menu|/photos]
+    // Also the bare /restaurants/{id}/dineout that Dineout's own tabs link to.
+    const at = parts.findIndex((p, i) => /-(?:rest)?\d+$/.test(p) || (i === 1 && parts[0] === "restaurants" && /^\d+$/.test(p)));
+    if (at < 0) return null;
     platform = "swiggy";
-    url = `https://www.swiggy.com${u.pathname}`.replace(/\/$/, "");
-    id = slug.match(/-(?:rest)?(\d+)$/)?.[1];
-    if (!id) return null;
-    slug = slug.replace(/-(?:rest)?\d+$/, "");
+    id = parts[at].match(/(?:^|-(?:rest)?)(\d+)$/)![1];
+    slug = parts[at].replace(/(?:^|-(?:rest)?)\d+$/, "");
+    if (parts[0] === "city" && at === 2) city = parts[1];
+    else if (parts[0] === "restaurants" && at === 3) {
+      city = parts[1];
+      pathArea = title(parts[2]);
+    }
+    dineout = parts[at + 1] === "dineout";
+    url = `https://www.swiggy.com/${parts.slice(0, at + 1).join("/")}${dineout ? "/dineout" : ""}`;
   } else return null;
 
   const name = slugify(restaurantName);
-  const nameMatches = name ? slug === name || slug.startsWith(`${name}-`) : null;
+  const nameMatches = name && slug ? slug === name || slug.startsWith(`${name}-`) : null;
   const rest = nameMatches ? slug.slice(name.length).replace(/^-/, "") : "";
   return {
     platform,
     url,
     city,
     slug,
-    areaHint: rest ? title(rest) : null,
+    areaHint: rest ? title(rest) : pathArea,
     nameMatches,
     ...(id ? { id } : {}),
+    ...(dineout ? { dineout } : {}),
   };
 }

@@ -203,9 +203,13 @@ function JoinForm({ journey, platforms, initial }: { journey: Journey; platforms
                       <>
                         <ListingPreview listing={read[p].listing} />
                         <p className="mt-2 text-sm text-leaf">
-                          {hi
-                            ? `खाली जगहें ${CHANNEL_NAME[p]} से भर दीं। रेस्टोरेंट बनने पर ${read[p].listing.menu.length} डिश, फ़ोटो और ${CHANNEL_NAME[p]} के दाम के साथ, आपके मेन्यू में आ जाएँगी।`
-                            : `We filled in the empty fields from ${CHANNEL_NAME[p]}. Your ${read[p].listing.menu.length} dishes, with photos and ${CHANNEL_NAME[p]} prices, come into your menu when you create the restaurant.`}
+                          {read[p].listing.menu.length === 0
+                            ? hi
+                              ? `खाली जगहें ${CHANNEL_NAME[p]} से भर दीं। इस पेज पर डिश की सूची नहीं है, मेन्यू बाद में जोड़ें।`
+                              : `We filled in the empty fields from ${CHANNEL_NAME[p]}. This page has no dish list, so add your menu later.`
+                            : hi
+                              ? `खाली जगहें ${CHANNEL_NAME[p]} से भर दीं। रेस्टोरेंट बनने पर ${read[p].listing.menu.length} डिश, ${read[p].listing.menu.some((m) => m.photo) ? "फ़ोटो और " : ""}${CHANNEL_NAME[p]} के दाम के साथ, आपके मेन्यू में आ जाएँगी।`
+                              : `We filled in the empty fields from ${CHANNEL_NAME[p]}. Your ${read[p].listing.menu.length} dishes, with ${read[p].listing.menu.some((m) => m.photo) ? "photos and " : ""}${CHANNEL_NAME[p]} prices, come into your menu when you create the restaurant.`}
                         </p>
                       </>
                     )}

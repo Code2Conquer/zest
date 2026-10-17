@@ -44,7 +44,8 @@ export async function applyListing(outlet: Outlet, listing: PlatformListing) {
   const p = listing.platform;
   const firstRead = !outlet.listingData[p];
   const fill = (current: string | null, next: string | null) => (current?.trim() ? current : (next ?? current));
-  const delivery = listing.rating.delivery;
+  // A Dineout-only listing has just a dining (Google) rating; it's still this platform's rating.
+  const delivery = listing.rating.delivery ?? listing.rating.dining;
   const [row] = await db
     .update(outlets)
     .set({
@@ -85,7 +86,7 @@ export async function applyListing(outlet: Outlet, listing: PlatformListing) {
       if (mine.available[p]) await db.update(menuItems).set({ available: { ...mine.available, [p]: false } }).where(eq(menuItems.id, mine.id));
     }
     if (fresh.length) {
-      // With no menu yet, a dish is offered everywhere; otherwise only where it was found.
+      // With no menu yet, a dish is offered everywhere (except where the outlet is Dineout-only); otherwise only where it was found.
       const everywhere = existing.length === 0;
       await db.insert(menuItems).values(
         fresh.map((it, i) => ({
@@ -98,11 +99,17 @@ export async function applyListing(outlet: Outlet, listing: PlatformListing) {
           description: it.description,
           photoUrl: it.photo,
           price: Object.fromEntries(PLATFORMS.map((q) => [q, it.price])) as Record<(typeof PLATFORMS)[number], number>,
-          available: Object.fromEntries(PLATFORMS.map((q) => [q, q === p ? it.available : everywhere && it.available])) as Record<(typeof PLATFORMS)[number], boolean>,
+          available: Object.fromEntries(PLATFORMS.map((q) => [q, q === p ? it.available : everywhere && !outlet.listingData[q]?.dineout && it.available])) as Record<(typeof PLATFORMS)[number], boolean>,
           sort: existing.length + i + 1,
         })),
       );
       imported = fresh.length;
+    }
+  }
+  // A Dineout-only listing means no delivery menu on this platform.
+  if (firstRead && listing.dineout && !menu.length) {
+    for (const mine of await db.select().from(menuItems).where(eq(menuItems.outletId, outlet.id))) {
+      if (mine.available[p]) await db.update(menuItems).set({ available: { ...mine.available, [p]: false } }).where(eq(menuItems.id, mine.id));
     }
   }
   await audit(outlet.id, `${p}-listing`, "listing.read", { url: listing.url, resId: listing.resId, rating: delivery?.value ?? null, menuImported: imported, menuMatched: matched });
