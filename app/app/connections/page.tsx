@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { ChannelTag } from "@/components/bits";
-import { EmailIngest } from "@/components/email-ingest";
+import { MailboxCard } from "@/components/mailbox-card";
 import { PlatformConnector } from "@/components/platform-connector";
 import { api, refreshAll, useApi } from "@/lib/api";
 import { PLATFORMS, type Platform } from "@/lib/platforms";
@@ -21,6 +21,9 @@ const ACTION_LABEL: Record<string, { en: string; hi: string }> = {
   "connection.saved": { en: "Connection saved", hi: "कनेक्शन सेव हुआ" },
   "connection.removed": { en: "Disconnected", hi: "डिस्कनेक्ट किया" },
   "payout.ingested": { en: "Payout read from email", hi: "ईमेल से पेआउट पढ़ा" },
+  "gmail.connected": { en: "Gmail connected", hi: "Gmail जुड़ा" },
+  "gmail.synced": { en: "Read new mail", hi: "नए मेल पढ़े" },
+  "gmail.disconnected": { en: "Gmail disconnected, mail deleted", hi: "Gmail हटाया, मेल मिटाए" },
   "outlet.updated": { en: "Details updated", hi: "जानकारी अपडेट हुई" },
   "outlet.created": { en: "Restaurant started", hi: "रेस्टोरेंट शुरू हुआ" },
   "menu.imported": { en: "Dishes added to menu", hi: "मेन्यू में डिश जोड़ी" },
@@ -117,7 +120,7 @@ export default function Connections() {
       <section className="mt-10">
         <h2 className="font-medium">{t("connect.email")}</h2>
         <div className="mt-3">
-          <EmailIngest compact />
+          <MailboxCard returnTo="/app/connections" />
         </div>
       </section>
 

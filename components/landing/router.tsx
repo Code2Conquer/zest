@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { api } from "@/lib/api";
+import { api, refreshAll } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, ChevronRight, X } from "lucide-react";
@@ -33,6 +33,8 @@ export function JourneyRouter({ tone = "light" }: { tone?: "light" | "haldi" }) 
     setError(null);
     try {
       await api("/api/outlet", { method: "POST", json: { journey: j, live: platforms, lang } });
+      // The browser now points at the new restaurant; reload everything that was showing the old one.
+      refreshAll();
       router.push(j === "live" ? "/connect" : `/start?track=${j}`);
     } catch (e) {
       setError((e as Error).message);

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Check, ChevronLeft, Lock } from "lucide-react";
 import { LangToggle, Wordmark } from "@/components/bits";
-import { EmailIngest } from "@/components/email-ingest";
+import { MailboxCard } from "@/components/mailbox-card";
 import { PlatformConnector } from "@/components/platform-connector";
 import { PLATFORMS } from "@/lib/platforms";
 import { useApp } from "@/lib/state";
@@ -65,33 +65,8 @@ export default function Connect() {
 
           <ol className="mt-10 space-y-12">
             <Step n={1} title={t("connect.email")} done={!!outlet?.email}>
-              <p className="max-w-[56ch] text-ink-2">{t("connect.email.sub")}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {(["gmail", "outlook"] as const).map((e) => (
-                  <button
-                    key={e}
-                    type="button"
-                    onClick={() => save({ email: outlet?.email === e ? null : e })}
-                    aria-pressed={outlet?.email === e}
-                    className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 ${
-                      outlet?.email === e ? "bg-leaf-soft text-leaf shadow-[0_0_0_1px_var(--leaf)]" : "bg-surface shadow-[0_0_0_1px_var(--line)] hover:shadow-[0_0_0_1px_var(--ink-2)]"
-                    }`}
-                  >
-                    {outlet?.email === e && <Check aria-hidden className="size-4" />}
-                    {t(e === "gmail" ? "connect.google" : "connect.outlook")}
-                  </button>
-                ))}
-              </div>
-              {outlet?.email && (
-                <div className="mt-4 space-y-3">
-                  <p className="max-w-[58ch] text-sm text-muted">
-                    {hi
-                      ? "Google/Microsoft साइन-इन सर्वर पर सेट होने तक, पेआउट मेल यहाँ पेस्ट करें या ईमेल फ़ॉरवर्डिंग नियम से भेजें।"
-                      : "Until Google or Microsoft sign-in is set up on the server, paste payout mails here or send them with a forwarding rule."}
-                  </p>
-                  <EmailIngest compact />
-                </div>
-              )}
+              <p className="mb-4 max-w-[56ch] text-ink-2">{t("connect.email.sub")}</p>
+              <MailboxCard returnTo="/connect" />
             </Step>
 
             <Step n={2} title={t("connect.platforms")} done={live.every((p) => connections.some((c) => c.platform === p))}>

@@ -90,6 +90,8 @@ export const payouts = sqliteTable("payouts", {
   status: text("status", { enum: ["upcoming", "credited"] }).notNull(),
   payDate: text("pay_date").notNull(),
   source: text("source").notNull(),
+  // Set when the payout was read from an email, so disconnecting the mailbox removes it too.
+  emailId: text("email_id"),
   createdAt: text("created_at").notNull().$defaultFn(now),
 });
 
@@ -145,6 +147,8 @@ export const notifications = sqliteTable("notifications", {
   sentAt: text("sent_at"),
 });
 
+export type MailKind = "payout" | "report" | "complaint" | "onboarding" | "other";
+
 export const emails = sqliteTable("emails", {
   id: text("id").primaryKey().$defaultFn(id),
   outletId: text("outlet_id").notNull(),
@@ -153,6 +157,27 @@ export const emails = sqliteTable("emails", {
   receivedAt: text("received_at").notNull().$defaultFn(now),
   parsedAs: text("parsed_as"),
   parsed: text("parsed", { mode: "json" }).$type<Record<string, unknown> | null>(),
+  // Where it came from: "paste" or "gmail", and the provider's message id for de-duplication.
+  origin: text("origin").notNull().default("paste"),
+  externalId: text("external_id"),
+  kind: text("kind").$type<MailKind>(),
+  snippet: text("snippet"),
+  attachments: text("attachments", { mode: "json" }).$type<{ filename: string; mimeType: string; read: boolean }[]>(),
+});
+
+/** A connected inbox. One per outlet for now. */
+export const mailboxes = sqliteTable("mailboxes", {
+  id: text("id").primaryKey().$defaultFn(id),
+  outletId: text("outlet_id").notNull().unique(),
+  provider: text("provider", { enum: ["gmail"] }).notNull(),
+  address: text("address").notNull(),
+  // Encrypted { refreshToken, accessToken, expiresAt }. Never sent to the client or the model.
+  secret: text("secret").notNull(),
+  status: text("status", { enum: ["connected", "syncing", "error"] }).notNull().default("connected"),
+  statusDetail: text("status_detail"),
+  backfillDone: integer("backfill_done", { mode: "boolean" }).notNull().default(false),
+  lastSyncAt: text("last_sync_at"),
+  connectedAt: text("connected_at").notNull().$defaultFn(now),
 });
 
 export const chatMessages = sqliteTable("chat_messages", {
@@ -171,3 +196,5 @@ export type OrderRow = typeof orders.$inferSelect;
 export type PayoutRow = typeof payouts.$inferSelect;
 export type ReviewRow = typeof reviews.$inferSelect;
 export type ApprovalRow = typeof approvals.$inferSelect;
+export type Mailbox = typeof mailboxes.$inferSelect;
+export type EmailRow = typeof emails.$inferSelect;

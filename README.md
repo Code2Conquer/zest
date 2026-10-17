@@ -71,7 +71,9 @@ Browser (Next.js pages)  ──►  /api/* route handlers  ──►  lib/server
 
 **Copilot.** With `ANTHROPIC_API_KEY`, the copilot runs Claude (`claude-opus-5-5`, server-side refusal fallback on) with nine tools: five that read the database (sales, orders, payouts, reviews, menu) and four that draft approvals (menu change, review reply, dispute, promo). Without a key it answers from the same data with keyword rules. Conversations are stored per restaurant.
 
-**Data in.** Payout emails go through `POST /api/ingest/email` (paste on the Money page, or a mail-forwarding rule). Orders arrive by `POST /api/sync` (pull from MCP/API connectors; run it on a schedule) or signed webhooks at `/api/webhooks/{platform}`.
+**Gmail.** Owners connect Gmail with read-only access. Zest searches only Zomato and Swiggy senders (`GMAIL_SENDERS`), reads the last 90 days on first connect, then new mail on each sync. Each mail is sorted into payout, report, complaint, onboarding or other; payouts are extracted from the body (rules) or, with Claude, from PDF and CSV attachments. Tokens are stored encrypted. Disconnecting revokes access and deletes everything read, including payouts. While the Google app is in Testing mode, owners must be listed as test users and reconnect every 7 days.
+
+**Data in.** Payout emails also go through `POST /api/ingest/email` (paste on the Money page, or a mail-forwarding rule). Orders arrive by `POST /api/sync` (pull from MCP/API connectors; run it on a schedule) or signed webhooks at `/api/webhooks/{platform}`.
 
 ## API
 
@@ -84,6 +86,9 @@ Browser (Next.js pages)  ──►  /api/* route handlers  ──►  lib/server
 | `GET /api/menu`, `POST /api/menu/changes`, `POST /api/menu/import` | Menu, edits as an approval, add dishes |
 | `GET /api/orders`, `POST /api/sync`, `POST /api/webhooks/[platform]` | Orders in |
 | `GET /api/payouts`, `POST /api/ingest/email` | Payouts and email ingestion |
+| `GET/DELETE /api/mail`, `POST /api/mail/sync` | Connected inbox status, disconnect, sync now |
+| `GET /api/mail/google/start`, `/callback` | Google sign-in for Gmail |
+| `GET /api/cron` | Scheduled sync of every inbox and platform (needs `CRON_SECRET`) |
 | `GET /api/reviews`, `POST /api/reviews/[id]/reply` | Reviews and reply drafts |
 | `GET/POST /api/approvals`, `POST /api/approvals/[id]` | Drafts; `{action: approve \| skip \| undo}` |
 | `POST /api/onboarding/document`, `/menu`, `/submit` | Read documents and menu photos, listing application |
@@ -94,9 +99,9 @@ Browser (Next.js pages)  ──►  /api/* route handlers  ──►  lib/server
 ## Not built yet
 
 - **Login.** A signed cookie identifies the restaurant per browser. Phone OTP login comes before launch.
-- **Gmail / Outlook sign-in.** Needs OAuth app credentials; payout mails come in by paste or forwarding for now.
+- **Outlook sign-in.** Gmail is done; Outlook is next if owners ask for it.
 - **Partner-app browser worker**, and real partner API paths (see Connectors).
-- **Scheduling.** `/api/sync` and `/api/notifications/daily-summary` are ready to be called by a cron job.
+- **Scheduling.** Vercel Cron calls `/api/cron` daily (Hobby limit); `.github/workflows/sync.yml` calls it every 15 minutes once the `ZEST_URL` and `CRON_SECRET` repository secrets are set.
 - **Dining and Growth screens** (Growth works through the copilot's promo drafts).
 
 ## Design notes

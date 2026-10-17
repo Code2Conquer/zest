@@ -122,3 +122,20 @@ export type CopilotReply = {
 };
 
 export type ChatEntry = { id: string; role: "user"; text: string } | { id: string; role: "assistant"; reply: CopilotReply };
+
+export type MailboxDTO = {
+  configured: boolean;
+  senders: string[];
+  mailbox: null | {
+    provider: "gmail";
+    address: string;
+    status: "connected" | "syncing" | "error";
+    statusDetail: string | null;
+    backfillDone: boolean;
+    lastSyncAt: string | null;
+    counts: Record<"payout" | "report" | "complaint" | "onboarding" | "other", number>;
+  };
+  recent: { id: string; from: string; subject: string; kind: string | null; receivedAt: string; snippet: string | null; payout: boolean; attachments: { filename: string; read: boolean }[] }[];
+};
+
+export type MailSyncResult = { checked: number; added: number; payouts: number; done: boolean; error?: string };

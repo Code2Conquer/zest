@@ -69,11 +69,38 @@ CREATE TABLE IF NOT EXISTS emails (
   id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL, from_addr TEXT NOT NULL, subject TEXT NOT NULL,
   received_at TEXT NOT NULL, parsed_as TEXT, parsed TEXT
 );
+CREATE TABLE IF NOT EXISTS mailboxes (
+  id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL UNIQUE, provider TEXT NOT NULL, address TEXT NOT NULL,
+  secret TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'connected', status_detail TEXT,
+  backfill_done INTEGER NOT NULL DEFAULT 0, last_sync_at TEXT, connected_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS chat_messages (
   id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL, role TEXT NOT NULL, content TEXT NOT NULL, created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS chat_messages_outlet ON chat_messages (outlet_id, created_at);
 `;
+
+// Columns added after the first release. Each runs once; "duplicate column" means it's already there.
+const COLUMNS = [
+  "ALTER TABLE emails ADD COLUMN origin TEXT NOT NULL DEFAULT 'paste'",
+  "ALTER TABLE emails ADD COLUMN external_id TEXT",
+  "ALTER TABLE emails ADD COLUMN kind TEXT",
+  "ALTER TABLE emails ADD COLUMN snippet TEXT",
+  "ALTER TABLE emails ADD COLUMN attachments TEXT",
+  "ALTER TABLE payouts ADD COLUMN email_id TEXT",
+];
+const INDEXES = "CREATE UNIQUE INDEX IF NOT EXISTS emails_outlet_external ON emails (outlet_id, external_id);";
+
+async function migrate(c: Client) {
+  for (const sql of COLUMNS) {
+    try {
+      await c.execute(sql);
+    } catch (err) {
+      if (!/duplicate column/i.test((err as Error).message)) throw err;
+    }
+  }
+  await c.execute(INDEXES);
+}
 
 type Db = LibSQLDatabase<typeof schema>;
 
@@ -95,6 +122,7 @@ export function ready(): Promise<void> {
   if (!globalForDb.zestReady) {
     globalForDb.zestReady = (async () => {
       await client().executeMultiple(TABLES);
+      await migrate(client());
       const { seedDemo } = await import("./seed");
       await seedDemo();
     })().catch((err) => {

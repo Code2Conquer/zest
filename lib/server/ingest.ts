@@ -1,14 +1,26 @@
 import "server-only";
+import type Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import type { Platform } from "../platforms";
 import { audit } from "./approvals";
 import { claude, hasClaude, MODEL } from "./claude";
 import { db } from "./db";
-import { emails, payouts } from "./schema";
+import { and, eq } from "drizzle-orm";
+import { emails, payouts, type MailKind } from "./schema";
 import { notify } from "./whatsapp";
 
-export type InboundEmail = { from: string; subject: string; text: string; receivedAt?: string };
+export type InboundAttachment = { filename: string; mimeType: string; data: string /* base64 */ };
+
+export type InboundEmail = {
+  from: string;
+  subject: string;
+  text: string;
+  receivedAt?: string;
+  attachments?: InboundAttachment[];
+  origin?: "paste" | "gmail";
+  externalId?: string;
+};
 
 const PayoutSchema = z.object({
   is_payout: z.boolean().describe("True only if this email reports a restaurant payout or settlement"),
@@ -60,33 +72,77 @@ export function parsePayoutWithRules(mail: InboundEmail): ParsedPayout | null {
   };
 }
 
+// Attachments Claude can read directly: PDFs as documents, CSV and plain text inline.
+const readable = (a: InboundAttachment) => a.mimeType === "application/pdf" || a.mimeType === "text/csv" || a.mimeType === "text/plain" || /\.csv$/i.test(a.filename);
+
 async function parsePayoutWithClaude(mail: InboundEmail): Promise<ParsedPayout | null> {
+  const files = (mail.attachments ?? []).filter(readable).slice(0, 3);
+  const content: Anthropic.ContentBlockParam[] = [];
+  for (const f of files) {
+    if (f.mimeType === "application/pdf") {
+      content.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: f.data }, title: f.filename });
+    } else {
+      content.push({ type: "text", text: `<attachment name="${f.filename}">\n${Buffer.from(f.data, "base64").toString("utf8").slice(0, 30000)}\n</attachment>` });
+    }
+  }
+  content.push({
+    type: "text",
+    text: `Extract the payout details from this email to an Indian restaurant${files.length ? " and its attachments" : ""}. Amounts are rupees as plain numbers. If it isn't a payout or settlement, set is_payout to false.\n\n<email>\nFrom: ${mail.from}\nSubject: ${mail.subject}\n\n${mail.text.slice(0, 20000)}\n</email>`,
+  });
   const res = await claude().messages.parse({
     model: MODEL,
     max_tokens: 2000,
     output_config: { effort: "low", format: zodOutputFormat(PayoutSchema) },
-    messages: [
-      {
-        role: "user",
-        content: `Extract the payout details from this email to an Indian restaurant. Amounts are rupees as plain numbers. If it isn't a payout or settlement email, set is_payout to false.\n\n<email>\nFrom: ${mail.from}\nSubject: ${mail.subject}\n\n${mail.text.slice(0, 20000)}\n</email>`,
-      },
-    ],
+    messages: [{ role: "user", content }],
   });
   if (res.stop_reason === "refusal") return null;
   return res.parsed_output ?? null;
 }
 
-/** Stores an inbound email and, if it's a payout mail, records the payout. */
+/** Sorts a platform mail into the kinds the app acts on. */
+export function classifyMail(mail: Pick<InboundEmail, "subject" | "text">): MailKind {
+  const s = `${mail.subject}\n${mail.text.slice(0, 3000)}`.toLowerCase();
+  if (/payout|settlement|payment advice|amount credited|remittance|statement of account/.test(s)) return "payout";
+  if (/complaint|escalat|refund request|customer issue|grievance/.test(s)) return "complaint";
+  if (/onboarding|listing|go[- ]live|documents? (?:approved|rejected|pending)|fssai|menu (?:approved|rejected)/.test(s)) return "onboarding";
+  if (/weekly|business report|performance|summary for|insights/.test(s)) return "report";
+  return "other";
+}
+
+/** Stores an inbound email and, if it's a payout mail, records the payout. Skips mail already seen. */
 export async function ingestEmail(outletId: string, mail: InboundEmail) {
-  let parsed = parsePayoutWithRules(mail);
+  if (mail.externalId) {
+    const [seen] = await db.select({ id: emails.id }).from(emails).where(and(eq(emails.outletId, outletId), eq(emails.externalId, mail.externalId)));
+    if (seen) return { kind: "duplicate" as const };
+  }
+  const mailKind = classifyMail(mail);
+  let parsed: ParsedPayout | null = null;
   let via = "rules";
-  if (!parsed && hasClaude() && /payout|settlement|payment|statement/i.test(`${mail.subject} ${mail.text}`)) {
-    parsed = await parsePayoutWithClaude(mail);
-    via = "claude";
+  if (mailKind === "payout") {
+    parsed = parsePayoutWithRules(mail);
+    if (!parsed && hasClaude()) {
+      parsed = await parsePayoutWithClaude(mail);
+      via = "claude";
+    }
   }
   const isPayout = !!parsed?.is_payout && parsed.platform !== "other";
-  await db.insert(emails).values({ outletId, fromAddr: mail.from, subject: mail.subject, receivedAt: mail.receivedAt, parsedAs: isPayout ? "payout" : null, parsed: parsed ? { ...parsed, via } : null });
-  if (!isPayout || !parsed) return { kind: "ignored" as const };
+  const [email] = await db
+    .insert(emails)
+    .values({
+      outletId,
+      fromAddr: mail.from,
+      subject: mail.subject,
+      receivedAt: mail.receivedAt,
+      parsedAs: isPayout ? "payout" : null,
+      parsed: parsed ? { ...parsed, via } : null,
+      origin: mail.origin ?? "paste",
+      externalId: mail.externalId,
+      kind: mailKind,
+      snippet: mail.text.replace(/\s+/g, " ").trim().slice(0, 240),
+      attachments: (mail.attachments ?? []).map((a) => ({ filename: a.filename, mimeType: a.mimeType, read: via === "claude" && readable(a) })),
+    })
+    .returning();
+  if (!isPayout || !parsed) return { kind: "ignored" as const, mailKind, emailId: email.id };
 
   const [row] = await db
     .insert(payouts)
@@ -103,11 +159,12 @@ export async function ingestEmail(outletId: string, mail: InboundEmail) {
       status: parsed.status,
       payDate: parsed.pay_date,
       source: `${mail.from}: ${mail.subject}`.slice(0, 200),
+      emailId: email.id,
     })
     .returning();
-  await audit(outletId, "email", "payout.ingested", { payoutId: row.id, via });
+  await audit(outletId, mail.origin === "gmail" ? "gmail" : "email", "payout.ingested", { payoutId: row.id, via });
   if (row.status === "credited") {
     await notify(outletId, "payout", `₹${row.net.toLocaleString("en-IN")} from ${row.platform === "zomato" ? "Zomato" : "Swiggy"} has been credited for ${row.periodLabel}.`);
   }
-  return { kind: "payout" as const, payout: row, via };
+  return { kind: "payout" as const, payout: row, via, emailId: email.id };
 }
