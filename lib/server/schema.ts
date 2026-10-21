@@ -90,6 +90,20 @@ export const orders = sqliteTable(
   (t) => [uniqueIndex("orders_outlet_channel_ext").on(t.outletId, t.channel, t.externalId)],
 );
 
+export type LineOption = { group: string; choice: string; priceDelta: number };
+
+/** One dish on an order, priced as it was when ordered. `orders.items` keeps a readable summary. */
+export const orderLines = sqliteTable("order_lines", {
+  id: text("id").primaryKey().$defaultFn(id),
+  orderId: text("order_id").notNull(),
+  itemId: text("item_id"),
+  name: text("name").notNull(),
+  qty: integer("qty").notNull(),
+  unitPrice: integer("unit_price").notNull(),
+  options: text("options", { mode: "json" }).$type<LineOption[]>().notNull().default([]),
+  lineTotal: integer("line_total").notNull(),
+});
+
 export const payouts = sqliteTable("payouts", {
   id: text("id").primaryKey().$defaultFn(id),
   outletId: text("outlet_id").notNull(),
@@ -275,6 +289,7 @@ export type Outlet = typeof outlets.$inferSelect;
 export type Connection = typeof connections.$inferSelect;
 export type MenuItemRow = typeof menuItems.$inferSelect;
 export type OrderRow = typeof orders.$inferSelect;
+export type OrderLineRow = typeof orderLines.$inferSelect;
 export type PayoutRow = typeof payouts.$inferSelect;
 export type ReviewRow = typeof reviews.$inferSelect;
 export type ApprovalRow = typeof approvals.$inferSelect;

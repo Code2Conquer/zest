@@ -54,6 +54,16 @@ export type MenuItemDTO = {
   ordersLast7: number;
 };
 
+export type OrderLineDTO = {
+  id: string;
+  itemId: string | null;
+  name: string;
+  qty: number;
+  unitPrice: number;
+  options: { group: string; choice: string; priceDelta: number }[];
+  lineTotal: number;
+};
+
 export type OrderDTO = {
   id: string;
   externalId: string;
@@ -65,6 +75,7 @@ export type OrderDTO = {
   delayed: boolean;
   promisedAt: string | null;
   prepMins: number;
+  lines?: OrderLineDTO[];
 };
 
 export type PayoutDTO = {

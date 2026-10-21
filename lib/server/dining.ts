@@ -4,7 +4,8 @@ import type { DiningDTO, ReservationDTO, TabDTO } from "../types";
 import { audit, HttpError } from "./approvals";
 import { db } from "./db";
 import { dayBounds } from "./queries";
-import { diningTables, dineTabs, menuItems, orders, reservations, type DineTab, type MenuItemRow, type Reservation, type TabLine } from "./schema";
+import { orderLineRows, summariseLines } from "./order-lines";
+import { diningTables, dineTabs, menuItems, orderLines, orders, reservations, type DineTab, type MenuItemRow, type Reservation, type TabLine } from "./schema";
 import { notify } from "./whatsapp";
 
 // Dine-in for a small restaurant without a POS: tables, running bills that become
@@ -115,16 +116,23 @@ export async function settle(outletId: string, tabId: string, paidVia: "cash" | 
   const total = totalOf(tab.lines);
   const [row] = await db.update(dineTabs).set({ status: "closed", paidVia, total, closedAt }).where(eq(dineTabs.id, tab.id)).returning();
   const [table] = await db.select().from(diningTables).where(eq(diningTables.id, tab.tableId));
-  await db.insert(orders).values({
-    outletId,
-    channel: "dine",
-    externalId: `T-${tab.id.slice(0, 8)}`,
-    items: tab.lines.map((l) => (l.qty > 1 ? `${l.qty}× ${l.name}` : l.name)).join(", "),
-    amount: total,
-    placedAt: tab.openedAt,
-    status: "served",
-    prepMins: Math.round((Date.parse(closedAt) - Date.parse(tab.openedAt)) / 60_000),
-  });
+  // The order and its lines are written together, so a dine-in sale never exists without its dishes.
+  const orderId = crypto.randomUUID();
+  const lines = tab.lines.map((l) => ({ itemId: l.itemId, name: l.name, qty: l.qty, unitPrice: l.price }));
+  await db.batch([
+    db.insert(orders).values({
+      id: orderId,
+      outletId,
+      channel: "dine",
+      externalId: `T-${tab.id.slice(0, 8)}`,
+      items: summariseLines(lines),
+      amount: total,
+      placedAt: tab.openedAt,
+      status: "served",
+      prepMins: Math.round((Date.parse(closedAt) - Date.parse(tab.openedAt)) / 60_000),
+    }),
+    db.insert(orderLines).values(orderLineRows(orderId, lines)),
+  ]);
   await audit(outletId, "staff", "dining.settled", { table: table?.label, total, paidVia });
   return tabDTO(row);
 }

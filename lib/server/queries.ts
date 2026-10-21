@@ -5,6 +5,7 @@ import type { ApprovalDTO, ApprovalStep, MenuItemDTO, OrderDTO, OutletDTO, Payou
 import { VOID_STATUSES } from "../orders";
 import { CHANNELS, type Channel } from "../platforms";
 import { listApprovals } from "./approvals";
+import { linesFor } from "./order-lines";
 import { hasClaude } from "./claude";
 import { db } from "./db";
 import { connections, menuItems, orders, payouts, reviews, type ApprovalRow, type Connection, type MenuItemRow, type OrderRow, type Outlet, type PayoutRow, type ReviewRow } from "./schema";
@@ -91,7 +92,9 @@ export async function getMenu(outletId: string) {
 }
 
 export async function getOrders(outletId: string, limit = 60) {
-  return (await db.select().from(orders).where(eq(orders.outletId, outletId)).orderBy(desc(orders.placedAt)).limit(limit)).map(orderDTO);
+  const rows = (await db.select().from(orders).where(eq(orders.outletId, outletId)).orderBy(desc(orders.placedAt)).limit(limit)).map(orderDTO);
+  const lines = await linesFor(rows.map((o) => o.id));
+  return rows.map((o) => (lines.has(o.id) ? { ...o, lines: lines.get(o.id) } : o));
 }
 
 export async function getPayouts(outletId: string) {

@@ -104,6 +104,11 @@ CREATE TABLE IF NOT EXISTS campaigns (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS campaigns_outlet ON campaigns (outlet_id, status);
+CREATE TABLE IF NOT EXISTS order_lines (
+  id TEXT PRIMARY KEY, order_id TEXT NOT NULL, item_id TEXT, name TEXT NOT NULL, qty INTEGER NOT NULL,
+  unit_price INTEGER NOT NULL, options TEXT NOT NULL DEFAULT '[]', line_total INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS order_lines_order ON order_lines (order_id);
 `;
 
 // Columns added after the first release. Each runs once; "duplicate column" means it's already there.
