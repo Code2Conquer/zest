@@ -3,18 +3,34 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { HttpError } from "./approvals";
 import { ready } from "./db";
+import { currentSession, requireRole, type Role, type SessionUser } from "./auth";
 import type { Outlet } from "./schema";
 import { currentOutlet } from "./session";
 
 type Ctx<P> = { params: Promise<P> };
+type Fn<P> = (req: Request, outlet: Outlet, params: P, session: SessionUser | null) => Promise<unknown>;
 
-/** Wraps a route handler: makes sure the database is ready, resolves the outlet, maps errors to JSON. */
-export function handler<P = Record<string, string>>(fn: (req: Request, outlet: Outlet, params: P) => Promise<unknown>) {
+export const OWNER: Role[] = ["owner"];
+export const MANAGERS: Role[] = ["owner", "manager"];
+export const FLOOR: Role[] = ["owner", "manager", "cashier"];
+
+/**
+ * Wraps a route handler: makes sure the database is ready, resolves the outlet and the signed-in person,
+ * maps errors to JSON. With `{ roles }`, only those roles may call it; the sample restaurant keeps its
+ * own rule (assertWritable) instead.
+ */
+export function handler<P = Record<string, string>>(fn: Fn<P>): (req: Request, ctx: Ctx<P>) => Promise<Response>;
+export function handler<P = Record<string, string>>(opts: { roles: Role[] }, fn: Fn<P>): (req: Request, ctx: Ctx<P>) => Promise<Response>;
+export function handler<P = Record<string, string>>(a: Fn<P> | { roles: Role[] }, b?: Fn<P>) {
+  const fn = typeof a === "function" ? a : b!;
+  const roles = typeof a === "function" ? null : a.roles;
   return async (req: Request, ctx: Ctx<P>) => {
     try {
       await ready();
-      const outlet = await currentOutlet();
-      const result = await fn(req, outlet, await ctx.params);
+      const session = await currentSession();
+      const outlet = session?.outlet ?? (await currentOutlet());
+      if (roles && !outlet.isDemo) requireRole(session, roles);
+      const result = await fn(req, outlet, await ctx.params, session);
       return result instanceof Response ? result : NextResponse.json(result);
     } catch (err) {
       if (err instanceof HttpError) return NextResponse.json({ error: err.message }, { status: err.status });

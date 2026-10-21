@@ -39,6 +39,11 @@ export function decrypt<T = Record<string, string>>(sealed: string): T {
   return JSON.parse(Buffer.concat([decipher.update(data), decipher.final()]).toString("utf8")) as T;
 }
 
+/** Keyed hash for short secrets such as staff PINs: comparable, never reversible without the key. */
+export function hmac(value: string): string {
+  return createHmac("sha256", getKey()).update(value).digest("base64url");
+}
+
 export function sign(value: string): string {
   return `${value}.${createHmac("sha256", getKey()).update(value).digest("base64url")}`;
 }

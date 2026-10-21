@@ -2,7 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { createApproval } from "@/lib/server/approvals";
 import { db } from "@/lib/server/db";
-import { assertWritable, handler } from "@/lib/server/http";
+import { assertWritable, handler, MANAGERS } from "@/lib/server/http";
 import { approvalDTO } from "@/lib/server/queries";
 import { menuItems } from "@/lib/server/schema";
 
@@ -32,7 +32,7 @@ const Body = z.object({
 });
 
 /** Turns menu edits into one approval. Nothing reaches a platform until it's approved. */
-export const POST = handler(async (req, outlet) => {
+export const POST = handler({ roles: MANAGERS }, async (req, outlet) => {
   assertWritable(outlet);
   const { changes } = Body.parse(await req.json());
   const names = await db.select({ id: menuItems.id, name: menuItems.name }).from(menuItems).where(and(eq(menuItems.outletId, outlet.id), inArray(menuItems.id, changes.map((c) => c.itemId))));

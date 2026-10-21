@@ -1,7 +1,7 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/server/db";
 import { disconnectGmail, gmailConfigured, gmailMissing, SENDERS } from "@/lib/server/gmail";
-import { assertWritable, handler } from "@/lib/server/http";
+import { assertWritable, handler, OWNER } from "@/lib/server/http";
 import { emails, mailboxes } from "@/lib/server/schema";
 import type { MailboxDTO } from "@/lib/types";
 
@@ -36,7 +36,7 @@ export const GET = handler(async (_req, outlet): Promise<MailboxDTO> => {
 });
 
 /** Disconnects Gmail, revokes access, and deletes what was read. */
-export const DELETE = handler(async (_req, outlet) => {
+export const DELETE = handler({ roles: OWNER }, async (_req, outlet) => {
   assertWritable(outlet);
   await disconnectGmail(outlet.id);
   return { ok: true };

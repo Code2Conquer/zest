@@ -4,7 +4,7 @@ import { audit, HttpError } from "@/lib/server/approvals";
 import { McpConnector, PartnerApiConnector } from "@/lib/server/connectors";
 import { encrypt, mask } from "@/lib/server/crypto";
 import { db } from "@/lib/server/db";
-import { assertWritable, handler } from "@/lib/server/http";
+import { assertWritable, handler, OWNER } from "@/lib/server/http";
 import { connectionDTO } from "@/lib/server/queries";
 import { connections } from "@/lib/server/schema";
 
@@ -21,7 +21,7 @@ const Body = z.discriminatedUnion("method", [
  * tools; partner API keys are stored and marked pending until the API is
  * configured; partner-app sign-ins are stored for the browser worker.
  */
-export const POST = handler(async (req, outlet) => {
+export const POST = handler({ roles: OWNER }, async (req, outlet) => {
   assertWritable(outlet);
   const body = Body.parse(await req.json());
   let status: "connected" | "pending" = "connected";
@@ -57,7 +57,7 @@ export const POST = handler(async (req, outlet) => {
   return connectionDTO(row);
 });
 
-export const DELETE = handler(async (req, outlet) => {
+export const DELETE = handler({ roles: OWNER }, async (req, outlet) => {
   assertWritable(outlet);
   const platform = z.enum(["zomato", "swiggy"]).parse(new URL(req.url).searchParams.get("platform"));
   await db.delete(connections).where(and(eq(connections.outletId, outlet.id), eq(connections.platform, platform)));

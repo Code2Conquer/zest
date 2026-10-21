@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { addReservation } from "@/lib/server/dining";
-import { assertWritable, handler } from "@/lib/server/http";
+import { assertWritable, FLOOR, handler } from "@/lib/server/http";
 
 const Body = z.object({
   kind: z.enum(["booking", "waitlist"]),
@@ -13,7 +13,7 @@ const Body = z.object({
   note: z.string().trim().max(200).optional(),
 });
 
-export const POST = handler(async (req, outlet) => {
+export const POST = handler({ roles: FLOOR }, async (req, outlet) => {
   assertWritable(outlet);
   return addReservation(outlet.id, Body.parse(await req.json()));
 });

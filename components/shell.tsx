@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Armchair, BookOpen, Home, IndianRupee, Menu as MenuIcon, MessageSquareText, Plug, ReceiptText, Sparkles, Star, TrendingUp, X } from "lucide-react";
 import type { Key } from "@/lib/i18n";
+import { signOutHere, useMe } from "@/lib/auth-client";
 import { useApp, useOutlet } from "@/lib/state";
 import { Copilot } from "./copilot";
 import { LangToggle, Wordmark } from "./bits";
@@ -27,6 +28,8 @@ const MOBILE_TABS = ["/app", "/app/orders", "copilot", "/app/money", "more"] as 
 export function Shell({ children }: { children: React.ReactNode }) {
   const { t, state } = useApp();
   const { isDemo, outlet } = useOutlet();
+  const { data: me } = useMe();
+  const hi = state.lang === "hi";
   const path = usePathname();
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -65,13 +68,29 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </li>
           ))}
         </ul>
-        <div className="mt-auto px-3">
+        <div className="mt-auto space-y-3 px-3">
+          {me?.user && (
+            <div className="text-sm">
+              <p className="truncate text-[#eef2ec]/80">{me.user.name || me.user.email}</p>
+              <button type="button" onClick={() => void signOutHere()} className="text-[#eef2ec]/60 underline underline-offset-2 hover:text-[#eef2ec]">
+                {hi ? "साइन आउट" : "Sign out"}
+              </button>
+            </div>
+          )}
           <LangToggle />
         </div>
       </nav>
 
       {/* Main canvas */}
       <div className="flex min-w-0 flex-1 flex-col">
+        {!isDemo && me && !me.role && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-turmeric-soft px-4 py-2 text-sm sm:px-8">
+            <span>{hi ? "बदलाव करने के लिए साइन इन करें।" : "Sign in to make changes."}</span>
+            <Link href={`/login?returnTo=${encodeURIComponent(path)}`} className="font-medium underline underline-offset-2">
+              {hi ? "साइन इन" : "Sign in"}
+            </Link>
+          </div>
+        )}
         {isDemo && (
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-turmeric-soft px-4 py-2 text-sm sm:px-8">
             <span>{state.lang === "hi" ? "आप एक सैंपल रेस्टोरेंट देख रहे हैं।" : "You're looking at a sample restaurant."}</span>

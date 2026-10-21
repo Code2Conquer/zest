@@ -105,6 +105,14 @@ CREATE TABLE IF NOT EXISTS campaigns (
 );
 CREATE INDEX IF NOT EXISTS campaigns_outlet ON campaigns (outlet_id, status);
 CREATE TABLE IF NOT EXISTS brands (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, email TEXT UNIQUE, phone TEXT UNIQUE, name TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS memberships (
+  id TEXT PRIMARY KEY, user_id TEXT NOT NULL, brand_id TEXT NOT NULL, role TEXT NOT NULL, outlet_ids TEXT,
+  pin_hash TEXT, active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS memberships_user ON memberships (user_id);
+CREATE INDEX IF NOT EXISTS memberships_brand ON memberships (brand_id);
+CREATE TABLE IF NOT EXISTS rate_limits (key TEXT NOT NULL, window_start INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (key, window_start));
 CREATE TABLE IF NOT EXISTS order_lines (
   id TEXT PRIMARY KEY, order_id TEXT NOT NULL, item_id TEXT, name TEXT NOT NULL, qty INTEGER NOT NULL,
   unit_price INTEGER NOT NULL, options TEXT NOT NULL DEFAULT '[]', line_total INTEGER NOT NULL
@@ -129,6 +137,8 @@ const COLUMNS = [
   "ALTER TABLE orders ADD COLUMN delayed INTEGER NOT NULL DEFAULT 0",
   "ALTER TABLE orders ADD COLUMN promised_at TEXT",
   "ALTER TABLE outlets ADD COLUMN brand_id TEXT",
+  "ALTER TABLE outlets ADD COLUMN staff_code TEXT",
+  "ALTER TABLE approvals ADD COLUMN decided_by TEXT",
 ];
 
 // Data fixes that move stored rows to a newer model. Each is safe to run again.
@@ -138,7 +148,10 @@ const DATA_FIXES = [
   "UPDATE orders SET status = 'out_for_delivery' WHERE status = 'picked'",
   "UPDATE orders SET status = 'completed' WHERE status = 'delivered'",
 ];
-const INDEXES = "CREATE UNIQUE INDEX IF NOT EXISTS emails_outlet_external ON emails (outlet_id, external_id);";
+const INDEXES = [
+  "CREATE UNIQUE INDEX IF NOT EXISTS emails_outlet_external ON emails (outlet_id, external_id)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS outlets_staff_code ON outlets (staff_code)",
+];
 
 export async function migrate(c: Client) {
   for (const sql of COLUMNS) {
@@ -148,7 +161,7 @@ export async function migrate(c: Client) {
       if (!/duplicate column/i.test((err as Error).message)) throw err;
     }
   }
-  await c.execute(INDEXES);
+  for (const sql of INDEXES) await c.execute(sql);
   for (const sql of DATA_FIXES) await c.execute(sql);
 }
 
@@ -178,6 +191,8 @@ export function ready(): Promise<void> {
       await seedDemo();
       const { ensureBrands } = await import("./brands");
       await ensureBrands();
+      const { ensureStaffCodes } = await import("./staff");
+      await ensureStaffCodes();
     })().catch((err) => {
       globalForDb.zestReady = undefined;
       throw err;

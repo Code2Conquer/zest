@@ -1,5 +1,5 @@
 // An in-memory cookie jar standing in for next/headers in route-handler tests.
-// Use in a test file with: vi.mock("next/headers", () => import("../cookies"));
+// Registered for every test file in tests/setup.ts.
 const jar = new Map<string, string>();
 
 export const cookieJar = {

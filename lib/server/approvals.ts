@@ -193,7 +193,8 @@ async function execute(outlet: Outlet, row: ApprovalRow): Promise<{ steps: Step[
   return { steps: p.platforms.map((platform) => ({ platform, what: "Listing application", ok: true as const, note: "Queued for submission" })) };
 }
 
-export async function approve(outlet: Outlet, id: string) {
+/** `actor` is "user:<id>" of whoever decided, or "owner" where no person is signed in (the sample restaurant). */
+export async function approve(outlet: Outlet, id: string, actor = "owner") {
   const row = await getApproval(outlet.id, id);
   if (row.status !== "pending") throw new HttpError(409, `This was already ${row.status}.`);
   // Re-read so a platform added or removed since drafting is respected.
@@ -202,33 +203,33 @@ export async function approve(outlet: Outlet, id: string) {
   const ok = steps.length > 0 && steps.every((s) => s.ok);
   const [updated] = await db
     .update(approvals)
-    .set({ status: ok ? "executed" : "failed", result: { steps, before: before ?? null }, decidedAt: new Date().toISOString() })
+    .set({ status: ok ? "executed" : "failed", result: { steps, before: before ?? null }, decidedAt: new Date().toISOString(), decidedBy: actor })
     .where(eq(approvals.id, id))
     .returning();
-  await audit(outlet.id, "owner", ok ? "approval.executed" : "approval.failed", { approvalId: id, steps });
+  await audit(outlet.id, actor, ok ? "approval.executed" : "approval.failed", { approvalId: id, steps });
   return updated;
 }
 
-export async function skip(outlet: Outlet, id: string) {
+export async function skip(outlet: Outlet, id: string, actor = "owner") {
   const row = await getApproval(outlet.id, id);
   if (row.status !== "pending") throw new HttpError(409, `This was already ${row.status}.`);
-  const [updated] = await db.update(approvals).set({ status: "skipped", decidedAt: new Date().toISOString() }).where(eq(approvals.id, id)).returning();
-  await audit(outlet.id, "owner", "approval.skipped", { approvalId: id });
+  const [updated] = await db.update(approvals).set({ status: "skipped", decidedAt: new Date().toISOString(), decidedBy: actor }).where(eq(approvals.id, id)).returning();
+  await audit(outlet.id, actor, "approval.skipped", { approvalId: id });
   return updated;
 }
 
 /** Undo is supported for menu changes; a posted reply or a raised dispute can't be recalled. */
-export async function undo(outlet: Outlet, id: string) {
+export async function undo(outlet: Outlet, id: string, actor = "owner") {
   const row = await getApproval(outlet.id, id);
   if (row.status === "skipped") {
-    const [updated] = await db.update(approvals).set({ status: "pending", decidedAt: null }).where(eq(approvals.id, id)).returning();
+    const [updated] = await db.update(approvals).set({ status: "pending", decidedAt: null, decidedBy: null }).where(eq(approvals.id, id)).returning();
     return updated;
   }
   if (row.kind !== "menu_change" || row.status !== "executed") throw new HttpError(409, "This can't be undone once sent.");
   const before = (row.result?.before ?? []) as MenuChange[];
   const [fresh] = await db.select().from(outlets).where(eq(outlets.id, outlet.id));
   const { steps } = await applyMenuChanges(fresh, before);
-  const [updated] = await db.update(approvals).set({ status: "undone", result: { ...(row.result ?? {}), undoSteps: steps } }).where(eq(approvals.id, id)).returning();
-  await audit(outlet.id, "owner", "approval.undone", { approvalId: id, steps });
+  const [updated] = await db.update(approvals).set({ status: "undone", result: { ...(row.result ?? {}), undoSteps: steps }, decidedBy: actor }).where(eq(approvals.id, id)).returning();
+  await audit(outlet.id, actor, "approval.undone", { approvalId: id, steps });
   return updated;
 }

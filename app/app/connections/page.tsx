@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { ChannelTag } from "@/components/bits";
 import { ListingCard } from "@/components/listing-preview";
 import { MailboxCard } from "@/components/mailbox-card";
+import { StaffCard } from "@/components/staff-card";
 import { PlatformConnector } from "@/components/platform-connector";
 import { api, refreshAll, useApi } from "@/lib/api";
 import { PLATFORMS, type Platform } from "@/lib/platforms";
@@ -115,6 +116,8 @@ export default function Connections() {
           </div>
         </section>
       )}
+
+      <StaffCard />
 
       <section className="mt-10">
         <h2 className="font-medium">{hi ? "प्लेटफ़ॉर्म" : "Platforms"}</h2>

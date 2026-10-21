@@ -13,10 +13,39 @@ export const brands = sqliteTable("brands", {
   createdAt: text("created_at").notNull().$defaultFn(now),
 });
 
+export type Role = "owner" | "manager" | "kitchen" | "cashier" | "rider";
+
+/** A person who signs in: an owner or manager by Google, staff by PIN on the restaurant's device. */
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey().$defaultFn(id),
+  email: text("email").unique(),
+  phone: text("phone").unique(),
+  name: text("name").notNull().default(""),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+});
+
+/** A person's role at a brand, for all its outlets (outletIds null) or some. */
+export const memberships = sqliteTable("memberships", {
+  id: text("id").primaryKey().$defaultFn(id),
+  userId: text("user_id").notNull(),
+  brandId: text("brand_id").notNull(),
+  role: text("role").$type<Role>().notNull(),
+  outletIds: text("outlet_ids", { mode: "json" }).$type<string[] | null>(),
+  // HMAC of a staff member's 4-digit PIN; owners and Google-signed-in managers have none.
+  pinHash: text("pin_hash"),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+});
+
+// Code staff type on the restaurant's device with their PIN. No 0/O or 1/I/L to misread.
+const STAFF_CODE_LETTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+export const newStaffCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => STAFF_CODE_LETTERS[b % STAFF_CODE_LETTERS.length]).join("");
+
 export const outlets = sqliteTable("outlets", {
   id: text("id").primaryKey().$defaultFn(id),
   // Set for every outlet once the database is ready (ensureBrands).
   brandId: text("brand_id"),
+  staffCode: text("staff_code").unique().$defaultFn(newStaffCode),
   name: text("name").notNull(),
   area: text("area").notNull().default(""),
   city: text("city").notNull().default(""),
@@ -161,6 +190,8 @@ export const approvals = sqliteTable("approvals", {
   result: text("result", { mode: "json" }).$type<Record<string, unknown> | null>(),
   createdAt: text("created_at").notNull().$defaultFn(now),
   decidedAt: text("decided_at"),
+  // "user:<id>" of whoever approved, skipped or undid it.
+  decidedBy: text("decided_by"),
 });
 
 export const auditLog = sqliteTable("audit_log", {
@@ -295,6 +326,8 @@ export const campaigns = sqliteTable("campaigns", {
 });
 
 export type Brand = typeof brands.$inferSelect;
+export type UserRow = typeof users.$inferSelect;
+export type MembershipRow = typeof memberships.$inferSelect;
 export type Outlet = typeof outlets.$inferSelect;
 export type Connection = typeof connections.$inferSelect;
 export type MenuItemRow = typeof menuItems.$inferSelect;

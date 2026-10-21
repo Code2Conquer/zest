@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { connectGmail, GmailError, syncMailbox } from "@/lib/server/gmail";
-import { handler } from "@/lib/server/http";
+import { handler, OWNER } from "@/lib/server/http";
 import { callbackUrl, finishState, safeReturn } from "@/lib/server/oauth-state";
 
 export const maxDuration = 60;
 
 /** Google sends the owner back here. Stores the tokens, then reads the first batch of mail. */
-export const GET = handler(async (req, outlet) => {
+export const GET = handler({ roles: OWNER }, async (req, outlet) => {
   const url = new URL(req.url);
   const state = await finishState(url.searchParams.get("state"));
   const returnTo = safeReturn(state?.returnTo ?? null);

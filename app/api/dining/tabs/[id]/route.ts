@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { cancelTab, setBilled, setLine, settle } from "@/lib/server/dining";
-import { assertWritable, handler } from "@/lib/server/http";
+import { assertWritable, FLOOR, handler } from "@/lib/server/http";
 
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("line"), itemId: z.string().min(1), qty: z.number().int().min(0).max(99) }),
@@ -11,7 +11,7 @@ const Body = z.discriminatedUnion("action", [
 ]);
 
 /** Changes a table's bill: dishes, print, reopen, settle or clear. */
-export const PATCH = handler<{ id: string }>(async (req, outlet, { id }) => {
+export const PATCH = handler<{ id: string }>({ roles: FLOOR }, async (req, outlet, { id }) => {
   assertWritable(outlet);
   const body = Body.parse(await req.json());
   if (body.action === "line") return setLine(outlet.id, id, body.itemId, body.qty);

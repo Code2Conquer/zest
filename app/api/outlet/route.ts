@@ -4,10 +4,10 @@ import { parseListing } from "@/lib/listing";
 import { audit, HttpError } from "@/lib/server/approvals";
 import { db } from "@/lib/server/db";
 import { applyListing, fetchListing } from "@/lib/server/listing-sync";
-import { handler } from "@/lib/server/http";
+import { handler, OWNER } from "@/lib/server/http";
 import { outletDTO } from "@/lib/server/queries";
 import { brands, outlets } from "@/lib/server/schema";
-import { setCurrentOutlet } from "@/lib/server/session";
+import { addOwner, currentUser, startSession } from "@/lib/server/auth";
 
 const Platforms = z.array(z.enum(["zomato", "swiggy"])).max(2);
 
@@ -44,20 +44,26 @@ const Start = Profile.partial().extend({
   lang: z.enum(["en", "hi"]).default("en"),
 });
 
-/** Creates the owner's restaurant and profile for this browser, or updates the one already started. */
-export const POST = handler(async (req, outlet) => {
+/**
+ * Creates the signed-in person's restaurant (brand, outlet and their owner membership), or updates
+ * the one they already own. Signing in comes first.
+ */
+export const POST = handler(async (req, outlet, _params, session) => {
   const { journey, live, listings, ...profile } = Start.parse(await req.json());
   const fields = { ...profile, journey, livePlatforms: live, ...(listings ? { listings: cleanListings(listings) } : {}) };
   let row;
-  if (!outlet.isDemo) {
+  if (session) {
+    if (session.membership.role !== "owner") throw new HttpError(403, "Only the owner can change the restaurant's details.");
     [row] = await db.update(outlets).set(fields).where(eq(outlets.id, outlet.id)).returning();
-    await audit(outlet.id, "owner", "outlet.updated", { fields: Object.keys(fields) });
+    await audit(outlet.id, `user:${session.user.id}`, "outlet.updated", { fields: Object.keys(fields) });
   } else {
+    const user = await currentUser();
+    if (!user) throw new HttpError(401, "Sign in with Google first.");
     const name = fields.name || "My restaurant";
     const [brand] = await db.insert(brands).values({ name }).returning();
     [row] = await db.insert(outlets).values({ ...fields, name, brandId: brand.id }).returning();
-    await setCurrentOutlet(row.id);
-    await audit(row.id, "owner", "outlet.created", { journey, live, documents: { fssai: !!profile.fssai, gstin: !!profile.gstin } });
+    await startSession(user, await addOwner(user.id, brand.id), row.id);
+    await audit(row.id, `user:${user.id}`, "outlet.created", { journey, live, documents: { fssai: !!profile.fssai, gstin: !!profile.gstin } });
   }
   // Read each listing page whose link is new. A failure here never blocks sign-up.
   const read: Partial<Record<"zomato" | "swiggy", { imported: number; matched: number } | { error: string }>> = {};
@@ -86,7 +92,7 @@ const Update = Profile.extend({
   whatsapp: z.boolean(),
 }).partial();
 
-export const PATCH = handler(async (req, outlet) => {
+export const PATCH = handler({ roles: OWNER }, async (req, outlet) => {
   const { live, listings, ...rest } = Update.parse(await req.json());
   const [row] = await db.update(outlets).set({ ...rest, ...(live ? { livePlatforms: live } : {}), ...(listings ? { listings: cleanListings(listings) } : {}) }).where(eq(outlets.id, outlet.id)).returning();
   await audit(outlet.id, "owner", "outlet.updated", { fields: Object.keys({ ...rest, ...(live ? { live } : {}), ...(listings ? { listings } : {}) }) });

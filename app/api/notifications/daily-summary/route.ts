@@ -1,9 +1,9 @@
-import { handler } from "@/lib/server/http";
+import { handler, MANAGERS } from "@/lib/server/http";
 import { getToday } from "@/lib/server/queries";
 import { notify } from "@/lib/server/whatsapp";
 
 /** The 8 am WhatsApp summary. Call from a scheduler once a day per outlet. */
-export const POST = handler(async (_req, outlet) => {
+export const POST = handler({ roles: MANAGERS }, async (_req, outlet) => {
   const t = await getToday(outlet);
   const name = outlet.ownerName || "there";
   const lines = outlet.lang === "hi"

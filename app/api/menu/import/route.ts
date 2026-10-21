@@ -2,7 +2,7 @@ import { eq, max } from "drizzle-orm";
 import { z } from "zod";
 import { audit } from "@/lib/server/approvals";
 import { db } from "@/lib/server/db";
-import { assertWritable, handler } from "@/lib/server/http";
+import { assertWritable, handler, MANAGERS } from "@/lib/server/http";
 import { guessKind } from "@/lib/server/listing-sync";
 import { getMenu } from "@/lib/server/queries";
 import { menuItems } from "@/lib/server/schema";
@@ -15,7 +15,7 @@ const Body = z.object({
 });
 
 /** Adds dishes read from a menu photo to the master menu. */
-export const POST = handler(async (req, outlet) => {
+export const POST = handler({ roles: MANAGERS }, async (req, outlet) => {
   assertWritable(outlet);
   const { items } = Body.parse(await req.json());
   const [{ top }] = await db.select({ top: max(menuItems.sort) }).from(menuItems).where(eq(menuItems.outletId, outlet.id));

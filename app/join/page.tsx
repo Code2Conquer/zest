@@ -10,6 +10,8 @@ import { cityName, parseListing } from "@/lib/listing";
 import { CHANNEL_NAME, PLATFORMS, type Platform } from "@/lib/platforms";
 import { useApp } from "@/lib/state";
 import { ListingPreview } from "@/components/listing-preview";
+import { SignInCard } from "@/components/sign-in";
+import { useMe } from "@/lib/auth-client";
 import type { OutletDTO, PlatformListing } from "@/lib/types";
 
 type Journey = "new" | "notlive" | "live";
@@ -45,14 +47,20 @@ const fromOutlet = (o: OutletDTO | null): Form => {
 /** Step 1 for a new owner: who they are and which restaurant. Creates both on the server. */
 function JoinInner() {
   const { outlet, outletError } = useApp();
+  const { data: me } = useMe();
   const params = useSearchParams();
   const raw = params.get("journey");
   const journey: Journey = raw === "new" || raw === "notlive" ? raw : "live";
   const live = (params.get("live") ?? "").split(",").filter((p): p is Platform => (PLATFORMS as string[]).includes(p));
   const platforms = journey === "live" ? (live.length ? live : PLATFORMS) : [];
 
+  // The owner signs in first, so the restaurant is created with them as its owner.
+  if (me && !me.user) {
+    const here = `/join${params.toString() ? `?${params}` : ""}`;
+    return <SignInCard returnTo={here} />;
+  }
   // Wait for the current outlet so a returning owner sees what they filled in before.
-  if (!outlet && !outletError) {
+  if (!me || (!outlet && !outletError)) {
     return (
       <p className="flex items-center gap-2 py-16 text-muted">
         <Loader2 aria-hidden className="size-4 animate-spin" />

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { audit, HttpError } from "@/lib/server/approvals";
 import { describeClaudeError, hasClaude } from "@/lib/server/claude";
-import { handler } from "@/lib/server/http";
+import { handler, MANAGERS } from "@/lib/server/http";
 import { DOC_KINDS, readDocument } from "@/lib/server/vision";
 
 // Reading with Claude can take tens of seconds; fits the Vercel Hobby limit.
@@ -11,7 +11,7 @@ const MAX_BYTES = 8 * 1024 * 1024;
 const TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 
 /** Reads an uploaded licence, PAN, cheque or GST certificate with Claude vision. */
-export const POST = handler(async (req, outlet) => {
+export const POST = handler({ roles: MANAGERS }, async (req, outlet) => {
   if (!hasClaude()) throw new HttpError(503, "Document reading needs ANTHROPIC_API_KEY on the server.");
   const form = await req.formData();
   const kind = z.enum(DOC_KINDS).parse(form.get("kind"));
