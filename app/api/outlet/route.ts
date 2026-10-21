@@ -11,7 +11,7 @@ import { addOwner, currentUser, startSession } from "@/lib/server/auth";
 
 const Platforms = z.array(z.enum(["zomato", "swiggy"])).max(2);
 
-export const GET = handler(async (_req, outlet) => outletDTO(outlet));
+export const GET = handler({ staff: true }, async (_req, outlet) => outletDTO(outlet));
 
 // What the owner tells us when they sign up. Documents are optional for now.
 const Profile = z.object({

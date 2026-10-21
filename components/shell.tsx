@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Armchair, BookOpen, Home, IndianRupee, Menu as MenuIcon, MessageSquareText, Plug, ReceiptText, Sparkles, Star, TrendingUp, X } from "lucide-react";
 import type { Key } from "@/lib/i18n";
@@ -38,6 +38,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
     setMoreOpen(false);
   }, [path]);
 
+  // Kitchen and rider sign-ins get only the orders board.
+  const screenOnly = me?.role === "kitchen" || me?.role === "rider";
+  const router = useRouter();
+  useEffect(() => {
+    if (screenOnly && path !== "/app/orders") router.replace("/app/orders");
+  }, [screenOnly, path, router]);
+  const nav = screenOnly ? NAV.filter((n) => n.href === "/app/orders") : NAV;
+
   const isActive = (href: string) => (href === "/app" ? path === "/app" : path.startsWith(href));
 
   return (
@@ -52,7 +60,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <p className="text-sm text-[#eef2ec]/60">{[outlet?.area, outlet?.city].filter(Boolean).join(", ") || (outlet ? (state.lang === "hi" ? "पता जोड़ें" : "Add your area in Connections") : "\u00a0")}</p>
         </div>
         <ul className="mt-6 space-y-0.5">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <li key={n.href}>
               <Link
                 href={n.href}

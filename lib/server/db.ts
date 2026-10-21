@@ -170,6 +170,8 @@ const DATA_FIXES = [
 const INDEXES = [
   "CREATE UNIQUE INDEX IF NOT EXISTS emails_outlet_external ON emails (outlet_id, external_id)",
   "CREATE UNIQUE INDEX IF NOT EXISTS outlets_staff_code ON outlets (staff_code)",
+  // Live order updates read "changed since" every couple of seconds.
+  "CREATE INDEX IF NOT EXISTS orders_outlet_updated ON orders (outlet_id, updated_at, id)",
 ];
 
 export async function migrate(c: Client) {

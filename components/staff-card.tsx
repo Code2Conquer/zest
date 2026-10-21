@@ -26,6 +26,7 @@ export function StaffCard() {
   const [name, setName] = useState("");
   const [role, setRole] = useState<"manager" | "kitchen" | "cashier" | "rider">("kitchen");
   const [pin, setPin] = useState("");
+  const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,9 +37,10 @@ export function StaffCard() {
     setBusy(true);
     setError(null);
     try {
-      await api("/api/staff", { method: "POST", json: { name, role, pin } });
+      await api("/api/staff", { method: "POST", json: role === "manager" ? { name, role, email } : { name, role, pin } });
       setName("");
       setPin("");
+      setEmail("");
       refreshAll();
     } catch (err) {
       setError((err as Error).message);
@@ -100,10 +102,17 @@ export function StaffCard() {
             ))}
           </select>
         </label>
-        <label className="w-28">
-          <span className="text-sm text-muted">PIN</span>
-          <input value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" required pattern="\d{4}" className={`mt-1 w-full font-mono tracking-widest ${field}`} />
-        </label>
+        {role === "manager" ? (
+          <label className="min-w-48 flex-1">
+            <span className="text-sm text-muted">{hi ? "Google ईमेल (वे इसी से साइन इन करेंगे)" : "Google email (they sign in with it)"}</span>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={`mt-1 w-full ${field}`} />
+          </label>
+        ) : (
+          <label className="w-28">
+            <span className="text-sm text-muted">PIN</span>
+            <input value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" required pattern="\d{4}" className={`mt-1 w-full font-mono tracking-widest ${field}`} />
+          </label>
+        )}
         <button type="submit" disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-paper disabled:opacity-60">
           {busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
           {hi ? "जोड़ें" : "Add"}

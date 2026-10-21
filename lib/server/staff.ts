@@ -4,11 +4,13 @@ import { HttpError } from "./approvals";
 import { startSession, type SessionUser } from "./auth";
 import { hmac } from "./crypto";
 import { db } from "./db";
-import { checkRate, rateCount } from "./rate-limit";
+import { checkRate, refundRate } from "./rate-limit";
 import { memberships, newStaffCode, outlets, users, type MembershipRow } from "./schema";
 
 const PIN_TRIES = 5;
 const PIN_WINDOW = 15 * 60;
+// Per address too, so one device can't work through many restaurant codes.
+const PIN_TRIES_PER_IP = 20;
 const pinHash = (pin: string) => hmac(`pin:${pin}`);
 
 /** Gives every outlet that has none a staff sign-in code. */
@@ -34,6 +36,18 @@ export async function addStaff(brandId: string, input: StaffInput): Promise<Memb
   return m;
 }
 
+/** Adds a manager who signs in with their own Google account instead of a PIN. */
+export async function addManagerByEmail(brandId: string, input: { name: string; email: string; outletIds: string[] | null }): Promise<MembershipRow> {
+  const email = input.email.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new HttpError(400, "Enter the manager's Google email address.");
+  let [user] = await db.select().from(users).where(eq(users.email, email));
+  if (!user) [user] = await db.insert(users).values({ email, name: input.name.trim() }).returning();
+  const [already] = await db.select().from(memberships).where(and(eq(memberships.userId, user.id), eq(memberships.brandId, brandId), eq(memberships.active, true)));
+  if (already) throw new HttpError(400, "That person already has access to this restaurant.");
+  const [m] = await db.insert(memberships).values({ userId: user.id, brandId, role: "manager", outletIds: input.outletIds }).returning();
+  return m;
+}
+
 /** Ends a person's access; their next request is signed out. */
 export async function removeStaff(membershipId: string) {
   await db.update(memberships).set({ active: false }).where(eq(memberships.id, membershipId));
@@ -48,13 +62,18 @@ export async function listStaff(brandId: string) {
   return rows.map((r) => ({ ...r, hasPin: !!r.hasPin }));
 }
 
-/** Signs staff in on the restaurant's device. Five wrong PINs lock the code for 15 minutes. */
-export async function pinSignIn(staffCode: string, pin: string): Promise<SessionUser> {
+/**
+ * Signs staff in on the restaurant's device. Five wrong PINs lock the code for 15 minutes.
+ * Every attempt is counted before the PIN is checked, so guesses sent at once can't slip past the limit;
+ * a right PIN gives its try back.
+ */
+export async function pinSignIn(staffCode: string, pin: string, ip?: string): Promise<SessionUser> {
   const code = staffCode.trim().toUpperCase();
   const key = `pin:${code}`;
-  if ((await rateCount(key, PIN_WINDOW)) >= PIN_TRIES) throw new HttpError(429, "Too many wrong PINs. Try again in 15 minutes.");
+  const tooMany = () => new HttpError(429, "Too many wrong PINs. Try again in 15 minutes.");
+  if (!(await checkRate(key, PIN_TRIES, PIN_WINDOW))) throw tooMany();
+  if (ip && !(await checkRate(`pin-ip:${ip}`, PIN_TRIES_PER_IP, PIN_WINDOW))) throw tooMany();
   const wrong = async (): Promise<never> => {
-    await checkRate(key, PIN_TRIES, PIN_WINDOW);
     throw new HttpError(401, "That restaurant code and PIN don't match.");
   };
   const [outlet] = await db.select().from(outlets).where(eq(outlets.staffCode, code));
@@ -63,5 +82,7 @@ export async function pinSignIn(staffCode: string, pin: string): Promise<Session
   const membership = candidates.find((m) => !m.outletIds || m.outletIds.includes(outlet.id));
   if (!membership) return wrong();
   const [user] = await db.select().from(users).where(eq(users.id, membership.userId));
+  await refundRate(key, PIN_WINDOW);
+  if (ip) await refundRate(`pin-ip:${ip}`, PIN_WINDOW);
   return startSession(user, membership, outlet.id);
 }

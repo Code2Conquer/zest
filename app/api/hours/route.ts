@@ -13,7 +13,7 @@ const Body = z.object({
     .max(100),
 });
 
-export const GET = handler(async (_req, outlet) => getHours(outlet.id));
+export const GET = handler({ staff: true }, async (_req, outlet) => getHours(outlet.id));
 
 /** Replaces the weekly hours and special dates. */
 export const PUT = handler({ roles: MANAGERS }, async (req, outlet, _p, session) => {

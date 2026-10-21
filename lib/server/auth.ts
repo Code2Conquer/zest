@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { HttpError } from "./approvals";
 import { sign, unsign } from "./crypto";
@@ -104,22 +104,34 @@ export async function signIn(identity: { email: string; name: string }): Promise
   let [user] = await db.select().from(users).where(eq(users.email, email));
   if (!user) [user] = await db.insert(users).values({ email, name: identity.name }).returning();
 
-  let [membership] = await db.select().from(memberships).where(and(eq(memberships.userId, user.id), eq(memberships.active, true)));
+  const mine = await db.select().from(memberships).where(and(eq(memberships.userId, user.id), eq(memberships.active, true)));
+  let membership: MembershipRow | undefined;
   let preferred: string | null = null;
-  if (!membership) {
-    const legacy = await legacyOutletId();
-    const [fromCookie] = legacy ? await db.select().from(outlets).where(eq(outlets.id, legacy)) : [];
-    const [box] = fromCookie ? [] : await db.select().from(mailboxes).where(eq(mailboxes.address, email));
-    const [fromMail] = box ? await db.select().from(outlets).where(eq(outlets.id, box.outletId)) : [];
-    const claim = [fromCookie, fromMail].find((o) => o && !o.isDemo && o.brandId);
-    if (claim && !(await ownerOf(claim.brandId!))) {
+
+  // A restaurant started before sign-in existed: this browser's old cookie, or a mailbox connected with this email.
+  // Claimed whatever restaurants the person already belongs to.
+  const legacy = await legacyOutletId();
+  const [fromCookie] = legacy ? await db.select().from(outlets).where(eq(outlets.id, legacy)) : [];
+  const [box] = await db.select().from(mailboxes).where(sql`lower(${mailboxes.address}) = ${email}`);
+  const [fromMail] = box ? await db.select().from(outlets).where(eq(outlets.id, box.outletId)) : [];
+  const claim = [fromCookie, fromMail].find((o) => o && !o.isDemo && o.brandId);
+  if (claim) {
+    const existing = mine.find((m) => m.brandId === claim.brandId);
+    const owner = await ownerOf(claim.brandId!);
+    if (existing) {
+      membership = existing;
+      preferred = claim.id;
+    } else if (!owner) {
       membership = await addOwner(user.id, claim.brandId!);
       preferred = claim.id;
       const { audit } = await import("./approvals");
       await audit(claim.id, `user:${user.id}`, "owner.linked", { via: claim === fromCookie ? "browser" : "gmail" });
     }
   }
-  (await cookies()).delete(LEGACY_COOKIE);
+  // Forget the old cookie once it has done its job: claimed, already owned by someone, or pointing nowhere useful.
+  if (!fromCookie || fromCookie.isDemo || (claim === fromCookie && (preferred || (await ownerOf(fromCookie.brandId!))))) (await cookies()).delete(LEGACY_COOKIE);
+  // Otherwise the first of their restaurants. TODO(Phase B): let people with several pick.
+  membership ??= mine[0];
   if (!membership) {
     await startUserSession(user);
     return null;

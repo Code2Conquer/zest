@@ -17,21 +17,30 @@ export const OWNER: Role[] = ["owner"];
 export const MANAGERS: Role[] = ["owner", "manager"];
 export const FLOOR: Role[] = ["owner", "manager", "cashier"];
 
+/** Kitchen and rider sign-ins see only their own screen, so they reach only routes marked `staff: true`. */
+const SCREEN_ONLY: Role[] = ["kitchen", "rider"];
+
+type Opts = { roles?: Role[]; staff?: boolean };
+
 /**
  * Wraps a route handler: makes sure the database is ready, resolves the outlet and the signed-in person,
  * maps errors to JSON. With `{ roles }`, only those roles may call it; the sample restaurant keeps its
- * own rule (assertWritable) instead.
+ * own rule (assertWritable) instead. `{ staff: true }` opens a read route to kitchen and rider sign-ins.
  */
 export function handler<P = Record<string, string>>(fn: Fn<P>): (req: Request, ctx: Ctx<P>) => Promise<Response>;
-export function handler<P = Record<string, string>>(opts: { roles: Role[] }, fn: Fn<P>): (req: Request, ctx: Ctx<P>) => Promise<Response>;
-export function handler<P = Record<string, string>>(a: Fn<P> | { roles: Role[] }, b?: Fn<P>) {
+export function handler<P = Record<string, string>>(opts: Opts, fn: Fn<P>): (req: Request, ctx: Ctx<P>) => Promise<Response>;
+export function handler<P = Record<string, string>>(a: Fn<P> | Opts, b?: Fn<P>) {
   const fn = typeof a === "function" ? a : b!;
-  const roles = typeof a === "function" ? null : a.roles;
+  const opts: Opts = typeof a === "function" ? {} : a;
+  const roles = opts.roles ?? null;
   return async (req: Request, ctx: Ctx<P>) => {
     try {
       await ready();
       const session = await currentSession();
       const outlet = session?.outlet ?? (await currentOutlet());
+      if (session && SCREEN_ONLY.includes(session.membership.role) && !opts.staff && !roles?.includes(session.membership.role)) {
+        throw new HttpError(403, "This isn't available on a kitchen or rider sign-in.");
+      }
       if (roles && !outlet.isDemo) requireRole(session, roles);
       const result = await fn(req, outlet, await ctx.params, session);
       return result instanceof Response ? result : NextResponse.json(result);

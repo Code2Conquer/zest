@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { handler } from "@/lib/server/http";
+import { clientIp, handler } from "@/lib/server/http";
 import { pinSignIn } from "@/lib/server/staff";
 
 const Body = z.object({ code: z.string().trim().min(4).max(12), pin: z.string().trim() });
@@ -7,6 +7,6 @@ const Body = z.object({ code: z.string().trim().min(4).max(12), pin: z.string().
 /** Staff sign-in on the restaurant's device: restaurant code and 4-digit PIN. */
 export const POST = handler(async (req) => {
   const { code, pin } = Body.parse(await req.json());
-  const s = await pinSignIn(code, pin);
+  const s = await pinSignIn(code, pin, clientIp(req));
   return { name: s.user.name, role: s.membership.role, outlet: s.outlet.name };
 });

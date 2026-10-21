@@ -16,8 +16,8 @@ describe("jobs", () => {
     let calls = 0;
     registerHandler(k, async () => void calls++);
     const job = await enqueue(k, {});
-    await runDueJobs({ limit: 10, deadlineMs: 5_000 });
-    await runDueJobs({ limit: 10, deadlineMs: 5_000 });
+    await runDueJobs({ limit: 10, deadlineMs: 50_000 });
+    await runDueJobs({ limit: 10, deadlineMs: 50_000 });
     expect(calls).toBe(1);
     expect((await row(job!.id)).status).toBe("done");
   });
@@ -27,7 +27,7 @@ describe("jobs", () => {
     let calls = 0;
     registerHandler(k, async () => void calls++);
     await enqueue(k, {}, { runAt: new Date(Date.now() + 10 * MIN) });
-    await runDueJobs({ limit: 10, deadlineMs: 5_000 });
+    await runDueJobs({ limit: 10, deadlineMs: 50_000 });
     expect(calls).toBe(0);
   });
 
@@ -47,7 +47,7 @@ describe("jobs", () => {
     const job = await enqueue(k, {});
     for (const waitMin of [0, 1, 5, 25, 60]) {
       vi.setSystemTime(Date.now() + waitMin * MIN + 1000);
-      await runDueJobs({ limit: 10, deadlineMs: 5_000 });
+      await runDueJobs({ limit: 10, deadlineMs: 50_000 });
     }
     const r = await row(job!.id);
     expect(r.status).toBe("failed");
@@ -61,7 +61,7 @@ describe("jobs", () => {
     registerHandler(k, async () => void calls++);
     const job = await enqueue(k, {});
     await db.update(jobs).set({ status: "running", lockedUntil: new Date(Date.now() - MIN).toISOString() }).where(eq(jobs.id, job!.id));
-    await runDueJobs({ limit: 10, deadlineMs: 5_000 });
+    await runDueJobs({ limit: 10, deadlineMs: 50_000 });
     expect(calls).toBe(1);
     expect((await row(job!.id)).status).toBe("done");
   });

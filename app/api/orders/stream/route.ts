@@ -9,7 +9,7 @@ const PING_MS = 15_000;
 const LIFETIME_MS = 55_000;
 
 /** Server-sent events: each change to this outlet's orders, within about 2 seconds. */
-export const GET = handler(async (req, outlet) => {
+export const GET = handler({ staff: true }, async (req, outlet) => {
   let cursor = req.headers.get("last-event-id") || new URL(req.url).searchParams.get("cursor");
   const encoder = new TextEncoder();
   const started = Date.now();

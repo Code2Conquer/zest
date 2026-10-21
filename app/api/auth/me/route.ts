@@ -3,7 +3,7 @@ import { devSigninAllowed, googleSigninConfigured } from "@/lib/server/google-si
 import { handler } from "@/lib/server/http";
 
 /** Who is signed in, their role here, and which sign-in methods this server offers. */
-export const GET = handler(async (_req, outlet, _params, session) => {
+export const GET = handler({ staff: true }, async (_req, outlet, _params, session) => {
   const user = session?.user ?? (await currentUser());
   return {
     user: user ? { name: user.name, email: user.email } : null,
