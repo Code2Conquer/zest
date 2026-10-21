@@ -11,6 +11,7 @@ import type { OrderDTO } from "@/lib/types";
 import { ACTIVE_STATUSES } from "@/lib/orders";
 import { DIRECT_CHANNELS, isDirect, type Channel } from "@/lib/platforms";
 import { useApp, useOutlet } from "@/lib/state";
+import { useOrderStream } from "@/lib/use-order-stream";
 
 const STATUS: Record<OrderDTO["status"], { en: string; hi: string; tone: string }> = {
   new: { en: "New", hi: "नया", tone: "text-turmeric font-medium" },
@@ -47,7 +48,15 @@ const TARGET_MINS = 15;
 export default function Orders() {
   const { t, pick, state } = useApp();
   const { live, outlet } = useOutlet();
-  const { data, error } = useApi<OrderDTO[]>(outlet ? `/api/orders?o=${outlet.id}` : null);
+  const { data, error, setData } = useApi<OrderDTO[]>(outlet ? `/api/orders?o=${outlet.id}` : null);
+  // Changes arrive live; each replaces the order with the same id, newest placed first.
+  const { mode } = useOrderStream((changed) => {
+    setData((prev) => {
+      const byId = new Map((prev ?? []).map((o) => [o.id, o]));
+      for (const o of changed) byId.set(o.id, { ...byId.get(o.id), ...o });
+      return [...byId.values()].sort((a, b) => b.placedAt.localeCompare(a.placedAt));
+    });
+  }, !!outlet);
   const [syncing, setSyncing] = useState(false);
   const [syncNote, setSyncNote] = useState<string | null>(null);
   const channels: Channel[] = [...live, "dine", ...DIRECT_CHANNELS];
@@ -96,6 +105,7 @@ export default function Orders() {
         </button>
       </div>
       {syncNote && <p className="mt-3 text-sm text-ink-2" role="status">{syncNote}</p>}
+      {mode === "polling" && <p className="mt-3 text-sm text-muted">{hi ? "हर 10 सेकंड में अपडेट हो रहा है" : "Updating every 10 seconds"}</p>}
       {error && <p className="mt-3 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}
 
       <div role="group" aria-label="Filter by channel" className="mt-6 flex flex-wrap gap-2">

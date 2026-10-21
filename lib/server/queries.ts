@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, lt, or } from "drizzle-orm";
 import type { DishKind } from "@/components/dishes";
 import type { ApprovalDTO, ApprovalStep, MenuItemDTO, OrderDTO, OutletDTO, PayoutDTO, ReviewDTO, TodayDTO } from "../types";
 import { VOID_STATUSES } from "../orders";
@@ -96,6 +96,19 @@ export async function getOrders(outletId: string, limit = 60) {
   const rows = (await db.select().from(orders).where(eq(orders.outletId, outletId)).orderBy(desc(orders.placedAt)).limit(limit)).map(orderDTO);
   const lines = await linesFor(rows.map((o) => o.id));
   return rows.map((o) => (lines.has(o.id) ? { ...o, lines: lines.get(o.id) } : o));
+}
+
+/**
+ * Orders changed after `cursor` ("<updated_at>|<id>" of the last one seen), oldest first, so a client
+ * can follow changes without missing two orders that changed in the same millisecond.
+ * With no cursor: everything changed since the start of today.
+ */
+export async function ordersChangedSince(outletId: string, cursor: string | null, limit = 100): Promise<{ orders: OrderDTO[]; cursor: string | null }> {
+  const [at, id] = cursor?.includes("|") ? cursor.split("|") : [null, null];
+  const after = at && id ? or(gt(orders.updatedAt, at), and(eq(orders.updatedAt, at), gt(orders.id, id))) : gte(orders.updatedAt, dayBounds(0)[0]);
+  const rows = await db.select().from(orders).where(and(eq(orders.outletId, outletId), after)).orderBy(asc(orders.updatedAt), asc(orders.id)).limit(limit);
+  const last = rows.at(-1);
+  return { orders: rows.map(orderDTO), cursor: last ? `${last.updatedAt}|${last.id}` : cursor };
 }
 
 export async function getPayouts(outletId: string) {
