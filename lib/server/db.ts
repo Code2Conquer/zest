@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS campaigns (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS campaigns_outlet ON campaigns (outlet_id, status);
+CREATE TABLE IF NOT EXISTS brands (id TEXT PRIMARY KEY, name TEXT NOT NULL, created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS order_lines (
   id TEXT PRIMARY KEY, order_id TEXT NOT NULL, item_id TEXT, name TEXT NOT NULL, qty INTEGER NOT NULL,
   unit_price INTEGER NOT NULL, options TEXT NOT NULL DEFAULT '[]', line_total INTEGER NOT NULL
@@ -127,6 +128,7 @@ const COLUMNS = [
   "ALTER TABLE outlets ADD COLUMN listing_data TEXT NOT NULL DEFAULT '{}'",
   "ALTER TABLE orders ADD COLUMN delayed INTEGER NOT NULL DEFAULT 0",
   "ALTER TABLE orders ADD COLUMN promised_at TEXT",
+  "ALTER TABLE outlets ADD COLUMN brand_id TEXT",
 ];
 
 // Data fixes that move stored rows to a newer model. Each is safe to run again.
@@ -174,6 +176,8 @@ export function ready(): Promise<void> {
       await migrate(client());
       const { seedDemo } = await import("./seed");
       await seedDemo();
+      const { ensureBrands } = await import("./brands");
+      await ensureBrands();
     })().catch((err) => {
       globalForDb.zestReady = undefined;
       throw err;

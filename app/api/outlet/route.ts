@@ -6,7 +6,7 @@ import { db } from "@/lib/server/db";
 import { applyListing, fetchListing } from "@/lib/server/listing-sync";
 import { handler } from "@/lib/server/http";
 import { outletDTO } from "@/lib/server/queries";
-import { outlets } from "@/lib/server/schema";
+import { brands, outlets } from "@/lib/server/schema";
 import { setCurrentOutlet } from "@/lib/server/session";
 
 const Platforms = z.array(z.enum(["zomato", "swiggy"])).max(2);
@@ -53,7 +53,9 @@ export const POST = handler(async (req, outlet) => {
     [row] = await db.update(outlets).set(fields).where(eq(outlets.id, outlet.id)).returning();
     await audit(outlet.id, "owner", "outlet.updated", { fields: Object.keys(fields) });
   } else {
-    [row] = await db.insert(outlets).values({ ...fields, name: fields.name || "My restaurant" }).returning();
+    const name = fields.name || "My restaurant";
+    const [brand] = await db.insert(brands).values({ name }).returning();
+    [row] = await db.insert(outlets).values({ ...fields, name, brandId: brand.id }).returning();
     await setCurrentOutlet(row.id);
     await audit(row.id, "owner", "outlet.created", { journey, live, documents: { fssai: !!profile.fssai, gstin: !!profile.gstin } });
   }

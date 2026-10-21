@@ -16,6 +16,7 @@ export type ConnectionDTO = {
 
 export type OutletDTO = {
   id: string;
+  brandId: string | null;
   name: string;
   area: string;
   city: string;

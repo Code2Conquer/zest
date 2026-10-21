@@ -18,6 +18,7 @@ export async function outletDTO(o: Outlet): Promise<OutletDTO> {
   const conns = await db.select().from(connections).where(eq(connections.outletId, o.id));
   return {
     id: o.id,
+    brandId: o.brandId,
     name: o.name,
     area: o.area,
     city: o.city,

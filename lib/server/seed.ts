@@ -1,22 +1,30 @@
 import "server-only";
-import { and, asc, eq, gte, lt } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, lt } from "drizzle-orm";
 import { MENU, ORDERS, OUTLET, PAYOUTS, RATINGS, REVIEWS, SALES_YESTERDAY } from "../data";
 import { fromLegacyStatus } from "../orders";
 import { createApproval } from "./approvals";
 import { db } from "./db";
 import { dinePrice, ensureTables } from "./dining";
 import { dayBounds } from "./queries";
-import { campaigns, connections, diningTables, dineTabs, menuItems, orders, outlets, payouts, reservations, reviews, type TabLine } from "./schema";
+import { campaigns, connections, diningTables, dineTabs, menuItems, orders, outlets, payouts, reservations, reviews, brands, type TabLine } from "./schema";
 
 export const DEMO_OUTLET_ID = "demo";
+export const DEMO_BRAND_ID = "demo-brand";
 
 /** A sample restaurant so the app has something to show before anything is connected. */
 export async function seedDemo() {
   const existing = await db.select({ id: outlets.id }).from(outlets).where(eq(outlets.id, DEMO_OUTLET_ID));
-  if (existing.length) return backfillDemoPhotos();
+  if (existing.length) {
+    // Demo seeded before brands existed: give it the fixed demo brand.
+    await db.insert(brands).values({ id: DEMO_BRAND_ID, name: OUTLET.name }).onConflictDoNothing();
+    await db.update(outlets).set({ brandId: DEMO_BRAND_ID }).where(and(eq(outlets.id, DEMO_OUTLET_ID), isNull(outlets.brandId)));
+    return backfillDemoPhotos();
+  }
 
+  await db.insert(brands).values({ id: DEMO_BRAND_ID, name: OUTLET.name }).onConflictDoNothing();
   await db.insert(outlets).values({
     id: DEMO_OUTLET_ID,
+    brandId: DEMO_BRAND_ID,
     name: OUTLET.name,
     area: OUTLET.area,
     cuisines: "North Indian, Biryani, Desserts",

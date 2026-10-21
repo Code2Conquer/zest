@@ -6,8 +6,17 @@ import type { ListingSummary } from "../types";
 const now = () => new Date().toISOString();
 const id = () => crypto.randomUUID();
 
+/** A restaurant business. Customers, loyalty, the storefront, WhatsApp and payments belong to the brand; orders and kitchens to its outlets. */
+export const brands = sqliteTable("brands", {
+  id: text("id").primaryKey().$defaultFn(id),
+  name: text("name").notNull(),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+});
+
 export const outlets = sqliteTable("outlets", {
   id: text("id").primaryKey().$defaultFn(id),
+  // Set for every outlet once the database is ready (ensureBrands).
+  brandId: text("brand_id"),
   name: text("name").notNull(),
   area: text("area").notNull().default(""),
   city: text("city").notNull().default(""),
@@ -285,6 +294,7 @@ export const campaigns = sqliteTable("campaigns", {
   createdAt: text("created_at").notNull().$defaultFn(now),
 });
 
+export type Brand = typeof brands.$inferSelect;
 export type Outlet = typeof outlets.$inferSelect;
 export type Connection = typeof connections.$inferSelect;
 export type MenuItemRow = typeof menuItems.$inferSelect;
