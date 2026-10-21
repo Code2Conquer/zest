@@ -6,10 +6,12 @@ import { createApproval } from "./approvals";
 import { db } from "./db";
 import { dinePrice, ensureTables } from "./dining";
 import { dayBounds } from "./queries";
-import { campaigns, connections, diningTables, dineTabs, menuItems, orders, outlets, payouts, reservations, reviews, brands, type TabLine } from "./schema";
+import { campaigns, connections, diningTables, dineTabs, menuItems, orders, outlets, payouts, reservations, reviews, brands, outletHours, type TabLine } from "./schema";
 
 export const DEMO_OUTLET_ID = "demo";
 export const DEMO_BRAND_ID = "demo-brand";
+// The sample restaurant opens 11 am to 11:30 pm every day.
+const DEFAULT_HOURS = (outletId: string) => [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ outletId, weekday, opens: "11:00", closes: "23:30" }));
 
 /** A sample restaurant so the app has something to show before anything is connected. */
 export async function seedDemo() {
@@ -18,6 +20,9 @@ export async function seedDemo() {
     // Demo seeded before brands existed: give it the fixed demo brand.
     await db.insert(brands).values({ id: DEMO_BRAND_ID, name: OUTLET.name }).onConflictDoNothing();
     await db.update(outlets).set({ brandId: DEMO_BRAND_ID }).where(and(eq(outlets.id, DEMO_OUTLET_ID), isNull(outlets.brandId)));
+    // Demo seeded before opening hours existed.
+    const [anyHours] = await db.select({ id: outletHours.id }).from(outletHours).where(eq(outletHours.outletId, DEMO_OUTLET_ID)).limit(1);
+    if (!anyHours) await db.insert(outletHours).values(DEFAULT_HOURS(DEMO_OUTLET_ID));
     return backfillDemoPhotos();
   }
 
@@ -128,6 +133,7 @@ function yesterdaysOrders(outletId: string) {
 
 /** Copies the sample menu, orders, payouts and reviews to an outlet. */
 export async function seedRestaurantData(outletId: string) {
+  await db.insert(outletHours).values(DEFAULT_HOURS(outletId));
   const today = new Date();
   const at = (time: string) => {
     const [hm, ampm] = time.split(" ");

@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { ChannelTag } from "@/components/bits";
 import { ListingCard } from "@/components/listing-preview";
 import { MailboxCard } from "@/components/mailbox-card";
+import { HoursEditor } from "@/components/hours-editor";
 import { StaffCard } from "@/components/staff-card";
 import { PlatformConnector } from "@/components/platform-connector";
 import { api, refreshAll, useApi } from "@/lib/api";
@@ -116,6 +117,8 @@ export default function Connections() {
           </div>
         </section>
       )}
+
+      <HoursEditor />
 
       <StaffCard />
 

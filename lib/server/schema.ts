@@ -41,6 +41,27 @@ export const memberships = sqliteTable("memberships", {
 const STAFF_CODE_LETTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 export const newStaffCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => STAFF_CODE_LETTERS[b % STAFF_CODE_LETTERS.length]).join("");
 
+/** Weekly opening spans; weekday 0 is Sunday. channel null applies to every channel. */
+export const outletHours = sqliteTable("outlet_hours", {
+  id: text("id").primaryKey().$defaultFn(id),
+  outletId: text("outlet_id").notNull(),
+  weekday: integer("weekday").notNull(),
+  opens: text("opens").notNull(),
+  closes: text("closes").notNull(),
+  channel: text("channel").$type<Channel | null>(),
+});
+
+/** Holidays and other dated exceptions to the weekly hours. */
+export const specialHours = sqliteTable("special_hours", {
+  id: text("id").primaryKey().$defaultFn(id),
+  outletId: text("outlet_id").notNull(),
+  date: text("date").notNull(),
+  closed: integer("closed", { mode: "boolean" }).notNull().default(false),
+  opens: text("opens"),
+  closes: text("closes"),
+  note: text("note").notNull().default(""),
+});
+
 /** Background work, run by /api/jobs/run every minute. */
 export const jobs = sqliteTable("jobs", {
   id: text("id").primaryKey().$defaultFn(id),

@@ -118,6 +118,14 @@ CREATE TABLE IF NOT EXISTS jobs (
   dedupe_key TEXT UNIQUE, created_at TEXT NOT NULL, finished_at TEXT
 );
 CREATE INDEX IF NOT EXISTS jobs_due ON jobs (status, run_at);
+CREATE TABLE IF NOT EXISTS outlet_hours (
+  id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL, weekday INTEGER NOT NULL, opens TEXT NOT NULL, closes TEXT NOT NULL, channel TEXT
+);
+CREATE INDEX IF NOT EXISTS outlet_hours_outlet ON outlet_hours (outlet_id);
+CREATE TABLE IF NOT EXISTS special_hours (
+  id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL, date TEXT NOT NULL, closed INTEGER NOT NULL DEFAULT 0, opens TEXT, closes TEXT, note TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS special_hours_outlet ON special_hours (outlet_id, date);
 CREATE TABLE IF NOT EXISTS rate_limits (key TEXT NOT NULL, window_start INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (key, window_start));
 CREATE TABLE IF NOT EXISTS order_lines (
   id TEXT PRIMARY KEY, order_id TEXT NOT NULL, item_id TEXT, name TEXT NOT NULL, qty INTEGER NOT NULL,
