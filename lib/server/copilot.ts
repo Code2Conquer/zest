@@ -35,13 +35,14 @@ const platformName = (p: Platform) => (p === "zomato" ? "Zomato" : "Swiggy");
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
 /** Runs one owner message through the copilot and stores both sides of the exchange. */
-export async function runCopilot(outlet: Outlet, message: string, uiLang: Lang): Promise<CopilotReply> {
+/** `engine` forces Claude or the keyword rules (evals use it); by default Claude runs when configured. */
+export async function runCopilot(outlet: Outlet, message: string, uiLang: Lang, engine?: CopilotReply["engine"]): Promise<CopilotReply> {
   const lang = replyLang(message, uiLang);
   const history = await db.select().from(chatMessages).where(eq(chatMessages.outletId, outlet.id)).orderBy(desc(chatMessages.createdAt)).limit(16);
   await db.insert(chatMessages).values({ outletId: outlet.id, role: "user", content: { text: message } });
 
   let reply: CopilotReply;
-  if (hasClaude()) {
+  if (engine ? engine === "claude" : hasClaude()) {
     try {
       reply = await withClaude(outlet, message, lang, history.reverse());
     } catch (err) {

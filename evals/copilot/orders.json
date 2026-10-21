@@ -1,0 +1,134 @@
+[
+  {
+    "id": "orders-1",
+    "message": "How did we do yesterday?",
+    "uiLang": "en",
+    "expect": {
+      "agent": "orders",
+      "replyLang": "en",
+      "cardTypes": [
+        "sales"
+      ]
+    }
+  },
+  {
+    "id": "orders-2",
+    "message": "Sales so far today",
+    "uiLang": "en",
+    "expect": {
+      "agent": "orders",
+      "replyLang": "en",
+      "cardTypes": [
+        "sales"
+      ]
+    }
+  },
+  {
+    "id": "orders-3",
+    "message": "How many orders today?",
+    "uiLang": "en",
+    "expect": {
+      "agent": "orders",
+      "replyLang": "en",
+      "cardTypes": [
+        "sales"
+      ]
+    }
+  },
+  {
+    "id": "orders-4",
+    "message": "What were yesterday's sales?",
+    "uiLang": "en",
+    "expect": {
+      "agent": "orders",
+      "replyLang": "en",
+      "cardTypes": [
+        "sales"
+      ]
+    }
+  },
+  {
+    "id": "orders-5",
+    "message": "Show me today's numbers",
+    "uiLang": "en",
+    "expect": {
+      "agent": "orders",
+      "replyLang": "en",
+      "cardTypes": [
+        "sales"
+      ]
+    }
+  },
+  {
+    "id": "orders-6",
+    "message": "kal kitna becha",
+    "uiLang": "en",
+    "expect": {
+      "agent": "orders",
+      "replyLang": "hi",
+      "cardTypes": [
+        "sales"
+      ]
+    }
+  },
+  {
+    "id": "orders-7",
+    "message": "aaj kitne order aaye",
+    "uiLang": "en",
+    "expect": {
+      "agent": "orders",
+      "replyLang": "hi",
+      "cardTypes": [
+        "sales"
+      ]
+    }
+  },
+  {
+    "id": "orders-8",
+    "message": "kal ki sales batao",
+    "uiLang": "en",
+    "expect": {
+      "agent": "orders",
+      "replyLang": "hi",
+      "cardTypes": [
+        "sales"
+      ]
+    }
+  },
+  {
+    "id": "orders-9",
+    "message": "कल का दिन कैसा रहा?",
+    "uiLang": "en",
+    "expect": {
+      "agent": "orders",
+      "replyLang": "hi",
+      "cardTypes": [
+        "sales"
+      ]
+    }
+  },
+  {
+    "id": "orders-10",
+    "message": "आज की बिक्री कितनी है",
+    "uiLang": "hi",
+    "expect": {
+      "agent": "orders",
+      "replyLang": "hi",
+      "cardTypes": [
+        "sales"
+      ]
+    }
+  },
+  {
+    "id": "orders-11",
+    "message": "आज कितने ऑर्डर आए",
+    "uiLang": "hi",
+    "expect": {
+      "agent": "orders",
+      "replyLang": "hi",
+      "cardTypes": [
+        "sales"
+      ]
+    }
+  }
+]

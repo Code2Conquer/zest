@@ -1,0 +1,174 @@
+[
+  {
+    "id": "menu-1",
+    "message": "Paneer is finished, turn off paneer dishes",
+    "uiLang": "en",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "en",
+      "approvalKinds": [
+        "menu_change"
+      ],
+      "mentions": [
+        "Paneer tikka"
+      ]
+    }
+  },
+  {
+    "id": "menu-2",
+    "message": "Mark chicken biryani out of stock",
+    "uiLang": "en",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "en",
+      "approvalKinds": [
+        "menu_change"
+      ],
+      "mentions": [
+        "Chicken biryani"
+      ]
+    }
+  },
+  {
+    "id": "menu-3",
+    "message": "Butter naan unavailable for now",
+    "uiLang": "en",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "en",
+      "approvalKinds": [
+        "menu_change"
+      ],
+      "mentions": [
+        "Butter naan"
+      ]
+    }
+  },
+  {
+    "id": "menu-4",
+    "message": "Gajar halwa is finished",
+    "uiLang": "en",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "en",
+      "approvalKinds": [
+        "menu_change"
+      ],
+      "mentions": [
+        "Gajar halwa"
+      ]
+    }
+  },
+  {
+    "id": "menu-5",
+    "message": "Turn off the thali",
+    "uiLang": "en",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "en",
+      "approvalKinds": [
+        "menu_change"
+      ],
+      "mentions": [
+        "Veg thali"
+      ]
+    }
+  },
+  {
+    "id": "menu-6",
+    "message": "Something is finished in the kitchen",
+    "uiLang": "en",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "en",
+      "approvalKinds": [],
+      "cardTypes": []
+    }
+  },
+  {
+    "id": "menu-7",
+    "message": "paneer khatam hai, band karo",
+    "uiLang": "en",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "menu_change"
+      ],
+      "mentions": [
+        "Paneer tikka"
+      ]
+    }
+  },
+  {
+    "id": "menu-8",
+    "message": "biryani band kar do",
+    "uiLang": "en",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "menu_change"
+      ],
+      "mentions": [
+        "Chicken biryani"
+      ]
+    }
+  },
+  {
+    "id": "menu-9",
+    "message": "makhani khatam hai",
+    "uiLang": "en",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "menu_change"
+      ],
+      "mentions": [
+        "Dal makhani"
+      ]
+    }
+  },
+  {
+    "id": "menu-10",
+    "message": "पनीर ख़त्म है, पनीर वाली डिश बंद करो",
+    "uiLang": "en",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "menu_change"
+      ],
+      "mentions": [
+        "Paneer tikka"
+      ]
+    }
+  },
+  {
+    "id": "menu-11",
+    "message": "पनीर वाली डिश बंद करो",
+    "uiLang": "hi",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "menu_change"
+      ],
+      "mentions": [
+        "Paneer tikka"
+      ]
+    }
+  },
+  {
+    "id": "menu-12",
+    "message": "बिरयानी ख़त्म है",
+    "uiLang": "hi",
+    "expect": {
+      "agent": "menu",
+      "replyLang": "hi",
+      "approvalKinds": [],
+      "cardTypes": []
+    }
+  }
+]

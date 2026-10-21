@@ -1,0 +1,155 @@
+[
+  {
+    "id": "finance-1",
+    "message": "Why is my Swiggy payout lower this week?",
+    "uiLang": "en",
+    "expect": {
+      "agent": "finance",
+      "replyLang": "en",
+      "cardTypes": [
+        "payout"
+      ],
+      "mentions": [
+        "Swiggy"
+      ]
+    }
+  },
+  {
+    "id": "finance-2",
+    "message": "Show my Zomato settlement",
+    "uiLang": "en",
+    "expect": {
+      "agent": "finance",
+      "replyLang": "en",
+      "cardTypes": [
+        "payout"
+      ],
+      "mentions": [
+        "Zomato"
+      ]
+    }
+  },
+  {
+    "id": "finance-3",
+    "message": "What deductions did Swiggy take?",
+    "uiLang": "en",
+    "expect": {
+      "agent": "finance",
+      "replyLang": "en",
+      "cardTypes": [
+        "payout"
+      ],
+      "mentions": [
+        "Swiggy"
+      ]
+    }
+  },
+  {
+    "id": "finance-4",
+    "message": "When is the next payout coming?",
+    "uiLang": "en",
+    "expect": {
+      "agent": "finance",
+      "replyLang": "en",
+      "cardTypes": [
+        "payout"
+      ]
+    }
+  },
+  {
+    "id": "finance-5",
+    "message": "Explain my latest statement",
+    "uiLang": "en",
+    "expect": {
+      "agent": "finance",
+      "replyLang": "en",
+      "cardTypes": [
+        "payout"
+      ]
+    }
+  },
+  {
+    "id": "finance-6",
+    "message": "swiggy ka paisa kam kyun aaya is hafte",
+    "uiLang": "en",
+    "expect": {
+      "agent": "finance",
+      "replyLang": "hi",
+      "cardTypes": [
+        "payout"
+      ],
+      "mentions": [
+        "Swiggy"
+      ]
+    }
+  },
+  {
+    "id": "finance-7",
+    "message": "zomato se kitna paisa aaya",
+    "uiLang": "en",
+    "expect": {
+      "agent": "finance",
+      "replyLang": "hi",
+      "cardTypes": [
+        "payout"
+      ],
+      "mentions": [
+        "Zomato"
+      ]
+    }
+  },
+  {
+    "id": "finance-8",
+    "message": "is hafte ka payout kya hai",
+    "uiLang": "en",
+    "expect": {
+      "agent": "finance",
+      "replyLang": "hi",
+      "cardTypes": [
+        "payout"
+      ]
+    }
+  },
+  {
+    "id": "finance-9",
+    "message": "इस हफ़्ते Swiggy पेआउट कम क्यों है?",
+    "uiLang": "en",
+    "expect": {
+      "agent": "finance",
+      "replyLang": "hi",
+      "cardTypes": [
+        "payout"
+      ],
+      "mentions": [
+        "Swiggy"
+      ]
+    }
+  },
+  {
+    "id": "finance-10",
+    "message": "Zomato का पेआउट दिखाओ",
+    "uiLang": "hi",
+    "expect": {
+      "agent": "finance",
+      "replyLang": "hi",
+      "cardTypes": [
+        "payout"
+      ],
+      "mentions": [
+        "Zomato"
+      ]
+    }
+  },
+  {
+    "id": "finance-11",
+    "message": "मेरे पैसे कब आएँगे?",
+    "uiLang": "hi",
+    "expect": {
+      "agent": "finance",
+      "replyLang": "hi",
+      "cardTypes": [
+        "payout"
+      ]
+    }
+  }
+]

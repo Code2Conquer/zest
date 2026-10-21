@@ -1,0 +1,134 @@
+[
+  {
+    "id": "growth-1",
+    "message": "Suggest a promo for the weekend",
+    "uiLang": "en",
+    "expect": {
+      "agent": "growth",
+      "replyLang": "en",
+      "approvalKinds": [
+        "promo"
+      ]
+    }
+  },
+  {
+    "id": "growth-2",
+    "message": "Should I run an offer?",
+    "uiLang": "en",
+    "expect": {
+      "agent": "growth",
+      "replyLang": "en",
+      "approvalKinds": [
+        "promo"
+      ]
+    }
+  },
+  {
+    "id": "growth-3",
+    "message": "Plan a discount for new customers",
+    "uiLang": "en",
+    "expect": {
+      "agent": "growth",
+      "replyLang": "en",
+      "approvalKinds": [
+        "promo"
+      ]
+    }
+  },
+  {
+    "id": "growth-4",
+    "message": "Set up ads for biryani",
+    "uiLang": "en",
+    "expect": {
+      "agent": "growth",
+      "replyLang": "en",
+      "approvalKinds": [
+        "promo"
+      ]
+    }
+  },
+  {
+    "id": "growth-5",
+    "message": "Weekend plan please",
+    "uiLang": "en",
+    "expect": {
+      "agent": "growth",
+      "replyLang": "en",
+      "approvalKinds": [
+        "promo"
+      ]
+    }
+  },
+  {
+    "id": "growth-6",
+    "message": "weekend ke liye offer batao",
+    "uiLang": "en",
+    "expect": {
+      "agent": "growth",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "promo"
+      ]
+    }
+  },
+  {
+    "id": "growth-7",
+    "message": "naya promo kya hai",
+    "uiLang": "en",
+    "expect": {
+      "agent": "growth",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "promo"
+      ]
+    }
+  },
+  {
+    "id": "growth-8",
+    "message": "discount chahiye, kya karna hai",
+    "uiLang": "en",
+    "expect": {
+      "agent": "growth",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "promo"
+      ]
+    }
+  },
+  {
+    "id": "growth-9",
+    "message": "वीकेंड के लिए प्रोमो बताओ",
+    "uiLang": "en",
+    "expect": {
+      "agent": "growth",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "promo"
+      ]
+    }
+  },
+  {
+    "id": "growth-10",
+    "message": "नए ग्राहकों के लिए ऑफ़र चलाओ",
+    "uiLang": "hi",
+    "expect": {
+      "agent": "growth",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "promo"
+      ]
+    }
+  },
+  {
+    "id": "growth-11",
+    "message": "प्रोमो चलाओ",
+    "uiLang": "hi",
+    "expect": {
+      "agent": "growth",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "promo"
+      ]
+    }
+  }
+]

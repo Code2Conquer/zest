@@ -1,0 +1,134 @@
+[
+  {
+    "id": "reviews-1",
+    "message": "Reply to new reviews",
+    "uiLang": "en",
+    "expect": {
+      "agent": "reviews",
+      "replyLang": "en",
+      "approvalKinds": [
+        "review_reply"
+      ]
+    }
+  },
+  {
+    "id": "reviews-2",
+    "message": "Draft replies for my reviews",
+    "uiLang": "en",
+    "expect": {
+      "agent": "reviews",
+      "replyLang": "en",
+      "approvalKinds": [
+        "review_reply"
+      ]
+    }
+  },
+  {
+    "id": "reviews-3",
+    "message": "Any complaints since last night?",
+    "uiLang": "en",
+    "expect": {
+      "agent": "reviews",
+      "replyLang": "en",
+      "approvalKinds": [
+        "review_reply"
+      ]
+    }
+  },
+  {
+    "id": "reviews-4",
+    "message": "How is my rating looking?",
+    "uiLang": "en",
+    "expect": {
+      "agent": "reviews",
+      "replyLang": "en",
+      "approvalKinds": [
+        "review_reply"
+      ]
+    }
+  },
+  {
+    "id": "reviews-5",
+    "message": "Reply to the 2 star review",
+    "uiLang": "en",
+    "expect": {
+      "agent": "reviews",
+      "replyLang": "en",
+      "approvalKinds": [
+        "review_reply"
+      ]
+    }
+  },
+  {
+    "id": "reviews-6",
+    "message": "reviews ka reply kar do",
+    "uiLang": "en",
+    "expect": {
+      "agent": "reviews",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "review_reply"
+      ]
+    }
+  },
+  {
+    "id": "reviews-7",
+    "message": "naye reviews kya hai",
+    "uiLang": "en",
+    "expect": {
+      "agent": "reviews",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "review_reply"
+      ]
+    }
+  },
+  {
+    "id": "reviews-8",
+    "message": "complaint ka reply batao",
+    "uiLang": "en",
+    "expect": {
+      "agent": "reviews",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "review_reply"
+      ]
+    }
+  },
+  {
+    "id": "reviews-9",
+    "message": "नए रिव्यू का जवाब दो",
+    "uiLang": "en",
+    "expect": {
+      "agent": "reviews",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "review_reply"
+      ]
+    }
+  },
+  {
+    "id": "reviews-10",
+    "message": "शिकायतों का जवाब तैयार करो",
+    "uiLang": "hi",
+    "expect": {
+      "agent": "reviews",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "review_reply"
+      ]
+    }
+  },
+  {
+    "id": "reviews-11",
+    "message": "रिव्यू दिखाओ",
+    "uiLang": "hi",
+    "expect": {
+      "agent": "reviews",
+      "replyLang": "hi",
+      "approvalKinds": [
+        "review_reply"
+      ]
+    }
+  }
+]
