@@ -35,6 +35,6 @@ export async function linesFor(orderIds: string[]): Promise<Map<string, OrderLin
 }
 
 /** The short text kept in `orders.items`, e.g. "2 butter naan, dal makhani". */
-export function summariseLines(lines: Pick<OrderLineInput, "name" | "qty">[]): string {
+export function summariseLines(lines: OrderLineInput[]): string {
   return lines.map((l) => (l.qty > 1 ? `${l.qty} ${l.name.toLowerCase()}` : l.name.toLowerCase())).join(", ");
 }
