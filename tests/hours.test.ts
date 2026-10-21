@@ -43,3 +43,18 @@ describe("existing sample restaurant", () => {
     expect((await getHours("demo")).weekly).toHaveLength(7);
   });
 });
+
+describe("duplicate hours", () => {
+  it("removes duplicate spans and refuses new ones", async () => {
+    const { client, migrate } = await import("@/lib/server/db");
+    const { getHours } = await import("@/lib/server/hours");
+    const { freshOutlet } = await import("./helpers");
+    const o = await freshOutlet();
+    // As left behind by several servers starting at once, before the unique index existed.
+    await client().execute("DROP INDEX IF EXISTS outlet_hours_unique");
+    for (let i = 0; i < 3; i++) await client().execute({ sql: "INSERT INTO outlet_hours (id, outlet_id, weekday, opens, closes, channel) VALUES (?, ?, 1, '11:00', '23:30', NULL)", args: [crypto.randomUUID(), o.id] });
+    await migrate(client());
+    expect((await getHours(o.id)).weekly).toHaveLength(1);
+    await expect(client().execute({ sql: "INSERT INTO outlet_hours (id, outlet_id, weekday, opens, closes, channel) VALUES (?, ?, 1, '11:00', '23:30', NULL)", args: [crypto.randomUUID(), o.id] })).rejects.toThrow();
+  });
+});

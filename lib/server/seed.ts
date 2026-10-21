@@ -24,7 +24,7 @@ export async function seedDemo() {
     await db.update(outlets).set({ ordering: true }).where(eq(outlets.id, DEMO_OUTLET_ID));
     // Demo seeded before opening hours existed.
     const [anyHours] = await db.select({ id: outletHours.id }).from(outletHours).where(eq(outletHours.outletId, DEMO_OUTLET_ID)).limit(1);
-    if (!anyHours) await db.insert(outletHours).values(DEFAULT_HOURS(DEMO_OUTLET_ID));
+    if (!anyHours) await db.insert(outletHours).values(DEFAULT_HOURS(DEMO_OUTLET_ID)).onConflictDoNothing();
     return backfillDemoPhotos();
   }
 
@@ -136,7 +136,7 @@ function yesterdaysOrders(outletId: string) {
 
 /** Copies the sample menu, orders, payouts and reviews to an outlet. */
 export async function seedRestaurantData(outletId: string) {
-  await db.insert(outletHours).values(DEFAULT_HOURS(outletId));
+  await db.insert(outletHours).values(DEFAULT_HOURS(outletId)).onConflictDoNothing();
   const today = new Date();
   const at = (time: string) => {
     const [hm, ampm] = time.split(" ");

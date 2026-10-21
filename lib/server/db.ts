@@ -181,7 +181,12 @@ const DATA_FIXES = [
   "UPDATE orders SET status = 'preparing', delayed = 1 WHERE status = 'delayed'",
   "UPDATE orders SET status = 'out_for_delivery' WHERE status = 'picked'",
   "UPDATE orders SET status = 'completed' WHERE status = 'delivered'",
+  // Several servers starting at once could each add the sample restaurant's default hours.
+  "DELETE FROM outlet_hours WHERE rowid NOT IN (SELECT MIN(rowid) FROM outlet_hours GROUP BY outlet_id, weekday, opens, closes, ifnull(channel, ''))",
 ];
+
+// Constraints that can only be added once the data fixes above have cleaned up.
+const LATE_INDEXES = ["CREATE UNIQUE INDEX IF NOT EXISTS outlet_hours_unique ON outlet_hours (outlet_id, weekday, opens, closes, ifnull(channel, ''))"];
 const INDEXES = [
   "CREATE UNIQUE INDEX IF NOT EXISTS emails_outlet_external ON emails (outlet_id, external_id)",
   "CREATE UNIQUE INDEX IF NOT EXISTS outlets_staff_code ON outlets (staff_code)",
@@ -200,6 +205,7 @@ export async function migrate(c: Client) {
   }
   for (const sql of INDEXES) await c.execute(sql);
   for (const sql of DATA_FIXES) await c.execute(sql);
+  for (const sql of LATE_INDEXES) await c.execute(sql);
 }
 
 type Db = LibSQLDatabase<typeof schema>;
