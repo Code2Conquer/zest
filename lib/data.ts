@@ -11,7 +11,7 @@ export const OUTLET = {
   ownerFirstName: "Aditi",
 };
 
-export const SALES_YESTERDAY: Record<Channel, { amount: number; orders: number }> = {
+export const SALES_YESTERDAY: Record<"zomato" | "swiggy" | "dine", { amount: number; orders: number }> = {
   zomato: { amount: 18420, orders: 46 },
   swiggy: { amount: 14760, orders: 39 },
   dine: { amount: 9310, orders: 21 },

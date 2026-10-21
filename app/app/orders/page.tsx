@@ -8,17 +8,26 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { rupees } from "@/components/cards";
 import { api, refreshAll, useApi } from "@/lib/api";
 import type { OrderDTO } from "@/lib/types";
-import type { Channel } from "@/lib/platforms";
+import { ACTIVE_STATUSES } from "@/lib/orders";
+import { DIRECT_CHANNELS, isDirect, type Channel } from "@/lib/platforms";
 import { useApp, useOutlet } from "@/lib/state";
 
 const STATUS: Record<OrderDTO["status"], { en: string; hi: string; tone: string }> = {
+  new: { en: "New", hi: "नया", tone: "text-turmeric font-medium" },
+  accepted: { en: "Accepted", hi: "स्वीकार किया", tone: "text-ink" },
   preparing: { en: "Preparing", hi: "बन रहा है", tone: "text-ink" },
-  delayed: { en: "Running late", hi: "देर हो रही है", tone: "text-chilli font-medium" },
   ready: { en: "Ready for pickup", hi: "पिकअप के लिए तैयार", tone: "text-leaf" },
-  picked: { en: "Picked up", hi: "पिकअप हो गया", tone: "text-ink-2" },
-  delivered: { en: "Delivered", hi: "डिलीवर हो गया", tone: "text-muted" },
+  out_for_delivery: { en: "Out for delivery", hi: "डिलीवरी के लिए निकला", tone: "text-ink-2" },
+  picked_up: { en: "Picked up", hi: "ले जाया गया", tone: "text-ink-2" },
+  served: { en: "Served", hi: "परोसा गया", tone: "text-muted" },
+  completed: { en: "Completed", hi: "पूरा हुआ", tone: "text-muted" },
+  rejected: { en: "Rejected", hi: "अस्वीकार", tone: "text-muted line-through" },
   cancelled: { en: "Cancelled", hi: "कैंसल", tone: "text-muted line-through" },
 };
+const LATE = { en: "Running late", hi: "देर हो रही है", tone: "text-chilli font-medium" };
+const statusOf = (o: OrderDTO) => (o.delayed && ACTIVE_STATUSES.includes(o.status) ? LATE : STATUS[o.status]);
+
+type Filter = Channel | "all" | "direct";
 
 function dishFor(items: string): DishKind {
   const s = items.toLowerCase();
@@ -41,11 +50,14 @@ export default function Orders() {
   const { data, error } = useApi<OrderDTO[]>(outlet ? `/api/orders?o=${outlet.id}` : null);
   const [syncing, setSyncing] = useState(false);
   const [syncNote, setSyncNote] = useState<string | null>(null);
-  const channels: Channel[] = [...live, "dine"];
-  const [filter, setFilter] = useState<Channel | "all">("all");
+  const channels: Channel[] = [...live, "dine", ...DIRECT_CHANNELS];
+  const hasDirect = (data ?? []).some((o) => isDirect(o.channel));
+  const filters: Filter[] = ["all", ...live, "dine", ...(hasDirect ? (["direct"] as const) : [])];
+  const [filter, setFilter] = useState<Filter>("all");
   const hi = state.lang === "hi";
-  const rows = (data ?? []).filter((o) => channels.includes(o.channel) && (filter === "all" || o.channel === filter));
-  const active = rows.filter((o) => ["preparing", "delayed", "ready"].includes(o.status));
+  const matches = (o: OrderDTO) => filter === "all" || (filter === "direct" ? isDirect(o.channel) : o.channel === filter);
+  const rows = (data ?? []).filter((o) => channels.includes(o.channel) && matches(o));
+  const active = rows.filter((o) => ACTIVE_STATUSES.includes(o.status));
   const done = rows.filter((o) => !active.includes(o)).slice(0, 30);
   const time = (iso: string) => new Date(iso).toLocaleTimeString(hi ? "hi-IN" : "en-IN", { hour: "numeric", minute: "2-digit" });
 
@@ -87,7 +99,7 @@ export default function Orders() {
       {error && <p className="mt-3 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}
 
       <div role="group" aria-label="Filter by channel" className="mt-6 flex flex-wrap gap-2">
-        {(["all", ...channels] as const).map((c) => (
+        {filters.map((c) => (
           <button
             key={c}
             type="button"
@@ -95,7 +107,7 @@ export default function Orders() {
             onClick={() => setFilter(c)}
             className={`rounded-full px-4 py-1.5 text-sm ${filter === c ? "bg-ink text-paper" : "bg-surface text-ink-2 shadow-[0_0_0_1px_var(--line)] hover:text-ink"}`}
           >
-            {c === "all" ? (hi ? "सभी" : "All") : <ChannelTag channel={c} className={filter === c ? "text-paper" : ""} />}
+            {c === "all" ? (hi ? "सभी" : "All") : c === "direct" ? (hi ? "सीधे ऑर्डर" : "Direct") : <ChannelTag channel={c} className={filter === c ? "text-paper" : ""} />}
           </button>
         ))}
       </div>
@@ -104,7 +116,7 @@ export default function Orders() {
       {data && active.length === 0 && <p className="mt-3 rounded-xl bg-sunken px-4 py-6 text-center text-muted">{hi ? "अभी किचन में कोई ऑर्डर नहीं।" : "No orders in the kitchen right now."}</p>}
       <ul className="mt-4 grid gap-5 sm:grid-cols-2">
         {active.map((o, i) => {
-          const late = o.status === "delayed";
+          const late = o.delayed;
           return (
             <motion.li
               key={o.id}
@@ -129,8 +141,8 @@ export default function Orders() {
                   />
                 </div>
                 <div className="mt-2 flex items-baseline justify-between text-sm">
-                  <span className={STATUS[o.status].tone}>
-                    {pick(STATUS[o.status])}, {o.prepMins} {hi ? "मिनट" : "min"}
+                  <span className={statusOf(o).tone}>
+                    {pick(statusOf(o))}, {o.prepMins} {hi ? "मिनट" : "min"}
                   </span>
                   <span>{rupees(o.amount)}</span>
                 </div>
@@ -158,7 +170,7 @@ export default function Orders() {
                 <span className="ml-2 text-sm text-muted">#{o.externalId}</span>
               </td>
               <td className="hidden py-2.5 text-ink-2 sm:table-cell">{o.items}</td>
-              <td className={`py-2.5 text-sm ${STATUS[o.status].tone}`}>{pick(STATUS[o.status])}</td>
+              <td className={`py-2.5 text-sm ${statusOf(o).tone}`}>{pick(statusOf(o))}</td>
               <td className="py-2.5 text-right">{rupees(o.amount)}</td>
             </tr>
           ))}

@@ -1,5 +1,6 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
+import { fromLegacyStatus } from "../orders";
 import type { Channel } from "../platforms";
 import { audit } from "./approvals";
 import { connectorFor, type IncomingOrder } from "./connectors";
@@ -11,10 +12,11 @@ export async function upsertOrders(outletId: string, channel: Channel, incoming:
   let n = 0;
   for (const o of incoming) {
     if (!o?.externalId || typeof o.amount !== "number") continue;
+    const { status, delayed } = fromLegacyStatus(o.status ?? "preparing");
     await db
       .insert(orders)
-      .values({ outletId, channel, externalId: String(o.externalId), items: o.items ?? "", amount: Math.round(o.amount), placedAt: o.placedAt ?? new Date().toISOString(), status: o.status ?? "preparing", prepMins: o.prepMins ?? 0 })
-      .onConflictDoUpdate({ target: [orders.outletId, orders.channel, orders.externalId], set: { status: o.status ?? "preparing", prepMins: o.prepMins ?? 0, updatedAt: new Date().toISOString() } });
+      .values({ outletId, channel, externalId: String(o.externalId), items: o.items ?? "", amount: Math.round(o.amount), placedAt: o.placedAt ?? new Date().toISOString(), status, delayed, prepMins: o.prepMins ?? 0 })
+      .onConflictDoUpdate({ target: [orders.outletId, orders.channel, orders.externalId], set: { status, delayed, prepMins: o.prepMins ?? 0, updatedAt: new Date().toISOString() } });
     n++;
   }
   return n;

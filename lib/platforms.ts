@@ -2,7 +2,11 @@
 // read the unified data model and never branch on how a platform was connected.
 
 export type Platform = "zomato" | "swiggy";
-export type Channel = Platform | "dine";
+/** Where an order came from. `web`, `whatsapp` and `phone` are the restaurant's own (direct) channels. */
+export type Channel = Platform | "ondc" | "web" | "whatsapp" | "phone" | "dine";
+export const CHANNELS: readonly Channel[] = ["zomato", "swiggy", "ondc", "web", "whatsapp", "phone", "dine"];
+export const DIRECT_CHANNELS = ["web", "whatsapp", "phone"] as const;
+export const isDirect = (c: Channel) => (DIRECT_CHANNELS as readonly Channel[]).includes(c);
 export type ConnectMethod = "api" | "mcp" | "portal";
 
 export const PLATFORMS: Platform[] = ["zomato", "swiggy"];
@@ -10,12 +14,21 @@ export const PLATFORMS: Platform[] = ["zomato", "swiggy"];
 export const CHANNEL_NAME: Record<Channel, string> = {
   zomato: "Zomato",
   swiggy: "Swiggy",
+  ondc: "ONDC",
+  web: "Website",
+  whatsapp: "WhatsApp",
+  phone: "Phone",
   dine: "Dine-in",
 };
 
 export const CHANNEL_COLOR: Record<Channel, string> = {
   zomato: "var(--ch-zomato)",
   swiggy: "var(--ch-swiggy)",
+  ondc: "var(--ch-ondc)",
+  // The three direct channels share one colour: they are the restaurant's own business.
+  web: "var(--ch-direct)",
+  whatsapp: "var(--ch-direct)",
+  phone: "var(--ch-direct)",
   dine: "var(--ch-dine)",
 };
 
@@ -79,3 +92,16 @@ export const METHODS: MethodSpec[] = [
     ],
   },
 ];
+
+export type SalesSegment = { key: Channel | "direct"; name: string; color: string; amount: number; orders: number };
+
+/**
+ * Sales grouped for display: the channels asked for, then one "Direct" segment
+ * for website, WhatsApp and phone orders when there were any.
+ */
+export function salesSegments(sales: Record<Channel, { amount: number; orders: number }>, channels: Channel[]): SalesSegment[] {
+  const segs: SalesSegment[] = channels.filter((c) => !isDirect(c)).map((c) => ({ key: c, name: CHANNEL_NAME[c], color: CHANNEL_COLOR[c], ...sales[c] }));
+  const direct = DIRECT_CHANNELS.reduce((s, c) => ({ amount: s.amount + sales[c].amount, orders: s.orders + sales[c].orders }), { amount: 0, orders: 0 });
+  if (direct.amount > 0) segs.push({ key: "direct", name: "Direct", color: "var(--ch-direct)", ...direct });
+  return segs;
+}

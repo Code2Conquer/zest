@@ -122,7 +122,7 @@ export async function settle(outletId: string, tabId: string, paidVia: "cash" | 
     items: tab.lines.map((l) => (l.qty > 1 ? `${l.qty}× ${l.name}` : l.name)).join(", "),
     amount: total,
     placedAt: tab.openedAt,
-    status: "delivered",
+    status: "served",
     prepMins: Math.round((Date.parse(closedAt) - Date.parse(tab.openedAt)) / 60_000),
   });
   await audit(outletId, "staff", "dining.settled", { table: table?.label, total, paidVia });

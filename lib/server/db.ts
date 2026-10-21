@@ -120,10 +120,20 @@ const COLUMNS = [
   "ALTER TABLE outlets ADD COLUMN gstin TEXT",
   "ALTER TABLE outlets ADD COLUMN listings TEXT NOT NULL DEFAULT '{}'",
   "ALTER TABLE outlets ADD COLUMN listing_data TEXT NOT NULL DEFAULT '{}'",
+  "ALTER TABLE orders ADD COLUMN delayed INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE orders ADD COLUMN promised_at TEXT",
+];
+
+// Data fixes that move stored rows to a newer model. Each is safe to run again.
+const DATA_FIXES = [
+  // Order lifecycle widened: "delayed" became a flag, "picked" and "delivered" were renamed.
+  "UPDATE orders SET status = 'preparing', delayed = 1 WHERE status = 'delayed'",
+  "UPDATE orders SET status = 'out_for_delivery' WHERE status = 'picked'",
+  "UPDATE orders SET status = 'completed' WHERE status = 'delivered'",
 ];
 const INDEXES = "CREATE UNIQUE INDEX IF NOT EXISTS emails_outlet_external ON emails (outlet_id, external_id);";
 
-async function migrate(c: Client) {
+export async function migrate(c: Client) {
   for (const sql of COLUMNS) {
     try {
       await c.execute(sql);
@@ -132,6 +142,7 @@ async function migrate(c: Client) {
     }
   }
   await c.execute(INDEXES);
+  for (const sql of DATA_FIXES) await c.execute(sql);
 }
 
 type Db = LibSQLDatabase<typeof schema>;
@@ -139,7 +150,8 @@ type Db = LibSQLDatabase<typeof schema>;
 // Reuse one client across hot reloads in development.
 const globalForDb = globalThis as unknown as { zestClient?: Client; zestDb?: Db; zestReady?: Promise<void> };
 
-function client(): Client {
+/** The underlying libSQL client, for raw statements in migrations and tests. */
+export function client(): Client {
   if (!globalForDb.zestClient) {
     if (url.startsWith("file:")) mkdirSync(dataDir, { recursive: true });
     globalForDb.zestClient = createClient({ url, authToken: process.env.DATABASE_AUTH_TOKEN });

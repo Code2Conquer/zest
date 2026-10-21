@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CHANNEL_COLOR, CHANNEL_NAME, type Channel } from "@/lib/platforms";
+import { salesSegments, type Channel, type SalesSegment } from "@/lib/platforms";
 import { useApp } from "@/lib/state";
 import type { CopilotCard, PayoutDTO, TodayDTO } from "@/lib/types";
 import { ApprovalTicket } from "./approval-ticket";
@@ -9,38 +9,43 @@ import { ChannelTag } from "./bits";
 
 export const rupees = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
-/** Stacked bar of sales by channel, each segment direct-labelled below. */
+/** Stacked bar of sales by channel, each segment direct-labelled below. Direct channels show as one segment. */
 export function ChannelSplit({ sales, channels }: { sales: TodayDTO["sales"]; channels: Channel[] }) {
   const { lang } = useApp();
-  const [hover, setHover] = useState<Channel | null>(null);
-  const total = channels.reduce((s, c) => s + sales[c].amount, 0);
+  const [hover, setHover] = useState<SalesSegment["key"] | null>(null);
+  const segs = salesSegments(sales, channels);
+  const total = segs.reduce((s, c) => s + c.amount, 0);
   if (!total) return <p className="text-sm text-muted">{lang === "hi" ? "अभी कोई बिक्री नहीं।" : "No sales yet."}</p>;
-  const shown = channels.filter((c) => sales[c].amount > 0);
+  const shown = segs.filter((c) => c.amount > 0);
+  const label = (seg: SalesSegment) => (seg.key === "direct" && lang === "hi" ? "सीधे ऑर्डर" : seg.name);
   return (
     <figure className="m-0">
-      <div className="flex h-3 gap-[2px]" role="img" aria-label={channels.map((c) => `${CHANNEL_NAME[c]} ${rupees(sales[c].amount)}`).join(", ")}>
+      <div className="flex h-3 gap-[2px]" role="img" aria-label={segs.map((c) => `${label(c)} ${rupees(c.amount)}`).join(", ")}>
         {shown.map((c, i) => (
           <div
-            key={c}
-            onMouseEnter={() => setHover(c)}
+            key={c.key}
+            onMouseEnter={() => setHover(c.key)}
             onMouseLeave={() => setHover(null)}
             className="h-full transition-opacity"
             style={{
-              width: `${(sales[c].amount / total) * 100}%`,
-              background: CHANNEL_COLOR[c],
-              opacity: hover && hover !== c ? 0.35 : 1,
+              width: `${(c.amount / total) * 100}%`,
+              background: c.color,
+              opacity: hover && hover !== c.key ? 0.35 : 1,
               borderRadius: `${i === 0 ? 4 : 0}px ${i === shown.length - 1 ? 4 : 0}px ${i === shown.length - 1 ? 4 : 0}px ${i === 0 ? 4 : 0}px`,
             }}
           />
         ))}
       </div>
-      <figcaption className="mt-3 grid gap-x-4 gap-y-2" style={{ gridTemplateColumns: `repeat(${channels.length}, minmax(0, 1fr))` }}>
-        {channels.map((c) => (
-          <div key={c} onMouseEnter={() => setHover(c)} onMouseLeave={() => setHover(null)}>
-            <ChannelTag channel={c} />
-            <div className="mt-0.5 text-[1.05rem] font-medium">{rupees(sales[c].amount)}</div>
+      <figcaption className="mt-3 grid gap-x-4 gap-y-2" style={{ gridTemplateColumns: `repeat(${segs.length}, minmax(0, 1fr))` }}>
+        {segs.map((c) => (
+          <div key={c.key} onMouseEnter={() => setHover(c.key)} onMouseLeave={() => setHover(null)}>
+            <span className="inline-flex items-center gap-1.5 text-sm text-ink-2">
+              <span aria-hidden className="size-2 rounded-full" style={{ background: c.color }} />
+              {label(c)}
+            </span>
+            <div className="mt-0.5 text-[1.05rem] font-medium">{rupees(c.amount)}</div>
             <div className="text-sm text-muted">
-              {sales[c].orders} {lang === "hi" ? "ऑर्डर" : "orders"}
+              {c.orders} {lang === "hi" ? "ऑर्डर" : "orders"}
             </div>
           </div>
         ))}

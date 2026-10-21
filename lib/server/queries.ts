@@ -2,7 +2,8 @@ import "server-only";
 import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
 import type { DishKind } from "@/components/dishes";
 import type { ApprovalDTO, ApprovalStep, MenuItemDTO, OrderDTO, OutletDTO, PayoutDTO, ReviewDTO, TodayDTO } from "../types";
-import type { Channel } from "../platforms";
+import { VOID_STATUSES } from "../orders";
+import { CHANNELS, type Channel } from "../platforms";
 import { listApprovals } from "./approvals";
 import { hasClaude } from "./claude";
 import { db } from "./db";
@@ -55,7 +56,7 @@ export const menuDTO = (m: MenuItemRow): MenuItemDTO => ({
   ordersLast7: m.ordersLast7,
 });
 
-export const orderDTO = (o: OrderRow): OrderDTO => ({ id: o.id, externalId: o.externalId, channel: o.channel, items: o.items, amount: o.amount, placedAt: o.placedAt, status: o.status, prepMins: o.prepMins });
+export const orderDTO = (o: OrderRow): OrderDTO => ({ id: o.id, externalId: o.externalId, channel: o.channel, items: o.items, amount: o.amount, placedAt: o.placedAt, status: o.status, delayed: o.delayed, promisedAt: o.promisedAt, prepMins: o.prepMins });
 
 export const payoutDTO = (p: PayoutRow): PayoutDTO => ({
   id: p.id,
@@ -114,13 +115,13 @@ export function dayBounds(offsetDays: number) {
 export async function salesForDay(outletId: string, offsetDays: number) {
   const [from, to] = dayBounds(offsetDays);
   const rows = await db.select().from(orders).where(and(eq(orders.outletId, outletId), gte(orders.placedAt, from), lt(orders.placedAt, to)));
-  const sales: Record<Channel, { amount: number; orders: number }> = { zomato: { amount: 0, orders: 0 }, swiggy: { amount: 0, orders: 0 }, dine: { amount: 0, orders: 0 } };
+  const sales = Object.fromEntries(CHANNELS.map((c) => [c, { amount: 0, orders: 0 }])) as Record<Channel, { amount: number; orders: number }>;
   for (const o of rows) {
-    if (o.status === "cancelled") continue;
+    if (VOID_STATUSES.includes(o.status)) continue;
     sales[o.channel].amount += o.amount;
     sales[o.channel].orders += 1;
   }
-  return { sales, cancelled: rows.filter((o) => o.status === "cancelled").length };
+  return { sales, cancelled: rows.filter((o) => VOID_STATUSES.includes(o.status)).length };
 }
 
 export async function getToday(outlet: Outlet): Promise<TodayDTO> {

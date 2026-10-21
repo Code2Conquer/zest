@@ -1,7 +1,7 @@
 import "server-only";
 import { and, asc, eq, gte, lt } from "drizzle-orm";
 import { MENU, ORDERS, OUTLET, PAYOUTS, RATINGS, REVIEWS, SALES_YESTERDAY } from "../data";
-import type { Channel } from "../platforms";
+import { fromLegacyStatus } from "../orders";
 import { createApproval } from "./approvals";
 import { db } from "./db";
 import { dinePrice, ensureTables } from "./dining";
@@ -97,7 +97,7 @@ function yesterdaysOrders(outletId: string) {
   start.setHours(11, 0, 0, 0);
   const dishes = MENU.map((m) => m.name);
   const rows = [];
-  for (const ch of ["zomato", "swiggy", "dine"] as Channel[]) {
+  for (const ch of ["zomato", "swiggy", "dine"] as const) {
     const { amount, orders: n } = SALES_YESTERDAY[ch];
     let left = amount;
     for (let i = 0; i < n; i++) {
@@ -110,7 +110,7 @@ function yesterdaysOrders(outletId: string) {
         items: `${dishes[(i * 3) % dishes.length]}, ${dishes[(i * 5 + 2) % dishes.length]}`,
         amount: share,
         placedAt: new Date(start.getTime() + ((i * 7919 + ch.length * 1000) % (12 * 3600)) * 1000).toISOString(),
-        status: "delivered" as const,
+        status: ch === "dine" ? ("served" as const) : ("completed" as const),
         prepMins: 9 + ((i * 7) % 9),
       });
     }
@@ -149,7 +149,7 @@ export async function seedRestaurantData(outletId: string) {
   );
   await db.insert(orders).values(yesterdaysOrders(outletId));
   await db.insert(orders).values(
-    ORDERS.map((o) => ({ outletId, channel: o.channel, externalId: o.id, items: o.items, amount: o.amount, placedAt: at(o.placedAt), status: o.status, prepMins: o.prepMins })),
+    ORDERS.map((o) => ({ outletId, channel: o.channel, externalId: o.id, items: o.items, amount: o.amount, placedAt: at(o.placedAt), ...fromLegacyStatus(o.status), prepMins: o.prepMins })),
   );
   await db.insert(payouts).values(
     PAYOUTS.map((p) => ({

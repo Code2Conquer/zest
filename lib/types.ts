@@ -2,6 +2,7 @@
 
 import type { DishKind } from "@/components/dishes";
 import type { Lang } from "./i18n";
+import type { OrderStatus } from "./orders";
 import type { Channel, ConnectMethod, Platform } from "./platforms";
 
 export type ConnectionDTO = {
@@ -60,7 +61,9 @@ export type OrderDTO = {
   items: string;
   amount: number;
   placedAt: string;
-  status: "preparing" | "ready" | "picked" | "delivered" | "delayed" | "cancelled";
+  status: OrderStatus;
+  delayed: boolean;
+  promisedAt: string | null;
   prepMins: number;
 };
 

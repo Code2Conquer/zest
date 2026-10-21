@@ -1,4 +1,5 @@
 import "server-only";
+import type { LegacyStatus, OrderStatus } from "../orders";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Platform } from "../platforms";
@@ -30,7 +31,8 @@ export type IncomingOrder = {
   items: string;
   amount: number;
   placedAt: string;
-  status: "preparing" | "ready" | "picked" | "delivered" | "delayed" | "cancelled";
+  /** New lifecycle statuses, or the legacy ones older senders still use. */
+  status: OrderStatus | LegacyStatus;
   prepMins?: number;
 };
 

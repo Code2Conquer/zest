@@ -20,6 +20,8 @@
   --ch-zomato: #c62f3b;
   --ch-swiggy: #d9820a;
   --ch-dine: #2a7db8;
+  --ch-direct: #7a4bb8;
+  --ch-ondc: #8a5a2b;
   /* Landing palette: haldi (turmeric) yellow, curry-leaf green, chilli, masala brown */
   --haldi: #f2b035;
   --haldi-deep: #de9614;
@@ -49,6 +51,8 @@
     --ch-zomato: #e04a63;
     --ch-swiggy: #b87a12;
     --ch-dine: #3f8fcb;
+    --ch-direct: #a985e0;
+    --ch-ondc: #c08a55;
     color-scheme: dark;
   }
 }
@@ -70,6 +74,8 @@
   --ch-zomato: #e04a63;
   --ch-swiggy: #b87a12;
   --ch-dine: #3f8fcb;
+  --ch-direct: #a985e0;
+  --ch-ondc: #c08a55;
   color-scheme: dark;
 }
 

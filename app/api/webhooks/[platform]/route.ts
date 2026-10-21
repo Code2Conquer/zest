@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db, ready } from "@/lib/server/db";
 import { outlets } from "@/lib/server/schema";
+import { LEGACY_STATUSES, ORDER_STATUSES } from "@/lib/orders";
+import type { IncomingOrder } from "@/lib/server/connectors";
 import { upsertOrders } from "@/lib/server/sync";
 
 const Body = z.object({
@@ -14,7 +16,8 @@ const Body = z.object({
       items: z.string(),
       amount: z.number(),
       placedAt: z.string().optional(),
-      status: z.enum(["preparing", "ready", "picked", "delivered", "delayed", "cancelled"]).optional(),
+      // Legacy statuses ("picked", "delivered", "delayed") are still accepted and mapped.
+      status: z.enum([...new Set([...ORDER_STATUSES, ...LEGACY_STATUSES])] as [string, ...string[]]).optional(),
       prepMins: z.number().optional(),
     }),
   ),
@@ -28,7 +31,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ platform: stri
   const secret = process.env.WEBHOOK_SECRET;
   if (!secret) return NextResponse.json({ error: "Webhooks aren't configured (WEBHOOK_SECRET)." }, { status: 503 });
   const { platform } = await ctx.params;
-  const channel = z.enum(["zomato", "swiggy", "dine"]).safeParse(platform);
+  // Direct channels (web, whatsapp, phone) are created by Zest itself, never pushed in.
+  const channel = z.enum(["zomato", "swiggy", "ondc", "dine"]).safeParse(platform);
   if (!channel.success) return NextResponse.json({ error: "Unknown platform." }, { status: 404 });
 
   const raw = await req.text();
@@ -41,6 +45,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ platform: stri
   await ready();
   const [outlet] = await db.select({ id: outlets.id }).from(outlets).where(eq(outlets.id, body.data.outletId));
   if (!outlet) return NextResponse.json({ error: "Unknown outlet." }, { status: 404 });
-  const n = await upsertOrders(outlet.id, channel.data, body.data.orders.map((o) => ({ ...o, placedAt: o.placedAt ?? new Date().toISOString(), status: o.status ?? "preparing" })));
+  const n = await upsertOrders(outlet.id, channel.data, body.data.orders.map((o) => ({ ...o, placedAt: o.placedAt ?? new Date().toISOString(), status: (o.status ?? "preparing") as IncomingOrder["status"] })));
   return NextResponse.json({ received: n });
 }

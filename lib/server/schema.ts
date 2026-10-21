@@ -1,5 +1,6 @@
 import { integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
-import type { ConnectMethod, Platform } from "../platforms";
+import type { OrderStatus } from "../orders";
+import type { Channel, ConnectMethod, Platform } from "../platforms";
 import type { ListingSummary } from "../types";
 
 const now = () => new Date().toISOString();
@@ -74,12 +75,15 @@ export const orders = sqliteTable(
   {
     id: text("id").primaryKey().$defaultFn(id),
     outletId: text("outlet_id").notNull(),
-    channel: text("channel", { enum: ["zomato", "swiggy", "dine"] }).notNull(),
+    channel: text("channel").$type<Channel>().notNull(),
     externalId: text("external_id").notNull(),
     items: text("items").notNull(),
     amount: integer("amount").notNull(),
     placedAt: text("placed_at").notNull(),
-    status: text("status", { enum: ["preparing", "ready", "picked", "delivered", "delayed", "cancelled"] }).notNull(),
+    status: text("status").$type<OrderStatus>().notNull(),
+    delayed: integer("delayed", { mode: "boolean" }).notNull().default(false),
+    // When the customer was told to expect it; null for orders whose platform doesn't say.
+    promisedAt: text("promised_at"),
     prepMins: integer("prep_mins").notNull().default(0),
     updatedAt: text("updated_at").notNull().$defaultFn(now),
   },
