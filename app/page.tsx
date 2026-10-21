@@ -106,7 +106,7 @@ export default function Landing() {
           <div>
             <motion.p {...rise(0)} className="inline-flex items-center gap-2 rounded-full bg-white/[0.07] px-3.5 py-1.5 text-sm text-[#f4efe6]/80 ring-1 ring-white/10">
               <span aria-hidden className="size-1.5 rounded-full bg-haldi" />
-              {hi ? "Zomato और Swiggy रेस्टोरेंट पार्टनर्स के लिए" : "For Zomato and Swiggy restaurant partners"}
+              {hi ? "Zomato, Swiggy, डाइन-इन और आपके अपने ऑर्डर" : "Zomato, Swiggy, dine-in and your own orders"}
             </motion.p>
             <motion.h1 {...rise(0.08)} className="font-sign mt-6 max-w-[11ch] text-[clamp(3rem,7.6vw,6rem)] leading-[0.9]">
               {hi ? (
@@ -121,8 +121,8 @@ export default function Landing() {
             </motion.h1>
             <motion.p {...rise(0.2)} className="mt-7 max-w-[46ch] text-[1.2rem] leading-relaxed text-[#f4efe6]/75">
               {hi
-                ? "Zest एजेंटों की एक टीम है जो आपका Zomato और Swiggy का काम चलाती है: मेन्यू, ऑर्डर, रिव्यू और पेआउट। हिंदी या अंग्रेज़ी में बात करें, यहाँ या WhatsApp पर।"
-                : "Zest is a team of AI agents that runs your Zomato and Swiggy business: menu, orders, reviews and payouts. Talk to it in Hindi or English, here or on WhatsApp."}
+                ? "आपके पूरे रेस्टोरेंट के लिए एक ऐप: Zomato और Swiggy, टेबल, और बिना कमीशन वाली आपकी अपनी ऑर्डरिंग साइट। AI एजेंट मेन्यू, ऑर्डर, रिव्यू और पेआउट संभालते हैं, हिंदी या अंग्रेज़ी में।"
+                : "One app for your whole restaurant: Zomato and Swiggy, your tables, and your own commission-free ordering site. AI agents handle the menu, orders, reviews and payouts, in Hindi or English."}
             </motion.p>
             <motion.div {...rise(0.32)} className="mt-10 flex flex-wrap items-center gap-3">
               <button
@@ -358,7 +358,7 @@ export default function Landing() {
           <div>
             <h2 className="font-sign max-w-[12ch] text-[clamp(2.2rem,5vw,3.8rem)] leading-[0.95]">{t("landing.title")}</h2>
             <p className="mt-4 max-w-[44ch] text-lg leading-relaxed text-[#f4efe6]/75">
-              {hi ? "दो मिनट में शुरू करें। कोई POS या नया सिस्टम नहीं चाहिए।" : "Start in two minutes. No POS or new hardware needed."}
+              {hi ? "Google से साइन इन करें और दो मिनट में शुरू करें। ऑर्डरिंग साइट मुफ़्त, कोई POS या नया हार्डवेयर नहीं चाहिए।" : "Sign in with Google and start in two minutes. Your ordering site is included; no POS or new hardware needed."}
             </p>
             <button type="button" onClick={openDemo} className="mt-8 inline-flex items-center gap-2 text-[#f4efe6]/80 underline-offset-4 hover:text-[#f4efe6] hover:underline">
               <Play aria-hidden className="size-3.5 fill-current" />
