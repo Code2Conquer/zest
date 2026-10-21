@@ -17,6 +17,9 @@ export type ConnectionDTO = {
 export type OutletDTO = {
   id: string;
   brandId: string | null;
+  slug: string | null;
+  upiId: string | null;
+  ordering: boolean;
   name: string;
   area: string;
   city: string;
@@ -77,6 +80,13 @@ export type OrderDTO = {
   promisedAt: string | null;
   prepMins: number;
   lines?: OrderLineDTO[];
+  /** Direct orders only. */
+  fulfilment?: "pickup" | "table" | "delivery" | null;
+  tableLabel?: string | null;
+  paymentStatus?: "unpaid" | "paid" | null;
+  paymentMethod?: "upi" | "counter" | null;
+  note?: string | null;
+  customer?: { name: string; phone: string } | null;
 };
 
 export type PayoutDTO = {

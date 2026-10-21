@@ -62,6 +62,22 @@ export const specialHours = sqliteTable("special_hours", {
   note: text("note").notNull().default(""),
 });
 
+/** A person who has ordered directly from the brand, one row per phone number. */
+export const customers = sqliteTable(
+  "customers",
+  {
+    id: text("id").primaryKey().$defaultFn(id),
+    brandId: text("brand_id").notNull(),
+    phone: text("phone").notNull(),
+    name: text("name").notNull().default(""),
+    orders: integer("orders").notNull().default(0),
+    spent: integer("spent").notNull().default(0),
+    firstOrderAt: text("first_order_at").notNull().$defaultFn(now),
+    lastOrderAt: text("last_order_at").notNull().$defaultFn(now),
+  },
+  (t) => [uniqueIndex("customers_brand_phone").on(t.brandId, t.phone)],
+);
+
 export type ConsentPurpose = "whatsapp_marketing" | "sms_marketing" | "whatsapp_transactional";
 
 /**
@@ -101,6 +117,10 @@ export const outlets = sqliteTable("outlets", {
   // Set for every outlet once the database is ready (ensureBrands).
   brandId: text("brand_id"),
   staffCode: text("staff_code").unique().$defaultFn(newStaffCode),
+  // The restaurant's own ordering site: /r/{slug}, paid by UPI to upiId or at the counter.
+  slug: text("slug").unique(),
+  upiId: text("upi_id"),
+  ordering: integer("ordering", { mode: "boolean" }).notNull().default(false),
   name: text("name").notNull(),
   area: text("area").notNull().default(""),
   city: text("city").notNull().default(""),
@@ -177,6 +197,15 @@ export const orders = sqliteTable(
     delayed: integer("delayed", { mode: "boolean" }).notNull().default(false),
     // When the customer was told to expect it; null for orders whose platform doesn't say.
     promisedAt: text("promised_at"),
+    // Direct orders (website, WhatsApp, phone) only.
+    customerId: text("customer_id"),
+    fulfilment: text("fulfilment").$type<"pickup" | "table" | "delivery">(),
+    tableLabel: text("table_label"),
+    paymentStatus: text("payment_status").$type<"unpaid" | "paid">(),
+    paymentMethod: text("payment_method").$type<"upi" | "counter">(),
+    note: text("note"),
+    // Lets the customer's browser follow this one order without an account.
+    publicToken: text("public_token"),
     prepMins: integer("prep_mins").notNull().default(0),
     updatedAt: text("updated_at").notNull().$defaultFn(now),
   },

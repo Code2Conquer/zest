@@ -90,6 +90,9 @@ const Update = Profile.extend({
   live: Platforms,
   email: z.enum(["gmail", "outlook"]).nullable(),
   whatsapp: z.boolean(),
+  ordering: z.boolean(),
+  // A UPI ID such as rasoi27@okhdfc; payments from the ordering site go straight to it.
+  upiId: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{2,}@[a-z]{2,}$/, "That doesn't look like a UPI ID (like name@okhdfc)").nullable(),
 }).partial();
 
 export const PATCH = handler({ roles: OWNER }, async (req, outlet) => {

@@ -131,6 +131,11 @@ CREATE TABLE IF NOT EXISTS consents (
   wording TEXT NOT NULL, source TEXT NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS consents_lookup ON consents (brand_id, phone, purpose, created_at);
+CREATE TABLE IF NOT EXISTS customers (
+  id TEXT PRIMARY KEY, brand_id TEXT NOT NULL, phone TEXT NOT NULL, name TEXT NOT NULL DEFAULT '', orders INTEGER NOT NULL DEFAULT 0,
+  spent INTEGER NOT NULL DEFAULT 0, first_order_at TEXT NOT NULL, last_order_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS customers_brand_phone ON customers (brand_id, phone);
 CREATE TABLE IF NOT EXISTS rate_limits (key TEXT NOT NULL, window_start INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (key, window_start));
 CREATE TABLE IF NOT EXISTS order_lines (
   id TEXT PRIMARY KEY, order_id TEXT NOT NULL, item_id TEXT, name TEXT NOT NULL, qty INTEGER NOT NULL,
@@ -158,6 +163,16 @@ const COLUMNS = [
   "ALTER TABLE outlets ADD COLUMN brand_id TEXT",
   "ALTER TABLE outlets ADD COLUMN staff_code TEXT",
   "ALTER TABLE approvals ADD COLUMN decided_by TEXT",
+  "ALTER TABLE outlets ADD COLUMN slug TEXT",
+  "ALTER TABLE outlets ADD COLUMN upi_id TEXT",
+  "ALTER TABLE outlets ADD COLUMN ordering INTEGER NOT NULL DEFAULT 0",
+  "ALTER TABLE orders ADD COLUMN customer_id TEXT",
+  "ALTER TABLE orders ADD COLUMN fulfilment TEXT",
+  "ALTER TABLE orders ADD COLUMN table_label TEXT",
+  "ALTER TABLE orders ADD COLUMN payment_status TEXT",
+  "ALTER TABLE orders ADD COLUMN payment_method TEXT",
+  "ALTER TABLE orders ADD COLUMN note TEXT",
+  "ALTER TABLE orders ADD COLUMN public_token TEXT",
 ];
 
 // Data fixes that move stored rows to a newer model. Each is safe to run again.
@@ -172,6 +187,7 @@ const INDEXES = [
   "CREATE UNIQUE INDEX IF NOT EXISTS outlets_staff_code ON outlets (staff_code)",
   // Live order updates read "changed since" every couple of seconds.
   "CREATE INDEX IF NOT EXISTS orders_outlet_updated ON orders (outlet_id, updated_at, id)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS outlets_slug ON outlets (slug)",
 ];
 
 export async function migrate(c: Client) {
@@ -214,6 +230,8 @@ export function ready(): Promise<void> {
       await ensureBrands();
       const { ensureStaffCodes } = await import("./staff");
       await ensureStaffCodes();
+      const { ensureSlugs } = await import("./storefront");
+      await ensureSlugs();
     })().catch((err) => {
       globalForDb.zestReady = undefined;
       throw err;

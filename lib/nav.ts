@@ -1,4 +1,4 @@
-import { Armchair, BookOpen, Home, IndianRupee, ReceiptText, Settings, Star, TrendingUp, type LucideIcon } from "lucide-react";
+import { Armchair, BookOpen, Home, IndianRupee, ReceiptText, Settings, Star, TrendingUp, Users, type LucideIcon } from "lucide-react";
 import type { Bi } from "./i18n";
 
 // The sidebar, ordered the way an owner's day runs: what's happening now, the customers,
@@ -28,6 +28,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: { en: "Customers", hi: "ग्राहक" },
     items: [
       { href: "/app/reviews", label: { en: "Reviews & complaints", hi: "रिव्यू और शिकायतें" }, hint: { en: "Every platform's reviews, with replies ready", hi: "हर प्लेटफ़ॉर्म के रिव्यू, जवाब तैयार" }, icon: Star },
+      { href: "/app/customers", label: { en: "Customer list", hi: "ग्राहक सूची" }, hint: { en: "People who ordered straight from your site", hi: "जिन्होंने आपकी साइट से सीधे ऑर्डर किया" }, icon: Users },
     ],
   },
   {

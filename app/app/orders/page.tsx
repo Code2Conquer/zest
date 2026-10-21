@@ -52,13 +52,13 @@ export default function Orders() {
   const { live, outlet } = useOutlet();
   const { data, error, setData } = useApi<OrderDTO[]>(outlet ? `/api/orders?o=${outlet.id}` : null);
   // Changes arrive live; each replaces the order with the same id, newest placed first.
-  const { mode } = useOrderStream((changed) => {
+  const merge = (changed: OrderDTO[]) =>
     setData((prev) => {
       const byId = new Map((prev ?? []).map((o) => [o.id, o]));
       for (const o of changed) byId.set(o.id, { ...byId.get(o.id), ...o });
       return [...byId.values()].sort((a, b) => b.placedAt.localeCompare(a.placedAt));
     });
-  }, !!outlet);
+  const { mode } = useOrderStream(merge, !!outlet);
   const [syncing, setSyncing] = useState(false);
   const [syncNote, setSyncNote] = useState<string | null>(null);
   const channels: Channel[] = [...live, "dine", ...DIRECT_CHANNELS];
@@ -158,6 +158,7 @@ export default function Orders() {
                   </span>
                   <span>{rupees(o.amount)}</span>
                 </div>
+                {isDirect(o.channel) && <DirectOrder order={o} onChange={merge} />}
               </div>
             </motion.li>
           );
@@ -189,5 +190,68 @@ export default function Orders() {
         </tbody>
       </table>
     </Page>
+  );
+}
+
+const NEXT_STEP: Partial<Record<OrderDTO["status"], { action: "accept" | "prepare" | "ready" | "complete"; en: string; hi: string }>> = {
+  new: { action: "accept", en: "Accept", hi: "स्वीकार करें" },
+  accepted: { action: "prepare", en: "Start preparing", hi: "बनाना शुरू करें" },
+  preparing: { action: "ready", en: "Mark ready", hi: "तैयार" },
+  ready: { action: "complete", en: "Handed over", hi: "दे दिया" },
+};
+
+/** A website, WhatsApp or phone order: who it's for, how it's paid, and the next step. */
+function DirectOrder({ order: o, onChange }: { order: OrderDTO; onChange: (o: OrderDTO[]) => void }) {
+  const { lang, pick } = useApp();
+  const hi = lang === "hi";
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const next = NEXT_STEP[o.status];
+
+  async function act(action: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      onChange([await api<OrderDTO>(`/api/orders/${o.id}`, { method: "PATCH", json: { action } })]);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 border-t border-dashed border-line pt-3 text-sm">
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-ink-2">
+        {o.customer && (
+          <a href={`tel:${o.customer.phone}`} className="font-medium text-ink underline-offset-2 hover:underline">
+            {o.customer.name}
+          </a>
+        )}
+        <span>{o.fulfilment === "table" ? (hi ? `टेबल ${o.tableLabel}` : `Table ${o.tableLabel}`) : hi ? "पिकअप" : "Pickup"}</span>
+        <span className={o.paymentStatus === "paid" ? "text-leaf" : "text-chilli"}>
+          {o.paymentStatus === "paid" ? (hi ? "भुगतान हो गया" : "Paid") : o.paymentMethod === "upi" ? (hi ? "UPI बाक़ी" : "UPI not confirmed") : hi ? "भुगतान बाक़ी" : "To pay at counter"}
+        </span>
+      </p>
+      {o.note && <p className="mt-1 italic text-ink-2">“{o.note}”</p>}
+      <div className="mt-2 flex flex-wrap gap-2">
+        {next && (
+          <button type="button" disabled={busy} onClick={() => act(next.action)} className="rounded-full bg-ink px-3.5 py-1.5 font-medium text-paper disabled:opacity-60">
+            {pick(next)}
+          </button>
+        )}
+        {o.paymentStatus === "unpaid" && o.status !== "rejected" && (
+          <button type="button" disabled={busy} onClick={() => act("paid")} className="rounded-full px-3.5 py-1.5 shadow-[inset_0_0_0_1px_var(--line)] hover:bg-sunken disabled:opacity-60">
+            {hi ? "भुगतान मिला" : "Mark paid"}
+          </button>
+        )}
+        {o.status === "new" && (
+          <button type="button" disabled={busy} onClick={() => act("reject")} className="rounded-full px-3 py-1.5 text-muted hover:text-chilli disabled:opacity-60">
+            {hi ? "मना करें" : "Reject"}
+          </button>
+        )}
+      </div>
+      {error && <p className="mt-1 text-chilli">{error}</p>}
+    </div>
   );
 }

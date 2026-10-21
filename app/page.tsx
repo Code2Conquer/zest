@@ -90,6 +90,7 @@ export default function Landing() {
           <Wordmark className="text-[1.9rem] text-[#f4efe6] [&_.bg-turmeric]:bg-haldi" />
           <nav aria-label="Sections" className="hidden items-center gap-8 text-[0.95rem] text-[#f4efe6]/80 md:flex">
             <a href="#product" className="hover:text-[#f4efe6]">{hi ? "प्रोडक्ट" : "Product"}</a>
+            <a href="#own" className="hover:text-[#f4efe6]">{hi ? "अपने ऑर्डर" : "Own orders"}</a>
             <a href="#agents" className="hover:text-[#f4efe6]">{hi ? "एजेंट" : "Agents"}</a>
             <a href="#journey" className="hover:text-[#f4efe6]">{hi ? "कैसे काम करता है" : "How it works"}</a>
           </nav>
@@ -177,6 +178,7 @@ export default function Landing() {
             ["Zomato", "var(--ch-zomato)"],
             ["Swiggy", "var(--ch-swiggy)"],
             [hi ? "डाइन-इन" : "Dine-in", "var(--ch-dine)"],
+            [hi ? "आपकी अपनी साइट" : "Your own site", "var(--ch-direct)"],
             ["WhatsApp", "var(--veg)"],
             ["Gmail", "var(--ink-2)"],
             ["Petpooja", "var(--ink-2)"],
@@ -198,6 +200,48 @@ export default function Landing() {
           {hi ? "हर स्क्रीन पर एक एजेंट काम कर रहा है। आप बस मंज़ूरी देते हैं।" : "Behind every screen there's an agent doing the work. You just say yes."}
         </p>
         <Showcase />
+      </section>
+
+      {/* All-in-one: the restaurant's own orders, next to the platforms */}
+      <section id="own" className="scroll-mt-8 border-y border-line bg-surface">
+        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.1em] text-muted">{hi ? "सब कुछ एक ऐप में" : "All in one"}</p>
+              <h2 className="font-sign mt-2 max-w-[18ch] text-[clamp(2rem,4.4vw,3.4rem)] leading-[1]">{hi ? "अपने ऑर्डर, बिना कमीशन।" : "Your own orders, no commission."}</h2>
+              <p className="mt-4 max-w-[58ch] text-lg leading-relaxed text-ink-2">
+                {hi
+                  ? "Zomato और Swiggy के साथ-साथ आपकी अपनी ऑर्डरिंग साइट। ग्राहक पिकअप या टेबल से ऑर्डर करते हैं और सीधे आपको UPI से भुगतान करते हैं।"
+                  : "Next to Zomato and Swiggy, your own ordering site. Customers order for pickup or from their table and pay you directly by UPI."}
+              </p>
+            </div>
+            <a href="/r/rasoi-27" className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 font-medium text-paper">
+              {hi ? "सैंपल साइट से ऑर्डर करके देखें" : "Try ordering from the sample"}
+              <ArrowRight aria-hidden className="size-4" />
+            </a>
+          </div>
+          <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {(
+              [
+                [ReceiptText, { en: "Your ordering site", hi: "आपकी ऑर्डरिंग साइट" }, { en: "Your menu at your own link and table QR codes. Pay by UPI to you, or at the counter.", hi: "आपके लिंक और टेबल QR पर आपका मेन्यू। UPI से सीधे आपको, या काउंटर पर भुगतान।" }, false],
+                [ChefHat, { en: "One live order board", hi: "एक लाइव ऑर्डर बोर्ड" }, { en: "Zomato, Swiggy, dine-in and your own orders appear together within seconds.", hi: "Zomato, Swiggy, डाइन-इन और आपके अपने ऑर्डर, सेकंडों में एक साथ।" }, false],
+                [ShieldCheck, { en: "Staff sign-in and roles", hi: "स्टाफ़ साइन-इन और रोल" }, { en: "Owners use Google; kitchen and counter staff use a PIN and see only their screen.", hi: "मालिक Google से; किचन और काउंटर स्टाफ़ PIN से, और सिर्फ़ अपनी स्क्रीन देखते हैं।" }, false],
+                [BookOpen, { en: "Hours and holidays", hi: "समय और छुट्टियाँ" }, { en: "Set opening hours once, including late nights and festival closures.", hi: "एक बार समय सेट करें, देर रात और त्योहार की छुट्टी समेत।" }, false],
+                [Star, { en: "Your customer list", hi: "आपकी ग्राहक सूची" }, { en: "Every direct order adds the customer, so regulars are yours, not the platform's.", hi: "हर सीधा ऑर्डर ग्राहक को जोड़ता है, ताकि रेगुलर आपके रहें, प्लेटफ़ॉर्म के नहीं।" }, false],
+                [TrendingUp, { en: "WhatsApp ordering, loyalty, Google reviews", hi: "WhatsApp ऑर्डर, लॉयल्टी, Google रिव्यू" }, { en: "Next: order on WhatsApp, points for regulars, and more Google reviews.", hi: "आगे: WhatsApp पर ऑर्डर, रेगुलर के लिए पॉइंट, और ज़्यादा Google रिव्यू।" }, true],
+              ] as const
+            ).map(([Icon, title, body, soon]) => (
+              <li key={title.en} className="rounded-2xl bg-paper p-6 shadow-[0_0_0_1px_var(--line)]">
+                <div className="flex items-center justify-between">
+                  <Icon aria-hidden className="size-6 text-ink-2" />
+                  {soon && <span className="rounded-full bg-turmeric-soft px-2.5 py-0.5 text-xs font-medium text-ink">{hi ? "आगे आ रहा है" : "Coming next"}</span>}
+                </div>
+                <h3 className="mt-4 text-lg font-semibold">{pick(title)}</h3>
+                <p className="mt-1.5 leading-relaxed text-ink-2">{pick(body)}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       {/* The brigade */}

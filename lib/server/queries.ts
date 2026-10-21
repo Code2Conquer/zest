@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, gt, gte, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, lt, or } from "drizzle-orm";
 import type { DishKind } from "@/components/dishes";
 import type { ApprovalDTO, ApprovalStep, MenuItemDTO, OrderDTO, OutletDTO, PayoutDTO, ReviewDTO, TodayDTO } from "../types";
 import { VOID_STATUSES } from "../orders";
@@ -8,7 +8,7 @@ import { listApprovals } from "./approvals";
 import { linesFor } from "./order-lines";
 import { hasClaude } from "./claude";
 import { db } from "./db";
-import { connections, menuItems, orders, payouts, reviews, type ApprovalRow, type Connection, type MenuItemRow, type OrderRow, type Outlet, type PayoutRow, type ReviewRow } from "./schema";
+import { customers, connections, menuItems, orders, payouts, reviews, type ApprovalRow, type Connection, type MenuItemRow, type OrderRow, type Outlet, type PayoutRow, type ReviewRow } from "./schema";
 
 export function connectionDTO(c: Connection) {
   return { platform: c.platform, method: c.method, status: c.status, statusDetail: c.statusDetail, lastSyncAt: c.lastSyncAt, info: c.publicInfo };
@@ -19,6 +19,9 @@ export async function outletDTO(o: Outlet): Promise<OutletDTO> {
   return {
     id: o.id,
     brandId: o.brandId,
+    slug: o.slug,
+    upiId: o.upiId,
+    ordering: o.ordering,
     name: o.name,
     area: o.area,
     city: o.city,
@@ -58,7 +61,30 @@ export const menuDTO = (m: MenuItemRow): MenuItemDTO => ({
   ordersLast7: m.ordersLast7,
 });
 
-export const orderDTO = (o: OrderRow): OrderDTO => ({ id: o.id, externalId: o.externalId, channel: o.channel, items: o.items, amount: o.amount, placedAt: o.placedAt, status: o.status, delayed: o.delayed, promisedAt: o.promisedAt, prepMins: o.prepMins });
+export const orderDTO = (o: OrderRow): OrderDTO => ({
+  id: o.id,
+  externalId: o.externalId,
+  channel: o.channel,
+  items: o.items,
+  amount: o.amount,
+  placedAt: o.placedAt,
+  status: o.status,
+  delayed: o.delayed,
+  promisedAt: o.promisedAt,
+  prepMins: o.prepMins,
+  ...(o.fulfilment ? { fulfilment: o.fulfilment, tableLabel: o.tableLabel, paymentStatus: o.paymentStatus, paymentMethod: o.paymentMethod, note: o.note } : {}),
+});
+
+/** Adds the customer's name and phone to direct orders, in one query. */
+async function withCustomers(rows: OrderRow[], dtos: OrderDTO[]): Promise<OrderDTO[]> {
+  const ids = [...new Set(rows.map((r) => r.customerId).filter((x): x is string => !!x))];
+  if (!ids.length) return dtos;
+  const found = new Map((await db.select().from(customers).where(inArray(customers.id, ids))).map((c) => [c.id, c]));
+  return dtos.map((d, i) => {
+    const c = rows[i].customerId ? found.get(rows[i].customerId!) : undefined;
+    return c ? { ...d, customer: { name: c.name, phone: c.phone } } : d;
+  });
+}
 
 export const payoutDTO = (p: PayoutRow): PayoutDTO => ({
   id: p.id,
@@ -93,7 +119,8 @@ export async function getMenu(outletId: string) {
 }
 
 export async function getOrders(outletId: string, limit = 60) {
-  const rows = (await db.select().from(orders).where(eq(orders.outletId, outletId)).orderBy(desc(orders.placedAt)).limit(limit)).map(orderDTO);
+  const raw = await db.select().from(orders).where(eq(orders.outletId, outletId)).orderBy(desc(orders.placedAt)).limit(limit);
+  const rows = await withCustomers(raw, raw.map(orderDTO));
   const lines = await linesFor(rows.map((o) => o.id));
   return rows.map((o) => (lines.has(o.id) ? { ...o, lines: lines.get(o.id) } : o));
 }
@@ -108,7 +135,7 @@ export async function ordersChangedSince(outletId: string, cursor: string | null
   const after = at && id ? or(gt(orders.updatedAt, at), and(eq(orders.updatedAt, at), gt(orders.id, id))) : gte(orders.updatedAt, dayBounds(0)[0]);
   const rows = await db.select().from(orders).where(and(eq(orders.outletId, outletId), after)).orderBy(asc(orders.updatedAt), asc(orders.id)).limit(limit);
   const last = rows.at(-1);
-  return { orders: rows.map(orderDTO), cursor: last ? `${last.updatedAt}|${last.id}` : cursor };
+  return { orders: await withCustomers(rows, rows.map(orderDTO)), cursor: last ? `${last.updatedAt}|${last.id}` : cursor };
 }
 
 export async function getPayouts(outletId: string) {

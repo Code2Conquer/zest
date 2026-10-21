@@ -20,6 +20,8 @@ export async function seedDemo() {
     // Demo seeded before brands existed: give it the fixed demo brand.
     await db.insert(brands).values({ id: DEMO_BRAND_ID, name: OUTLET.name }).onConflictDoNothing();
     await db.update(outlets).set({ brandId: DEMO_BRAND_ID }).where(and(eq(outlets.id, DEMO_OUTLET_ID), isNull(outlets.brandId)));
+    // The sample restaurant shows the ordering site; payment at the counter (no real UPI ID).
+    await db.update(outlets).set({ ordering: true }).where(eq(outlets.id, DEMO_OUTLET_ID));
     // Demo seeded before opening hours existed.
     const [anyHours] = await db.select({ id: outletHours.id }).from(outletHours).where(eq(outletHours.outletId, DEMO_OUTLET_ID)).limit(1);
     if (!anyHours) await db.insert(outletHours).values(DEFAULT_HOURS(DEMO_OUTLET_ID));
@@ -30,6 +32,7 @@ export async function seedDemo() {
   await db.insert(outlets).values({
     id: DEMO_OUTLET_ID,
     brandId: DEMO_BRAND_ID,
+    ordering: true,
     name: OUTLET.name,
     area: OUTLET.area,
     cuisines: "North Indian, Biryani, Desserts",

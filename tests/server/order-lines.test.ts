@@ -54,3 +54,9 @@ describe("order lines", () => {
     expect(lines.reduce((s, l) => s + l.lineTotal, 0)).toBe(order.amount);
   });
 });
+
+describe("summary capitals", () => {
+  it("starts with a capital letter like other orders on the board", () => {
+    expect(summariseLines([{ itemId: null, name: "Paneer tikka", qty: 1, unitPrice: 289 }])).toBe("Paneer tikka");
+  });
+});

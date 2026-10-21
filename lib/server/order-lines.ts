@@ -34,7 +34,8 @@ export async function linesFor(orderIds: string[]): Promise<Map<string, OrderLin
   return out;
 }
 
-/** The short text kept in `orders.items`, e.g. "2 butter naan, dal makhani". */
+/** The short text kept in `orders.items`, e.g. "2 butter naan, dal makhani" or "Paneer tikka". */
 export function summariseLines(lines: OrderLineInput[]): string {
-  return lines.map((l) => (l.qty > 1 ? `${l.qty} ${l.name.toLowerCase()}` : l.name.toLowerCase())).join(", ");
+  const text = lines.map((l) => (l.qty > 1 ? `${l.qty} ${l.name.toLowerCase()}` : l.name.toLowerCase())).join(", ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
