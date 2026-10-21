@@ -2,13 +2,13 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Put in place everything the all-in-one phases build on: tests, phone OTP login with roles, brands, the widened order model, order lines, a job runner, live order updates, opening hours, a consent ledger, copilot evals and ops basics, without breaking any screen that works today.
+**Goal:** Put in place everything the all-in-one phases build on, at no running cost: tests, Google sign-in for owners and PIN sign-in for staff with roles, brands, the widened order model, order lines, a job runner, live order updates, opening hours, a consent ledger, copilot evals and ops basics, without breaking any screen that works today.
 
 **Architecture:** Same Next.js app and libSQL database. New tables are created in `lib/server/db.ts` the way existing ones are (`CREATE TABLE IF NOT EXISTS` in `TABLES`, additive `ALTER TABLE` in `COLUMNS`, idempotent data fixes in `migrate()`). New server logic lives in focused files under `lib/server/`, each with pure functions that tests call directly against an in-memory database.
 
 **Tech Stack:** Next.js 16 (App Router), TypeScript 7, Drizzle ORM on `@libsql/client`, zod 4, Vitest (new, dev), `@sentry/nextjs` (new).
 
-**Spec:** `docs/superpowers/specs/2026-10-21-all-in-one-restaurant-design.md` (Phase A row of §13; §7.0, §7.1, §7.2, §7.7 consent, §7.17, §11)
+**Spec:** `docs/superpowers/specs/2026-10-21-all-in-one-restaurant-design.md` (Phase A row of §13; §7.0, §7.1, §7.2, §7.7 consent, §7.17, §11; §15 items 7–11 override the paid services)
 
 ## Global Constraints
 
@@ -21,29 +21,26 @@
 - No new runtime dependencies besides `@sentry/nextjs`; `vitest` and `tsx` are dev dependencies.
 - Existing API response shapes stay compatible; new fields are additive.
 - Times are stored as ISO strings in UTC; opening hours are interpreted in `Asia/Kolkata`.
+- No paid service is required to run anything in this plan (spec §15 items 7–11). Integrations that will be paid later sit behind an interface with a free implementation.
 
 ## Review Focus
 
-1. **A pilot outlet created before this phase (cookie only, no user)** must stay reachable: when its owner logs in with the phone on `outlets.owner_phone`, they get an owner membership for it. Test in Task 5.
+1. **A pilot outlet created before this phase (cookie only, no user)** must stay reachable: the first Google sign-in from the browser that holds its cookie, or by the Gmail address connected to it, makes that person its owner. Test in Task 5.
 2. **Webhook senders still posting old statuses** (`picked`, `delivered`) must be accepted and mapped, not rejected. Test in Task 2.
 3. **Overnight hours** (6 pm to 2 am) and a server clock in UTC must still say "open" at 1:30 am IST. Test in Task 8.
 4. **A job whose handler throws or whose run is cut off** must run again later, never stay "running" forever. Test in Task 6.
-5. **OTP abuse**: repeated sends to one number and guessing codes must be stopped. Test in Task 5.
+5. **PIN guessing** on a shared kitchen device must be stopped, and a staff member removed by the owner must lose access at once. Test in Task 5.
 
 ---
 
 ## Before you start (owner actions, not code)
 
-These have lead times; start them on day one. Track them as a checklist in the pull request description.
+All free. Paid services wait until the product is ready and 50 restaurants are onboarded (spec §15).
 
-- [ ] Upgrade the Vercel project to Pro (needed for the per-minute cron in Task 6).
-- [ ] Buy `zest.menu` (used in Phase B; buying early avoids losing it).
-- [ ] Start Meta Business verification for Zest and apply as a WhatsApp Tech Provider (one to two weeks).
-- [ ] Apply to the Razorpay partner programme.
-- [ ] Choose the OTP SMS provider; this plan assumes MSG91 (`OTP_PROVIDER=msg91`) and register its DLT OTP template.
-- [ ] Add `ANTHROPIC_API_KEY` in Vercel and set a monthly spend limit in the Anthropic console.
-- [ ] Rotate the Turso token that was shared in chat (PLAN §13 step 7); set `CRON_SECRET`.
-- [ ] Create a Sentry project and add `SENTRY_DSN`.
+- [ ] Rotate the Turso token that was shared in chat (PLAN §13 step 7) and set `CRON_SECRET` in Vercel.
+- [ ] In the existing Google Cloud OAuth client, add `<site>/api/auth/google/callback` as a redirect URI (sign-in reuses the Gmail client).
+- [ ] Create a free cron-job.org account; after Task 6 is deployed, add a job calling `GET https://zest-dusky.vercel.app/api/jobs/run` every minute with header `Authorization: Bearer <CRON_SECRET>`.
+- [ ] Optional: a free Sentry account and `SENTRY_DSN` (Task 11 works without it).
 
 ---
 
@@ -253,60 +250,61 @@ it("creates a brand with a new restaurant", async () => {
 
 ---
 
-### Task 5: Users, roles and phone OTP login
+### Task 5: Users, roles, Google sign-in and staff PINs
 
 **Files:**
-- Create: `lib/server/otp.ts`, `lib/server/rate-limit.ts`, `lib/server/auth.ts`, `app/api/auth/otp/route.ts`, `app/api/auth/verify/route.ts`, `app/api/auth/logout/route.ts`, `app/login/page.tsx`
-- Modify: `lib/server/db.ts`, `lib/server/schema.ts`, `lib/server/session.ts`, `lib/server/http.ts`, `lib/server/approvals.ts` (`decided_by`), every mutating route under `app/api/` (role lists below), `app/join/page.tsx` and `app/start/page.tsx` (OTP before creating a restaurant), `components/shell.tsx` (signed-in person, sign out), `lib/i18n.ts`, `.env.example`
-- Test: `tests/server/otp.test.ts`, `tests/server/auth.test.ts`
+- Create: `lib/server/rate-limit.ts`, `lib/server/auth.ts`, `lib/server/staff.ts`, `app/api/auth/google/start/route.ts`, `app/api/auth/google/callback/route.ts`, `app/api/auth/pin/route.ts`, `app/api/auth/logout/route.ts`, `app/api/staff/route.ts`, `app/api/staff/[id]/route.ts`, `app/login/page.tsx`, `app/login/staff/page.tsx`, `components/staff-card.tsx`
+- Modify: `lib/server/db.ts`, `lib/server/schema.ts`, `lib/server/session.ts`, `lib/server/http.ts`, `lib/server/oauth-state.ts` (a purpose field, so sign-in and Gmail states can't be swapped), `lib/server/approvals.ts` (`decided_by`), every mutating route under `app/api/` (role lists below), `app/join/page.tsx` and `app/start/page.tsx` (continue with Google before the restaurant is created), `app/app/connections/page.tsx` (Staff card), `components/shell.tsx` (signed-in person, sign out), `lib/i18n.ts`, `.env.example`
+- Test: `tests/server/auth.test.ts`, `tests/server/staff.test.ts`
 
 **Interfaces:**
-- Tables: `users(id, phone UNIQUE, name, created_at)`; `memberships(id, user_id, brand_id, role, outlet_ids JSON NULL, created_at)` with `role ∈ owner | manager | kitchen | cashier | rider` and `outlet_ids` NULL meaning every outlet of the brand; `otp_challenges(id, phone, code_hash, purpose, attempts, expires_at, consumed_at, created_at)`; `rate_limits(key, window_start, count, PRIMARY KEY(key, window_start))`; column `approvals.decided_by TEXT`.
+- Tables: `users(id, email UNIQUE NULL, phone UNIQUE NULL, name, created_at)`; `memberships(id, user_id, brand_id, role, outlet_ids JSON NULL, pin_hash NULL, active INTEGER DEFAULT 1, created_at)` with `role ∈ owner | manager | kitchen | cashier | rider` and `outlet_ids` NULL meaning every outlet of the brand; `rate_limits(key, window_start, count, PRIMARY KEY(key, window_start))`; columns `outlets.staff_code TEXT UNIQUE` (6 characters from `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, set for every outlet in `migrate()`), `approvals.decided_by TEXT`.
 - `checkRate(key: string, limit: number, windowSec: number): Promise<boolean>` (true when allowed; fixed window).
-- `startOtp(phone: string, purpose: "staff" | "customer"): Promise<{ challengeId: string }>` — normalises to `+91XXXXXXXXXX`; 6-digit code; stores HMAC-SHA256(code, ZEST_SECRET_KEY); expiry 5 minutes; at most 3 sends per phone per 10 minutes (`checkRate("otp:"+phone, 3, 600)`), else `HttpError(429)`; sends through `OtpSender` chosen by `OTP_PROVIDER` (`msg91` or `console`, default `console` outside production).
-- `verifyOtp(challengeId: string, code: string): Promise<{ phone: string }>` — at most 5 attempts per challenge, then the challenge is dead; single use; `HttpError(400)` on any failure with one generic message.
-- `type SessionUser = { user: UserRow; membership: MembershipRow; outlet: Outlet }`; `currentSession(): Promise<SessionUser | null>`; `signIn(phone: string): Promise<SessionUser | null>` (find or create user; auto-link legacy outlets, see below; set cookie `zest_session` = signed `{ userId, brandId, outletId }`); `requireRole(session: SessionUser | null, roles: Role[]): SessionUser`.
+- Google sign-in: `/api/auth/google/start` redirects with scopes `openid email profile` (no Gmail scope) using `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`; the callback checks state, exchanges the code, reads the verified email from the ID token, and calls `signIn`.
+- `type SessionUser = { user: UserRow; membership: MembershipRow; outlet: Outlet }`; `currentSession(): Promise<SessionUser | null>`; `signIn(identity: { email: string; name: string }): Promise<SessionUser | null>` (find or create the user; link legacy outlets as below; set cookie `zest_session` = signed `{ userId, membershipId, outletId }`, 30 days); `requireRole(session: SessionUser | null, roles: Role[]): SessionUser` (401 without a session, 403 with the wrong role).
+- Staff: `addStaff(brandId: string, input: { name: string; role: "manager" | "kitchen" | "cashier" | "rider"; outletIds: string[] | null; pin: string }): Promise<MembershipRow>` (owner only; PIN is exactly 4 digits and unique among active staff of each of its outlets; stored as HMAC-SHA256 with `ZEST_SECRET_KEY`); `removeStaff(membershipId: string): Promise<void>` (sets `active=0`); `pinSignIn(staffCode: string, pin: string): Promise<SessionUser>` — at most 5 wrong PINs per staff code per 15 minutes (`checkRate("pin:"+staffCode, 5, 900)`), then 429 for the rest of the window; one generic error for a wrong code or PIN. A manager may be given a Google email instead of a PIN.
+- `currentSession` re-reads the membership on every request and returns null when it is inactive, so removing a person ends their access on their next request.
 - `handler` keeps its signature `(req, outlet, params)` and gains an optional first argument: `handler({ roles: Role[] }, fn)` where `fn` receives `(req, outlet, params, session)`. Without a session, mutating handlers with `roles` refuse with 401, except on the demo outlet where the existing `assertWritable` rule still applies.
 
-**Legacy access (Review Focus 1):** on `signIn`, if no membership exists and an outlet has `owner_phone` equal to the normalised phone, create an owner membership for that outlet's brand. If the browser still has the old `zest_outlet` cookie for an outlet with no owner phone, the first person to verify a phone in that browser becomes its owner, and the outlet's `owner_phone` is set. The old cookie is then cleared.
+**Legacy access (Review Focus 1):** on `signIn`, if the user has no membership: (a) if the browser holds the old `zest_outlet` cookie for an outlet with no owner membership, the user becomes its owner, and that cookie is cleared; (b) otherwise, if a connected mailbox's `address` equals the user's email, the user becomes owner of that mailbox's outlet. A new user with neither goes to `/join`.
 
 **Route roles** (all GET routes: any member; demo: no login):
-- owner only: `/api/connections` (POST, DELETE), `/api/mail*` (except GET), `/api/outlet` (PATCH), `/api/outlet/demo` (DELETE)
-- owner, manager: `/api/approvals/[id]`, `/api/menu/*` writes, `/api/growth/*` writes, `/api/reviews/[id]/reply`, `/api/copilot` (POST, DELETE), `/api/ingest/email`, `/api/onboarding/*`, `/api/dining/tables*`
+- owner only: `/api/connections` (POST, DELETE), `/api/mail*` (except GET), `/api/outlet` (PATCH), `/api/outlet/demo` (DELETE), `/api/staff*`
+- owner, manager: `/api/approvals/[id]`, `/api/menu/*` writes, `/api/growth/*` writes, `/api/reviews/[id]/reply`, `/api/copilot` (POST, DELETE), `/api/ingest/email`, `/api/onboarding/*`, `/api/dining/tables*`, `/api/sync`
 - owner, manager, cashier: `/api/dining/tabs*`, `/api/dining/reservations*`
-- system (secret header, unchanged): `/api/cron`, `/api/webhooks/*`, `/api/sync` keeps owner, manager
+- system (secret header, unchanged): `/api/cron`, `/api/jobs/run`, `/api/webhooks/*`
+- Kitchen and rider roles have no write routes yet; their screens arrive in Phases B and C.
 
 - [ ] **Step 1: Write the failing tests**
 
 ```ts
-describe("otp", () => {
-  it("verifies the right code once", async () => {
-    const { challengeId } = await startOtp("98765 43210", "staff");
-    const code = lastConsoleCode(); // console sender records the last code for tests
-    expect(await verifyOtp(challengeId, code)).toEqual({ phone: "+919876543210" });
-    await expect(verifyOtp(challengeId, code)).rejects.toThrow();
-  });
-  it("locks a challenge after 5 wrong codes", async () => { /* 5 wrong → 6th with the right code still fails */ });
-  it("expires after 5 minutes", async () => { /* vi.setSystemTime(+301s) → fails */ });
-  it("limits sends to 3 per 10 minutes per phone", async () => { /* 4th startOtp rejects with status 429 */ });
-});
 describe("auth", () => {
-  it("links a pilot outlet by owner phone on first sign-in", async () => {
-    // outlet with owner_phone "+919876543210" and no memberships; signIn("+919876543210") → owner membership on that outlet's brand
+  it("makes the first signer-in the owner of a cookie-only pilot outlet", async () => {
+    // outlet with no memberships; signIn({ email: "a@x.in", name: "A" }) with the old cookie set to it → owner membership on its brand
   });
-  it("refuses a kitchen user approving a draft", async () => { /* requireRole(kitchenSession, ["owner","manager"]) throws status 403 */ });
-  it("still serves the demo without a session", async () => { /* GET /api/today with no cookie returns the demo outlet */ });
-  it("refuses a write to a real outlet without a session", async () => { /* POST /api/menu/changes with no session → 401 */ });
+  it("links an outlet by its connected Gmail address", async () => {
+    // mailbox address "owner@x.in" for outlet O; signIn({ email: "owner@x.in", name: "O" }) → owner of O's brand
+  });
+  it("refuses a kitchen member approving a draft", async () => { /* requireRole(kitchen, ["owner","manager"]) throws status 403 */ });
+  it("still serves the demo without a session", async () => { /* GET /api/today, no cookie → demo outlet */ });
+  it("refuses a write to a real outlet without a session", async () => { /* POST /api/menu/changes, no session → 401 */ });
+  it("rejects a sign-in callback with a Gmail-purpose state", async () => { /* → 400 */ });
+});
+describe("staff", () => {
+  it("signs in with the restaurant code and PIN", async () => { /* addStaff kitchen pin "4821"; pinSignIn(code, "4821") → role kitchen */ });
+  it("locks the code after 5 wrong PINs", async () => { /* 5 wrong → 6th with the right PIN rejects with status 429 */ });
+  it("ends access when the owner removes the person", async () => { /* removeStaff → currentSession() for that cookie returns null */ });
+  it("refuses a duplicate PIN at the same outlet", async () => { /* second addStaff with "4821" throws */ });
 });
 ```
 
-- [ ] **Step 2: Run to verify they fail** — `npx vitest run tests/server/otp.test.ts tests/server/auth.test.ts` → FAIL
+- [ ] **Step 2: Run to verify they fail** — `npx vitest run tests/server/auth.test.ts tests/server/staff.test.ts` → FAIL
 
-- [ ] **Step 3: Implement** the tables, `rate-limit.ts`, `otp.ts` (with `console` and `msg91` senders; MSG91 uses `MSG91_AUTH_KEY` and `MSG91_TEMPLATE_ID`), `auth.ts`, the three auth routes, and the role lists on every listed route. `/login` is a two-step phone → code screen in the existing visual style, Hindi and English, with the resend button disabled for 30 seconds. `app/join` and `app/start` ask for OTP before the restaurant is created, and the owner membership is created with it. `approve`, `skip` and `undo` record `decided_by`.
+- [ ] **Step 3: Implement** the tables, `rate-limit.ts`, `auth.ts`, `staff.ts`, the auth and staff routes, and the role lists on every listed route. `/login` offers "Continue with Google" and a link to `/login/staff` (restaurant code and a PIN pad with large keys for a kitchen tablet). The Staff card on Connections lists people with role and outlets, adds staff with a PIN, shows the restaurant code, and removes staff. Hindi and English throughout. `app/join` and `app/start` ask the owner to continue with Google before the restaurant is created, and the owner membership is created with it. `approve`, `skip` and `undo` record `decided_by`.
 
 - [ ] **Step 4: Run tests, typecheck and build** — `npm test && npx tsc --noEmit && npm run build` → PASS
 
-- [ ] **Step 5: Commit** — `git commit -am "feat(auth): phone OTP login, roles per brand, and linking pilot outlets by owner phone"`
+- [ ] **Step 5: Commit** — `git commit -am "feat(auth): Google sign-in for owners, PIN sign-in for staff, roles per brand, and linking pilot outlets"`
 
 ---
 
@@ -314,7 +312,7 @@ describe("auth", () => {
 
 **Files:**
 - Create: `lib/server/jobs.ts`, `lib/server/job-handlers.ts`, `app/api/jobs/run/route.ts`
-- Modify: `lib/server/db.ts`, `lib/server/schema.ts`, `vercel.json`, `.github/workflows/sync.yml` (remove the 15-minute call once the per-minute cron is live), `README.md` (Scheduling)
+- Modify: `lib/server/db.ts`, `lib/server/schema.ts`, `app/api/cron/route.ts`, `.github/workflows/sync.yml` (call `/api/jobs/run` as a backup trigger), `README.md` (Scheduling)
 - Test: `tests/server/jobs.test.ts`
 
 **Interfaces:**
@@ -323,7 +321,7 @@ describe("auth", () => {
 - `registerHandler(kind: string, fn: (payload: Record<string, unknown>) => Promise<void>): void`.
 - `runDueJobs(opts: { limit: number; deadlineMs: number; now?: Date }): Promise<{ ran: number; failed: number }>` — claims due jobs with one `UPDATE … WHERE id IN (SELECT … LIMIT ?) RETURNING *` setting `status='running'` and `locked_until = now + 2 min`; also reclaims `running` jobs whose `locked_until` has passed; on throw: `attempts+1`, `run_at = now + [1, 5, 25, 60][attempts-1] minutes`, back to `queued`; after 5 attempts `failed` with `last_error`.
 - `job-handlers.ts` registers `sync.outlet` (calls `syncOutlet`), `mail.sync` (calls `syncMailbox`), `growth.check` (calls `checkCampaigns`). `/api/jobs/run` (CRON_SECRET) enqueues `sync.outlet` for every outlet with a connection with dedupe key `sync:<outletId>:<5-minute bucket>`, then calls `runDueJobs({ limit: 25, deadlineMs: 50_000 })`.
-- `vercel.json` adds `{ "path": "/api/jobs/run", "schedule": "* * * * *" }`; the daily `/api/cron` stays and enqueues `mail.sync` and `growth.check` per outlet instead of running them inline.
+- Driven every minute by the free external cron (cron-job.org, see "Before you start"). `vercel.json` keeps only its daily `/api/cron`, which now enqueues `mail.sync` and `growth.check` per outlet instead of running them inline, then calls `runDueJobs` as a safety net. The GitHub Actions workflow calls `/api/jobs/run` every 15 minutes as a backup trigger.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -345,7 +343,7 @@ it("reclaims a job whose run was cut off", async () => {
 
 - [ ] **Step 4: Run tests** — `npm test` → PASS
 
-- [ ] **Step 5: Commit** — `git commit -am "feat: durable job runner on a per-minute cron, with retries and dedupe"`
+- [ ] **Step 5: Commit** — `git commit -am "feat: durable job runner with retries and dedupe, driven by an external per-minute cron"`
 
 ---
 
@@ -511,7 +509,7 @@ Examples to include verbatim:
 - Consumes: `checkRate` (Task 5).
 - Copilot POST: 20 messages per outlet per minute (`copilot:<outletId>`), else 429 with a Hindi/English message.
 - Listing preview POST: 10 per IP per hour (`listing:<ip>`; IP from `x-forwarded-for` first entry).
-- Sentry: errors from route handlers and the browser, with `beforeSend` removing phone numbers (`/\+?91\d{10}/g` → `[phone]`) and request bodies. Disabled when `SENTRY_DSN` is unset.
+- Sentry: errors from route handlers and the browser, with `beforeSend` removing phone numbers (`/\+?91\d{10}/g` → `[phone]`) and request bodies. Free Developer plan; disabled when `SENTRY_DSN` is unset, so nothing breaks without an account.
 - `docs/ops.md`: how to restore the Turso database to a point in time, the env vars and secrets list with owners, the cron and job runner, and how to read the failed-jobs list (`SELECT … FROM jobs WHERE status='failed'`).
 
 - [ ] **Step 1: Write the failing tests**
@@ -539,10 +537,10 @@ it("scrubs phone numbers before sending to Sentry", () => {
 
 - [ ] Every existing screen works on the new order model: Today, Orders, Menu, Reviews, Money, Dining, Growth, Connections, the copilot, and `/m/[outletId]` (click through in `npm run dev` on the demo and on a newly created restaurant).
 - [ ] Tests run in CI on every push.
-- [ ] Owners log in by OTP; a pilot outlet created before the change is reachable by its owner.
-- [ ] `/api/jobs/run` runs every minute on Vercel and `jobs` shows `sync.outlet` runs completing.
-- [ ] Owner actions from "Before you start" are done or have a date.
+- [ ] Owners sign in with Google and staff with a PIN; a pilot outlet created before the change is reachable by its owner.
+- [ ] cron-job.org calls `/api/jobs/run` every minute and `jobs` shows `sync.outlet` runs completing.
+- [ ] Owner actions from "Before you start" are done.
 
 ## Next plans
 
-Write after Phase A merges, each from spec §7 and §13: Phase B (storefront, variants and add-ons, Razorpay, order hub and kitchen screen, phone orders, GST receipts, customers), then C to F.
+Write after Phase A merges, each from spec §7 and §13: Phase B (storefront, variants and add-ons, UPI-link payments, order hub and kitchen screen, phone orders, GST receipts, customers), then C to F.

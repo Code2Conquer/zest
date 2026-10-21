@@ -352,8 +352,8 @@ Decided: this roadmap replaces PLAN §13's next steps. Phase A absorbs its weeks
 
 | Phase | Weeks | Ships | Exit test |
 |---|---|---|---|
-| **A. Foundations** | 1–4 | Test setup and CI; eval harness; Claude switched on with a spend limit; phone OTP login and roles; brands; channel and order-status migration; `order_lines`; job runner on Vercel Pro; SSE for orders; consent ledger; hours model; Meta business verification and Razorpay partner application started; error monitoring, rate limits, backups | All existing screens work on the new order model; tests run in CI; owners log in by OTP |
-| **B. Direct ordering MVP** | 4–10 | Storefront (pickup, table ordering, scheduled), variants and add-ons, pay-at-counter from day one and Razorpay once KYC clears, order hub and kitchen screen, printing, busy mode, staff-taken phone orders, GST receipts, customer profiles, transactional WhatsApp updates | 10 pilot outlets take at least one paid direct order a day for 2 weeks; median checkout under 90 seconds; zero lost orders |
+| **A. Foundations** | 1–4 | Test setup and CI; eval harness (rules engine); Google sign-in for owners and PIN sign-in for staff, with roles; brands; channel and order-status migration; `order_lines`; job runner driven by a free external cron; SSE for orders; consent ledger; hours model; error monitoring, rate limits, backups | All existing screens work on the new order model; tests run in CI; owners log in by OTP |
+| **B. Direct ordering MVP** | 4–10 | Storefront (pickup, table ordering, scheduled), variants and add-ons, pay at the counter or by UPI link to the restaurant's own UPI ID (Razorpay after 50 restaurants, §15), order hub and kitchen screen, printing, busy mode, staff-taken phone orders, GST receipts, customer profiles, transactional WhatsApp updates | 10 pilot outlets take at least one paid direct order a day for 2 weeks; median checkout under 90 seconds; zero lost orders |
 | **C. Delivery and WhatsApp ordering** | 7–12 | Zones and fees, own riders, one delivery-partner adapter, tracking links, WhatsApp ordering, smart upsells | 90% of direct deliveries on time; WhatsApp orders 20%+ of direct orders at pilots that turn it on; upsell attach rate measured |
 | **D. Repeat business** | 10–16 | Segments, journeys, broadcasts with guardrails, attribution, loyalty online and on dine-in bills, PWA install and push | Journeys bring back 5%+ of drifting customers a month; members order more often than non-members; opt-out rate under 2% per message |
 | **E. Being found** | 14–20 | Google connection, hours everywhere, ordering link, Google reviews in the inbox with replies, reviews engine, health checks, presence score, public `/score`, SEO pages | Google reviews per pilot outlet up 50% in 60 days; hours mismatches at zero; `/score` brings sign-ups |
@@ -383,6 +383,17 @@ Decided: this roadmap replaces PLAN §13's next steps. Phase A absorbs its weeks
 4. This roadmap replaces PLAN §13; same pilot outlets; estimates for two engineers (§13).
 5. Vercel Pro; buy `zest.menu` (§7.3, §11.3).
 6. Legal sign-off gates only Phase B payments and pricing differences, and Phase D marketing (§12).
+
+**Cost decisions, 21 October 2026 (owner): nothing paid until the product is ready and 50 restaurants are onboarded.** These override the matching parts of §7 and §13 until then:
+
+7. **Hosting stays on Vercel Hobby.** A free external scheduler (cron-job.org) calls the job runner every minute, replacing the Vercel Pro plan in §11.3. Vercel's Hobby terms are for non-commercial use, so move to Pro when Zest starts charging restaurants.
+8. **No custom domain yet.** Storefronts live at `https://zest-dusky.vercel.app/r/{slug}`; per-brand subdomains on `zest.menu` and custom domains come when a domain is bought. The host-to-brand mapping is built so that the switch needs no route changes.
+9. **No SMS provider yet.** Owners and managers sign in with Google (the app already has a Google OAuth client for Gmail). Kitchen, cashier and rider staff sign in on the restaurant's device with a restaurant code and a 4-digit PIN the owner sets. Phone OTP is added when an SMS provider is chosen (Firebase gives 10 free SMS a day on a billed plan; Indian SMS providers charge per message and need DLT registration). Storefront customers give a phone number without verification until then; loyalty (Phase D) needs verification and waits for it.
+10. **Meta verification and the Razorpay partner application wait until 50 restaurants are onboarded.** Until then:
+    - Direct orders are paid with a UPI deep link and QR code made from the restaurant's own UPI ID (`upi://pay?pa=…&am=…&tn=<order no>`), or at the counter. Staff mark the order paid in the hub; nothing is confirmed automatically.
+    - Customer messages (order confirmations, ready, out for delivery, review requests) are prepared as `wa.me` links with the text filled in; staff tap to send from the restaurant's own WhatsApp. No WhatsApp ordering bot, broadcasts or journeys that send by themselves until the Cloud API is connected.
+    - The order hub, kitchen screen, customers, consent ledger and loyalty points are built as designed, so switching on Razorpay and WhatsApp later replaces the senders, not the screens.
+11. **Claude API key last.** Every feature keeps its keyword-rules fallback; the copilot evals run on rules in CI and on Claude once a key is added.
 
 **Still open:**
 
