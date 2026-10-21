@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight, BookOpen, ChefHat, IndianRupee, Play, ReceiptText, ShieldCheck, Star, TrendingUp, Users } from "lucide-react";
+import { ArrowDown, ArrowRight, BookOpen, Check, ChefHat, IndianRupee, Play, Plus, ReceiptText, ShieldCheck, Star, Store, TrendingUp } from "lucide-react";
 import { LangToggle, Wordmark } from "@/components/bits";
-import { DishStrip } from "@/components/landing/dish-strip";
 import { HeroStage } from "@/components/landing/hero-stage";
 import { JourneyRouter, RouterDialog } from "@/components/landing/router";
 import { Showcase } from "@/components/landing/showcase";
@@ -62,6 +61,117 @@ const BRIGADE: { icon: typeof Star; photo: string; alt: string; role: Bi; name: 
   },
 ];
 
+// The four things an owner gets, grouped by outcome. The same grouping runs through the nav and footer.
+const PILLARS: { id: string; icon: typeof Star; name: Bi; line: Bi; points: Bi[]; soon?: Bi }[] = [
+  {
+    id: "service",
+    icon: ChefHat,
+    name: { en: "Run service", hi: "सर्विस चलाएँ" },
+    line: { en: "Every order and every table, on one screen.", hi: "हर ऑर्डर और हर टेबल, एक स्क्रीन पर।" },
+    points: [
+      { en: "Live orders from Zomato, Swiggy, dine-in and your own page", hi: "Zomato, Swiggy, डाइन-इन और आपके पेज के लाइव ऑर्डर" },
+      { en: "Tables, bills, bookings and the waitlist", hi: "टेबल, बिल, बुकिंग और वेटलिस्ट" },
+      { en: "One menu, with stock and prices synced everywhere", hi: "एक मेन्यू, स्टॉक और क़ीमत हर जगह एक जैसी" },
+      { en: "Staff sign in with a PIN and see only their work", hi: "स्टाफ़ PIN से साइन इन करते हैं और सिर्फ़ अपना काम देखते हैं" },
+    ],
+  },
+  {
+    id: "direct",
+    icon: Store,
+    name: { en: "Sell direct", hi: "सीधे बेचें" },
+    line: { en: "A page of your own for the customers who already know you.", hi: "उन ग्राहकों के लिए आपका अपना पेज जो आपको पहले से जानते हैं।" },
+    points: [
+      { en: "Your restaurant page with menu, photos, ratings and price for two", hi: "आपका रेस्टोरेंट पेज: मेन्यू, फ़ोटो, रेटिंग और दो लोगों का ख़र्च" },
+      { en: "Table QR codes, so guests order from their seat", hi: "टेबल QR कोड, ताकि मेहमान अपनी सीट से ऑर्डर करें" },
+      { en: "Payment by UPI straight to you, or at the counter", hi: "भुगतान UPI से सीधे आपको, या काउंटर पर" },
+      { en: "A customer list that builds itself", hi: "अपने-आप बनती ग्राहक सूची" },
+    ],
+    soon: { en: "Coming next: ordering on WhatsApp and points for regulars", hi: "आगे: WhatsApp पर ऑर्डर और रेगुलर के लिए पॉइंट" },
+  },
+  {
+    id: "money",
+    icon: IndianRupee,
+    name: { en: "Know your money", hi: "अपना हिसाब जानें" },
+    line: { en: "Every payout, read and explained for you.", hi: "हर पेआउट, पढ़ा और समझाया हुआ।" },
+    points: [
+      { en: "Payout mails and statements read from your inbox", hi: "पेआउट मेल और स्टेटमेंट आपके इनबॉक्स से पढ़े जाते हैं" },
+      { en: "Sales, fees, ads and deductions, line by line", hi: "बिक्री, फ़ीस, ऐड और कटौती, एक-एक लाइन" },
+      { en: "Wrong charges found and disputes drafted", hi: "ग़लत कटौती पकड़ी जाती है और डिस्प्यूट तैयार" },
+      { en: "Yesterday's sales by channel, every morning", hi: "हर सुबह कल की बिक्री, हर चैनल की" },
+    ],
+  },
+  {
+    id: "grow",
+    icon: TrendingUp,
+    name: { en: "Grow", hi: "बढ़ें" },
+    line: { en: "More good reviews and better-run promos, with less effort.", hi: "ज़्यादा अच्छे रिव्यू और बेहतर प्रोमो, कम मेहनत में।" },
+    points: [
+      { en: "A reply to every review, drafted in your voice", hi: "हर रिव्यू का जवाब, आपके अंदाज़ में" },
+      { en: "Promos and ads with a hard spend cap", hi: "पक्की ख़र्च सीमा वाले प्रोमो और ऐड" },
+      { en: "Campaigns that pause themselves when they stop paying off", hi: "फ़ायदा न हो तो अपने-आप रुकने वाले कैंपेन" },
+      { en: "Festival and slow-hour ideas from your own orders", hi: "आपके ऑर्डर से त्योहार और धीमे घंटों के आइडिया" },
+    ],
+  },
+];
+
+// What an owner juggles today, all of which Zest brings into one place.
+const TODAY: Bi[] = [
+  { en: "Two partner apps", hi: "दो पार्टनर ऐप" },
+  { en: "Three tablets at the counter", hi: "काउंटर पर तीन टैबलेट" },
+  { en: "A notebook for bookings", hi: "बुकिंग की कॉपी" },
+  { en: "Payouts buried in email", hi: "ईमेल में दबे पेआउट" },
+  { en: "Regulars ordering on WhatsApp", hi: "WhatsApp पर रेगुलर के ऑर्डर" },
+  { en: "Reviews nobody has time for", hi: "रिव्यू जिनके लिए समय नहीं" },
+  { en: "Staff asking for your password", hi: "स्टाफ़ आपका पासवर्ड माँगता है" },
+];
+
+const STEPS: { title: Bi; body: Bi }[] = [
+  { title: { en: "Sign in with Google", hi: "Google से साइन इन करें" }, body: { en: "No forms to fill and nothing to install. It works on the phone or laptop you already have.", hi: "कोई लंबा फ़ॉर्म नहीं, कुछ इंस्टॉल नहीं। आपके फ़ोन या लैपटॉप पर चलता है।" } },
+  { title: { en: "Paste your Zomato or Swiggy link", hi: "अपना Zomato या Swiggy लिंक डालें" }, body: { en: "Your menu, photos, ratings and details come in on their own.", hi: "आपका मेन्यू, फ़ोटो, रेटिंग और जानकारी अपने-आप आ जाती है।" } },
+  { title: { en: "Connect your email and platforms", hi: "ईमेल और प्लेटफ़ॉर्म जोड़ें" }, body: { en: "Payouts, statements and orders start showing up, explained.", hi: "पेआउट, स्टेटमेंट और ऑर्डर दिखने लगते हैं, समझाए हुए।" } },
+  { title: { en: "Open your page and add your team", hi: "अपना पेज खोलें और टीम जोड़ें" }, body: { en: "Share your link and table QR codes, and give staff a PIN.", hi: "अपना लिंक और टेबल QR शेयर करें, और स्टाफ़ को PIN दें।" } },
+];
+
+const FAQ: { q: Bi; a: Bi }[] = [
+  {
+    q: { en: "Does Zest replace Zomato or Swiggy?", hi: "क्या Zest, Zomato या Swiggy की जगह लेता है?" },
+    a: {
+      en: "No. Zest works alongside them. Your listings keep running as they do, and Zest helps you run them better: orders, menu, reviews and payouts in one place. Your own page is for customers who already know you.",
+      hi: "नहीं। Zest उनके साथ काम करता है। आपकी लिस्टिंग वैसे ही चलती हैं, और Zest उन्हें बेहतर चलाने में मदद करता है: ऑर्डर, मेन्यू, रिव्यू और पेआउट एक जगह। आपका अपना पेज उन ग्राहकों के लिए है जो आपको पहले से जानते हैं।",
+    },
+  },
+  {
+    q: { en: "Do I need a POS or new hardware?", hi: "क्या POS या नया हार्डवेयर चाहिए?" },
+    a: { en: "No. Zest runs on the phone, tablet or laptop you already use. Connections to POS systems such as Petpooja are on the way.", hi: "नहीं। Zest आपके मौजूदा फ़ोन, टैबलेट या लैपटॉप पर चलता है। Petpooja जैसे POS से कनेक्शन आ रहे हैं।" },
+  },
+  {
+    q: { en: "Can my staff use it without my login?", hi: "क्या स्टाफ़ मेरे लॉगिन के बिना इस्तेमाल कर सकता है?" },
+    a: { en: "Yes. Add each person with a role and a 4-digit PIN. Kitchen staff see only the order board; managers can do more; only you see everything.", hi: "हाँ। हर व्यक्ति को एक रोल और 4 अंकों का PIN दें। किचन स्टाफ़ सिर्फ़ ऑर्डर बोर्ड देखता है; मैनेजर ज़्यादा कर सकते हैं; सब कुछ सिर्फ़ आप देखते हैं।" },
+  },
+  {
+    q: { en: "Will the AI change things without asking?", hi: "क्या AI बिना पूछे कुछ बदल देगा?" },
+    a: { en: "No. Every change to a platform, every reply and every promo starts as a draft you approve. Promos have a hard spend cap, and everything is on record with undo.", hi: "नहीं। प्लेटफ़ॉर्म पर हर बदलाव, हर जवाब और हर प्रोमो पहले ड्राफ़्ट बनता है जिसे आप मंज़ूर करते हैं। प्रोमो पर पक्की ख़र्च सीमा, और हर काम का रिकॉर्ड और undo।" },
+  },
+  {
+    q: { en: "How do customers pay on my page?", hi: "मेरे पेज पर ग्राहक भुगतान कैसे करते हैं?" },
+    a: { en: "By UPI straight to your own UPI ID, or at the counter. The money comes to you directly; Zest never holds it.", hi: "UPI से सीधे आपके UPI ID पर, या काउंटर पर। पैसा सीधे आपके पास आता है; Zest कभी नहीं रखता।" },
+  },
+  {
+    q: { en: "Can I use it in Hindi?", hi: "क्या मैं इसे हिंदी में इस्तेमाल कर सकता हूँ?" },
+    a: { en: "Yes. The whole app works in Hindi and English, and the assistant replies in Hindi when you write in Hindi or Hinglish.", hi: "हाँ। पूरा ऐप हिंदी और अंग्रेज़ी में चलता है, और आप हिंदी या हिंग्लिश में लिखें तो असिस्टेंट हिंदी में जवाब देता है।" },
+  },
+];
+
+const WORKS_WITH: [string, string][] = [
+  ["Zomato", "var(--ch-zomato)"],
+  ["Swiggy", "var(--ch-swiggy)"],
+  ["Dine-in", "var(--ch-dine)"],
+  ["Your own page", "var(--ch-direct)"],
+  ["WhatsApp", "var(--veg)"],
+  ["Gmail", "var(--ink-2)"],
+  ["UPI", "var(--ink-2)"],
+];
+
 export default function Landing() {
   const { t, pick, state } = useApp();
   const [routerOpen, setRouterOpen] = useState(false);
@@ -79,65 +189,74 @@ export default function Landing() {
 
   const rise = (delay: number) =>
     reduce ? {} : { initial: { opacity: 0, y: 18 }, animate: { opacity: 1, y: 0 }, transition: { delay, duration: 0.6, ease: [0.2, 0.7, 0.2, 1] as const } };
+  const reveal = (i = 0) =>
+    reduce ? {} : { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.3 }, transition: { delay: i * 0.07, duration: 0.6, ease: [0.2, 0.7, 0.2, 1] as const } };
+
+  const startButton = (tone: "dark" | "light") => (
+    <button
+      type="button"
+      onClick={() => setRouterOpen(true)}
+      className={`group inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-[1.05rem] font-medium transition-transform hover:-translate-y-0.5 ${tone === "dark" ? "bg-haldi text-[#17201c] shadow-[0_14px_34px_-14px_rgba(242,176,53,0.7)]" : "bg-ink text-paper"}`}
+    >
+      {hi ? "शुरू करें" : "Get started"}
+      <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
+    </button>
+  );
+
+  const eyebrow = (text: string, tone: "light" | "dark" = "light") => (
+    <p className={`text-[0.8rem] font-medium uppercase tracking-[0.14em] ${tone === "dark" ? "text-[#f4efe6]/55" : "text-muted"}`}>{text}</p>
+  );
 
   return (
     <div className="min-h-dvh overflow-x-clip">
-      {/* Hero: warm, dark, photographic */}
+      {/* Hero */}
       <section className="relative isolate overflow-hidden bg-[#0e1511] text-[#f4efe6]">
         <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_80%_40%,rgba(242,176,53,0.16),transparent_70%),radial-gradient(40%_50%_at_10%_90%,rgba(178,58,42,0.18),transparent_70%)]" />
         <div aria-hidden className="grain absolute inset-0 -z-10 opacity-[0.07]" />
         <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-8">
           <Wordmark className="text-[1.9rem] text-[#f4efe6] [&_.bg-turmeric]:bg-haldi" />
-          <nav aria-label="Sections" className="hidden items-center gap-8 text-[0.95rem] text-[#f4efe6]/80 md:flex">
-            <a href="#product" className="hover:text-[#f4efe6]">{hi ? "प्रोडक्ट" : "Product"}</a>
-            <a href="#problems" className="hover:text-[#f4efe6]">{hi ? "क्या आसान होता है" : "What gets easier"}</a>
-            <a href="#agents" className="hover:text-[#f4efe6]">{hi ? "एजेंट" : "Agents"}</a>
-            <a href="#journey" className="hover:text-[#f4efe6]">{hi ? "कैसे काम करता है" : "How it works"}</a>
+          <nav aria-label="Sections" className="hidden items-center gap-8 text-[0.95rem] text-[#f4efe6]/75 md:flex">
+            <a href="#platform" className="hover:text-[#f4efe6]">{hi ? "प्लेटफ़ॉर्म" : "Platform"}</a>
+            <a href="#agents" className="hover:text-[#f4efe6]">{hi ? "AI एजेंट" : "AI agents"}</a>
+            <a href="#start" className="hover:text-[#f4efe6]">{hi ? "शुरुआत कैसे करें" : "Get set up"}</a>
+            <a href="#faq" className="hover:text-[#f4efe6]">{hi ? "सवाल" : "FAQ"}</a>
           </nav>
           <div className="flex items-center gap-3">
             <LangToggle />
+            <a href="/login" className="hidden text-[0.95rem] text-[#f4efe6]/80 hover:text-[#f4efe6] sm:block">
+              {hi ? "लॉग इन" : "Log in"}
+            </a>
             <button type="button" onClick={() => setRouterOpen(true)} className="hidden rounded-full bg-haldi px-5 py-2.5 text-[0.95rem] font-medium text-[#17201c] transition-colors hover:bg-[#f6c25a] sm:block">
               {hi ? "शुरू करें" : "Get started"}
             </button>
           </div>
         </header>
 
-        <div className="mx-auto grid max-w-7xl items-center gap-16 px-4 pb-24 pt-8 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:pb-32 lg:pt-14">
+        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-20 pt-8 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:pb-28 lg:pt-12">
           <div>
-            <motion.p {...rise(0)} className="inline-flex items-center gap-2 rounded-full bg-white/[0.07] px-3.5 py-1.5 text-sm text-[#f4efe6]/80 ring-1 ring-white/10">
+            <motion.p {...rise(0)} className="inline-flex items-center gap-2 rounded-full bg-white/[0.06] px-3.5 py-1.5 text-sm text-[#f4efe6]/80 ring-1 ring-white/10">
               <span aria-hidden className="size-1.5 rounded-full bg-haldi" />
-              {hi ? "Zomato, Swiggy, डाइन-इन और सीधे ऑर्डर, एक जगह" : "Zomato, Swiggy, dine-in and direct orders, in one place"}
+              {hi ? "रेस्टोरेंट चलाने के लिए एक ही ऐप" : "The one app to run your restaurant"}
             </motion.p>
-            <motion.h1 {...rise(0.08)} className="font-sign mt-6 max-w-[11ch] text-[clamp(3rem,7.6vw,6rem)] leading-[0.9]">
+            <motion.h1 {...rise(0.08)} className="font-sign mt-6 max-w-[16ch] text-[clamp(2.6rem,5.6vw,4.6rem)] leading-[0.94]">
               {hi ? (
                 <>
-                  आपकी किचन, <span className="text-haldi">सँभली हुई।</span>
+                  पूरा रेस्टोरेंट, <span className="text-haldi">एक ऐप से।</span>
                 </>
               ) : (
                 <>
-                  Your kitchen, <span className="text-haldi">sorted.</span>
+                  Run your whole restaurant <span className="text-haldi">from one app.</span>
                 </>
               )}
             </motion.h1>
-            <motion.p {...rise(0.2)} className="mt-7 max-w-[46ch] text-[1.2rem] leading-relaxed text-[#f4efe6]/75">
+            <motion.p {...rise(0.2)} className="mt-7 max-w-[50ch] text-[1.2rem] leading-relaxed text-[#f4efe6]/75">
               {hi
-                ? "Zomato और Swiggy पर बिक्री, टेबल पर मेहमान, और रेगुलर ग्राहकों के फ़ोन और WhatsApp ऑर्डर: Zest सब एक ऐप में चलाता है। AI एजेंट मेन्यू, ऑर्डर, रिव्यू और पेआउट संभालते हैं, हिंदी या अंग्रेज़ी में।"
-                : "Selling on Zomato and Swiggy, guests at your tables, regulars ordering by phone and WhatsApp: Zest runs all of it from one app. AI agents keep the menu, orders, reviews and payouts in order, in Hindi or English."}
+                ? "Zomato और Swiggy के ऑर्डर, आपकी टेबल, आपका अपना ऑर्डरिंग पेज, पेआउट, रिव्यू और स्टाफ़, सब एक जगह। AI एजेंट रोज़ का काम करते हैं, आप बस मंज़ूरी देते हैं। हिंदी या अंग्रेज़ी में।"
+                : "Zomato and Swiggy orders, your tables, your own ordering page, payouts, reviews and staff, together in one place. AI agents do the busywork and you just approve. In Hindi or English."}
             </motion.p>
-            <motion.div {...rise(0.32)} className="mt-10 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setRouterOpen(true)}
-                className="group inline-flex items-center gap-2 rounded-full bg-haldi px-7 py-4 text-[1.05rem] font-semibold text-[#17201c] shadow-[0_18px_40px_-14px_rgba(242,176,53,0.6)] transition-transform hover:-translate-y-0.5"
-              >
-                {hi ? "अपना रेस्टोरेंट जोड़ें" : "Set up my restaurant"}
-                <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </button>
-              <button
-                type="button"
-                onClick={openDemo}
-                className="group inline-flex items-center gap-3 rounded-full py-2 pl-2 pr-5 text-[1.05rem] font-medium text-[#f4efe6] ring-1 ring-white/20 transition-colors hover:bg-white/[0.06]"
-              >
+            <motion.div {...rise(0.32)} className="mt-9 flex flex-wrap items-center gap-4">
+              {startButton("dark")}
+              <button type="button" onClick={openDemo} className="group inline-flex items-center gap-3 rounded-full py-2 pl-2 pr-5 text-[1.05rem] font-medium text-[#f4efe6] ring-1 ring-white/20 transition-colors hover:bg-white/5">
                 <span className="grid size-10 place-items-center rounded-full bg-white/10 transition-colors group-hover:bg-white/20">
                   <Play aria-hidden className="size-4 fill-current" />
                 </span>
@@ -148,9 +267,9 @@ export default function Landing() {
               </button>
             </motion.div>
             <motion.ul {...rise(0.44)} className="mt-12 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#f4efe6]/60">
-              {(hi ? ["हिंदी और अंग्रेज़ी", "WhatsApp पर भी", "कोई नया हार्डवेयर नहीं"] : ["Hindi and English", "Works on WhatsApp", "No new hardware"]).map((x) => (
+              {(hi ? ["दो मिनट में शुरू", "Zomato और Swiggy के साथ", "कोई नया हार्डवेयर नहीं"] : ["Set up in two minutes", "Works with Zomato and Swiggy", "No new hardware"]).map((x) => (
                 <li key={x} className="inline-flex items-center gap-2">
-                  <span aria-hidden className="text-haldi">✓</span>
+                  <Check aria-hidden className="size-4 text-haldi" />
                   {x}
                 </li>
               ))}
@@ -160,144 +279,121 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Real dishes, priced on both platforms */}
-      <section className="pt-16">
-        <p className="mx-auto max-w-7xl px-4 text-sm font-medium uppercase tracking-wider text-muted sm:px-8">
-          {hi ? "एक मेन्यू, हर प्लेटफ़ॉर्म पर एक जैसा" : "One menu, in sync on every platform"}
-        </p>
-        <div className="mt-5">
-          <DishStrip />
-        </div>
-      </section>
-
-      {/* Where it works */}
-      <section className="mx-auto max-w-7xl px-4 pt-14 sm:px-8">
-        <p className="text-center text-muted">{hi ? "जहाँ आप पहले से बेचते हैं, वहीं काम करता है" : "Works where you already sell"}</p>
-        <ul className="mt-5 flex flex-wrap justify-center gap-x-10 gap-y-4 text-[1.25rem] font-semibold text-ink-2">
-          {[
-            ["Zomato", "var(--ch-zomato)"],
-            ["Swiggy", "var(--ch-swiggy)"],
-            [hi ? "डाइन-इन" : "Dine-in", "var(--ch-dine)"],
-            [hi ? "आपका अपना पेज" : "Your own page", "var(--ch-direct)"],
-            ["WhatsApp", "var(--veg)"],
-            ["Gmail", "var(--ink-2)"],
-            ["Petpooja", "var(--ink-2)"],
-          ].map(([name, color]) => (
-            <li key={name} className="inline-flex items-center gap-2">
-              <span aria-hidden className="size-2.5 rounded-full" style={{ background: color }} />
-              {name}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Product showcase */}
-      <section id="product" className="mx-auto max-w-7xl scroll-mt-8 px-4 py-24 sm:px-8">
-        <h2 className="font-sign max-w-[18ch] text-[clamp(2rem,4.4vw,3.4rem)] leading-[1]">
-          {hi ? "रेस्टोरेंट का सारा काम, एक जगह।" : "Everything your restaurant runs on, in one place."}
-        </h2>
-        <p className="mb-12 mt-4 max-w-[56ch] text-lg leading-relaxed text-ink-2">
-          {hi ? "हर स्क्रीन पर एक एजेंट काम कर रहा है। आप बस मंज़ूरी देते हैं।" : "Behind every screen there's an agent doing the work. You just say yes."}
-        </p>
-        <Showcase />
-      </section>
-
-      {/* The problems Zest takes off an owner's plate */}
-      <section id="problems" className="scroll-mt-8 border-y border-line bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8">
-          <p className="text-sm font-medium uppercase tracking-[0.1em] text-muted">{hi ? "क्या आसान होता है" : "What gets easier"}</p>
-          <h2 className="font-sign mt-2 max-w-[20ch] text-[clamp(2rem,4.4vw,3.4rem)] leading-[1]">{hi ? "काउंटर के पीछे का हर रोज़ का काम।" : "The everyday work behind the counter."}</h2>
-          <p className="mt-4 max-w-[60ch] text-lg leading-relaxed text-ink-2">
-            {hi
-              ? "Zomato और Swiggy आपके ग्राहक लाते हैं। बाक़ी सब, पाँच ऐप, तीन टैबलेट, फ़ोन पर ऑर्डर और ईमेल में पेआउट, आपके ज़िम्मे रहता है। Zest वही सँभालता है।"
-              : "Zomato and Swiggy bring you customers. Everything else lands on you: five apps, three tablets, orders on the phone and payouts buried in email. That's the part Zest handles."}
-          </p>
-          <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {(
-              [
-                [ReceiptText, { en: "Orders come from everywhere", hi: "ऑर्डर हर तरफ़ से आते हैं" }, { en: "Zomato, Swiggy, your tables, calls and WhatsApp land on one live board, so nothing is missed in the rush.", hi: "Zomato, Swiggy, टेबल, फ़ोन और WhatsApp, सब एक लाइव बोर्ड पर, ताकि भीड़ में कुछ न छूटे।" }],
-                [Users, { en: "Regulars have no easy way to order from you", hi: "रेगुलर के पास सीधे ऑर्डर का आसान तरीक़ा नहीं" }, { en: "Give them a page of your own to order from, for pickup or from their table, and keep your listings as they are.", hi: "उन्हें अपना एक पेज दें, पिकअप या टेबल से ऑर्डर के लिए, और आपकी लिस्टिंग वैसे ही चलती रहें।" }],
-                [IndianRupee, { en: "Payouts are hard to read", hi: "पेआउट समझना मुश्किल" }, { en: "Statements are read from your email and explained line by line: sales, fees, ads and deductions.", hi: "स्टेटमेंट आपके ईमेल से पढ़े जाते हैं और एक-एक लाइन समझाई जाती है: बिक्री, फ़ीस, ऐड और कटौती।" }],
-                [Star, { en: "Reviews pile up unanswered", hi: "रिव्यू का जवाब नहीं हो पाता" }, { en: "A reply to every review is drafted in your voice. You read it and approve.", hi: "हर रिव्यू का जवाब आपके अंदाज़ में तैयार। आप पढ़कर मंज़ूर करें।" }],
-                [BookOpen, { en: "The menu drifts out of sync", hi: "मेन्यू हर जगह अलग हो जाता है" }, { en: "One menu for every platform and your own page. Mark a dish out of stock once and it's off everywhere.", hi: "हर प्लेटफ़ॉर्म और आपके पेज के लिए एक मेन्यू। एक बार आउट ऑफ़ स्टॉक करें, हर जगह बंद।" }],
-                [ShieldCheck, { en: "Staff need access, not your password", hi: "स्टाफ़ को एक्सेस चाहिए, आपका पासवर्ड नहीं" }, { en: "Kitchen and counter staff sign in with a PIN and see only their screen. You stay in charge.", hi: "किचन और काउंटर स्टाफ़ PIN से साइन इन करते हैं और सिर्फ़ अपनी स्क्रीन देखते हैं। कंट्रोल आपके पास।" }],
-              ] as const
-            ).map(([Icon, title, body]) => (
-              <li key={title.en} className="rounded-2xl bg-paper p-6 shadow-[0_0_0_1px_var(--line)]">
-                <Icon aria-hidden className="size-6 text-ink-2" />
-                <h3 className="mt-4 text-lg font-semibold">{pick(title)}</h3>
-                <p className="mt-1.5 leading-relaxed text-ink-2">{pick(body)}</p>
+      {/* Works with */}
+      <section className="border-b border-line">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-4 px-4 py-8 sm:px-8">
+          <p className="text-sm text-muted">{hi ? "उन सबके साथ जो आप पहले से इस्तेमाल करते हैं" : "Works with what you already use"}</p>
+          <ul className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-[1.1rem] font-semibold text-ink-2">
+            {WORKS_WITH.map(([name, color]) => (
+              <li key={name} className="inline-flex items-center gap-2">
+                <span aria-hidden className="size-2.5 rounded-full" style={{ background: color }} />
+                {hi && name === "Your own page" ? "आपका अपना पेज" : hi && name === "Dine-in" ? "डाइन-इन" : name}
               </li>
             ))}
           </ul>
-
-          {/* A page of your own, next to your listings */}
-          <div id="own" className="mt-16 grid scroll-mt-8 items-center gap-8 rounded-3xl bg-curry p-8 text-[#f4efe6] sm:p-10 lg:grid-cols-[1.2fr_1fr]">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-[0.1em] text-[#f4efe6]/60">{hi ? "आपका अपना पेज" : "Your own page"}</p>
-              <h3 className="font-sign mt-2 max-w-[18ch] text-[clamp(1.8rem,3.6vw,2.8rem)] leading-[1]">{hi ? "अपनी लिस्टिंग के साथ, अपना एक पेज।" : "A page of your own, next to your listings."}</h3>
-              <p className="mt-4 max-w-[52ch] leading-relaxed text-[#f4efe6]/80">
-                {hi
-                  ? "जो ग्राहक पहले से आपको जानते हैं, फ़ोन करते हैं, WhatsApp करते हैं या टेबल पर बैठे हैं, वे आपके पेज से ऑर्डर करते हैं। मेन्यू, फ़ोटो, रेटिंग और क़ीमतें आपकी लिस्टिंग जैसी, भुगतान UPI से या काउंटर पर। Zomato और Swiggy पर आपका कारोबार वैसे ही चलता रहता है।"
-                  : "Customers who already know you, the ones who call, message or sit at your tables, order from your page: your menu, photos, ratings and prices, laid out like your listings, paid by UPI or at the counter. Your business on Zomato and Swiggy carries on as it is."}
-              </p>
-              <ul className="mt-5 space-y-1.5 text-[#f4efe6]/85">
-                {[
-                  { en: "A link and QR code for your counter, bills and tables", hi: "काउंटर, बिल और टेबल के लिए लिंक और QR कोड" },
-                  { en: "Orders arrive on the same live board as everything else", hi: "ऑर्डर उसी लाइव बोर्ड पर आते हैं" },
-                  { en: "A customer list that builds itself as people order", hi: "ऑर्डर के साथ अपने-आप बनती ग्राहक सूची" },
-                ].map((x) => (
-                  <li key={x.en} className="flex gap-2">
-                    <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-haldi" />
-                    {pick(x)}
-                  </li>
-                ))}
-              </ul>
-              <a href="/r/rasoi-27" className="mt-7 inline-flex items-center gap-2 rounded-full bg-haldi px-6 py-3 font-medium text-[#17201c] hover:bg-[#f6c25a]">
-                {hi ? "सैंपल रेस्टोरेंट का पेज देखें" : "See a sample restaurant page"}
-                <ArrowRight aria-hidden className="size-4" />
-              </a>
-            </div>
-            <ul className="grid gap-3 text-sm">
-              {[
-                { t: { en: "Coming next", hi: "आगे आ रहा है" }, d: { en: "Ordering in a WhatsApp chat, points for regulars, and asking happy guests for a Google review.", hi: "WhatsApp चैट में ऑर्डर, रेगुलर के लिए पॉइंट, और ख़ुश मेहमानों से Google रिव्यू।" } },
-                { t: { en: "Works alongside", hi: "साथ में चलता है" }, d: { en: "Your Zomato and Swiggy listings, your POS if you have one, and the partner apps you already use.", hi: "आपकी Zomato और Swiggy लिस्टिंग, आपका POS अगर है, और पार्टनर ऐप जो आप पहले से इस्तेमाल करते हैं।" } },
-              ].map((x) => (
-                <li key={x.t.en} className="rounded-2xl bg-white/5 p-5 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.1)]">
-                  <p className="font-medium text-haldi">{pick(x.t)}</p>
-                  <p className="mt-1 leading-relaxed text-[#f4efe6]/75">{pick(x.d)}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
+      </section>
+
+      {/* The problem */}
+      <section className="mx-auto grid max-w-7xl items-center gap-14 px-4 py-24 sm:px-8 lg:grid-cols-[1fr_1.05fr]">
+        <motion.div {...reveal()}>
+          {eyebrow(hi ? "आज का हाल" : "The way it is today")}
+          <h2 className="font-sign mt-3 max-w-[14ch] text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1]">{hi ? "रेस्टोरेंट एक काम नहीं, चालीस काम है।" : "A restaurant isn't one job. It's forty."}</h2>
+          <p className="mt-5 max-w-[50ch] text-lg leading-relaxed text-ink-2">
+            {hi
+              ? "Zomato और Swiggy ग्राहक लाते हैं। बाक़ी सब आपके ज़िम्मे: टैबलेट, कॉपी, ईमेल, WhatsApp, और स्टाफ़। हर एक अलग जगह। Zest इन्हें एक ऐप में ले आता है, ताकि आप खाने और मेहमानों पर ध्यान दे सकें।"
+              : "Zomato and Swiggy bring the customers. Everything else lands on you: tablets, notebooks, inboxes, WhatsApp and staff, each in a different place. Zest brings it into one app, so you can get back to the food and the guests."}
+          </p>
+        </motion.div>
+        <motion.div {...reveal(1)} className="relative rounded-[28px] bg-surface p-6 shadow-[0_0_0_1px_var(--line)] sm:p-8">
+          <ul className="flex flex-wrap gap-2.5">
+            {TODAY.map((x, i) => (
+              <li key={x.en} className="rounded-full bg-sunken px-4 py-2 text-[0.95rem] text-ink-2" style={{ transform: `rotate(${((i * 37) % 7) - 3}deg)` }}>
+                {pick(x)}
+              </li>
+            ))}
+          </ul>
+          <div className="my-6 flex items-center gap-3 text-muted">
+            <span className="h-px flex-1 bg-line" />
+            <ArrowDown aria-hidden className="size-5" />
+            <span className="h-px flex-1 bg-line" />
+          </div>
+          <div className="flex items-center gap-4 rounded-2xl bg-curry p-5 text-[#eef2ec]">
+            <Wordmark className="text-[1.7rem] text-[#eef2ec] [&_.bg-turmeric]:bg-haldi" />
+            <p className="text-[0.95rem] leading-snug text-[#eef2ec]/80">{hi ? "एक ऐप। एक लॉगिन। आपकी पूरी टीम।" : "One app. One login. Your whole team."}</p>
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Platform pillars */}
+      <section id="platform" className="scroll-mt-8 bg-surface py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-8">
+          <div className="max-w-3xl">
+            {eyebrow(hi ? "प्लेटफ़ॉर्म" : "The platform")}
+            <h2 className="font-sign mt-3 text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1]">{hi ? "रेस्टोरेंट को जो कुछ चाहिए, सब एक जगह।" : "Everything your restaurant runs on."}</h2>
+            <p className="mt-5 max-w-[56ch] text-lg leading-relaxed text-ink-2">
+              {hi ? "चार हिस्से, एक ऐप। हर हिस्सा उसी डेटा पर चलता है, इसलिए कुछ दो बार नहीं करना पड़ता।" : "Four parts, one app. Each runs on the same data, so nothing has to be done twice."}
+            </p>
+          </div>
+          <ul className="mt-14 grid gap-5 md:grid-cols-2">
+            {PILLARS.map((p, i) => (
+              <motion.li key={p.id} {...reveal(i)} className="flex flex-col rounded-[28px] bg-paper p-7 shadow-[0_0_0_1px_var(--line)] sm:p-9">
+                <span className="grid size-12 place-items-center rounded-2xl bg-curry text-haldi">
+                  <p.icon aria-hidden className="size-6" />
+                </span>
+                <h3 className="mt-6 text-[1.6rem] font-semibold tracking-[-0.02em]">{pick(p.name)}</h3>
+                <p className="mt-1 text-lg text-ink-2">{pick(p.line)}</p>
+                <ul className="mt-6 space-y-3">
+                  {p.points.map((x) => (
+                    <li key={x.en} className="flex gap-3 leading-relaxed">
+                      <Check aria-hidden className="mt-1 size-4 shrink-0 text-leaf" />
+                      {pick(x)}
+                    </li>
+                  ))}
+                </ul>
+                {p.soon && <p className="mt-6 rounded-xl bg-turmeric-soft px-4 py-2.5 text-sm text-ink">{pick(p.soon)}</p>}
+                <div className="mt-auto pt-6">
+                  {p.id === "direct" ? (
+                    <a href="/r/rasoi-27" className="inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline">
+                      {hi ? "सैंपल रेस्टोरेंट का पेज देखें" : "See a sample restaurant page"}
+                      <ArrowRight aria-hidden className="size-4" />
+                    </a>
+                  ) : (
+                    <button type="button" onClick={openDemo} className="inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline">
+                      {hi ? "डेमो किचन में देखें" : "See it in the demo kitchen"}
+                      <ArrowRight aria-hidden className="size-4" />
+                    </button>
+                  )}
+                </div>
+              </motion.li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* Product tour */}
+      <section id="product" className="mx-auto max-w-7xl scroll-mt-8 px-4 py-24 sm:px-8">
+        {eyebrow(hi ? "काम करते हुए देखें" : "See it at work")}
+        <h2 className="font-sign mt-3 max-w-[18ch] text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1]">{hi ? "हर स्क्रीन के पीछे एक एजेंट।" : "Behind every screen, an agent at work."}</h2>
+        <p className="mb-12 mt-5 max-w-[56ch] text-lg leading-relaxed text-ink-2">{hi ? "एजेंट ड्राफ़्ट तैयार करते हैं, आप हाँ कहते हैं।" : "The agents prepare the work. You say yes."}</p>
+        <Showcase />
       </section>
 
       {/* The brigade */}
       <section id="agents" className="scroll-mt-8 bg-curry text-[#eef2ec]">
         <div className="mx-auto max-w-7xl px-4 py-24 sm:px-8">
-          <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
-            <div>
-              <h2 className="font-sign max-w-[16ch] text-[clamp(2rem,4.4vw,3.4rem)] leading-[1] text-haldi">
-                {hi ? "आपकी किचन ब्रिगेड, AI वाली।" : "A kitchen brigade that never takes a day off."}
-              </h2>
-              <p className="mt-4 max-w-[54ch] text-lg leading-relaxed text-[#eef2ec]/75">
-                {hi
-                  ? "हर एजेंट का एक काम है, जैसे बड़ी किचन में होता है। Zest हेड शेफ़ है: आपकी बात सुनता है और सही एजेंट को देता है।"
-                  : "Each agent has one station, the way a big kitchen works. Zest is the head chef: it hears what you need and hands it to the right station."}
-              </p>
-            </div>
-          </div>
+          {eyebrow(hi ? "AI एजेंट" : "AI agents", "dark")}
+          <h2 className="font-sign mt-3 max-w-[16ch] text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1] text-haldi">
+            {hi ? "आपकी किचन ब्रिगेड, AI वाली।" : "A kitchen brigade that never takes a day off."}
+          </h2>
+          <p className="mt-5 max-w-[54ch] text-lg leading-relaxed text-[#eef2ec]/75">
+            {hi
+              ? "हर एजेंट का एक काम है, जैसे बड़ी किचन में होता है। Zest हेड शेफ़ है: आपकी बात सुनता है और सही एजेंट को देता है।"
+              : "Each agent has one station, the way a big kitchen works. Zest is the head chef: it hears what you need and hands it to the right station."}
+          </p>
           <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {BRIGADE.map((b, i) => (
-              <motion.li
-                key={b.name.en}
-                initial={reduce ? false : { opacity: 0, y: 28 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ delay: (i % 3) * 0.08, duration: 0.6, ease: [0.2, 0.7, 0.2, 1] }}
-                className="group overflow-hidden rounded-3xl bg-curry-2 ring-1 ring-white/10"
-              >
+              <motion.li key={b.name.en} {...reveal(i % 3)} className="group overflow-hidden rounded-3xl bg-curry-2 ring-1 ring-white/10">
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <img src={`/photos/${b.photo}.webp`} alt={b.alt} width={800} height={600} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105" />
                   <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-curry-2 via-curry-2/10 to-transparent" />
@@ -316,33 +412,21 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Journey: the plate fills up */}
-      <section id="journey" className="mx-auto max-w-7xl scroll-mt-8 px-4 py-24 sm:px-8">
-        <h2 className="font-sign max-w-[20ch] text-[clamp(2rem,4.4vw,3.4rem)] leading-[1]">{t("landing.stages")}</h2>
-        <ol className="mt-14 grid gap-12 md:grid-cols-3">
-          {(
-            [
-              { n: "01", photo: "stage-new", alt: "Samosas with chutneys on a wooden board", title: "stage.1", sub: "stage.1.sub" },
-              { n: "02", photo: "stage-operate", alt: "A chef tossing a flaming pan in a busy kitchen", title: "stage.2", sub: "stage.2.sub" },
-              { n: "03", photo: "stage-scale", alt: "A warm, busy restaurant dining room", title: "stage.3", sub: "stage.3.sub" },
-            ] as const
-          ).map((s, i) => (
-            <motion.li
-              key={s.n}
-              initial={reduce ? false : { opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.4 }}
-              transition={{ delay: i * 0.15, duration: 0.5 }}
-            >
-              <div className="group relative aspect-[4/5] overflow-hidden rounded-3xl bg-sunken">
-                <img src={`/photos/${s.photo}.webp`} alt={s.alt} width={800} height={600} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105" />
-                <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                <span className="font-sign absolute bottom-4 left-5 text-[3.2rem] leading-none text-white/90">{s.n}</span>
-              </div>
-              <div className="mt-5">
-                <h3 className="mt-1 text-[1.35rem] font-semibold">{t(s.title)}</h3>
-                <p className="mt-2 max-w-[38ch] leading-relaxed text-ink-2">{t(s.sub)}</p>
-              </div>
+      {/* Get set up in four steps */}
+      <section id="start" className="mx-auto max-w-7xl scroll-mt-8 px-4 py-24 sm:px-8">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            {eyebrow(hi ? "शुरुआत" : "Getting started")}
+            <h2 className="font-sign mt-3 max-w-[16ch] text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1]">{hi ? "चार क़दम में तैयार।" : "Up and running in four steps."}</h2>
+          </div>
+          {startButton("light")}
+        </div>
+        <ol className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map((s, i) => (
+            <motion.li key={s.title.en} {...reveal(i)} className="relative rounded-[24px] bg-surface p-6 shadow-[0_0_0_1px_var(--line)]">
+              <span className="font-sign text-[2.6rem] leading-none text-haldi-deep">{String(i + 1).padStart(2, "0")}</span>
+              <h3 className="mt-5 text-[1.2rem] font-semibold leading-snug">{pick(s.title)}</h3>
+              <p className="mt-2 leading-relaxed text-ink-2">{pick(s.body)}</p>
             </motion.li>
           ))}
         </ol>
@@ -357,10 +441,18 @@ export default function Landing() {
               {hi ? "आपकी मंज़ूरी के बिना कुछ भी किचन से बाहर नहीं जाता।" : "Nothing leaves the kitchen without your OK."}
             </h2>
             <ul className="mt-5 space-y-2.5 text-[1.05rem] leading-relaxed text-ink-2">
-              <li>{hi ? "हर बदलाव पहले ड्राफ़्ट बनता है, आप मंज़ूर करते हैं।" : "Every change starts as a draft that you approve."}</li>
-              <li>{hi ? "प्रोमो और ऐड पर पक्की ख़र्च सीमा।" : "Hard spend caps on every promo and ad."}</li>
-              <li>{hi ? "पासवर्ड एन्क्रिप्टेड रहते हैं और AI को नहीं दिखते।" : "Passwords stay encrypted and are never shown to the AI."}</li>
-              <li>{hi ? "हर काम का रिकॉर्ड, और वापस लेने का विकल्प।" : "A record of everything, with undo."}</li>
+              {[
+                { en: "Every change starts as a draft that you approve.", hi: "हर बदलाव पहले ड्राफ़्ट बनता है, आप मंज़ूर करते हैं।" },
+                { en: "Hard spend caps on every promo and ad.", hi: "प्रोमो और ऐड पर पक्की ख़र्च सीमा।" },
+                { en: "Passwords stay encrypted and are never shown to the AI.", hi: "पासवर्ड एन्क्रिप्टेड रहते हैं और AI को नहीं दिखते।" },
+                { en: "Each person sees only what their role needs.", hi: "हर व्यक्ति सिर्फ़ वही देखता है जो उसके काम के लिए ज़रूरी है।" },
+                { en: "A record of everything, with undo.", hi: "हर काम का रिकॉर्ड, और वापस लेने का विकल्प।" },
+              ].map((x) => (
+                <li key={x.en} className="flex gap-3">
+                  <Check aria-hidden className="mt-1.5 size-4 shrink-0 text-leaf" />
+                  {pick(x)}
+                </li>
+              ))}
             </ul>
           </div>
           <div className="ticket mx-auto w-full max-w-sm rotate-[-2deg] px-5 py-5">
@@ -375,6 +467,27 @@ export default function Landing() {
               <span className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-paper">{t("ticket.approve")}</span>
               <span className="rounded-full px-4 py-2 text-sm text-ink shadow-[inset_0_0_0_1px_var(--line)]">{t("ticket.edit")}</span>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="scroll-mt-8 border-t border-line bg-surface">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-24 sm:px-8 lg:grid-cols-[1fr_1.6fr]">
+          <div>
+            {eyebrow(hi ? "सवाल" : "Questions")}
+            <h2 className="font-sign mt-3 max-w-[12ch] text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1]">{hi ? "जो मालिक अक्सर पूछते हैं।" : "What owners ask us."}</h2>
+          </div>
+          <div className="divide-y divide-line border-y border-line">
+            {FAQ.map((f) => (
+              <details key={f.q.en} className="group py-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[1.15rem] font-medium">
+                  {pick(f.q)}
+                  <Plus aria-hidden className="size-5 shrink-0 text-muted transition-transform group-open:rotate-45" />
+                </summary>
+                <p className="mt-3 max-w-[64ch] leading-relaxed text-ink-2">{pick(f.a)}</p>
+              </details>
+            ))}
           </div>
         </div>
       </section>
@@ -400,9 +513,57 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Footer, grouped the same way as the platform */}
       <footer className="bg-curry text-[#eef2ec]/70">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm sm:px-8">
-          <Wordmark className="text-xl text-[#eef2ec]" />
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-8 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+          <div>
+            <Wordmark className="text-2xl text-[#eef2ec]" />
+            <p className="mt-3 max-w-[30ch] text-sm leading-relaxed">{hi ? "रेस्टोरेंट चलाने के लिए एक ही ऐप। हिंदी और अंग्रेज़ी में।" : "The one app to run your restaurant. In Hindi and English."}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-[#eef2ec]">{hi ? "प्लेटफ़ॉर्म" : "Platform"}</p>
+            <ul className="mt-3 space-y-2 text-sm">
+              {PILLARS.map((p) => (
+                <li key={p.id}>
+                  <a href="#platform" className="hover:text-[#eef2ec]">
+                    {pick(p.name)}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-[#eef2ec]">{hi ? "शुरू करें" : "Get started"}</p>
+            <ul className="mt-3 space-y-2 text-sm">
+              <li>
+                <button type="button" onClick={() => setRouterOpen(true)} className="hover:text-[#eef2ec]">
+                  {hi ? "अपना रेस्टोरेंट जोड़ें" : "Set up my restaurant"}
+                </button>
+              </li>
+              <li>
+                <a href="/login" className="hover:text-[#eef2ec]">{hi ? "लॉग इन" : "Log in"}</a>
+              </li>
+              <li>
+                <a href="/login/staff" className="hover:text-[#eef2ec]">{hi ? "स्टाफ़ साइन-इन" : "Staff sign-in"}</a>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-[#eef2ec]">{hi ? "देखें" : "See it"}</p>
+            <ul className="mt-3 space-y-2 text-sm">
+              <li>
+                <button type="button" onClick={openDemo} className="hover:text-[#eef2ec]">
+                  {t("landing.demo")}
+                </button>
+              </li>
+              <li>
+                <a href="/r/rasoi-27" className="hover:text-[#eef2ec]">{hi ? "सैंपल रेस्टोरेंट पेज" : "Sample restaurant page"}</a>
+              </li>
+              <li>
+                <a href="#faq" className="hover:text-[#eef2ec]">{hi ? "सवाल" : "FAQ"}</a>
+              </li>
+            </ul>
+          </div>
         </div>
       </footer>
 
