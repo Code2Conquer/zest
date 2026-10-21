@@ -126,6 +126,11 @@ CREATE TABLE IF NOT EXISTS special_hours (
   id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL, date TEXT NOT NULL, closed INTEGER NOT NULL DEFAULT 0, opens TEXT, closes TEXT, note TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS special_hours_outlet ON special_hours (outlet_id, date);
+CREATE TABLE IF NOT EXISTS consents (
+  id TEXT PRIMARY KEY, brand_id TEXT NOT NULL, phone TEXT NOT NULL, purpose TEXT NOT NULL, granted INTEGER NOT NULL,
+  wording TEXT NOT NULL, source TEXT NOT NULL, actor TEXT NOT NULL, created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS consents_lookup ON consents (brand_id, phone, purpose, created_at);
 CREATE TABLE IF NOT EXISTS rate_limits (key TEXT NOT NULL, window_start INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (key, window_start));
 CREATE TABLE IF NOT EXISTS order_lines (
   id TEXT PRIMARY KEY, order_id TEXT NOT NULL, item_id TEXT, name TEXT NOT NULL, qty INTEGER NOT NULL,

@@ -62,6 +62,24 @@ export const specialHours = sqliteTable("special_hours", {
   note: text("note").notNull().default(""),
 });
 
+export type ConsentPurpose = "whatsapp_marketing" | "sms_marketing" | "whatsapp_transactional";
+
+/**
+ * Every opt-in and opt-out, never edited or deleted: who (phone), for which brand and purpose,
+ * the exact wording they saw, where, and when. The latest row for a purpose decides.
+ */
+export const consents = sqliteTable("consents", {
+  id: text("id").primaryKey().$defaultFn(id),
+  brandId: text("brand_id").notNull(),
+  phone: text("phone").notNull(),
+  purpose: text("purpose").$type<ConsentPurpose>().notNull(),
+  granted: integer("granted", { mode: "boolean" }).notNull(),
+  wording: text("wording").notNull(),
+  source: text("source").notNull(),
+  actor: text("actor").notNull(),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+});
+
 /** Background work, run by /api/jobs/run every minute. */
 export const jobs = sqliteTable("jobs", {
   id: text("id").primaryKey().$defaultFn(id),
