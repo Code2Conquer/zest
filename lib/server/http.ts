@@ -10,6 +10,9 @@ import { currentOutlet } from "./session";
 type Ctx<P> = { params: Promise<P> };
 type Fn<P> = (req: Request, outlet: Outlet, params: P, session: SessionUser | null) => Promise<unknown>;
 
+/** The caller's address, from the first x-forwarded-for entry the host sets. */
+export const clientIp = (req: Request) => req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
+
 export const OWNER: Role[] = ["owner"];
 export const MANAGERS: Role[] = ["owner", "manager"];
 export const FLOOR: Role[] = ["owner", "manager", "cashier"];
