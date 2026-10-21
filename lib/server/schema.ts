@@ -41,6 +41,22 @@ export const memberships = sqliteTable("memberships", {
 const STAFF_CODE_LETTERS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 export const newStaffCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => STAFF_CODE_LETTERS[b % STAFF_CODE_LETTERS.length]).join("");
 
+/** Background work, run by /api/jobs/run every minute. */
+export const jobs = sqliteTable("jobs", {
+  id: text("id").primaryKey().$defaultFn(id),
+  kind: text("kind").notNull(),
+  payload: text("payload", { mode: "json" }).$type<Record<string, unknown>>().notNull().default({}),
+  runAt: text("run_at").notNull(),
+  status: text("status", { enum: ["queued", "running", "done", "failed"] }).notNull().default("queued"),
+  attempts: integer("attempts").notNull().default(0),
+  lastError: text("last_error"),
+  // A running job whose lock has passed was cut off (timeout, crash) and is picked up again.
+  lockedUntil: text("locked_until"),
+  dedupeKey: text("dedupe_key").unique(),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+  finishedAt: text("finished_at"),
+});
+
 export const outlets = sqliteTable("outlets", {
   id: text("id").primaryKey().$defaultFn(id),
   // Set for every outlet once the database is ready (ensureBrands).
@@ -329,6 +345,7 @@ export type Brand = typeof brands.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
 export type MembershipRow = typeof memberships.$inferSelect;
 export type Outlet = typeof outlets.$inferSelect;
+export type JobRow = typeof jobs.$inferSelect;
 export type Connection = typeof connections.$inferSelect;
 export type MenuItemRow = typeof menuItems.$inferSelect;
 export type OrderRow = typeof orders.$inferSelect;

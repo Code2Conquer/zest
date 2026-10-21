@@ -112,6 +112,12 @@ CREATE TABLE IF NOT EXISTS memberships (
 );
 CREATE INDEX IF NOT EXISTS memberships_user ON memberships (user_id);
 CREATE INDEX IF NOT EXISTS memberships_brand ON memberships (brand_id);
+CREATE TABLE IF NOT EXISTS jobs (
+  id TEXT PRIMARY KEY, kind TEXT NOT NULL, payload TEXT NOT NULL DEFAULT '{}', run_at TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'queued', attempts INTEGER NOT NULL DEFAULT 0, last_error TEXT, locked_until TEXT,
+  dedupe_key TEXT UNIQUE, created_at TEXT NOT NULL, finished_at TEXT
+);
+CREATE INDEX IF NOT EXISTS jobs_due ON jobs (status, run_at);
 CREATE TABLE IF NOT EXISTS rate_limits (key TEXT NOT NULL, window_start INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (key, window_start));
 CREATE TABLE IF NOT EXISTS order_lines (
   id TEXT PRIMARY KEY, order_id TEXT NOT NULL, item_id TEXT, name TEXT NOT NULL, qty INTEGER NOT NULL,

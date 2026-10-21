@@ -1,5 +1,6 @@
-name: Sync mail and orders
-# Calls the app's /api/cron every 15 minutes. Needs two repository secrets:
+name: Run background jobs (backup trigger)
+# Calls the app's job runner every 15 minutes, in case the every-minute external scheduler
+# (cron-job.org) misses. Needs two repository secrets:
 #   ZEST_URL     e.g. https://zest-dusky.vercel.app
 #   CRON_SECRET  the same value as CRON_SECRET in Vercel
 on:
@@ -13,6 +14,6 @@ jobs:
       ZEST_URL: ${{ secrets.ZEST_URL }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
     steps:
-      - name: Call /api/cron
+      - name: Call /api/jobs/run
         if: env.ZEST_URL != '' && env.CRON_SECRET != ''
-        run: curl -fsS --max-time 70 -H "Authorization: Bearer $CRON_SECRET" "$ZEST_URL/api/cron"
+        run: curl -fsS --max-time 70 -H "Authorization: Bearer $CRON_SECRET" "$ZEST_URL/api/jobs/run"

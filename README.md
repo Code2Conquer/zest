@@ -114,7 +114,7 @@ Browser (Next.js pages)  ──►  /api/* route handlers  ──►  lib/server
 - **Login.** A signed cookie identifies the restaurant per browser. Phone OTP login comes before launch.
 - **Outlook sign-in.** Gmail is done; Outlook is next if owners ask for it.
 - **Partner-app browser worker**, and real partner API paths (see Connectors).
-- **Scheduling.** Vercel Cron calls `/api/cron` daily (Hobby limit); `.github/workflows/sync.yml` calls it every 15 minutes once the `ZEST_URL` and `CRON_SECRET` repository secrets are set.
+- **Scheduling.** Background work runs as jobs (`lib/server/jobs.ts`): queued rows, claimed with an expiring lock, retried after 1, 5, 25 and 60 minutes, and marked failed after 5 attempts. `/api/jobs/run` queues an order sync per connected outlet every 5 minutes and runs due jobs; call it every minute from a free scheduler such as cron-job.org with `Authorization: Bearer $CRON_SECRET`. `.github/workflows/sync.yml` calls it every 15 minutes as a backup, and Vercel Cron calls `/api/cron` daily to queue inbox syncs and campaign checks. Failed jobs: `SELECT kind, attempts, last_error FROM jobs WHERE status = 'failed'`.
 
 ## Design notes
 
