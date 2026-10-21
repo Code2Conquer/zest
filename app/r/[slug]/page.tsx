@@ -3,7 +3,7 @@
 import { Suspense, use, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
-import { Check, Loader2, Minus, Plus, ShoppingBag, X } from "lucide-react";
+import { Check, Clock, IndianRupee, Loader2, Minus, Plus, Search, ShoppingBag, Star, Utensils, X } from "lucide-react";
 import { LangToggle } from "@/components/bits";
 import { api } from "@/lib/api";
 import { useApp } from "@/lib/state";
@@ -11,20 +11,37 @@ import { useApp } from "@/lib/state";
 // The restaurant's own ordering site. Phone first: browse, add dishes, give a name and number,
 // pick up or eat at the table, and pay by UPI to the restaurant or at the counter.
 
-type Dish = { id: string; name: string; category: string; description: string; veg: boolean; bestseller: boolean; photo: string | null; price: number };
-type Shop = { name: string; area: string; cuisines: string; fssai: string | null; open: boolean; upi: boolean; menu: Dish[] };
+type Dish = { id: string; name: string; category: string; description: string; veg: boolean; bestseller: boolean; photo: string | null; price: number; rating: number | null; votes: number };
+type Shop = {
+  name: string;
+  area: string;
+  locality: string;
+  address: string;
+  cuisines: string[];
+  ratings: { platform: "zomato" | "swiggy"; value: number; count: number }[];
+  costForTwo: { amount: number; estimated: boolean } | null;
+  highlights: string[];
+  photos: string[];
+  pureVeg: boolean;
+  hoursToday: string | null;
+  fssai: string | null;
+  open: boolean;
+  upi: boolean;
+  menu: Dish[];
+};
 type Placed = { orderId: string; number: string; total: number; token: string; upiLink: string | null };
 type Status = { number: string; status: string; total: number; items: string; paymentStatus: "unpaid" | "paid" | null; fulfilment: string | null; table: string | null; upiLink: string | null };
 
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+const PLATFORM = { zomato: "Zomato", swiggy: "Swiggy" } as const;
 
 const STEP: Record<string, { en: string; hi: string }> = {
   new: { en: "Sent to the kitchen", hi: "किचन को भेजा गया" },
-  accepted: { en: "Accepted", hi: "स्वीकार हुआ" },
+  accepted: { en: "Accepted by the restaurant", hi: "रेस्टोरेंट ने स्वीकार किया" },
   preparing: { en: "Being prepared", hi: "बन रहा है" },
   ready: { en: "Ready", hi: "तैयार है" },
-  completed: { en: "Collected. Enjoy!", hi: "ले लिया गया। मज़े करें!" },
-  served: { en: "Served. Enjoy!", hi: "परोसा गया। मज़े करें!" },
+  completed: { en: "Collected. Enjoy your meal!", hi: "ले लिया गया। खाने का मज़ा लें!" },
+  served: { en: "Served. Enjoy your meal!", hi: "परोसा गया। खाने का मज़ा लें!" },
   rejected: { en: "The restaurant couldn't take this order", hi: "रेस्टोरेंट यह ऑर्डर नहीं ले पाया" },
   cancelled: { en: "Cancelled", hi: "कैंसल" },
 };
@@ -39,6 +56,8 @@ function Storefront({ slug }: { slug: string }) {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [checkout, setCheckout] = useState(false);
   const [placed, setPlaced] = useState<Placed | null>(null);
+  const [query, setQuery] = useState("");
+  const [vegOnly, setVegOnly] = useState(false);
 
   useEffect(() => {
     api<Shop>(`/api/storefront/${slug}`).then(setShop, (e: Error) => setError(e.message));
@@ -49,7 +68,11 @@ function Storefront({ slug }: { slug: string }) {
     } catch {}
   }, [slug]);
 
-  const categories = useMemo(() => [...new Set(shop?.menu.map((m) => m.category) ?? [])], [shop]);
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (shop?.menu ?? []).filter((m) => (!vegOnly || m.veg) && (!q || m.name.toLowerCase().includes(q) || m.description.toLowerCase().includes(q)));
+  }, [shop, query, vegOnly]);
+  const categories = useMemo(() => [...new Set(shown.map((m) => m.category))], [shown]);
   const count = Object.values(cart).reduce((s, n) => s + n, 0);
   const total = shop ? Object.entries(cart).reduce((s, [id, n]) => s + (shop.menu.find((m) => m.id === id)?.price ?? 0) * n, 0) : 0;
   const add = (id: string, d: number) => setCart((c) => ({ ...c, [id]: Math.max(0, Math.min(20, (c[id] ?? 0) + d)) }));
@@ -65,6 +88,7 @@ function Storefront({ slug }: { slug: string }) {
     return (
       <OrderPlaced
         slug={slug}
+        shopName={shop.name}
         placed={placed}
         onNew={() => {
           try {
@@ -76,82 +100,236 @@ function Storefront({ slug }: { slug: string }) {
       />
     );
 
+  const [cover, ...more] = shop.photos;
+  const mode = table ? (hi ? `टेबल ${table}` : `Table ${table}`) : hi ? "पिकअप" : "Pickup";
+
   return (
-    <div className="min-h-dvh bg-paper pb-28 text-ink">
-      <header className="bg-curry px-5 pb-6 pt-6 text-[#f4efe6]">
-        <div className="mx-auto flex max-w-xl items-start justify-between gap-4">
-          <div>
-            <p className="text-sm text-[#f4efe6]/60">{shop.area}</p>
-            <h1 className="font-sign mt-1 text-[2.2rem] leading-none">{shop.name}</h1>
-            {shop.cuisines && <p className="mt-2 text-[#f4efe6]/75">{shop.cuisines}</p>}
-            <p className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${shop.open ? "bg-haldi text-ink" : "bg-white/15 text-[#f4efe6]"}`}>
-              {shop.open ? (table ? (hi ? `टेबल ${table} से ऑर्डर` : `Ordering for table ${table}`) : hi ? "पिकअप के लिए ऑर्डर करें" : "Order for pickup") : hi ? "अभी बंद है" : "Closed right now"}
-            </p>
-          </div>
+    <div className="min-h-dvh bg-paper pb-28 text-ink lg:pb-16">
+      {/* Cover photos, as listing pages open */}
+      <div className="relative">
+        <div className="mx-auto grid h-[220px] max-w-6xl gap-1.5 overflow-hidden sm:h-[300px] sm:grid-cols-[2fr_1fr] sm:px-6 sm:pt-6 lg:rounded-b-none">
+          {cover ? (
+            <img src={cover} alt="" className="size-full object-cover sm:rounded-l-2xl max-sm:rounded-none" />
+          ) : (
+            <div className="size-full bg-[radial-gradient(70%_80%_at_30%_30%,#1c3628,#12261b)]" />
+          )}
+          {more.length > 0 && (
+            <div className="hidden grid-rows-2 gap-1.5 sm:grid">
+              {more.slice(0, 2).map((p, i) => (
+                <img key={p} src={p} alt="" className={`size-full object-cover ${i === 0 ? "rounded-tr-2xl" : "rounded-br-2xl"}`} />
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="absolute right-4 top-4 sm:right-8 sm:top-8">
           <LangToggle />
         </div>
-      </header>
+      </div>
 
-      <nav aria-label="Categories" className="sticky top-0 z-10 border-b border-line bg-paper/95 backdrop-blur">
-        <ul className="mx-auto flex max-w-xl gap-2 overflow-x-auto px-5 py-3 text-sm">
-          {categories.map((c) => (
-            <li key={c}>
-              <a href={`#${encodeURIComponent(c)}`} className="block whitespace-nowrap rounded-full bg-surface px-3.5 py-1.5 shadow-[0_0_0_1px_var(--line)]">
-                {c}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <main className="mx-auto max-w-xl px-5">
-        {shop.menu.length === 0 && <p className="py-16 text-center text-muted">{hi ? "मेन्यू अपडेट हो रहा है।" : "The menu is being updated."}</p>}
-        {categories.map((c) => (
-          <section key={c} id={encodeURIComponent(c)} className="scroll-mt-16 pt-8">
-            <h2 className="text-lg font-semibold">{c}</h2>
-            <ul className="mt-2 divide-y divide-line">
-              {shop.menu
-                .filter((m) => m.category === c)
-                .map((m) => (
-                  <li key={m.id} className="flex gap-4 py-4">
-                    <div className="min-w-0 flex-1">
-                      <span className={`food-mark ${m.veg ? "text-veg" : "nonveg text-nonveg"}`} aria-label={m.veg ? "Veg" : "Non-veg"} />
-                      <p className="mt-1 font-medium">{m.name}</p>
-                      <p className="text-sm text-ink-2">{inr(m.price)}</p>
-                      {m.description && <p className="mt-1 line-clamp-2 text-sm text-muted">{m.description}</p>}
-                    </div>
-                    <div className="flex shrink-0 flex-col items-center gap-2">
-                      {m.photo && <img src={m.photo} alt="" width={112} height={84} loading="lazy" className="h-[84px] w-[112px] rounded-xl object-cover" />}
-                      {shop.open &&
-                        (cart[m.id] ? (
-                          <span className="inline-flex items-center gap-3 rounded-lg bg-ink px-2 py-1.5 text-paper">
-                            <button type="button" aria-label={hi ? "एक कम" : "One less"} onClick={() => add(m.id, -1)}>
-                              <Minus aria-hidden className="size-4" />
-                            </button>
-                            <span className="min-w-4 text-center font-medium">{cart[m.id]}</span>
-                            <button type="button" aria-label={hi ? "एक और" : "One more"} onClick={() => add(m.id, 1)}>
-                              <Plus aria-hidden className="size-4" />
-                            </button>
-                          </span>
-                        ) : (
-                          <button type="button" onClick={() => add(m.id, 1)} className="rounded-lg bg-surface px-5 py-1.5 font-medium text-leaf shadow-[0_0_0_1px_var(--line)]">
-                            {hi ? "जोड़ें" : "Add"}
-                          </button>
-                        ))}
-                    </div>
-                  </li>
+      {/* Restaurant details card */}
+      <div className="relative z-10 mx-auto -mt-10 max-w-6xl px-4 sm:-mt-12 sm:px-6">
+        <section className="rounded-3xl bg-surface p-5 shadow-[0_0_0_1px_var(--line),0_18px_40px_-24px_rgb(0_0_0/0.35)] sm:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-5">
+            <div className="min-w-0">
+              <h1 className="text-[clamp(1.8rem,4vw,2.5rem)] font-semibold leading-tight tracking-[-0.03em]">{shop.name}</h1>
+              {shop.cuisines.length > 0 && <p className="mt-1 text-ink-2">{shop.cuisines.join(" · ")}</p>}
+              <p className="mt-0.5 text-sm text-muted">{[shop.address, shop.locality && !shop.address.includes(shop.locality) ? shop.locality : null].filter(Boolean).join(", ") || shop.area}</p>
+            </div>
+            {shop.ratings.length > 0 && (
+              <div className="flex gap-3">
+                {shop.ratings.map((r) => (
+                  <div key={r.platform} className="min-w-[84px] rounded-xl text-center shadow-[0_0_0_1px_var(--line)]">
+                    <p className="inline-flex w-full items-center justify-center gap-1 rounded-t-xl bg-veg py-1 text-[1.05rem] font-semibold text-white">
+                      {r.value.toFixed(1)}
+                      <Star aria-hidden className="size-3.5 fill-current" />
+                    </p>
+                    <p className="px-2 pt-1 text-[0.75rem] font-medium">{PLATFORM[r.platform]}</p>
+                    <p className="px-2 pb-1.5 text-[0.7rem] text-muted">
+                      {r.count.toLocaleString("en-IN")} {hi ? "रेटिंग" : "ratings"}
+                    </p>
+                  </div>
                 ))}
-            </ul>
-          </section>
-        ))}
-        <p className="mt-10 text-center text-xs text-muted">
-          {shop.fssai ? `FSSAI ${shop.fssai} · ` : ""}
-          {hi ? "क़ीमतों में लागू टैक्स शामिल। Zest द्वारा ऑर्डरिंग।" : "Prices include taxes where applicable. Ordering by Zest."}
-        </p>
-      </main>
+              </div>
+            )}
+          </div>
+
+          <ul className="mt-5 flex flex-wrap gap-2 text-sm">
+            <li className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium ${shop.open ? "bg-leaf-soft text-leaf" : "bg-chilli-soft text-chilli"}`}>
+              <Clock aria-hidden className="size-3.5" />
+              {shop.open ? (hi ? "अभी खुला" : "Open now") : hi ? "अभी बंद" : "Closed now"}
+              {shop.hoursToday && <span className="font-normal opacity-80">· {shop.hoursToday}</span>}
+            </li>
+            {shop.costForTwo && (
+              <li className="inline-flex items-center gap-1.5 rounded-full bg-sunken px-3 py-1.5">
+                <IndianRupee aria-hidden className="size-3.5" />
+                {shop.costForTwo.estimated ? "≈ " : ""}
+                {inr(shop.costForTwo.amount)} {hi ? "दो लोगों के लिए" : "for two"}
+              </li>
+            )}
+            {shop.pureVeg && (
+              <li className="inline-flex items-center gap-1.5 rounded-full bg-sunken px-3 py-1.5 text-veg">
+                <span className="food-mark scale-75" aria-hidden />
+                {hi ? "शुद्ध शाकाहारी" : "Pure veg"}
+              </li>
+            )}
+            <li className="inline-flex items-center gap-1.5 rounded-full bg-turmeric-soft px-3 py-1.5 font-medium">
+              {table ? <Utensils aria-hidden className="size-3.5" /> : <ShoppingBag aria-hidden className="size-3.5" />}
+              {table ? (hi ? `टेबल ${table} से ऑर्डर` : `Ordering for table ${table}`) : hi ? "पिकअप के लिए ऑर्डर" : "Order for pickup"}
+            </li>
+            {shop.highlights.slice(0, 3).map((h) => (
+              <li key={h} className="rounded-full px-3 py-1.5 text-ink-2 shadow-[inset_0_0_0_1px_var(--line)]">
+                {h}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
+      {/* Search and filters */}
+      <div className="sticky top-0 z-20 mt-4 border-b border-line bg-paper/95 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+          <label className="relative min-w-0 flex-1">
+            <span className="sr-only">{hi ? "मेन्यू में खोजें" : "Search the menu"}</span>
+            <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={hi ? "डिश खोजें" : "Search dishes"} className="w-full rounded-full bg-surface py-2 pl-9 pr-4 shadow-[0_0_0_1px_var(--line)] outline-none focus:shadow-[0_0_0_2px_var(--ink)]" />
+          </label>
+          {!shop.pureVeg && (
+            <button type="button" aria-pressed={vegOnly} onClick={() => setVegOnly((v) => !v)} className={`inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm ${vegOnly ? "bg-leaf-soft text-leaf shadow-[0_0_0_1.5px_var(--veg)]" : "bg-surface shadow-[0_0_0_1px_var(--line)]"}`}>
+              <span className="food-mark text-veg" aria-hidden />
+              {hi ? "सिर्फ़ वेज" : "Veg only"}
+            </button>
+          )}
+        </div>
+        <nav aria-label={hi ? "श्रेणियाँ" : "Categories"} className="mx-auto max-w-6xl lg:hidden">
+          <ul className="flex gap-2 overflow-x-auto px-4 pb-3 text-sm sm:px-6">
+            {categories.map((c) => (
+              <li key={c}>
+                <a href={`#${encodeURIComponent(c)}`} className="block whitespace-nowrap rounded-full bg-surface px-3.5 py-1.5 shadow-[0_0_0_1px_var(--line)]">
+                  {c} <span className="text-muted">{shown.filter((m) => m.category === c).length}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 pt-2 sm:px-6 lg:grid-cols-[200px_minmax(0,1fr)_300px]">
+        {/* Categories, desktop */}
+        <nav aria-label={hi ? "श्रेणियाँ" : "Categories"} className="hidden lg:block">
+          <ul className="sticky top-24 space-y-0.5 border-r border-line pr-4 pt-6 text-[0.95rem]">
+            {categories.map((c) => (
+              <li key={c}>
+                <a href={`#${encodeURIComponent(c)}`} className="flex justify-between rounded-lg px-3 py-2 text-ink-2 hover:bg-surface hover:text-ink">
+                  <span>{c}</span>
+                  <span className="text-muted">{shown.filter((m) => m.category === c).length}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {/* Menu */}
+        <main>
+          {shop.menu.length === 0 && <p className="py-16 text-center text-muted">{hi ? "मेन्यू अपडेट हो रहा है।" : "The menu is being updated."}</p>}
+          {shop.menu.length > 0 && shown.length === 0 && <p className="py-16 text-center text-muted">{hi ? "कोई डिश नहीं मिली।" : "No dishes match."}</p>}
+          {categories.map((c) => (
+            <section key={c} id={encodeURIComponent(c)} className="scroll-mt-36 pt-6">
+              <h2 className="text-xl font-semibold tracking-[-0.01em]">
+                {c} <span className="text-base font-normal text-muted">({shown.filter((m) => m.category === c).length})</span>
+              </h2>
+              <ul className="mt-2 divide-y divide-dashed divide-line">
+                {shown
+                  .filter((m) => m.category === c)
+                  .map((m) => (
+                    <li key={m.id} className="flex gap-5 py-6">
+                      <div className="min-w-0 flex-1">
+                        <p className="flex items-center gap-2">
+                          <span className={`food-mark ${m.veg ? "text-veg" : "nonveg text-nonveg"}`} aria-label={m.veg ? "Veg" : "Non-veg"} />
+                          {m.bestseller && <span className="rounded bg-turmeric-soft px-1.5 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-ink">{hi ? "बेस्टसेलर" : "Bestseller"}</span>}
+                        </p>
+                        <h3 className="mt-1.5 text-[1.05rem] font-semibold">{m.name}</h3>
+                        <p className="mt-0.5 font-medium">{inr(m.price)}</p>
+                        {m.rating && (
+                          <p className="mt-1 inline-flex items-center gap-1 text-sm text-ink-2">
+                            <Star aria-hidden className="size-3.5 fill-turmeric text-turmeric" />
+                            {m.rating.toFixed(1)} <span className="text-muted">({m.votes.toLocaleString("en-IN")})</span>
+                          </p>
+                        )}
+                        {m.description && <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted">{m.description}</p>}
+                      </div>
+                      <div className="relative w-[132px] shrink-0 pb-4">
+                        {m.photo ? <img src={m.photo} alt="" width={132} height={132} loading="lazy" className="size-[132px] rounded-2xl object-cover" /> : <div className="h-8" />}
+                        {shop.open && (
+                          <div className={`${m.photo ? "absolute inset-x-3 bottom-0" : ""}`}>
+                            {cart[m.id] ? (
+                              <span className="flex items-center justify-between rounded-lg bg-surface px-2 py-1.5 font-semibold text-leaf shadow-[0_0_0_1px_var(--line),0_6px_14px_-8px_rgb(0_0_0/0.4)]">
+                                <button type="button" aria-label={hi ? "एक कम" : "One less"} onClick={() => add(m.id, -1)} className="px-1">
+                                  <Minus aria-hidden className="size-4" />
+                                </button>
+                                <span>{cart[m.id]}</span>
+                                <button type="button" aria-label={hi ? "एक और" : "One more"} onClick={() => add(m.id, 1)} className="px-1">
+                                  <Plus aria-hidden className="size-4" />
+                                </button>
+                              </span>
+                            ) : (
+                              <button type="button" onClick={() => add(m.id, 1)} className="w-full rounded-lg bg-surface py-1.5 font-semibold text-leaf shadow-[0_0_0_1px_var(--line),0_6px_14px_-8px_rgb(0_0_0/0.4)] hover:bg-leaf-soft">
+                                {hi ? "जोड़ें" : "ADD"}
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            </section>
+          ))}
+          <p className="mt-10 border-t border-line pt-6 text-center text-xs text-muted">
+            {shop.fssai ? `FSSAI ${shop.fssai} · ` : ""}
+            {hi ? "क़ीमतों में लागू टैक्स शामिल।" : "Prices include taxes where applicable."} {hi ? "Zest द्वारा ऑर्डरिंग।" : "Ordering by Zest."}
+          </p>
+        </main>
+
+        {/* Cart, desktop */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-24 mt-6 rounded-2xl bg-surface p-5 shadow-[0_0_0_1px_var(--line)]">
+            <h2 className="font-semibold">{hi ? "आपका ऑर्डर" : "Your order"}</h2>
+            <p className="text-sm text-muted">{mode}</p>
+            {count === 0 ? (
+              <p className="mt-6 text-center text-sm text-muted">{hi ? "डिश जोड़ें, वे यहाँ दिखेंगी।" : "Add dishes and they'll show here."}</p>
+            ) : (
+              <>
+                <ul className="mt-4 space-y-2 text-sm">
+                  {Object.entries(cart)
+                    .filter(([, n]) => n > 0)
+                    .map(([id, n]) => {
+                      const m = shop.menu.find((x) => x.id === id)!;
+                      return (
+                        <li key={id} className="flex justify-between gap-3">
+                          <span className="min-w-0">
+                            <span className={`food-mark mr-1.5 inline-grid scale-75 align-middle ${m.veg ? "text-veg" : "nonveg text-nonveg"}`} aria-hidden />
+                            {n} × {m.name}
+                          </span>
+                          <span className="shrink-0">{inr(m.price * n)}</span>
+                        </li>
+                      );
+                    })}
+                </ul>
+                <p className="mt-4 flex justify-between border-t border-line pt-3 font-semibold">
+                  <span>{hi ? "कुल" : "Total"}</span>
+                  <span>{inr(total)}</span>
+                </p>
+                <button type="button" onClick={() => setCheckout(true)} className="mt-4 w-full rounded-xl bg-ink py-3 font-medium text-paper">
+                  {hi ? "आगे बढ़ें" : "Checkout"}
+                </button>
+              </>
+            )}
+          </div>
+        </aside>
+      </div>
 
       {count > 0 && !checkout && (
-        <button type="button" onClick={() => setCheckout(true)} className="fixed inset-x-4 bottom-4 z-20 mx-auto flex max-w-xl items-center justify-between rounded-2xl bg-ink px-5 py-4 text-paper shadow-xl">
+        <button type="button" onClick={() => setCheckout(true)} className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-xl items-center justify-between rounded-2xl bg-ink px-5 py-4 text-paper shadow-xl lg:hidden">
           <span className="inline-flex items-center gap-2">
             <ShoppingBag aria-hidden className="size-5" />
             {count} {hi ? "आइटम" : count === 1 ? "item" : "items"} · {inr(total)}
@@ -265,7 +443,7 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
   );
 }
 
-function OrderPlaced({ slug, placed, onNew }: { slug: string; placed: Placed; onNew: () => void }) {
+function OrderPlaced({ slug, shopName, placed, onNew }: { slug: string; shopName: string; placed: Placed; onNew: () => void }) {
   const { lang, pick } = useApp();
   const hi = lang === "hi";
   const [status, setStatus] = useState<Status | null>(null);
@@ -290,7 +468,8 @@ function OrderPlaced({ slug, placed, onNew }: { slug: string; placed: Placed; on
         <span className="mx-auto grid size-14 place-items-center rounded-full bg-leaf-soft text-leaf">
           <Check aria-hidden className="size-7" />
         </span>
-        <h1 className="mt-4 text-2xl font-semibold">{hi ? "ऑर्डर मिल गया" : "Order received"}</h1>
+        <p className="mt-4 text-sm font-medium uppercase tracking-[0.08em] text-muted">{shopName}</p>
+        <h1 className="mt-1 text-2xl font-semibold">{hi ? "ऑर्डर मिल गया" : "Order received"}</h1>
         <p className="mt-1 text-ink-2">
           {hi ? "ऑर्डर नंबर" : "Order"} <span className="font-semibold">{placed.number}</span> · {inr(placed.total)}
         </p>
@@ -310,11 +489,9 @@ function OrderPlaced({ slug, placed, onNew }: { slug: string; placed: Placed; on
           </div>
         )}
 
-        {done && (
-          <button type="button" onClick={onNew} className="mt-6 rounded-full px-6 py-3 font-medium shadow-[inset_0_0_0_1.5px_var(--ink)]">
-            {hi ? "नया ऑर्डर" : "Order again"}
-          </button>
-        )}
+        <button type="button" onClick={onNew} className="mt-6 rounded-full px-6 py-3 font-medium shadow-[inset_0_0_0_1.5px_var(--ink)]">
+          {done ? (hi ? "फिर से ऑर्डर करें" : "Order again") : hi ? "मेन्यू पर वापस" : "Back to the menu"}
+        </button>
       </div>
     </div>
   );

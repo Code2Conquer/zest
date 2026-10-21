@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowRight, BookOpen, ChefHat, IndianRupee, Play, ReceiptText, ShieldCheck, Star, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, ChefHat, IndianRupee, Play, ReceiptText, ShieldCheck, Star, TrendingUp, Users } from "lucide-react";
 import { LangToggle, Wordmark } from "@/components/bits";
 import { DishStrip } from "@/components/landing/dish-strip";
 import { HeroStage } from "@/components/landing/hero-stage";
@@ -90,7 +90,7 @@ export default function Landing() {
           <Wordmark className="text-[1.9rem] text-[#f4efe6] [&_.bg-turmeric]:bg-haldi" />
           <nav aria-label="Sections" className="hidden items-center gap-8 text-[0.95rem] text-[#f4efe6]/80 md:flex">
             <a href="#product" className="hover:text-[#f4efe6]">{hi ? "प्रोडक्ट" : "Product"}</a>
-            <a href="#own" className="hover:text-[#f4efe6]">{hi ? "अपने ऑर्डर" : "Own orders"}</a>
+            <a href="#problems" className="hover:text-[#f4efe6]">{hi ? "क्या आसान होता है" : "What gets easier"}</a>
             <a href="#agents" className="hover:text-[#f4efe6]">{hi ? "एजेंट" : "Agents"}</a>
             <a href="#journey" className="hover:text-[#f4efe6]">{hi ? "कैसे काम करता है" : "How it works"}</a>
           </nav>
@@ -106,7 +106,7 @@ export default function Landing() {
           <div>
             <motion.p {...rise(0)} className="inline-flex items-center gap-2 rounded-full bg-white/[0.07] px-3.5 py-1.5 text-sm text-[#f4efe6]/80 ring-1 ring-white/10">
               <span aria-hidden className="size-1.5 rounded-full bg-haldi" />
-              {hi ? "Zomato, Swiggy, डाइन-इन और आपके अपने ऑर्डर" : "Zomato, Swiggy, dine-in and your own orders"}
+              {hi ? "Zomato, Swiggy, डाइन-इन और सीधे ऑर्डर, एक जगह" : "Zomato, Swiggy, dine-in and direct orders, in one place"}
             </motion.p>
             <motion.h1 {...rise(0.08)} className="font-sign mt-6 max-w-[11ch] text-[clamp(3rem,7.6vw,6rem)] leading-[0.9]">
               {hi ? (
@@ -121,8 +121,8 @@ export default function Landing() {
             </motion.h1>
             <motion.p {...rise(0.2)} className="mt-7 max-w-[46ch] text-[1.2rem] leading-relaxed text-[#f4efe6]/75">
               {hi
-                ? "आपके पूरे रेस्टोरेंट के लिए एक ऐप: Zomato और Swiggy, टेबल, और बिना कमीशन वाली आपकी अपनी ऑर्डरिंग साइट। AI एजेंट मेन्यू, ऑर्डर, रिव्यू और पेआउट संभालते हैं, हिंदी या अंग्रेज़ी में।"
-                : "One app for your whole restaurant: Zomato and Swiggy, your tables, and your own commission-free ordering site. AI agents handle the menu, orders, reviews and payouts, in Hindi or English."}
+                ? "Zomato और Swiggy पर बिक्री, टेबल पर मेहमान, और रेगुलर ग्राहकों के फ़ोन और WhatsApp ऑर्डर: Zest सब एक ऐप में चलाता है। AI एजेंट मेन्यू, ऑर्डर, रिव्यू और पेआउट संभालते हैं, हिंदी या अंग्रेज़ी में।"
+                : "Selling on Zomato and Swiggy, guests at your tables, regulars ordering by phone and WhatsApp: Zest runs all of it from one app. AI agents keep the menu, orders, reviews and payouts in order, in Hindi or English."}
             </motion.p>
             <motion.div {...rise(0.32)} className="mt-10 flex flex-wrap items-center gap-3">
               <button
@@ -178,7 +178,7 @@ export default function Landing() {
             ["Zomato", "var(--ch-zomato)"],
             ["Swiggy", "var(--ch-swiggy)"],
             [hi ? "डाइन-इन" : "Dine-in", "var(--ch-dine)"],
-            [hi ? "आपकी अपनी साइट" : "Your own site", "var(--ch-direct)"],
+            [hi ? "आपका अपना पेज" : "Your own page", "var(--ch-direct)"],
             ["WhatsApp", "var(--veg)"],
             ["Gmail", "var(--ink-2)"],
             ["Petpooja", "var(--ink-2)"],
@@ -202,45 +202,74 @@ export default function Landing() {
         <Showcase />
       </section>
 
-      {/* All-in-one: the restaurant's own orders, next to the platforms */}
-      <section id="own" className="scroll-mt-8 border-y border-line bg-surface">
+      {/* The problems Zest takes off an owner's plate */}
+      <section id="problems" className="scroll-mt-8 border-y border-line bg-surface">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-[0.1em] text-muted">{hi ? "सब कुछ एक ऐप में" : "All in one"}</p>
-              <h2 className="font-sign mt-2 max-w-[18ch] text-[clamp(2rem,4.4vw,3.4rem)] leading-[1]">{hi ? "अपने ऑर्डर, बिना कमीशन।" : "Your own orders, no commission."}</h2>
-              <p className="mt-4 max-w-[58ch] text-lg leading-relaxed text-ink-2">
-                {hi
-                  ? "Zomato और Swiggy के साथ-साथ आपकी अपनी ऑर्डरिंग साइट। ग्राहक पिकअप या टेबल से ऑर्डर करते हैं और सीधे आपको UPI से भुगतान करते हैं।"
-                  : "Next to Zomato and Swiggy, your own ordering site. Customers order for pickup or from their table and pay you directly by UPI."}
-              </p>
-            </div>
-            <a href="/r/rasoi-27" className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 font-medium text-paper">
-              {hi ? "सैंपल साइट से ऑर्डर करके देखें" : "Try ordering from the sample"}
-              <ArrowRight aria-hidden className="size-4" />
-            </a>
-          </div>
+          <p className="text-sm font-medium uppercase tracking-[0.1em] text-muted">{hi ? "क्या आसान होता है" : "What gets easier"}</p>
+          <h2 className="font-sign mt-2 max-w-[20ch] text-[clamp(2rem,4.4vw,3.4rem)] leading-[1]">{hi ? "काउंटर के पीछे का हर रोज़ का काम।" : "The everyday work behind the counter."}</h2>
+          <p className="mt-4 max-w-[60ch] text-lg leading-relaxed text-ink-2">
+            {hi
+              ? "Zomato और Swiggy आपके ग्राहक लाते हैं। बाक़ी सब, पाँच ऐप, तीन टैबलेट, फ़ोन पर ऑर्डर और ईमेल में पेआउट, आपके ज़िम्मे रहता है। Zest वही सँभालता है।"
+              : "Zomato and Swiggy bring you customers. Everything else lands on you: five apps, three tablets, orders on the phone and payouts buried in email. That's the part Zest handles."}
+          </p>
           <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {(
               [
-                [ReceiptText, { en: "Your ordering site", hi: "आपकी ऑर्डरिंग साइट" }, { en: "Your menu at your own link and table QR codes. Pay by UPI to you, or at the counter.", hi: "आपके लिंक और टेबल QR पर आपका मेन्यू। UPI से सीधे आपको, या काउंटर पर भुगतान।" }, false],
-                [ChefHat, { en: "One live order board", hi: "एक लाइव ऑर्डर बोर्ड" }, { en: "Zomato, Swiggy, dine-in and your own orders appear together within seconds.", hi: "Zomato, Swiggy, डाइन-इन और आपके अपने ऑर्डर, सेकंडों में एक साथ।" }, false],
-                [ShieldCheck, { en: "Staff sign-in and roles", hi: "स्टाफ़ साइन-इन और रोल" }, { en: "Owners use Google; kitchen and counter staff use a PIN and see only their screen.", hi: "मालिक Google से; किचन और काउंटर स्टाफ़ PIN से, और सिर्फ़ अपनी स्क्रीन देखते हैं।" }, false],
-                [BookOpen, { en: "Hours and holidays", hi: "समय और छुट्टियाँ" }, { en: "Set opening hours once, including late nights and festival closures.", hi: "एक बार समय सेट करें, देर रात और त्योहार की छुट्टी समेत।" }, false],
-                [Star, { en: "Your customer list", hi: "आपकी ग्राहक सूची" }, { en: "Every direct order adds the customer, so regulars are yours, not the platform's.", hi: "हर सीधा ऑर्डर ग्राहक को जोड़ता है, ताकि रेगुलर आपके रहें, प्लेटफ़ॉर्म के नहीं।" }, false],
-                [TrendingUp, { en: "WhatsApp ordering, loyalty, Google reviews", hi: "WhatsApp ऑर्डर, लॉयल्टी, Google रिव्यू" }, { en: "Next: order on WhatsApp, points for regulars, and more Google reviews.", hi: "आगे: WhatsApp पर ऑर्डर, रेगुलर के लिए पॉइंट, और ज़्यादा Google रिव्यू।" }, true],
+                [ReceiptText, { en: "Orders come from everywhere", hi: "ऑर्डर हर तरफ़ से आते हैं" }, { en: "Zomato, Swiggy, your tables, calls and WhatsApp land on one live board, so nothing is missed in the rush.", hi: "Zomato, Swiggy, टेबल, फ़ोन और WhatsApp, सब एक लाइव बोर्ड पर, ताकि भीड़ में कुछ न छूटे।" }],
+                [Users, { en: "Regulars have no easy way to order from you", hi: "रेगुलर के पास सीधे ऑर्डर का आसान तरीक़ा नहीं" }, { en: "Give them a page of your own to order from, for pickup or from their table, and keep your listings as they are.", hi: "उन्हें अपना एक पेज दें, पिकअप या टेबल से ऑर्डर के लिए, और आपकी लिस्टिंग वैसे ही चलती रहें।" }],
+                [IndianRupee, { en: "Payouts are hard to read", hi: "पेआउट समझना मुश्किल" }, { en: "Statements are read from your email and explained line by line: sales, fees, ads and deductions.", hi: "स्टेटमेंट आपके ईमेल से पढ़े जाते हैं और एक-एक लाइन समझाई जाती है: बिक्री, फ़ीस, ऐड और कटौती।" }],
+                [Star, { en: "Reviews pile up unanswered", hi: "रिव्यू का जवाब नहीं हो पाता" }, { en: "A reply to every review is drafted in your voice. You read it and approve.", hi: "हर रिव्यू का जवाब आपके अंदाज़ में तैयार। आप पढ़कर मंज़ूर करें।" }],
+                [BookOpen, { en: "The menu drifts out of sync", hi: "मेन्यू हर जगह अलग हो जाता है" }, { en: "One menu for every platform and your own page. Mark a dish out of stock once and it's off everywhere.", hi: "हर प्लेटफ़ॉर्म और आपके पेज के लिए एक मेन्यू। एक बार आउट ऑफ़ स्टॉक करें, हर जगह बंद।" }],
+                [ShieldCheck, { en: "Staff need access, not your password", hi: "स्टाफ़ को एक्सेस चाहिए, आपका पासवर्ड नहीं" }, { en: "Kitchen and counter staff sign in with a PIN and see only their screen. You stay in charge.", hi: "किचन और काउंटर स्टाफ़ PIN से साइन इन करते हैं और सिर्फ़ अपनी स्क्रीन देखते हैं। कंट्रोल आपके पास।" }],
               ] as const
-            ).map(([Icon, title, body, soon]) => (
+            ).map(([Icon, title, body]) => (
               <li key={title.en} className="rounded-2xl bg-paper p-6 shadow-[0_0_0_1px_var(--line)]">
-                <div className="flex items-center justify-between">
-                  <Icon aria-hidden className="size-6 text-ink-2" />
-                  {soon && <span className="rounded-full bg-turmeric-soft px-2.5 py-0.5 text-xs font-medium text-ink">{hi ? "आगे आ रहा है" : "Coming next"}</span>}
-                </div>
+                <Icon aria-hidden className="size-6 text-ink-2" />
                 <h3 className="mt-4 text-lg font-semibold">{pick(title)}</h3>
                 <p className="mt-1.5 leading-relaxed text-ink-2">{pick(body)}</p>
               </li>
             ))}
           </ul>
+
+          {/* A page of your own, next to your listings */}
+          <div id="own" className="mt-16 grid scroll-mt-8 items-center gap-8 rounded-3xl bg-curry p-8 text-[#f4efe6] sm:p-10 lg:grid-cols-[1.2fr_1fr]">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.1em] text-[#f4efe6]/60">{hi ? "आपका अपना पेज" : "Your own page"}</p>
+              <h3 className="font-sign mt-2 max-w-[18ch] text-[clamp(1.8rem,3.6vw,2.8rem)] leading-[1]">{hi ? "अपनी लिस्टिंग के साथ, अपना एक पेज।" : "A page of your own, next to your listings."}</h3>
+              <p className="mt-4 max-w-[52ch] leading-relaxed text-[#f4efe6]/80">
+                {hi
+                  ? "जो ग्राहक पहले से आपको जानते हैं, फ़ोन करते हैं, WhatsApp करते हैं या टेबल पर बैठे हैं, वे आपके पेज से ऑर्डर करते हैं। मेन्यू, फ़ोटो, रेटिंग और क़ीमतें आपकी लिस्टिंग जैसी, भुगतान UPI से या काउंटर पर। Zomato और Swiggy पर आपका कारोबार वैसे ही चलता रहता है।"
+                  : "Customers who already know you, the ones who call, message or sit at your tables, order from your page: your menu, photos, ratings and prices, laid out like your listings, paid by UPI or at the counter. Your business on Zomato and Swiggy carries on as it is."}
+              </p>
+              <ul className="mt-5 space-y-1.5 text-[#f4efe6]/85">
+                {[
+                  { en: "A link and QR code for your counter, bills and tables", hi: "काउंटर, बिल और टेबल के लिए लिंक और QR कोड" },
+                  { en: "Orders arrive on the same live board as everything else", hi: "ऑर्डर उसी लाइव बोर्ड पर आते हैं" },
+                  { en: "A customer list that builds itself as people order", hi: "ऑर्डर के साथ अपने-आप बनती ग्राहक सूची" },
+                ].map((x) => (
+                  <li key={x.en} className="flex gap-2">
+                    <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-haldi" />
+                    {pick(x)}
+                  </li>
+                ))}
+              </ul>
+              <a href="/r/rasoi-27" className="mt-7 inline-flex items-center gap-2 rounded-full bg-haldi px-6 py-3 font-medium text-[#17201c] hover:bg-[#f6c25a]">
+                {hi ? "सैंपल रेस्टोरेंट का पेज देखें" : "See a sample restaurant page"}
+                <ArrowRight aria-hidden className="size-4" />
+              </a>
+            </div>
+            <ul className="grid gap-3 text-sm">
+              {[
+                { t: { en: "Coming next", hi: "आगे आ रहा है" }, d: { en: "Ordering in a WhatsApp chat, points for regulars, and asking happy guests for a Google review.", hi: "WhatsApp चैट में ऑर्डर, रेगुलर के लिए पॉइंट, और ख़ुश मेहमानों से Google रिव्यू।" } },
+                { t: { en: "Works alongside", hi: "साथ में चलता है" }, d: { en: "Your Zomato and Swiggy listings, your POS if you have one, and the partner apps you already use.", hi: "आपकी Zomato और Swiggy लिस्टिंग, आपका POS अगर है, और पार्टनर ऐप जो आप पहले से इस्तेमाल करते हैं।" } },
+              ].map((x) => (
+                <li key={x.t.en} className="rounded-2xl bg-white/5 p-5 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.1)]">
+                  <p className="font-medium text-haldi">{pick(x.t)}</p>
+                  <p className="mt-1 leading-relaxed text-[#f4efe6]/75">{pick(x.d)}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -358,7 +387,7 @@ export default function Landing() {
           <div>
             <h2 className="font-sign max-w-[12ch] text-[clamp(2.2rem,5vw,3.8rem)] leading-[0.95]">{t("landing.title")}</h2>
             <p className="mt-4 max-w-[44ch] text-lg leading-relaxed text-[#f4efe6]/75">
-              {hi ? "Google से साइन इन करें और दो मिनट में शुरू करें। ऑर्डरिंग साइट मुफ़्त, कोई POS या नया हार्डवेयर नहीं चाहिए।" : "Sign in with Google and start in two minutes. Your ordering site is included; no POS or new hardware needed."}
+              {hi ? "Google से साइन इन करें और दो मिनट में शुरू करें। कोई POS या नया हार्डवेयर नहीं चाहिए।" : "Sign in with Google and start in two minutes. No POS or new hardware needed."}
             </p>
             <button type="button" onClick={openDemo} className="mt-8 inline-flex items-center gap-2 text-[#f4efe6]/80 underline-offset-4 hover:text-[#f4efe6] hover:underline">
               <Play aria-hidden className="size-3.5 fill-current" />

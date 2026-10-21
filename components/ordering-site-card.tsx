@@ -38,8 +38,8 @@ export function OrderingSiteCard() {
       </div>
       <p className="mt-0.5 max-w-[60ch] text-sm text-muted">
         {hi
-          ? "बिना कमीशन के सीधे ऑर्डर: पिकअप, या टेबल के QR से। ग्राहक UPI से सीधे आपको या काउंटर पर भुगतान करते हैं।"
-          : "Commission-free orders straight to you: pickup, or from a table's QR code. Customers pay you directly by UPI, or at the counter."}
+          ? "आपके रेगुलर और टेबल पर बैठे मेहमानों के लिए आपका अपना ऑर्डरिंग पेज: पिकअप, या टेबल के QR से। ग्राहक UPI से सीधे आपको या काउंटर पर भुगतान करते हैं।"
+          : "Your own ordering page for regulars and guests at your tables: pickup, or from a table's QR code. Customers pay you by UPI, or at the counter."}
       </p>
       <div className="mt-4 flex flex-wrap gap-5 rounded-2xl bg-surface p-5 shadow-[0_0_0_1px_var(--line)]">
         {qr && <div aria-hidden className="size-28 shrink-0 [&_svg]:size-full" dangerouslySetInnerHTML={{ __html: qr.svg }} />}

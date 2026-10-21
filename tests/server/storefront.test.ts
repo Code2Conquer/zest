@@ -173,3 +173,34 @@ describe("ordering routes", () => {
     expect(((await res.json()) as { status: string }).status).toBe("accepted");
   });
 });
+
+describe("restaurant page details", () => {
+  it("uses the listing's price for two when there is one", async () => {
+    const { outlet } = await shop({
+      cuisines: "North Indian, Biryani",
+      ratings: { zomato: { value: 4.3, count: 1200, change: 0 } },
+      listingData: { zomato: { costForTwo: 700, photos: ["https://x/cover.jpg"], highlights: ["Pure veg"], address: "12 MG Road", locality: "Indiranagar" } as never },
+    });
+    const s = await getStorefront(outlet.slug!);
+    expect(s.costForTwo).toEqual({ amount: 700, estimated: false });
+    expect(s.cuisines).toEqual(["North Indian", "Biryani"]);
+    expect(s.ratings).toEqual([{ platform: "zomato", value: 4.3, count: 1200 }]);
+    expect(s.photos[0]).toBe("https://x/cover.jpg");
+    expect(s.address).toBe("12 MG Road");
+  });
+
+  it("estimates the price for two from the menu otherwise", async () => {
+    const { outlet } = await shop();
+    const s = await getStorefront(outlet.slug!);
+    // Median price ₹152 (55 and 249) × 2.5, to the nearest ₹50.
+    expect(s.costForTwo).toEqual({ amount: 400, estimated: true });
+  });
+
+  it("says when it closes today", async () => {
+    const { outlet } = await shop();
+    await setHours(outlet.id, [0, 1, 2, 3, 4, 5, 6].map((d) => ({ weekday: d, opens: "00:00", closes: "23:59" })), []);
+    const s = await getStorefront(outlet.slug!);
+    expect(s.open).toBe(true);
+    expect(s.hoursToday).toBe("12:00 am – 11:59 pm");
+  });
+});

@@ -53,19 +53,54 @@ async function openNow(outletId: string) {
   return isOpenAt(weekly, special, new Date(), "web");
 }
 
+const clock = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h < 12 ? "am" : "pm"}`;
+};
+
+/** Today's opening spans in India time, e.g. "11:00 am – 11:30 pm"; null when no hours are set or closed today. */
+async function hoursToday(outletId: string): Promise<string | null> {
+  const { weekly, special } = await getHours(outletId);
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit", weekday: "short" }).formatToParts(new Date()).map((p) => [p.type, p.value]));
+  const date = `${parts.year}-${parts.month}-${parts.day}`;
+  const exception = special.find((x) => x.date === date);
+  const spans = exception ? (exception.closed || !exception.opens || !exception.closes ? [] : [{ opens: exception.opens, closes: exception.closes }]) : weekly.filter((h) => h.weekday === ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(parts.weekday) && !h.channel);
+  return spans.length ? spans.map((h) => `${clock(h.opens)} – ${clock(h.closes)}`).join(", ") : null;
+}
+
+/** "Price for two" as listing pages show it: the platform's figure, or about 2.5× the median dish price. */
+function costForTwo(listing: number | null | undefined, prices: number[]): { amount: number; estimated: boolean } | null {
+  if (listing) return { amount: listing, estimated: false };
+  if (!prices.length) return null;
+  const sorted = [...prices].sort((a, b) => a - b);
+  const mid = sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+  return { amount: Math.round((mid * 2.5) / 50) * 50, estimated: true };
+}
+
 export async function getStorefront(slug: string) {
   const o = await shopBySlug(slug);
-  const menu = await db.select().from(menuItems).where(eq(menuItems.outletId, o.id)).orderBy(asc(menuItems.sort));
+  const all = await db.select().from(menuItems).where(eq(menuItems.outletId, o.id)).orderBy(asc(menuItems.sort));
+  const menu = all.filter((m) => Object.values(m.available).some(Boolean));
+  const listings = Object.values(o.listingData ?? {}).filter(Boolean);
+  const pick = <T>(f: (l: (typeof listings)[number]) => T | null | undefined) => listings.map(f).find((v) => v != null && v !== "" && !(Array.isArray(v) && !v.length)) ?? null;
+  const cuisines = (o.cuisines ? o.cuisines.split(",") : (pick((l) => l.cuisines) ?? [])).map((c) => c.trim()).filter(Boolean);
+  const photos = [...(pick((l) => l.photos) ?? []), ...menu.filter((m) => m.photoUrl && m.bestseller).map((m) => m.photoUrl!), ...menu.filter((m) => m.photoUrl && !m.bestseller).map((m) => m.photoUrl!)];
   return {
     name: o.name,
     area: [o.area, o.city].filter(Boolean).join(", "),
-    cuisines: o.cuisines,
+    locality: o.area || pick((l) => l.locality) || "",
+    address: o.address || pick((l) => l.address) || "",
+    cuisines,
+    ratings: (["zomato", "swiggy"] as const).flatMap((p) => (o.ratings?.[p] ? [{ platform: p, value: o.ratings[p]!.value, count: o.ratings[p]!.count }] : [])),
+    costForTwo: costForTwo(pick((l) => l.costForTwo), menu.map(dinePrice)),
+    highlights: pick((l) => l.highlights) ?? [],
+    photos: [...new Set(photos)].slice(0, 5),
+    pureVeg: menu.length > 0 && menu.every((m) => m.veg),
+    hoursToday: await hoursToday(o.id),
     fssai: o.fssai,
     open: await openNow(o.id),
     upi: !!o.upiId,
-    menu: menu
-      .filter((m) => Object.values(m.available).some(Boolean))
-      .map((m) => ({ id: m.id, name: m.name, category: m.category, description: m.description, veg: m.veg, bestseller: m.bestseller, photo: m.photoUrl, price: dinePrice(m) })),
+    menu: menu.map((m) => ({ id: m.id, name: m.name, category: m.category, description: m.description, veg: m.veg, bestseller: m.bestseller, photo: m.photoUrl, price: dinePrice(m), rating: m.votes ? m.rating : null, votes: m.votes })),
   };
 }
 
