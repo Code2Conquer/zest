@@ -1,5 +1,7 @@
 "use client";
 
+import { Page } from "@/components/page";
+import { NAV_GROUPS, navItem } from "@/lib/nav";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Banknote, Check, Clock, CreditCard, ExternalLink, Minus, Pencil, Plus, Printer, QrCode, Search, Smartphone, Users, X } from "lucide-react";
@@ -21,7 +23,7 @@ const TONE: Record<Table["status"], { card: string; dot: string; en: string; hi:
 const minsSince = (iso: string, now: number) => Math.max(0, Math.round((now - Date.parse(iso)) / 60_000));
 
 export default function Dining() {
-  const { lang, outlet } = useApp();
+  const { lang, outlet, pick } = useApp();
   const hi = lang === "hi";
   const { data, error, setData } = useApi<DiningDTO>(outlet ? `/api/dining?o=${outlet.id}` : null);
   const [now, setNow] = useState(() => Date.now());
@@ -61,19 +63,18 @@ export default function Dining() {
   const freeCount = data?.tables.filter((t) => t.status === "free").length ?? 0;
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[clamp(1.9rem,4vw,2.6rem)] font-semibold tracking-[-0.03em]">{hi ? "डाइनिंग" : "Dining"}</h1>
-          <p className="mt-1 max-w-[60ch] text-muted">
-            {hi ? "टेबल, बिल, रिज़र्वेशन और वेटलिस्ट। हर बिल डाइन-इन बिक्री में जुड़ता है।" : "Tables, bills, bookings and the waitlist. Every settled bill counts in your dine-in sales."}
-          </p>
-        </div>
+    <Page
+      width="wide"
+      eyebrow={pick(NAV_GROUPS[1].label!)}
+      title={pick(navItem("/app/dining").label)}
+      subtitle={hi ? "टेबल, बिल, रिज़र्वेशन और वेटलिस्ट। हर बिल डाइन-इन बिक्री में जुड़ता है।" : "Tables, bills, bookings and the waitlist. Every settled bill counts in your dine-in sales."}
+      actions={
         <button type="button" onClick={() => setEditing((e) => !e)} className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm ${editing ? "bg-ink text-paper" : "shadow-[inset_0_0_0_1px_var(--line)] hover:bg-sunken"}`}>
           {editing ? <Check aria-hidden className="size-4" /> : <Pencil aria-hidden className="size-3.5" />}
           {editing ? (hi ? "हो गया" : "Done") : hi ? "टेबल बदलें" : "Edit tables"}
         </button>
-      </div>
+      }
+    >
 
       {error && <p className="mt-6 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}
       {note && (
@@ -152,7 +153,7 @@ export default function Dining() {
       )}
 
       <AnimatePresence>{table && <TableSheet key={table.id} table={table} data={data!} now={now} onClose={() => setOpenTable(null)} act={act} onSeat={(g) => seatAt(table, g)} />}</AnimatePresence>
-    </div>
+    </Page>
   );
 }
 
@@ -535,7 +536,7 @@ function Waitlist({ data, now, onPlace, act }: { data: DiningDTO; now: number; o
   return (
     <section>
       <div className="flex items-center justify-between">
-        <h2 className="font-medium">
+        <h2 className="text-lg font-semibold tracking-[-0.01em]">
           {hi ? "वेटलिस्ट" : "Waitlist"} <span className="text-muted">{data.waitlist.length || ""}</span>
         </h2>
         {!adding && (
@@ -606,7 +607,7 @@ function Bookings({ data, onPlace, act }: { data: DiningDTO; onPlace: (g: Guest)
   return (
     <section>
       <div className="flex items-center justify-between">
-        <h2 className="font-medium">
+        <h2 className="text-lg font-semibold tracking-[-0.01em]">
           {hi ? "आज की बुकिंग" : "Today's bookings"} <span className="text-muted">{upcoming.length || ""}</span>
         </h2>
         {!adding && (
@@ -661,7 +662,7 @@ function QrCard() {
   const { data } = useApi<{ url: string; svg: string }>(outlet ? `/api/dining/qr?o=${outlet.id}` : null);
   return (
     <section className="rounded-2xl bg-surface p-4 shadow-[0_0_0_1px_var(--line)]">
-      <h2 className="flex items-center gap-2 font-medium">
+      <h2 className="flex items-center gap-2 text-lg font-semibold tracking-[-0.01em]">
         <QrCode aria-hidden className="size-4" />
         {hi ? "टेबल के लिए QR मेन्यू" : "QR menu for tables"}
       </h2>

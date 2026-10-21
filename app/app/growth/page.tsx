@@ -1,5 +1,7 @@
 "use client";
 
+import { Page } from "@/components/page";
+import { NAV_GROUPS, navItem } from "@/lib/nav";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { CalendarDays, Clock, Loader2, Megaphone, Pause, Play, Sparkles, Square, Star, Users, X } from "lucide-react";
@@ -30,7 +32,7 @@ const STATUS: Record<CampaignDTO["status"], { en: string; hi: string; tone: stri
 const ret = (c: Pick<CampaignDTO, "revenue" | "spent">) => (c.spent ? c.revenue / c.spent : 0);
 
 export default function Growth() {
-  const { lang, outlet } = useApp();
+  const { lang, outlet, pick } = useApp();
   const { live } = useOutlet();
   const hi = lang === "hi";
   const { data, error, reload } = useApi<GrowthDTO>(outlet ? `/api/growth?o=${outlet.id}` : null);
@@ -72,20 +74,20 @@ export default function Growth() {
   const blank: CampaignInput = { platform: live[0] ?? "zomato", goal: "new_customers", offer: "percent", value: 20, upTo: 80, minOrder: 0, budget: 2500, days: 7, window: "All day" };
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[clamp(1.9rem,4vw,2.6rem)] font-semibold tracking-[-0.03em]">{hi ? "ग्रोथ" : "Growth"}</h1>
-          <p className="mt-1 max-w-[62ch] text-muted">
-            {hi
-              ? "हर प्लेटफ़ॉर्म पर प्रोमो और ऐड, पक्की ख़र्च सीमा के साथ। आपकी मंज़ूरी के बाद ही चालू, और फ़ायदा न हो तो अपने-आप रुकते हैं।"
-              : "Promos and ads on each platform, with a hard spend cap. Nothing runs without your OK, and campaigns pause themselves if they stop paying off."}
-          </p>
-        </div>
+    <Page
+      eyebrow={pick(NAV_GROUPS[3].label!)}
+      title={pick(navItem("/app/growth").label)}
+      subtitle={
+        hi
+          ? "हर प्लेटफ़ॉर्म पर प्रोमो और ऐड, पक्की ख़र्च सीमा के साथ। आपकी मंज़ूरी के बाद ही चालू, और फ़ायदा न हो तो अपने-आप रुकते हैं।"
+          : "Promos and ads on each platform, with a hard spend cap. Nothing runs without your OK, and campaigns pause themselves if they stop paying off."
+      }
+      actions={
         <button type="button" onClick={() => open(blank)} className="rounded-full bg-ink px-5 py-2.5 font-medium text-paper">
           {hi ? "नया कैंपेन" : "New campaign"}
         </button>
-      </div>
+      }
+    >
 
       {error && <p className="mt-6 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}
 
@@ -109,7 +111,7 @@ export default function Growth() {
 
       {data && data.suggestions.length > 0 && (
         <section className="mt-10">
-          <h2 className="font-medium">{hi ? "आगे क्या आज़माएँ" : "Worth trying next"}</h2>
+          <h2 className="text-lg font-semibold tracking-[-0.01em]">{hi ? "आगे क्या आज़माएँ" : "Worth trying next"}</h2>
           <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {data.suggestions.map((sg) => (
               <SuggestionCard key={sg.id} s={sg} onPlan={() => open(sg.input)} />
@@ -125,7 +127,7 @@ export default function Growth() {
       {data && (
         <section className="mt-10">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-medium">
+            <h2 className="text-lg font-semibold tracking-[-0.01em]">
               {hi ? "कैंपेन" : "Campaigns"} <span className="text-muted">{s?.live ? `· ${s.live} ${hi ? "चालू" : "live"}` : ""}</span>
             </h2>
             <button type="button" onClick={check} disabled={checking} className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm shadow-[inset_0_0_0_1px_var(--line)] hover:bg-sunken disabled:opacity-50">
@@ -145,7 +147,7 @@ export default function Growth() {
           )}
         </section>
       )}
-    </div>
+    </Page>
   );
 }
 
@@ -218,7 +220,7 @@ function Builder({ initial, limit, onClose, onDone }: { initial: CampaignInput; 
       aria-label={hi ? "कैंपेन प्लान" : "Plan a campaign"}
     >
       <div className="flex items-center justify-between border-b border-line px-5 py-4 sm:px-6">
-        <h2 className="flex items-center gap-2 text-lg font-medium">
+        <h2 className="flex items-center gap-2 text-lg font-semibold tracking-[-0.01em]">
           <Megaphone aria-hidden className="size-5 text-turmeric" />
           {hi ? "कैंपेन प्लान करें" : "Plan a campaign"}
         </h2>

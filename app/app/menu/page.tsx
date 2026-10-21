@@ -1,5 +1,7 @@
 "use client";
 
+import { Page } from "@/components/page";
+import { NAV_GROUPS, navItem } from "@/lib/nav";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Camera, Check, Search, Sparkles, X } from "lucide-react";
@@ -39,7 +41,7 @@ function describeChanges(before: Item, after: Item, live: Platform[], hi: boolea
 }
 
 export default function MenuPage() {
-  const { state } = useApp();
+  const { state, pick } = useApp();
   const { live, outlet } = useOutlet();
   const hi = state.lang === "hi";
 
@@ -166,11 +168,15 @@ export default function MenuPage() {
   const editItem = draft.find((m) => m.id === editing) ?? null;
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <Page
+      eyebrow={pick(NAV_GROUPS[1].label!)}
+      title={pick(navItem("/app/menu").label)}
+      subtitle={hi ? "एक मास्टर मेन्यू, हर प्लेटफ़ॉर्म पर। ग्राहक इसे ऐसे देखते हैं।" : "One master menu for every platform, shown the way customers see it."}
+    >
       {/* Restaurant header, as customers see it */}
-      <header className="flex flex-wrap items-end justify-between gap-6 border-b border-line pb-6">
+      <header className="flex flex-wrap items-end justify-between gap-6 rounded-2xl bg-surface p-5 shadow-[0_0_0_1px_var(--line)]">
         <div>
-          <h1 className="text-[clamp(2rem,4vw,2.7rem)] font-semibold leading-tight tracking-[-0.03em]">{outlet?.name}</h1>
+          <h2 className="text-[1.6rem] font-semibold leading-tight tracking-[-0.02em]">{outlet?.name}</h2>
           {outlet?.cuisines && <p className="mt-1 text-ink-2">{outlet.cuisines}</p>}
           {outlet?.area && <p className="text-sm text-muted">{outlet.area}</p>}
         </div>
@@ -383,7 +389,7 @@ export default function MenuPage() {
           </motion.p>
         )}
       </AnimatePresence>
-    </div>
+    </Page>
   );
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { Page } from "@/components/page";
 import Link from "next/link";
 import { useState } from "react";
 import { ApprovalTicket } from "@/components/approval-ticket";
@@ -28,14 +29,7 @@ export default function Today() {
   if (error) return <p className="mx-auto max-w-4xl rounded-xl bg-chilli-soft p-4 text-chilli">{error}</p>;
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <p className="text-muted" suppressHydrationWarning>
-        {dateLabel}
-      </p>
-      <h1 className="mt-1 text-[clamp(1.9rem,4vw,2.6rem)] font-semibold leading-tight tracking-[-0.03em]" suppressHydrationWarning>
-        {greeting}
-        {outlet?.ownerName ? `, ${outlet.ownerName}` : ""}
-      </h1>
+    <Page eyebrow={dateLabel} title={`${greeting}${outlet?.ownerName ? `, ${outlet.ownerName}` : ""}`}>
 
       {outlet && !outlet.isDemo && connections.length === 0 && !outlet.email && (
         <Link href="/connect" className="mt-6 block rounded-2xl bg-turmeric-soft p-5 hover:shadow-[0_0_0_1px_var(--turmeric)]">
@@ -109,7 +103,7 @@ export default function Today() {
       {data && data.topDishes.length > 0 && (
         <section className="mt-10">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-xl font-medium">{hi ? "सबसे ज़्यादा बिकने वाली डिश" : "Your best sellers"}</h2>
+            <h2 className="text-lg font-semibold tracking-[-0.01em]">{hi ? "सबसे ज़्यादा बिकने वाली डिश" : "Your best sellers"}</h2>
             <Link href="/app/menu" className="text-sm text-ink-2 underline underline-offset-2 hover:text-ink">
               {hi ? "मेन्यू खोलें" : "Open menu"}
             </Link>
@@ -133,7 +127,7 @@ export default function Today() {
       )}
 
       <section className="mt-10">
-        <h2 className="text-xl font-medium">{t("today.approvals")}</h2>
+        <h2 className="text-lg font-semibold tracking-[-0.01em]">{t("today.approvals")}</h2>
         <p className="mt-1 text-sm text-muted">{hi ? "आपके एजेंटों के ड्राफ़्ट। मंज़ूरी के बिना कुछ नहीं जाएगा।" : "Drafts from your agents. Nothing goes out until you approve it."}</p>
         {data && tickets.length === 0 && <p className="mt-4 rounded-xl bg-sunken px-4 py-6 text-center text-muted">{t("today.empty")}</p>}
         <div className="mt-4 grid gap-5 md:grid-cols-2">
@@ -171,6 +165,6 @@ export default function Today() {
           })}
         </ul>
       </section>
-    </div>
+    </Page>
   );
 }

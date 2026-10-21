@@ -63,7 +63,7 @@ export function StaffCard() {
 
   return (
     <section className="mt-10">
-      <h2 className="font-medium">{hi ? "स्टाफ़" : "Staff"}</h2>
+      <h2 className="text-lg font-semibold tracking-[-0.01em]">{hi ? "स्टाफ़" : "Staff"}</h2>
       <p className="mt-1 text-sm text-muted">
         {hi ? "स्टाफ़ रेस्टोरेंट के फ़ोन या टैबलेट पर इस कोड और अपने PIN से साइन इन करते हैं:" : "Staff sign in on the restaurant's phone or tablet with this code and their own PIN:"}{" "}
         <span className="font-mono text-base font-semibold tracking-widest text-ink">{data?.staffCode ?? "…"}</span>

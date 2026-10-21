@@ -1,5 +1,7 @@
 "use client";
 
+import { Page } from "@/components/page";
+import { NAV_GROUPS, navItem } from "@/lib/nav";
 import { useState } from "react";
 import { motion } from "motion/react";
 import { ChannelTag } from "@/components/bits";
@@ -93,17 +95,17 @@ export default function Orders() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[clamp(1.9rem,4vw,2.6rem)] font-semibold tracking-[-0.03em]">{t("nav.orders")}</h1>
-          <p className="mt-1 text-muted">{hi ? "सभी प्लेटफ़ॉर्म और डाइन-इन, एक जगह" : "Every platform and dine-in, in one list"}</p>
-        </div>
+    <Page
+      eyebrow={pick(NAV_GROUPS[1].label!)}
+      title={pick(navItem("/app/orders").label)}
+      subtitle={hi ? "सभी प्लेटफ़ॉर्म और डाइन-इन, एक जगह" : "Every platform and dine-in, in one list"}
+      actions={
         <button type="button" onClick={sync} disabled={syncing} className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm shadow-[inset_0_0_0_1px_var(--line)] hover:bg-sunken disabled:opacity-60">
           {syncing ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <RefreshCw aria-hidden className="size-4" />}
           {hi ? "अभी सिंक करें" : "Sync now"}
         </button>
-      </div>
+      }
+    >
       {syncNote && <p className="mt-3 text-sm text-ink-2" role="status">{syncNote}</p>}
       {mode === "polling" && <p className="mt-3 text-sm text-muted">{hi ? "हर 10 सेकंड में अपडेट हो रहा है" : "Updating every 10 seconds"}</p>}
       {error && <p className="mt-3 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}
@@ -122,7 +124,7 @@ export default function Orders() {
         ))}
       </div>
 
-      <h2 className="mt-8 font-medium">{hi ? `किचन में (${active.length})` : `In the kitchen (${active.length})`}</h2>
+      <h2 className="mt-8 text-lg font-semibold tracking-[-0.01em]">{hi ? `किचन में (${active.length})` : `In the kitchen (${active.length})`}</h2>
       {data && active.length === 0 && <p className="mt-3 rounded-xl bg-sunken px-4 py-6 text-center text-muted">{hi ? "अभी किचन में कोई ऑर्डर नहीं।" : "No orders in the kitchen right now."}</p>}
       <ul className="mt-4 grid gap-5 sm:grid-cols-2">
         {active.map((o, i) => {
@@ -162,7 +164,7 @@ export default function Orders() {
         })}
       </ul>
 
-      <h2 className="mt-10 font-medium">{hi ? "पहले के" : "Earlier"}</h2>
+      <h2 className="mt-10 text-lg font-semibold tracking-[-0.01em]">{hi ? "पहले के" : "Earlier"}</h2>
       <table className="mt-3 w-full text-left text-[0.95rem]">
         <thead className="text-sm text-muted">
           <tr className="border-b border-line">
@@ -186,6 +188,6 @@ export default function Orders() {
           ))}
         </tbody>
       </table>
-    </div>
+    </Page>
   );
 }

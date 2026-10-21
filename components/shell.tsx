@@ -3,30 +3,26 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Armchair, BookOpen, Home, IndianRupee, Menu as MenuIcon, MessageSquareText, Plug, ReceiptText, Sparkles, Star, TrendingUp, X } from "lucide-react";
-import type { Key } from "@/lib/i18n";
+import { Menu as MenuIcon, MessageSquareText, Sparkles, X } from "lucide-react";
+import { useApi } from "@/lib/api";
 import { signOutHere, useMe } from "@/lib/auth-client";
+import { NAV_GROUPS, navItem, type NavItem } from "@/lib/nav";
 import { useApp, useOutlet } from "@/lib/state";
 import { Copilot } from "./copilot";
 import { LangToggle, Wordmark } from "./bits";
 
-type NavItem = { href: string; key: Key; icon: typeof Home; soon?: boolean };
-
-const NAV: NavItem[] = [
-  { href: "/app", key: "nav.today", icon: Home },
-  { href: "/app/orders", key: "nav.orders", icon: ReceiptText },
-  { href: "/app/menu", key: "nav.menu", icon: BookOpen },
-  { href: "/app/reviews", key: "nav.reviews", icon: Star },
-  { href: "/app/money", key: "nav.money", icon: IndianRupee },
-  { href: "/app/dining", key: "nav.dining", icon: Armchair },
-  { href: "/app/growth", key: "nav.growth", icon: TrendingUp },
-  { href: "/app/connections", key: "nav.connections", icon: Plug },
-];
-
 const MOBILE_TABS = ["/app", "/app/orders", "copilot", "/app/money", "more"] as const;
 
+const ROLE_NAME = {
+  owner: { en: "Owner", hi: "मालिक" },
+  manager: { en: "Manager", hi: "मैनेजर" },
+  kitchen: { en: "Kitchen", hi: "किचन" },
+  cashier: { en: "Cashier", hi: "कैशियर" },
+  rider: { en: "Rider", hi: "राइडर" },
+};
+
 export function Shell({ children }: { children: React.ReactNode }) {
-  const { t, state } = useApp();
+  const { t, state, pick } = useApp();
   const { isDemo, outlet } = useOutlet();
   const { data: me } = useMe();
   const hi = state.lang === "hi";
@@ -44,7 +40,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (screenOnly && path !== "/app/orders") router.replace("/app/orders");
   }, [screenOnly, path, router]);
-  const nav = screenOnly ? NAV.filter((n) => n.href === "/app/orders") : NAV;
+  const groups = screenOnly ? NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => i.href === "/app/orders") })).filter((g) => g.items.length) : NAV_GROUPS;
+  // Drafts waiting for the owner's OK, shown on Today.
+  const { data: pending } = useApi<{ id: string }[]>(me && !screenOnly ? "/api/approvals?status=pending" : null);
+  const waiting = pending?.length ?? 0;
 
   const isActive = (href: string) => (href === "/app" ? path === "/app" : path.startsWith(href));
 
@@ -57,29 +56,44 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </Link>
         <div className="mt-6 px-3">
           <p className="font-medium">{outlet?.name ?? "\u00a0"}</p>
-          <p className="text-sm text-[#eef2ec]/60">{[outlet?.area, outlet?.city].filter(Boolean).join(", ") || (outlet ? (state.lang === "hi" ? "पता जोड़ें" : "Add your area in Connections") : "\u00a0")}</p>
+          <p className="text-sm text-[#eef2ec]/60">{[outlet?.area, outlet?.city].filter(Boolean).join(", ") || (outlet ? (state.lang === "hi" ? "सेटिंग्स में पता जोड़ें" : "Add your area in Settings") : "\u00a0")}</p>
         </div>
-        <ul className="mt-6 space-y-0.5">
-          {nav.map((n) => (
-            <li key={n.href}>
-              <Link
-                href={n.href}
-                aria-current={isActive(n.href) ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[0.95rem] ${
-                  isActive(n.href) ? "bg-haldi font-medium text-ink" : "text-[#eef2ec]/80 hover:bg-white/10 hover:text-[#eef2ec]"
-                }`}
-              >
-                <n.icon aria-hidden className="size-[18px]" />
-                <span className="flex-1">{t(n.key)}</span>
-                {n.soon && <span className="text-[0.7rem] opacity-60">{t("soon")}</span>}
-              </Link>
-            </li>
+        <div className="scrollbar-thin mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto">
+          {groups.map((g) => (
+            <div key={g.id} className={g.id === "settings" ? "border-t border-white/10 pt-3" : ""}>
+              {g.label && <p className="px-3 pb-1 text-[0.72rem] font-medium uppercase tracking-[0.08em] text-[#eef2ec]/45">{pick(g.label)}</p>}
+              <ul className="space-y-0.5">
+                {g.items.map((n) => (
+                  <li key={n.href}>
+                    <Link
+                      href={n.href}
+                      title={pick(n.hint)}
+                      aria-current={isActive(n.href) ? "page" : undefined}
+                      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[0.95rem] ${
+                        isActive(n.href) ? "bg-haldi font-medium text-ink" : "text-[#eef2ec]/80 hover:bg-white/10 hover:text-[#eef2ec]"
+                      }`}
+                    >
+                      <n.icon aria-hidden className="size-[18px]" />
+                      <span className="flex-1">{pick(n.label)}</span>
+                      {n.href === "/app" && waiting > 0 && (
+                        <span aria-label={hi ? `${waiting} मंज़ूरी बाक़ी` : `${waiting} waiting for your OK`} className={`rounded-full px-2 text-[0.75rem] font-semibold ${isActive(n.href) ? "bg-ink text-paper" : "bg-haldi text-ink"}`}>
+                          {waiting}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
-        <div className="mt-auto space-y-3 px-3">
+        </div>
+        <div className="mt-4 space-y-3 px-3">
           {me?.user && (
             <div className="text-sm">
-              <p className="truncate text-[#eef2ec]/80">{me.user.name || me.user.email}</p>
+              <p className="truncate text-[#eef2ec]/80">
+                {me.user.name || me.user.email}
+                {me.role && <span className="text-[#eef2ec]/50"> · {pick(ROLE_NAME[me.role])}</span>}
+              </p>
               <button type="button" onClick={() => void signOutHere()} className="text-[#eef2ec]/60 underline underline-offset-2 hover:text-[#eef2ec]">
                 {hi ? "साइन आउट" : "Sign out"}
               </button>
@@ -154,17 +168,30 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {/* "More" sheet, mobile */}
       {moreOpen && (
         <div className="fixed inset-0 z-30 bg-ink/30 lg:hidden" onClick={() => setMoreOpen(false)}>
-          <ul className="absolute inset-x-0 bottom-[72px] rounded-t-2xl bg-surface p-3" onClick={(e) => e.stopPropagation()}>
-            {NAV.filter((n) => !["/app", "/app/orders", "/app/money"].includes(n.href)).map((n) => (
-              <li key={n.href}>
-                <Link href={n.href} className="flex items-center gap-3 rounded-lg px-3 py-3 text-ink hover:bg-sunken">
-                  <n.icon aria-hidden className="size-5 text-ink-2" />
-                  <span className="flex-1">{t(n.key)}</span>
-                  {n.soon && <span className="text-sm text-muted">{t("soon")}</span>}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="absolute inset-x-0 bottom-[72px] max-h-[70dvh] overflow-y-auto rounded-t-2xl bg-surface p-3" onClick={(e) => e.stopPropagation()}>
+            {groups.map((g) => {
+              const items = g.items.filter((n) => !["/app", "/app/orders", "/app/money"].includes(n.href));
+              if (!items.length) return null;
+              return (
+                <div key={g.id} className="py-1">
+                  {g.label && <p className="px-3 pb-1 pt-2 text-[0.72rem] font-medium uppercase tracking-[0.08em] text-muted">{pick(g.label)}</p>}
+                  <ul>
+                    {items.map((n) => (
+                      <li key={n.href}>
+                        <Link href={n.href} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-ink hover:bg-sunken">
+                          <n.icon aria-hidden className="size-5 text-ink-2" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block">{pick(n.label)}</span>
+                            <span className="block truncate text-sm text-muted">{pick(n.hint)}</span>
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -189,11 +216,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </button>
             );
           }
-          const n = NAV.find((x) => x.href === tab)!;
+          const n: NavItem = navItem(tab);
           return (
-            <Link key={tab} href={n.href} aria-current={isActive(n.href) ? "page" : undefined} className={`flex flex-col items-center justify-center gap-1 text-[0.75rem] ${isActive(n.href) ? "text-ink" : "text-muted"}`}>
+            <Link key={tab} href={n.href} aria-current={isActive(n.href) ? "page" : undefined} className={`relative flex flex-col items-center justify-center gap-1 text-[0.75rem] ${isActive(n.href) ? "text-ink" : "text-muted"}`}>
               <n.icon aria-hidden className="size-5" />
-              {t(n.key)}
+              {pick(n.short ?? n.label)}
+              {n.href === "/app" && waiting > 0 && <span aria-hidden className="absolute right-[28%] top-2.5 size-2 rounded-full bg-turmeric" />}
             </Link>
           );
         })}

@@ -62,7 +62,7 @@ export function HoursEditor() {
   return (
     <section className="mt-10">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-medium">{hi ? "खुलने का समय" : "Opening hours"}</h2>
+        <h2 className="text-lg font-semibold tracking-[-0.01em]">{hi ? "खुलने का समय" : "Opening hours"}</h2>
         {openNow !== null && <span className={`text-sm ${openNow ? "text-leaf" : "text-muted"}`}>{openNow ? (hi ? "अभी खुला" : "Open now") : hi ? "अभी बंद" : "Closed now"}</span>}
       </div>
       <p className="mt-1 text-sm text-muted">

@@ -1,5 +1,7 @@
 "use client";
 
+import { Page } from "@/components/page";
+import { NAV_GROUPS, navItem } from "@/lib/nav";
 import { useState } from "react";
 import { AlertCircle, Check, Loader2 } from "lucide-react";
 import { ChannelTag, Stars } from "@/components/bits";
@@ -9,7 +11,7 @@ import { useApp, useOutlet } from "@/lib/state";
 import type { ApprovalDTO, ReviewDTO } from "@/lib/types";
 
 export default function Reviews() {
-  const { t, lang } = useApp();
+  const { t, lang, pick } = useApp();
   const { outlet, live } = useOutlet();
   const { data, error } = useApi<ReviewDTO[]>(outlet ? `/api/reviews?o=${outlet.id}` : null);
   const hi = lang === "hi";
@@ -18,9 +20,12 @@ export default function Reviews() {
   const answered = reviews.filter((r) => r.reply);
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="text-[clamp(1.9rem,4vw,2.6rem)] font-semibold tracking-[-0.03em]">{t("nav.reviews")}</h1>
-      <p className="mt-1 text-muted">{hi ? "हर प्लेटफ़ॉर्म के रिव्यू और शिकायतें, जवाब तैयार" : "Reviews and complaints from every platform, with replies ready"}</p>
+    <Page
+      width="narrow"
+      eyebrow={pick(NAV_GROUPS[2].label!)}
+      title={pick(navItem("/app/reviews").label)}
+      subtitle={hi ? "हर प्लेटफ़ॉर्म के रिव्यू और शिकायतें, जवाब तैयार" : "Reviews and complaints from every platform, with replies ready"}
+    >
 
       <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-4">
         {live.map((p) => {
@@ -49,7 +54,7 @@ export default function Reviews() {
 
       {error && <p className="mt-6 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}
 
-      <h2 className="mt-10 font-medium">{hi ? `जवाब बाक़ी (${open.length})` : `Waiting for a reply (${open.length})`}</h2>
+      <h2 className="mt-10 text-lg font-semibold tracking-[-0.01em]">{hi ? `जवाब बाक़ी (${open.length})` : `Waiting for a reply (${open.length})`}</h2>
       {data && open.length === 0 && <p className="mt-3 rounded-xl bg-sunken px-4 py-6 text-center text-muted">{hi ? "हर रिव्यू का जवाब दिया जा चुका है।" : "Every review has a reply."}</p>}
       <div className="mt-4 space-y-6">
         {open.map((r) => (
@@ -59,7 +64,7 @@ export default function Reviews() {
 
       {answered.length > 0 && (
         <>
-          <h2 className="mt-12 font-medium">{hi ? "जवाब दिए गए" : "Replied"}</h2>
+          <h2 className="mt-12 text-lg font-semibold tracking-[-0.01em]">{hi ? "जवाब दिए गए" : "Replied"}</h2>
           <ul className="mt-3 divide-y divide-line border-y border-line">
             {answered.map((r) => (
               <li key={r.id} className="py-4">
@@ -71,7 +76,7 @@ export default function Reviews() {
           </ul>
         </>
       )}
-    </div>
+    </Page>
   );
 }
 

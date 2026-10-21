@@ -1,5 +1,7 @@
 "use client";
 
+import { Page } from "@/components/page";
+import { NAV_GROUPS, navItem } from "@/lib/nav";
 import { ChannelTag } from "@/components/bits";
 import { rupees } from "@/components/cards";
 import { EmailIngest } from "@/components/email-ingest";
@@ -9,7 +11,7 @@ import { useApp, useOutlet } from "@/lib/state";
 import type { PayoutDTO } from "@/lib/types";
 
 export default function Money() {
-  const { t, lang } = useApp();
+  const { t, lang, pick } = useApp();
   const { outlet, live } = useOutlet();
   const { data, error } = useApi<PayoutDTO[]>(outlet ? `/api/payouts?o=${outlet.id}` : null);
   const hi = lang === "hi";
@@ -19,14 +21,12 @@ export default function Money() {
   const date = (iso: string) => new Date(iso).toLocaleDateString(hi ? "hi-IN" : "en-IN", { weekday: "short", day: "numeric", month: "short" });
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-[clamp(1.9rem,4vw,2.6rem)] font-semibold tracking-[-0.03em]">{t("nav.money")}</h1>
-          <p className="mt-1 max-w-[60ch] text-muted">{hi ? "पेआउट, कमीशन और कटौती, आपके ईमेल से मिलाकर।" : "Payouts, commission and deductions, read from your email."}</p>
-        </div>
-        <EmailIngest compact />
-      </div>
+    <Page
+      eyebrow={pick(NAV_GROUPS[4].label!)}
+      title={pick(navItem("/app/money").label)}
+      subtitle={hi ? "पेआउट, कमीशन और कटौती, आपके ईमेल से मिलाकर।" : "Payouts, commission and deductions, read from your email."}
+      actions={<EmailIngest compact />}
+    >
 
       <div className="mt-6">
         <MailInsights />
@@ -41,7 +41,7 @@ export default function Money() {
 
       {upcoming.length > 0 && (
         <>
-          <h2 className="mt-8 font-medium">{hi ? "आने वाले" : "On the way"}</h2>
+          <h2 className="mt-8 text-lg font-semibold tracking-[-0.01em]">{hi ? "आने वाले" : "On the way"}</h2>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             {upcoming.map((p) => (
               <article key={p.id} className="rounded-2xl bg-surface p-5 shadow-[0_0_0_1px_var(--line)]">
@@ -81,7 +81,7 @@ export default function Money() {
 
       {credited.length > 0 && (
         <>
-          <h2 className="mt-10 font-medium">{hi ? "खाते में आ चुके" : "Credited"}</h2>
+          <h2 className="mt-10 text-lg font-semibold tracking-[-0.01em]">{hi ? "खाते में आ चुके" : "Credited"}</h2>
           <table className="mt-3 w-full text-left text-[0.95rem]">
             <thead className="text-sm text-muted">
               <tr className="border-b border-line">
@@ -106,6 +106,6 @@ export default function Money() {
           </table>
         </>
       )}
-    </div>
+    </Page>
   );
 }

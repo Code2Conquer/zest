@@ -1,5 +1,7 @@
 "use client";
 
+import { Page } from "@/components/page";
+import { navItem } from "@/lib/nav";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { ChannelTag } from "@/components/bits";
@@ -34,7 +36,7 @@ const ACTION_LABEL: Record<string, { en: string; hi: string }> = {
 };
 
 export default function Connections() {
-  const { t, lang, outlet, updateOutlet } = useApp();
+  const { t, lang, outlet, updateOutlet, pick } = useApp();
   const hi = lang === "hi";
   const { data: audit } = useApi<AuditRow[]>(outlet ? `/api/audit?o=${outlet.id}` : null);
   const { data: outbox } = useApi<NotificationRow[]>(outlet ? `/api/notifications?o=${outlet.id}` : null);
@@ -71,15 +73,15 @@ export default function Connections() {
   const field = "w-full rounded-lg bg-surface px-3 py-2.5 outline-none shadow-[inset_0_0_0_1px_var(--line)] focus:shadow-[inset_0_0_0_2px_var(--turmeric)]";
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="text-[clamp(1.9rem,4vw,2.6rem)] font-semibold tracking-[-0.03em]">{t("nav.connections")}</h1>
-      <p className="mt-1 max-w-[60ch] text-muted">
-        {hi ? "जिन प्लेटफ़ॉर्म पर आप लाइव हैं, उन्हें चुनें। हर एक को API, MCP या पार्टनर ऐप साइन-इन से जोड़ें।" : "Pick the platforms you're live on. Connect each one by API, MCP or partner app sign-in."}
-      </p>
-      {error && <p className="mt-4 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}
+    <Page
+      width="narrow"
+      title={pick(navItem("/app/connections").label)}
+      subtitle={pick(navItem("/app/connections").hint)}
+    >
+      {error && <p className="mb-4 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}
 
       <section className="mt-8">
-        <h2 className="font-medium">{hi ? "रेस्टोरेंट" : "Restaurant"}</h2>
+        <h2 className="text-lg font-semibold tracking-[-0.01em]">{hi ? "रेस्टोरेंट" : "Restaurant"}</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {(
             [
@@ -108,7 +110,7 @@ export default function Connections() {
 
       {outlet && !outlet.isDemo && (
         <section className="mt-10">
-          <h2 className="font-medium">{hi ? "आपकी लिस्टिंग" : "Your listings"}</h2>
+          <h2 className="text-lg font-semibold tracking-[-0.01em]">{hi ? "आपकी लिस्टिंग" : "Your listings"}</h2>
           <p className="mt-0.5 text-sm text-muted">{hi ? "रेटिंग, पता, समय और मेन्यू आपके Zomato और Swiggy पेज से।" : "Rating, address, hours and menu from your Zomato and Swiggy pages."}</p>
           <div className="mt-3 space-y-6">
             {(outlet.live.length ? outlet.live : PLATFORMS).map((p) => (
@@ -123,7 +125,10 @@ export default function Connections() {
       <StaffCard />
 
       <section className="mt-10">
-        <h2 className="font-medium">{hi ? "प्लेटफ़ॉर्म" : "Platforms"}</h2>
+        <h2 className="text-lg font-semibold tracking-[-0.01em]">{hi ? "प्लेटफ़ॉर्म" : "Platforms"}</h2>
+        <p className="mt-0.5 max-w-[60ch] text-sm text-muted">
+          {hi ? "जिन प्लेटफ़ॉर्म पर आप लाइव हैं, उन्हें चुनें। हर एक को API, MCP या पार्टनर ऐप साइन-इन से जोड़ें।" : "Pick the platforms you're live on. Connect each one by API, MCP or partner app sign-in."}
+        </p>
         <div className="mt-3 space-y-4">
           {PLATFORMS.map((p) => {
             const on = !!outlet?.live.includes(p);
@@ -141,14 +146,14 @@ export default function Connections() {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-medium">{t("connect.email")}</h2>
+        <h2 className="text-lg font-semibold tracking-[-0.01em]">{t("connect.email")}</h2>
         <div className="mt-3">
           <MailboxCard returnTo="/app/connections" />
         </div>
       </section>
 
       <section className="mt-10">
-        <h2 className="font-medium">{t("connect.whatsapp")}</h2>
+        <h2 className="text-lg font-semibold tracking-[-0.01em]">{t("connect.whatsapp")}</h2>
         <div className="mt-3 flex flex-wrap items-end gap-4">
           <label className="block w-60">
             <span className="mb-1 block text-sm text-ink-2">{hi ? "WhatsApp नंबर" : "WhatsApp number"}</span>
@@ -186,7 +191,7 @@ export default function Connections() {
       </section>
 
       <section className="mt-10 pb-8">
-        <h2 className="font-medium">{hi ? "हाल की गतिविधि" : "Recent activity"}</h2>
+        <h2 className="text-lg font-semibold tracking-[-0.01em]">{hi ? "हाल की गतिविधि" : "Recent activity"}</h2>
         <p className="mt-1 text-sm text-muted">{hi ? "हर बदलाव का रिकॉर्ड, किसने और कब।" : "A record of every change: who did it and when."}</p>
         <ul className="mt-3 divide-y divide-line border-y border-line text-sm">
           {(audit ?? []).slice(0, 15).map((a) => (
@@ -201,6 +206,6 @@ export default function Connections() {
           ))}
         </ul>
       </section>
-    </div>
+    </Page>
   );
 }
