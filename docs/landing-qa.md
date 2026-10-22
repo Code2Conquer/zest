@@ -10,7 +10,7 @@ Pages: `/` (small food businesses) and `/restaurants`. Brief: `docs/landing-brie
 | Keyboard focus | Pass. Tabbing through `/` and `/restaurants` reaches every control, including the scenario tabs, the Soundbox's buttons, "Hear it", the waitlist fields and every FAQ; each shows a 3px turmeric ring. The phone swipe strip is focusable for arrow-key scrolling. |
 | Contrast | Pass. Lighthouse accessibility: `/` 97 before the last fix (one placeholder at 4.3:1, since darkened to 5.3:1), `/restaurants` 100. |
 | No horizontal scroll at 360 px | Pass, in English and Hindi, on both pages (checked by toggling the language live). The "One day" moments on phones scroll sideways on purpose, inside their own strip. |
-| Lighthouse mobile performance, throttled (production build) | `/` 94 (LCP 3.0 s, TBT 0 ms, CLS 0), `/restaurants` 96 (LCP 2.7 s, CLS 0.01). Was 75: the 700 KB Devanagari font was preloaded for everyone and the hero used full-size photos for 44 px thumbnails. |
+| Lighthouse mobile performance, throttled (production build) | `/` 84 to 90 over five runs (FCP 1.5 s, simulated LCP 3.6 to 4.4 s, TBT 0 ms, CLS 0), `/restaurants` 90 to 94 (CLS 0.011). Below 90 on some runs: the LCP is the hero paragraph, which paints with the first paint (70 ms unthrottled), but Lighthouse's simulation counts every script loaded before that paint, mostly the 148 KB React/Next runtime. Earlier fixes: the 700 KB Devanagari font is no longer preloaded, the hero uses thumbnails, and the Latin-extended Anek file (needed for ₹) is now preloaded, which cut FCP from 2.3 s to 1.5 s. |
 | Hindi parity | Every visible and spoken string on both pages has Hindi. The seller's own menu board, ordering page and KOTs stay as the seller writes them. Devanagari gets a taller line height. |
 
 ## Honesty pass: "Coming soon" labels
@@ -24,7 +24,6 @@ Labelled (not live in the codebase or switched off in production):
 - Google listing setup: Get found panel, FAQ "Will people find me on Google?"
 - AI-answer setup, Instagram posts and Meta ads: Get found panels, the Growth agent
 - Nearby-search suggestions: the "Jain thali" line
-- Sold-out sync to WhatsApp, Google and Instagram: "Sold out? Just say it" heading
 - Reminders and welcome offers for regulars: line under "Know your regulars"
 - FSSAI help: FAQ
 - Email morning summary: section heading on `/restaurants`
@@ -43,7 +42,7 @@ Found already working:
 |---|---|
 | No gradient blobs, glowing orbs, sparkles or "AI" stars | Pass. A sparkle icon on the AI-answers panel was replaced with a chat icon. |
 | No all-caps eyebrows, no decorative middle-dot strings | Pass. The only capitals are printed KOT tickets and the ordering page's ADD buttons. Middle dots appear only as data separators (time · agent, area · type). |
-| No identical rounded card grids | Pass after a fix: the sold-out channels were a 2×2 tile grid and are now one panel with rows. |
+| No identical rounded card grids | Pass. |
 | One orchestrated moment per section, nothing else moves on its own | Pass after a fix: the delivery route's dashes kept moving after the sequence and now stop. Loops (hero, agents, restaurants hero) repeat no faster than every 8 s and pause off screen. |
 | Only food, kitchens, phones and the Soundbox as imagery | Pass. |
 | Every homepage headline reads naturally to a home-kitchen owner, in Hindi too | Pass, in my reading; worth a native speaker's pass. |

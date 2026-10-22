@@ -362,7 +362,7 @@ export function AgentFlow({ cast = "seller" }: { cast?: keyof typeof CAST }) {
           })()}
           <p className="text-[15px] leading-snug">{pick(sc.heard)}</p>
         </div>
-        <ol className="mt-3 min-h-[350px] space-y-2">
+        <ol className="mt-3 space-y-2" style={{ minHeight: Math.max(...SCENARIOS.map((x) => x.steps.length)) * 88 }}>
           {sc.steps.map((x, k) => {
             const info = AGENT_INFO[x.agent];
             const on = k === step - 1;

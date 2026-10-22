@@ -6,7 +6,7 @@ import "./globals.css";
 
 // One family, two scripts: Anek (Ek Type) draws Latin and Devanagari to the same
 // proportions, so Hindi and English sit together without a font switch.
-const latin = Anek_Latin({ subsets: ["latin"], variable: "--font-anek-latin", display: "swap", axes: ["wdth"] });
+const latin = Anek_Latin({ subsets: ["latin", "latin-ext"], variable: "--font-anek-latin", display: "swap", axes: ["wdth"] });
 // Devanagari is large (~700 KB with the width axis), so it isn't preloaded: English readers never
 // download it, and Hindi readers get it as soon as the page shows Devanagari.
 const deva = Anek_Devanagari({ subsets: ["devanagari"], variable: "--font-anek-deva", display: "swap", axes: ["wdth"], preload: false });
