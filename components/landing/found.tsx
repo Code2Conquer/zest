@@ -79,7 +79,7 @@ export function GetFound() {
     );
   };
 
-  const query = "homemade rajma chawal near me";
+  const query = pick({ en: "homemade rajma chawal near me", hi: "घर का राजमा चावल मेरे पास" });
   return (
     <div ref={box} className="grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-8">
       <ul className="grid gap-5 lg:order-1">{[0, 1].map(panel)}</ul>
@@ -87,21 +87,21 @@ export function GetFound() {
         <div className="h-[430px] overflow-hidden rounded-[26px] bg-white px-3.5 pt-8 text-[#1c1f23]">
           <p className="flex items-center gap-2 rounded-full bg-[#eef0f2] px-3.5 py-2.5 text-[13px]">
             <Search aria-hidden size={14} className="shrink-0 text-[#6f757c]" />
-            <span className="truncate">{step >= 0 ? <span className={step === 0 ? "gf-type" : ""}>{query}</span> : <span className="text-[#8d939a]">Search</span>}</span>
+            <span className="truncate">{step >= 0 ? <span className={step === 0 ? "gf-type" : ""}>{query}</span> : <span className="text-[#8d939a]">{pick({ en: "Search", hi: "खोजें" })}</span>}</span>
           </p>
           {step >= 1 && (
             <div className="gf-in mt-4 space-y-3 text-[13px]">
               <div className="rounded-2xl p-3 ring-1 ring-[#d9dee3]">
-                <p className="text-[12px] text-[#545a61]">Home kitchen · 4.8 · 1.2 km</p>
+                <p className="text-[12px] text-[#545a61]">{pick({ en: "Home kitchen · 4.8 · 1.2 km", hi: "घर की रसोई · 4.8 · 1.2 किमी" })}</p>
                 <p className="mt-0.5 text-[16px] font-semibold text-[#2a5db0]">Meena&apos;s Kitchen</p>
-                <p className="text-[#545a61]">Rajma chawal ₹90 · Open till 9:30 pm</p>
-                <span className="mt-2.5 inline-flex min-h-8 items-center rounded-full bg-[#2a5db0] px-3.5 font-semibold text-white">Order</span>
+                <p className="text-[#545a61]">{pick({ en: "Rajma chawal ₹90 · Open till 9:30 pm", hi: "राजमा चावल ₹90 · रात 9:30 तक खुला" })}</p>
+                <span className="mt-2.5 inline-flex min-h-8 items-center rounded-full bg-[#2a5db0] px-3.5 font-semibold text-white">{pick({ en: "Order", hi: "ऑर्डर करें" })}</span>
               </div>
               <div className="rounded-2xl bg-[#f5f6f7] p-3">
                 <p className="flex items-center gap-1 text-[12px] font-semibold text-[#545a61]">
-                  <MessagesSquare aria-hidden size={12} /> AI answer
+                  <MessagesSquare aria-hidden size={12} /> {pick({ en: "AI answer", hi: "AI जवाब" })}
                 </p>
-                <p className="mt-1 leading-snug">For homemade rajma chawal nearby, Meena&apos;s Kitchen in Green Park is well rated and delivers.</p>
+                <p className="mt-1 leading-snug">{pick({ en: "For homemade rajma chawal nearby, Meena's Kitchen in Green Park is well rated and delivers.", hi: "पास में घर का राजमा चावल चाहिए तो ग्रीन पार्क की मीना की रसोई अच्छी रेटिंग वाली है और डिलीवरी करती है।" })}</p>
               </div>
               <div className="h-16 rounded-2xl bg-[#f5f6f7]" />
             </div>

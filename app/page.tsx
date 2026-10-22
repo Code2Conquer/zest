@@ -37,10 +37,10 @@ const FEATURES: { icon: typeof Mic; text: Bi }[] = [
   { icon: BellRing, text: { en: "Never misses an order: gets louder, then calls your phone", hi: "कोई ऑर्डर नहीं छूटता: आवाज़ तेज़ करता है, फिर आपको फ़ोन करता है" } },
 ];
 
-const REGULARS: { name: string; usual: Bi; last: Bi; next: Bi }[] = [
-  { name: "Rahul", usual: { en: "Rajma chawal, every Friday", hi: "राजमा चावल, हर शुक्रवार" }, last: { en: "Last order 7 days ago", hi: "पिछला ऑर्डर 7 दिन पहले" }, next: { en: "Reminder ready for Friday", hi: "शुक्रवार का रिमाइंडर तैयार" } },
-  { name: "Priya", usual: { en: "Thali with an extra roti", hi: "थाली, एक रोटी ज़्यादा" }, last: { en: "Last order yesterday", hi: "पिछला ऑर्डर कल" }, next: { en: "Free roti owed from last week", hi: "पिछले हफ़्ते की एक रोटी बाक़ी" } },
-  { name: "Mr Sharma, Flat 302", usual: { en: "Aloo paratha, less spicy", hi: "आलू पराठा, कम मिर्च" }, last: { en: "Last order 3 days ago", hi: "पिछला ऑर्डर 3 दिन पहले" }, next: { en: "Told when aloo paratha is on", hi: "आलू पराठा बनने पर बताया जाएगा" } },
+const REGULARS: { name: Bi; usual: Bi; last: Bi; next: Bi }[] = [
+  { name: { en: "Rahul", hi: "राहुल" }, usual: { en: "Rajma chawal, every Friday", hi: "राजमा चावल, हर शुक्रवार" }, last: { en: "Last order 7 days ago", hi: "पिछला ऑर्डर 7 दिन पहले" }, next: { en: "Reminder ready for Friday", hi: "शुक्रवार का रिमाइंडर तैयार" } },
+  { name: { en: "Priya", hi: "प्रिया" }, usual: { en: "Thali with an extra roti", hi: "थाली, एक रोटी ज़्यादा" }, last: { en: "Last order yesterday", hi: "पिछला ऑर्डर कल" }, next: { en: "Free roti owed from last week", hi: "पिछले हफ़्ते की एक रोटी बाक़ी" } },
+  { name: { en: "Mr Sharma, Flat 302", hi: "शर्मा जी, फ़्लैट 302" }, usual: { en: "Aloo paratha, less spicy", hi: "आलू पराठा, कम मिर्च" }, last: { en: "Last order 3 days ago", hi: "पिछला ऑर्डर 3 दिन पहले" }, next: { en: "Told when aloo paratha is on", hi: "आलू पराठा बनने पर बताया जाएगा" } },
 ];
 
 const FAQ: { q: Bi; a: Bi; soon?: boolean }[] = [
@@ -279,10 +279,10 @@ export default function Home() {
           </div>
           <ul className="grid gap-3">
             {REGULARS.map((r) => (
-              <li key={r.name} className="flex items-center gap-4 rounded-[20px] bg-[var(--lp-paper)] p-4 sm:p-5">
-                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--lp-accent-soft)] text-[18px] font-semibold">{r.name[0]}</span>
+              <li key={r.name.en} className="flex items-center gap-4 rounded-[20px] bg-[var(--lp-paper)] p-4 sm:p-5">
+                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--lp-accent-soft)] text-[18px] font-semibold">{pick(r.name)[0]}</span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[17px] font-semibold">{r.name}</p>
+                  <p className="text-[17px] font-semibold">{pick(r.name)}</p>
                   <p className="text-[15px]">{pick(r.usual)}</p>
                   <p className="text-[14px] text-[var(--lp-muted)]">
                     {pick(r.last)} · {pick(r.next)}

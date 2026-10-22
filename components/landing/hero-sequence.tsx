@@ -153,11 +153,14 @@ function SellerPhone({ lifted, round, order, paid }: { lifted: boolean; round: n
         </div>
         <ul className="space-y-1 px-2.5 pt-2.5">
           {DISHES.map((d, k) => (
-            <li key={d.name} className={`flex items-center gap-2.5 rounded-xl bg-white p-1.5 ${lifted ? (round === 0 ? "hs-lift" : "") : "opacity-0"}`} style={{ animationDelay: `${k * 380}ms` }}>
-              <img src={d.photo} alt="" className="size-11 shrink-0 rounded-lg object-cover" />
+            <li key={d.name} className={`flex items-center gap-2 rounded-xl bg-white p-1.5 sm:gap-2.5 ${lifted ? (round === 0 ? "hs-lift" : "") : "opacity-0"}`} style={{ animationDelay: `${k * 380}ms` }}>
+              <img src={d.photo} alt="" className="size-9 shrink-0 rounded-lg object-cover sm:size-11" />
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-1 text-[12.5px] font-semibold leading-tight">
-                  <VegMark /> {d.name}
+                <p className="flex items-start gap-1 text-[12.5px] font-semibold leading-tight">
+                  <span className="mt-[1px]">
+                    <VegMark />
+                  </span>
+                  <span className="min-w-0">{d.name}</span>
                 </p>
                 <p className="text-[12px]">₹{d.price}</p>
               </div>

@@ -51,7 +51,16 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
   }
 
   const box = size === "sm" ? 208 : 260;
-  const label = { idle: "Waiting for orders", ringing: "New order", speaking: "Speaking", printing: "Printing the ticket", accepted: "Order accepted", escalating: "Order not accepted yet" }[state];
+  const label = pick(
+    {
+      idle: { en: "Zest Soundbox, waiting for orders", hi: "Zest Soundbox, ऑर्डर का इंतज़ार" },
+      ringing: { en: "Zest Soundbox, new order", hi: "Zest Soundbox, नया ऑर्डर" },
+      speaking: { en: "Zest Soundbox, speaking", hi: "Zest Soundbox, बोल रहा है" },
+      printing: { en: "Zest Soundbox, printing the ticket", hi: "Zest Soundbox, टिकट छाप रहा है" },
+      accepted: { en: "Zest Soundbox, order accepted", hi: "Zest Soundbox, ऑर्डर मंज़ूर" },
+      escalating: { en: "Zest Soundbox, order not accepted yet", hi: "Zest Soundbox, ऑर्डर अभी मंज़ूर नहीं हुआ" },
+    }[state],
+  );
 
   return (
     <figure className={`sb flex flex-col items-center ${className}`} data-state={state} style={{ "--sb": `${box}px` } as React.CSSProperties}>
@@ -61,7 +70,7 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
           type="button"
           onClick={onPress}
           disabled={!onPress}
-          aria-label={state === "accepted" ? "Food ready" : "Accept the order"}
+          aria-label={state === "accepted" ? pick({ en: "Food ready", hi: "खाना तैयार" }) : pick({ en: "Accept the order", hi: "ऑर्डर मंज़ूर करें" })}
           className="sb-button absolute left-1/2 top-0 z-20 -translate-x-1/2"
           style={{ width: box * 0.3, height: box * 0.3 }}
         >
@@ -69,7 +78,7 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
         </button>
 
         {/* Push to talk, on the right side */}
-        <button type="button" onClick={onTalk} disabled={!onTalk} aria-label="Push to talk" className="sb-talk absolute z-20 grid place-items-center" style={{ right: -box * 0.045, top: box * 0.42, width: box * 0.07, height: box * 0.22 }}>
+        <button type="button" onClick={onTalk} disabled={!onTalk} aria-label={pick({ en: "Push to talk", hi: "बोलने के लिए दबाएँ" })} className="sb-talk absolute z-20 grid place-items-center" style={{ right: -box * 0.045, top: box * 0.42, width: box * 0.07, height: box * 0.22 }}>
           <Mic aria-hidden size={Math.round(box * 0.05)} />
         </button>
 

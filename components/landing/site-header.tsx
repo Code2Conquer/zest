@@ -25,7 +25,7 @@ export function SiteHeader({ nav = HOME_NAV, start }: { nav?: NavLink[]; start: 
   return (
     <header className="relative z-30">
       <div className="lp-wrap flex h-[72px] items-center justify-between gap-4">
-        <a href="/" aria-label="Zest home" className="shrink-0">
+        <a href="/" aria-label={pick({ en: "Zest home", hi: "Zest होम" })} className="shrink-0">
           <Wordmark className="text-[28px]" />
         </a>
         <nav aria-label={pick({ en: "Sections", hi: "हिस्से" })} className="hidden items-center gap-7 text-[15px] font-medium xl:flex">
