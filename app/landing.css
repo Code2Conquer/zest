@@ -1,76 +1,98 @@
-/* Landing page. One motif runs the system: the kitchen order ticket, a square slip with a notch
-   cut into each side and a printed band along its top. Flat fields of the brand's colours,
-   no gradients, no resting shadows, no thin rules. */
+/* Landing page. Its own fixed palette: the page is a printed brochure for the product, so it does not
+   follow the system's dark mode (the app screens do). Stone ground, white product surfaces, curry-leaf
+   green for the dark bands, haldi for the one accent. Flat colour, no gradients, no resting shadows. */
 
 .lp {
-  --lp-ground: var(--paper);
-  --lp-paper: var(--surface);
-  --lp-ink: var(--ink);
-  --lp-muted: var(--ink-2);
+  --lp-ground: #f3f4f1;
+  --lp-paper: #ffffff;
+  --lp-sunken: #e8ebe6;
+  --lp-ink: #17201c;
+  --lp-muted: #4a5650;
+  --lp-line: #dde2dc;
   --lp-field: #12261b; /* curry-leaf green */
+  --lp-field-2: #1c3628;
   --lp-field-ink: #eef2ec;
+  --lp-field-muted: #b9c7bd;
   --lp-accent: #f2b035; /* haldi */
+  --lp-accent-soft: #fbefd2;
   --lp-accent-ink: #17201c;
   --lp-zomato: #c62f3b;
   --lp-swiggy: #d9820a;
-  --lp-notch: 14px;
-  --lp-m: clamp(18px, 2.2vw, 32px); /* the page's one pair of outer margins */
+  --lp-web: #2b6a4b;
+  --lp-dine: #2a7db8;
+  --lp-good: #237433;
+  --lp-bad: #b8321f;
+  --lp-m: clamp(18px, 4vw, 56px); /* the page's one pair of outer margins */
+  --lp-max: 1280px;
+  color-scheme: light;
   background: var(--lp-ground);
   color: var(--lp-ink);
 }
 
-/* The ticket: square corners, a V-notch cut into the middle of each side. */
-.tkt {
-  clip-path: polygon(0 0, 100% 0, 100% calc(50% - var(--lp-notch)), calc(100% - var(--lp-notch)) 50%, 100% calc(50% + var(--lp-notch)), 100% 100%, 0 100%, 0 calc(50% + var(--lp-notch)), var(--lp-notch) 50%, 0 calc(50% - var(--lp-notch)));
-}
-
-/* The printed band along a ticket's top edge: alternating filled bars. */
-.perf {
-  display: flex;
+.lp-wrap {
   width: 100%;
-  min-width: 0;
-  overflow: hidden;
-  contain: inline-size; /* the bars must never set the width of what holds them */
-}
-.perf > span {
-  flex: 0 0 28px;
-  height: 100%;
-}
-.perf > span:nth-child(odd) {
-  background: currentColor;
+  max-width: calc(var(--lp-max) + 2 * var(--lp-m));
+  margin-inline: auto;
+  padding-inline: var(--lp-m);
 }
 
-/* The ticket as bullet and as the button's hover. */
-.tkt-dot {
-  display: inline-block;
-  width: 0.55em;
-  height: 0.55em;
-  background: currentColor;
-  clip-path: polygon(0 0, 100% 0, 100% 35%, 75% 50%, 100% 65%, 100% 100%, 0 100%, 0 65%, 25% 50%, 0 35%);
+/* Product surfaces: real interface pieces, so they keep a quiet border. */
+.lp-ui {
+  background: var(--lp-paper);
+  border: 1px solid var(--lp-line); /* taste-skill-ignore: interface surface */
+  border-radius: 18px;
+  color: var(--lp-ink);
 }
+
 .lp-btn {
-  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   min-height: 52px;
-  padding: 0 1.6rem;
+  padding: 0 1.5rem;
+  border-radius: 999px;
   background: var(--lp-ink);
-  color: var(--lp-paper);
+  color: #fff;
   font-weight: 600;
-  font-size: 1.125rem;
-  transition: transform 150ms ease, background-color 150ms ease;
+  font-size: 17px;
+  transition: transform 160ms ease, background-color 160ms ease;
 }
 .lp-btn:hover {
   transform: translateY(-2px);
+  background: #000;
 }
 .lp-btn:active {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.98);
 }
-.lp-btn.on-dark {
+.lp-btn:focus-visible,
+.lp-ghost:focus-visible,
+.lp-link:focus-visible {
+  outline: 3px solid var(--lp-accent);
+  outline-offset: 3px;
+}
+.lp-btn.haldi {
   background: var(--lp-accent);
   color: var(--lp-accent-ink);
+}
+.lp-btn.haldi:hover {
+  background: #f6c15a;
+}
+.lp-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 52px;
+  padding: 0 1.25rem;
+  border-radius: 999px;
+  background: var(--lp-sunken);
+  font-weight: 600;
+  font-size: 17px;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+.lp-ghost:hover {
+  background: #dce1da;
+  transform: translateY(-2px);
 }
 .lp-link {
   text-decoration: underline;
@@ -81,85 +103,102 @@
   text-decoration-thickness: 3px;
 }
 
-/* Kitchen photographs crossfading in the hero: light shifting through the day. */
-.lp-fade {
-  position: absolute;
-  inset: 0;
+/* Entrances: short and early. The observer fires before a section reaches the screen, so nobody
+   watches content wait at half opacity. */
+.lp-in {
   opacity: 0;
-  transition: opacity 1.6s ease;
+  transform: translateY(18px);
+  transition: opacity 450ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 450ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: calc(var(--i, 0) * 70ms);
 }
-.lp-fade.on {
+.lp-seen .lp-in,
+.no-js .lp-in {
   opacity: 1;
-  animation: lp-drift 9s ease-out both;
+  transform: none;
 }
-/* The photo on screen drifts in slowly, like a camera settling on the pass. */
+
+/* Cards rise a little under the pointer. */
+.lp-lift {
+  transition: transform 180ms ease;
+}
+.lp-lift:hover {
+  transform: translateY(-4px);
+}
+
+/* The hero photo settles in slowly. */
+.lp-drift {
+  animation: lp-drift 12s ease-out both;
+}
 @keyframes lp-drift {
   from { transform: scale(1.08); }
   to { transform: scale(1); }
 }
 
-/* Prep bars fill from the left once the board is on screen. */
+/* The phone and the order alert float gently, out of step with each other. */
+.lp-float {
+  animation: lp-float 7s ease-in-out infinite;
+}
+.lp-float.late {
+  animation-delay: -3.5s;
+}
+@keyframes lp-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* A new order slides onto the board. */
+.lp-arrive {
+  animation: lp-arrive 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes lp-arrive {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Bars fill from the left once their section is on screen. */
 .lp-bar {
   transform-origin: left;
   transform: scaleX(0);
-  transition: transform 1100ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms;
+  transition: transform 1000ms cubic-bezier(0.2, 0.7, 0.2, 1) 250ms;
 }
 .lp-seen .lp-bar,
 .no-js .lp-bar {
   transform: none;
 }
 
-/* Entrances: each part of a section rises in turn when the section arrives. */
-.lp-in {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
-  transition-delay: calc(var(--i, 0) * 80ms);
+/* The live dot on the board. */
+.lp-pulse {
+  animation: lp-pulse 1.8s ease-in-out infinite;
 }
-.lp-seen .lp-in {
-  opacity: 1;
-  transform: none;
-}
-.no-js .lp-in {
-  opacity: 1;
-  transform: none;
+@keyframes lp-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
 }
 
-/* Cards in a field rise a little under the pointer. */
-.lp-lift {
-  transition: transform 150ms ease;
+.lp details > summary {
+  list-style: none;
+  cursor: pointer;
 }
-.lp-lift:hover {
-  transform: translateY(-6px);
-}
-
-/* FAQ cards: a filled slip with its tab cut into the top edge. */
-.lp-card {
-  clip-path: polygon(var(--tab-x, 0px) 0, calc(var(--tab-x, 0px) + 220px) 0, calc(var(--tab-x, 0px) + 220px) 40px, 100% 40px, 100% 100%, 0 100%, 0 40px, var(--tab-x, 0px) 40px);
-}
-
-@media (max-width: 640px) {
-  .lp-card {
-    clip-path: polygon(var(--tab-x, 0px) 0, calc(var(--tab-x, 0px) + 140px) 0, calc(var(--tab-x, 0px) + 140px) 40px, 100% 40px, 100% 100%, 0 100%, 0 40px, var(--tab-x, 0px) 40px);
-  }
+.lp details > summary::-webkit-details-marker {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-fade.on {
-    animation: none;
-  }
-  .lp-bar {
-    transform: none;
-  }
-  .lp-fade,
-  .lp-bar,
   .lp-in,
-  .lp-btn,
-  .lp-lift {
-    transition: none;
-  }
-  .lp-in {
+  .lp-bar {
     opacity: 1;
     transform: none;
+    transition: none;
+  }
+  .lp-drift,
+  .lp-float,
+  .lp-arrive,
+  .lp-pulse {
+    animation: none;
+  }
+  .lp-btn,
+  .lp-ghost,
+  .lp-lift {
+    transition: none;
   }
 }
