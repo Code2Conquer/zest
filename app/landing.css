@@ -223,58 +223,6 @@
 }
 
 
-/* One day at Meena's Kitchen: each moment's picture plays when it becomes current (.dy-play) and
-   otherwise rests in its finished state. */
-.dy-play .dy-a { animation: dy-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-.dy-play .dy-b { animation: dy-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) 250ms both; }
-.dy-play .dy-c { animation: dy-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) 700ms both; }
-.dy-play .dy-drop { animation: dy-in 380ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
-.dy-play .dy-tap { animation: dy-tap 600ms ease-out 1600ms both; }
-@keyframes dy-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: none; }
-}
-@keyframes dy-tap {
-  0% { opacity: 0; transform: scale(0.9); }
-  60% { opacity: 1; transform: scale(1.05); }
-  100% { opacity: 1; transform: scale(1); }
-}
-.dy-rider {
-  transform: translate(310px, 75px);
-}
-.dy-play .dy-rider {
-  animation: dy-ride 3400ms linear both;
-}
-@keyframes dy-ride {
-  0% { transform: translate(10px, 75px); }
-  24% { transform: translate(110px, 75px); }
-  38% { transform: translate(110px, 140px); }
-  62% { transform: translate(210px, 140px); }
-  76% { transform: translate(210px, 75px); }
-  100% { transform: translate(310px, 75px); }
-}
-.dy-play .dy-door { animation: dy-door 300ms ease-out both; }
-@keyframes dy-door {
-  from { opacity: 0.15; transform: scale(0.5); transform-box: fill-box; transform-origin: center; }
-  to { opacity: 1; transform: scale(1); transform-box: fill-box; transform-origin: center; }
-}
-
-/* Get found: the search typing itself in, then the result arriving. */
-.gf-type {
-  display: inline-block;
-  overflow: hidden;
-  white-space: nowrap;
-  vertical-align: bottom;
-  animation: gf-type 1100ms steps(28, end) both;
-}
-@keyframes gf-type {
-  from { max-width: 0; }
-  to { max-width: 100%; }
-}
-.gf-in {
-  animation: dy-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-
 .lp details > summary {
   list-style: none;
   cursor: pointer;
@@ -294,16 +242,7 @@
   .hs-bubble,
   .hs-chip,
   .hs-token,
-  .hs-cursor,
-  .dy-a,
-  .dy-b,
-  .dy-c,
-  .dy-drop,
-  .dy-tap,
-  .dy-rider,
-  .dy-door,
-  .gf-type,
-  .gf-in {
+  .hs-cursor {
     animation: none !important;
   }
   .lp-btn,

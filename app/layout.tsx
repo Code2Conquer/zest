@@ -16,8 +16,8 @@ const hand = Kalam({ subsets: ["latin", "devanagari"], weight: ["400", "700"], v
 const kot = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "600"], variable: "--font-kot", display: "swap", preload: false });
 
 export const metadata: Metadata = {
-  title: "Zest",
-  description: "Your kitchen, online in a minute. Your own ordering page, WhatsApp orders, UPI payments and delivery by Zomato riders, run by Zest's AI agents.",
+  title: "Zest · Online orders for home kitchens and stalls",
+  description: "Get online orders for your home kitchen, tiffin service or stall. Your own ordering page, WhatsApp orders, UPI payments, and delivery by you or by Zomato riders. Free to start.",
 };
 
 export const viewport: Viewport = {

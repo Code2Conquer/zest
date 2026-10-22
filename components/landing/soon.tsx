@@ -6,7 +6,7 @@ import { useApp } from "@/lib/state";
 export function Soon({ className = "" }: { className?: string }) {
   const { pick } = useApp();
   return (
-    <span className={`ml-2 inline-flex whitespace-nowrap rounded-full bg-[var(--lp-sunken)] px-2 py-0.5 align-middle text-[12.5px] font-semibold text-[var(--lp-muted)] ${className}`}>
+    <span className={`ml-2 inline-flex whitespace-nowrap rounded-full bg-[var(--lp-sunken)] px-2 py-0.5 align-middle text-[12.5px] font-semibold tracking-normal [font-variation-settings:normal] leading-normal text-[var(--lp-muted)] ${className}`}>
       {pick({ en: "Coming soon", hi: "जल्द आ रहा है" })}
     </span>
   );

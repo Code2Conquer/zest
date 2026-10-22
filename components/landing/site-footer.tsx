@@ -14,7 +14,7 @@ export function SiteFooter() {
         <div className="flex flex-wrap items-end justify-between gap-8">
           <div>
             <Wordmark className="text-[34px]" />
-            <p className="mt-3 text-[17px]">{pick({ en: "Your kitchen, online in a minute.", hi: "आपकी रसोई, एक मिनट में ऑनलाइन।" })}</p>
+            <p className="mt-3 text-[17px]">{pick({ en: "Online orders, delivered by you or by Zomato.", hi: "ऑनलाइन ऑर्डर, आप पहुँचाएँ या Zomato।" })}</p>
           </div>
           <nav aria-label={pick({ en: "Footer", hi: "फ़ुटर" })}>
             <ul className="flex flex-wrap gap-x-6 gap-y-3 text-[16px]">

@@ -36,7 +36,9 @@ export function LangToggle({ className = "" }: { className?: string }) {
           lang={l}
           aria-pressed={lang === l}
           onClick={() => setLang(l)}
-          className={`min-h-9 rounded-full px-3 transition-colors ${lang === l ? "bg-[color-mix(in_srgb,currentColor_14%,transparent)] font-semibold" : "opacity-75 hover:opacity-100"}`}
+          // While the page is in English, "हिंदी" is drawn in the phone's own Devanagari font: in Anek it
+          // would pull the whole Devanagari font file (~700 KB) for one word.
+          className={`min-h-9 rounded-full px-3 transition-colors ${lang === l ? "bg-[color-mix(in_srgb,currentColor_14%,transparent)] font-semibold" : "opacity-75 hover:opacity-100"} ${l === "hi" && lang !== "hi" ? "font-[system-ui,sans-serif]" : ""}`}
         >
           {l === "en" ? "English" : "हिंदी"}
         </button>

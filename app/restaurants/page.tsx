@@ -3,7 +3,7 @@
 import "../landing.css";
 import { useState } from "react";
 import { BellRing, Hand, Languages, Lock, Plus, Printer } from "lucide-react";
-import { AudienceSplit } from "@/components/landing/audience-split";
+import { AudienceSwitch } from "@/components/landing/audience-switch";
 import { AgentFlow } from "@/components/landing/flow";
 import { MorningSummary, RasoiPhone, RestaurantStage, RestaurantVoice } from "@/components/landing/restaurants";
 import { SiteFooter } from "@/components/landing/site-footer";
@@ -63,7 +63,8 @@ export default function Restaurants() {
 
       {/* Hero */}
       <section aria-labelledby="hero-h" className="lp-wrap pb-8 pt-2 lg:pb-10 lg:pt-6">
-        <h1 id="hero-h" className="lp-display max-w-[17ch] text-[40px] leading-[1.02] [text-wrap:balance] sm:text-[60px] lg:max-w-none lg:text-[clamp(56px,5.2vw,80px)]">
+        <AudienceSwitch current="restaurants" />
+        <h1 id="hero-h" className="lp-display mt-6 max-w-[17ch] text-[40px] sm:mt-8 leading-[1.02] [text-wrap:balance] sm:text-[60px] lg:max-w-none lg:text-[clamp(56px,5.2vw,80px)]">
           {pick({ en: "Never miss an order. Know every app by morning.", hi: "कोई ऑर्डर न छूटे। सुबह तक हर ऐप का हाल जानिए।" })}
         </h1>
         <div className="mt-8 grid grid-cols-[minmax(0,1fr)] items-center gap-12 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)]">
@@ -111,8 +112,6 @@ export default function Restaurants() {
           </div>
         </div>
       </section>
-
-      <AudienceSplit current="restaurants" />
 
       {/* One voice for every order */}
       <section id="voice" aria-labelledby="voice-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-10 lg:py-14">

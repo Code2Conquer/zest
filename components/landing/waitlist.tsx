@@ -31,7 +31,9 @@ const validPhone = (v: string) => {
   return /^[6-9]\d{9}$/.test(d);
 };
 
-export function Waitlist({ page, section, defaultType = "", tone = "light" }: { page: "/" | "/restaurants"; section: string; defaultType?: string; tone?: "light" | "dark" }) {
+const SOUNDBOX_DONE: Bi = { en: "You're on the list. We'll WhatsApp you when the Soundbox is ready for your kitchen.", hi: "आप लिस्ट में हैं। Soundbox आपकी रसोई के लिए तैयार होते ही हम आपको WhatsApp करेंगे।" };
+
+export function Waitlist({ page, section, defaultType = "", tone = "light", done = SOUNDBOX_DONE }: { page: "/" | "/restaurants"; section: string; defaultType?: string; tone?: "light" | "dark"; done?: Bi }) {
   const { pick } = useApp();
   const uid = useId();
   const [v, setV] = useState({ name: "", business: "", phone: "", city: "", type: defaultType });
@@ -88,7 +90,7 @@ export function Waitlist({ page, section, defaultType = "", tone = "light" }: { 
           <Check aria-hidden size={22} strokeWidth={3} />
         </span>
         <p className="mt-4 text-[20px] font-semibold leading-snug">
-          {pick({ en: "You're on the list. We'll WhatsApp you when the Soundbox is ready for your kitchen.", hi: "आप लिस्ट में हैं। Soundbox आपकी रसोई के लिए तैयार होते ही हम आपको WhatsApp करेंगे।" })}
+          {pick(done)}
         </p>
       </div>
     );
