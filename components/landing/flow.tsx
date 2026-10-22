@@ -183,7 +183,7 @@ export function AgentFlow() {
   }
 
   return (
-    <div ref={box} data-ui className="overflow-hidden rounded-[28px] bg-[#1c1f23] text-[#f1f1ec]">
+    <div ref={box} data-ui className="overflow-hidden rounded-[28px] bg-[#1c1f23] text-[#f1f1ec] outline outline-1 -outline-offset-1 outline-[#33383e]">
       <div role="tablist" aria-label={pick({ en: "Scenarios", hi: "हालात" })} className="flex flex-wrap justify-center gap-2 px-5 pt-7">
         {SCENARIOS.map((x, k) => (
           <button
@@ -284,13 +284,13 @@ export function AgentFlow() {
             const on = k === step - 1;
             const was = k < step - 1 || finished;
             return (
-              <li key={`${s}-${k}`} className={`flex items-start gap-3 rounded-2xl border p-3.5 transition-colors duration-500 ${on ? "border-[var(--z-turmeric)] bg-[#2a2e33]" : "border-[#33383e]"} ${on || was ? "" : "opacity-50"}`}>
-                <span className={`grid size-9 shrink-0 place-items-center rounded-full ${on ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : "bg-[#2a2e33] text-[#d9dee3]"}`}>
+              <li key={`${s}-${k}`} className={`flex items-start gap-3 rounded-2xl border p-3.5 transition-colors duration-500 ${on ? "border-[var(--z-turmeric)] bg-[#2a2e33]" : "border-[#33383e]"}`}>
+                <span className={`grid size-9 shrink-0 place-items-center rounded-full ${on ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : on || was ? "bg-[#2a2e33] text-[#d9dee3]" : "bg-[#24282d] text-[#80868d]"}`}>
                   <info.icon aria-hidden size={16} />
                 </span>
                 <div className="text-[15px] leading-snug">
-                  <p className="font-semibold text-white">{pick(info.name)}</p>
-                  <p className="text-[#d9dee3]">{pick(x.text)}</p>
+                  <p className={`font-semibold ${on || was ? "text-white" : "text-[#a3a9b0]"}`}>{pick(info.name)}</p>
+                  <p className={on || was ? "text-[#d9dee3]" : "text-[#a3a9b0]"}>{pick(x.text)}</p>
                 </div>
               </li>
             );

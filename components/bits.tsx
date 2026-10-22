@@ -17,7 +17,7 @@ export function ChannelTag({ channel, className = "" }: { channel: Channel; clas
 export function Wordmark({ className = "" }: { className?: string }) {
   // A single turmeric fleck after the "t", like zest on a dish: the only place the accent appears in the chrome.
   return (
-    <span aria-label="Zest" className={`relative inline-flex items-start text-[1.65rem] font-semibold leading-none tracking-[-0.03em] ${className}`}>
+    <span role="img" aria-label="Zest" className={`relative inline-flex items-start text-[1.65rem] font-semibold leading-none tracking-[-0.03em] ${className}`}>
       <span aria-hidden>Zest</span>
       <span aria-hidden className="ml-[0.06em] mt-[0.04em] size-[0.22em] rounded-full bg-turmeric" />
     </span>

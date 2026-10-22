@@ -10,6 +10,7 @@ import { HeroSequence } from "@/components/landing/hero-sequence";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SoldOut } from "@/components/landing/sold-out";
+import { Soon } from "@/components/landing/soon";
 import { SoundboxDemo } from "@/components/landing/soundbox-demo";
 import { Waitlist } from "@/components/landing/waitlist";
 import type { Bi } from "@/lib/i18n";
@@ -45,32 +46,26 @@ const REGULARS: { name: Bi; usual: Bi; last: Bi; next: Bi }[] = [
 
 const FAQ: { q: Bi; a: Bi; soon?: boolean }[] = [
   { q: { en: "Do I need to be on Zomato or Swiggy?", hi: "क्या मुझे Zomato या Swiggy पर होना ज़रूरी है?" }, a: { en: "No. Zest gives you your own page and WhatsApp ordering. Zomato riders only deliver.", hi: "नहीं। Zest आपको अपना पेज और WhatsApp ऑर्डर देता है। Zomato राइडर सिर्फ़ डिलीवरी करते हैं।" } },
-  { q: { en: "Who delivers?", hi: "डिलीवरी कौन करता है?" }, a: { en: "You choose for each order: pickup, your own helper, or a Zomato rider with live tracking.", hi: "हर ऑर्डर के लिए आप चुनिए: पिकअप, आपका अपना हेल्पर, या लाइव ट्रैकिंग के साथ Zomato राइडर।" } },
+  { q: { en: "Who delivers?", hi: "डिलीवरी कौन करता है?" }, a: { en: "You choose for each order: pickup, your own helper, or a Zomato rider with live tracking.", hi: "हर ऑर्डर के लिए आप चुनिए: पिकअप, आपका अपना हेल्पर, या लाइव ट्रैकिंग के साथ Zomato राइडर।" }, soon: true },
   { q: { en: "Who pays for delivery?", hi: "डिलीवरी का पैसा कौन देता है?" }, a: { en: "You decide: the guest pays, you offer free delivery above an amount, or pickup only.", hi: "आप तय कीजिए: ग्राहक दे, एक रक़म से ऊपर आप मुफ़्त डिलीवरी दें, या सिर्फ़ पिकअप।" } },
   { q: { en: "How do I get paid?", hi: "मुझे पैसा कैसे मिलेगा?" }, a: { en: "Guests pay by UPI, straight to your account.", hi: "ग्राहक UPI से पैसा देते हैं, सीधे आपके खाते में।" } },
   { q: { en: "Do I need an FSSAI registration?", hi: "क्या FSSAI रजिस्ट्रेशन ज़रूरी है?" }, a: { en: "For delivery, yes. Zest helps you apply.", hi: "डिलीवरी के लिए, हाँ। Zest आवेदन में मदद करता है।" }, soon: true },
   { q: { en: "What does it cost?", hi: "इसका ख़र्च कितना है?" }, a: { en: "Free to start.", hi: "शुरुआत मुफ़्त है।" } },
-  { q: { en: "Will people find me on Google?", hi: "क्या लोग मुझे Google पर ढूँढ पाएँगे?" }, a: { en: "Yes. Zest builds your website for search and sets up your Google listing. Home kitchens can show their delivery area without showing their address.", hi: "हाँ। Zest आपकी वेबसाइट सर्च के लिए बनाता है और Google लिस्टिंग तैयार करता है। घर की रसोई अपना पता दिखाए बिना डिलीवरी का इलाक़ा दिखा सकती है।" } },
+  { q: { en: "Will people find me on Google?", hi: "क्या लोग मुझे Google पर ढूँढ पाएँगे?" }, a: { en: "Yes. Zest builds your website for search and sets up your Google listing. Home kitchens can show their delivery area without showing their address.", hi: "हाँ। Zest आपकी वेबसाइट सर्च के लिए बनाता है और Google लिस्टिंग तैयार करता है। घर की रसोई अपना पता दिखाए बिना डिलीवरी का इलाक़ा दिखा सकती है।" }, soon: true },
   { q: { en: "Do I need a smartphone?", hi: "क्या स्मार्टफ़ोन चाहिए?" }, a: { en: "A phone with WhatsApp is enough to start. The Soundbox lets you run orders without touching it.", hi: "शुरू करने के लिए WhatsApp वाला फ़ोन काफ़ी है। Soundbox से आप फ़ोन छुए बिना ऑर्डर चला सकते हैं।" } },
   { q: { en: "Which languages?", hi: "कौन-सी भाषाएँ?" }, a: { en: "Hindi and English today, more Indian languages soon. Write in Hinglish and Zest answers in kind.", hi: "अभी हिंदी और अंग्रेज़ी, जल्द और भारतीय भाषाएँ। हिंग्लिश में लिखिए, Zest उसी में जवाब देगा।" } },
 ];
 
-const SOON: Bi = { en: "Coming soon", hi: "जल्द आ रहा है" };
 const H2 = "lp-display text-[clamp(34px,4vw,58px)] leading-[1.02] [text-wrap:balance]";
 const LEAD = "max-w-[38em] text-[18px] leading-relaxed text-[var(--lp-muted)]";
 
-/** A small "Coming soon" tag beside anything not live yet. */
-function Soon() {
-  const { pick } = useApp();
-  return <span className="ml-2 inline-flex rounded-full bg-[var(--lp-sunken)] px-2 py-0.5 align-middle text-[12.5px] font-semibold text-[var(--lp-muted)]">{pick(SOON)}</span>;
-}
 
 export default function Home() {
   const { pick } = useApp();
   const starts = (
     <div className="flex flex-wrap gap-3">
       <a href="/join?journey=new&from=menu-photo" className="lp-btn haldi">
-        {pick({ en: "Upload menu photo", hi: "मेन्यू की फ़ोटो भेजें" })}
+        {pick({ en: "Upload menu photo", hi: "मेन्यू की फ़ोटो भेजें" })} <Soon className="bg-[#fbefd3]" />
       </a>
       <a href="#waitlist" className="lp-ghost">
         {pick({ en: "Start on WhatsApp", hi: "WhatsApp पर शुरू करें" })} <Soon />
@@ -83,27 +78,29 @@ export default function Home() {
       <SiteHeader start={{ href: "/join?journey=new", label: { en: "Start free", hi: "मुफ़्त शुरू करें" } }} />
 
       {/* Hero */}
-      <section aria-labelledby="hero-h" className="lp-wrap grid grid-cols-[minmax(0,1fr)] items-start gap-12 pb-20 pt-6 lg:pb-28 lg:pt-12 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:gap-12">
-        <div className="xl:pt-6">
-          <h1 id="hero-h" className="lp-display text-[40px] leading-[1.02] sm:text-[60px] xl:text-[clamp(56px,5vw,76px)]">
-            {pick({ en: "Your kitchen, online in a minute. Zest does the rest.", hi: "आपकी रसोई, एक मिनट में ऑनलाइन। बाक़ी सब Zest करेगा।" })}
-          </h1>
-          <p className="mt-6 max-w-[36em] text-[18px] leading-relaxed text-[var(--lp-muted)]">
-            {pick({
-              en: "Send a photo of your menu and your own ordering page is live, with WhatsApp orders, UPI payments and delivery by Zomato riders. Zest's AI agents take orders, bring back your regulars and find new customers. The Zest Soundbox tells you every order out loud.",
-              hi: "अपने मेन्यू की फ़ोटो भेजिए और आपका अपना ऑर्डर पेज तैयार, WhatsApp ऑर्डर, UPI पेमेंट और Zomato राइडर से डिलीवरी के साथ। Zest के AI एजेंट ऑर्डर लेते हैं, पुराने ग्राहकों को वापस लाते हैं और नए ग्राहक ढूँढते हैं। Zest Soundbox हर ऑर्डर बोलकर बताता है।",
-            })}
-          </p>
-          <div className="mt-8">{starts}</div>
-          <p className="mt-4 text-[16px] font-medium">{pick({ en: "Free to start. No app to learn.", hi: "शुरुआत मुफ़्त। कोई ऐप सीखने की ज़रूरत नहीं।" })}</p>
-          <p className="mt-6 text-[16px] text-[var(--lp-muted)]">
-            {pick({ en: "Already on Zomato or Swiggy?", hi: "पहले से Zomato या Swiggy पर हैं?" })}{" "}
-            <a href="/restaurants" className="lp-link font-medium text-[var(--lp-ink)]">
-              {pick({ en: "See Zest for restaurants", hi: "रेस्टोरेंट के लिए Zest देखें" })}
-            </a>
-          </p>
+      <section aria-labelledby="hero-h" className="lp-wrap pb-20 pt-6 lg:pb-28 lg:pt-12">
+        <h1 id="hero-h" className="lp-display max-w-[17ch] text-[40px] leading-[1.02] [text-wrap:balance] sm:text-[60px] xl:max-w-none xl:text-[clamp(60px,5.4vw,80px)]">
+          {pick({ en: "Your kitchen, online in a minute. Zest does the rest.", hi: "आपकी रसोई, एक मिनट में ऑनलाइन। बाक़ी सब Zest करेगा।" })}
+        </h1>
+        <div className="mt-8 grid grid-cols-[minmax(0,1fr)] items-start gap-12 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:gap-12">
+          <div>
+            <p className="max-w-[36em] text-[18px] leading-relaxed text-[var(--lp-muted)]">
+              {pick({
+                en: "Send a photo of your menu and your own ordering page is live, with WhatsApp orders, UPI payments and delivery by Zomato riders. Zest's AI agents take orders, bring back your regulars and find new customers. The Zest Soundbox tells you every order out loud.",
+                hi: "अपने मेन्यू की फ़ोटो भेजिए और आपका अपना ऑर्डर पेज तैयार, WhatsApp ऑर्डर, UPI पेमेंट और Zomato राइडर से डिलीवरी के साथ। Zest के AI एजेंट ऑर्डर लेते हैं, पुराने ग्राहकों को वापस लाते हैं और नए ग्राहक ढूँढते हैं। Zest Soundbox हर ऑर्डर बोलकर बताता है।",
+              })}
+            </p>
+            <div className="mt-8">{starts}</div>
+            <p className="mt-4 text-[16px] font-medium">{pick({ en: "Free to start. No app to learn.", hi: "शुरुआत मुफ़्त। कोई ऐप सीखने की ज़रूरत नहीं।" })}</p>
+            <p className="mt-6 text-[16px] text-[var(--lp-muted)]">
+              {pick({ en: "Already on Zomato or Swiggy?", hi: "पहले से Zomato या Swiggy पर हैं?" })}{" "}
+              <a href="/restaurants" className="lp-link font-medium text-[var(--lp-ink)]">
+                {pick({ en: "See Zest for restaurants", hi: "रेस्टोरेंट के लिए Zest देखें" })}
+              </a>
+            </p>
+          </div>
+          <HeroSequence />
         </div>
-        <HeroSequence />
       </section>
 
       {/* One day at Meena's Kitchen */}
@@ -137,7 +134,10 @@ export default function Home() {
           <dl className="mt-12 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-5">
             {AGENT_LIST.map((x) => (
               <div key={x.name.en}>
-                <dt className="text-[17px] font-semibold">{pick(x.name)}</dt>
+                <dt className="text-[17px] font-semibold">
+                  {pick(x.name)}
+                  {x.name.en === "Growth" && <Soon />}
+                </dt>
                 <dd className="mt-1 text-[15px] leading-relaxed text-[var(--lp-muted)]">{pick(x.does)}</dd>
               </div>
             ))}
@@ -166,6 +166,7 @@ export default function Home() {
           <p className="mt-10 max-w-[44em] text-[18px] leading-relaxed">
             {pick({ en: "Zest watches what people search for nearby and tells you what to add:", hi: "Zest देखता है कि आस-पास लोग क्या खोज रहे हैं और बताता है क्या जोड़ें:" })}{" "}
             <span className="font-semibold">{pick({ en: "“Many people near you search for Jain thali. Want to add one?”", hi: "“आपके आस-पास बहुत लोग जैन थाली खोजते हैं। एक जोड़ें?”" })}</span>
+            <Soon />
           </p>
         </div>
       </section>
@@ -216,7 +217,7 @@ export default function Home() {
             </ul>
           </div>
           <div className="mt-16 grid items-start gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-            <p className="lp-display text-[clamp(26px,2.8vw,40px)] leading-[1.1] [text-wrap:balance]">
+            <p className="text-[22px] font-semibold leading-snug [text-wrap:balance]">
               {pick({ en: "You trust a soundbox with your payments. Now trust one with your orders.", hi: "पेमेंट के लिए आप साउंडबॉक्स पर भरोसा करते हैं। अब ऑर्डर के लिए भी कीजिए।" })}
             </p>
             <div>
@@ -230,8 +231,9 @@ export default function Home() {
       {/* Delivery, your way */}
       <section aria-labelledby="delivery-h" className="bg-[var(--lp-sunken)] py-20 lg:py-28">
         <div className="lp-wrap">
-          <h2 id="delivery-h" className={`max-w-[22ch] ${H2}`}>
+          <h2 id="delivery-h" className={H2}>
             {pick({ en: "Pickup, your helper or a Zomato rider. Zest picks the best way.", hi: "पिकअप, आपका हेल्पर या Zomato राइडर। सबसे अच्छा तरीक़ा Zest चुनता है।" })}
+            <Soon />
           </h2>
           <p className={`mt-4 ${LEAD}`}>
             {pick({
@@ -250,6 +252,7 @@ export default function Home() {
         <div className="lp-wrap">
           <h2 id="soldout-h" className={H2}>
             {pick({ en: "Sold out? Just say it.", hi: "ख़त्म हो गया? बस बोल दीजिए।" })}
+            <Soon />
           </h2>
           <p className={`mt-4 ${LEAD}`}>
             {pick({
@@ -276,6 +279,10 @@ export default function Home() {
                 hi: "हर ऑर्डर के साथ ग्राहक का नाम, नंबर और पसंदीदा डिश आती है, और ये आपके ही रहते हैं। जब उनकी पसंद की डिश मेन्यू में हो, Zest उन्हें याद दिलाता है, और नए ग्राहकों का स्वागत आपके चुने ऑफ़र से करता है।",
               })}
             </p>
+            <p className="mt-4 text-[15px] text-[var(--lp-muted)]">
+              {pick({ en: "The guest list is live; reminders and welcome offers are", hi: "ग्राहक सूची चालू है; रिमाइंडर और स्वागत ऑफ़र" })}
+              <Soon />
+            </p>
           </div>
           <ul className="grid gap-3">
             {REGULARS.map((r) => (
@@ -295,7 +302,7 @@ export default function Home() {
       </section>
 
       {/* Start in a minute */}
-      <section aria-labelledby="start-h" className="bg-[var(--z-ink)] py-20 text-[#f1f1ec] lg:py-28">
+      <section aria-labelledby="start-h" className="bg-[#15181b] py-20 text-[#f1f1ec] lg:py-28">
         <div className="lp-wrap grid items-end gap-12 lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)]">
           <div>
             <h2 id="start-h" className={H2}>
@@ -317,7 +324,7 @@ export default function Home() {
           <div className="lg:pb-2">
             <div className="flex flex-wrap gap-3">
               <a href="/join?journey=new&from=menu-photo" className="lp-btn haldi">
-                {pick({ en: "Upload menu photo", hi: "मेन्यू की फ़ोटो भेजें" })}
+                {pick({ en: "Upload menu photo", hi: "मेन्यू की फ़ोटो भेजें" })} <Soon className="bg-[#fbefd3]" />
               </a>
               <a href="#waitlist" className="lp-ghost on-dark">
                 {pick({ en: "Start on WhatsApp", hi: "WhatsApp पर शुरू करें" })} <Soon />

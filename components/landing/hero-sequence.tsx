@@ -154,7 +154,7 @@ function SellerPhone({ lifted, round, order, paid }: { lifted: boolean; round: n
         <ul className="space-y-1 px-2.5 pt-2.5">
           {DISHES.map((d, k) => (
             <li key={d.name} className={`flex items-center gap-2 rounded-xl bg-white p-1.5 sm:gap-2.5 ${lifted ? (round === 0 ? "hs-lift" : "") : "opacity-0"}`} style={{ animationDelay: `${k * 380}ms` }}>
-              <img src={d.photo} alt="" className="size-9 shrink-0 rounded-lg object-cover sm:size-11" />
+              <img src={d.thumb} alt="" width={44} height={44} className="size-9 shrink-0 rounded-lg object-cover sm:size-11" />
               <div className="min-w-0 flex-1">
                 <p className="flex items-start gap-1 text-[12.5px] font-semibold leading-tight">
                   <span className="mt-[1px]">
@@ -190,7 +190,7 @@ function SellerPhone({ lifted, round, order, paid }: { lifted: boolean; round: n
 
 function VegMark() {
   return (
-    <span aria-label="Veg" className="grid size-3 shrink-0 place-items-center rounded-[2px] border-[1.5px] border-[#2f7a4c]">
+    <span role="img" aria-label="Veg" className="grid size-3 shrink-0 place-items-center rounded-[2px] border-[1.5px] border-[#2f7a4c]">
       <span className="size-1.5 rounded-full bg-[#2f7a4c]" />
     </span>
   );

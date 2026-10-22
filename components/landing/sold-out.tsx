@@ -57,18 +57,14 @@ export function SoldOut() {
         <Soundbox size="sm" state={talking ? "speaking" : "idle"} caption={talking ? { en: "Listening…", hi: "सुन रहा है…" } : said ?? { en: "Press the side button and say a dish is finished.", hi: "साइड बटन दबाइए और बोलिए कौन-सी डिश ख़त्म हुई।" }} clip={said && off ? "sold-out" : undefined} onTalk={() => say(!off)} />
         <p className="mt-2 text-[14px] text-[var(--lp-muted)]">{pick({ en: "“Rajma khatam”", hi: "“राजमा ख़त्म”" })}</p>
       </div>
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="rounded-[24px] bg-[var(--lp-paper)] px-5 py-2 outline outline-1 -outline-offset-1 outline-[var(--lp-line)]">
         {CHANNELS.map((c, k) => (
-          <li key={c.id} className="flex items-center gap-3 rounded-2xl bg-[var(--lp-paper)] p-4 ring-1 ring-[var(--lp-line)]">
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--lp-sunken)]">
-              <c.icon aria-hidden size={19} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[16px] font-semibold">{pick(c.name)}</p>
-              <p className={`text-[15px] transition-colors duration-300 ${off ? "text-[var(--lp-bad)]" : "text-[var(--lp-good)]"}`} style={{ transitionDelay: `${k * 220}ms` }}>
-                {off ? pick({ en: "Rajma chawal: sold out", hi: "राजमा चावल: ख़त्म" }) : pick({ en: "Rajma chawal: on", hi: "राजमा चावल: उपलब्ध" })}
-              </p>
-            </div>
+          <li key={c.id} className="flex items-center gap-4 py-4">
+            <c.icon aria-hidden size={20} className="shrink-0 text-[var(--lp-muted)]" />
+            <p className="min-w-0 flex-1 text-[17px] font-semibold">{pick(c.name)}</p>
+            <p className={`text-right text-[15px] font-medium transition-colors duration-300 ${off ? "text-[var(--lp-bad)]" : "text-[var(--lp-good)]"}`} style={{ transitionDelay: `${k * 220}ms` }}>
+              {off ? pick({ en: "Rajma chawal: sold out", hi: "राजमा चावल: ख़त्म" }) : pick({ en: "Rajma chawal: on", hi: "राजमा चावल: उपलब्ध" })}
+            </p>
           </li>
         ))}
       </ul>

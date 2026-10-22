@@ -107,7 +107,7 @@ export function Waitlist({ page, section, defaultType = "", tone = "light" }: { 
       )}
     </div>
   );
-  const inputCls = (f: Field) => `block min-h-12 w-full rounded-xl px-4 text-[17px] outline-none focus:ring-2 focus:ring-[var(--z-turmeric)] ${box} ${errors[f] ? "ring-2 ring-[var(--lp-bad)]" : ""}`;
+  const inputCls = (f: Field) => `block min-h-12 w-full rounded-xl px-4 text-[17px] outline-none  ${box} ${errors[f] ? "outline outline-2 -outline-offset-2 outline-[var(--lp-bad)]" : ""}`;
   const aria = (f: Field) => ({ "aria-invalid": !!errors[f] || undefined, "aria-describedby": errors[f] ? `${uid}-${f}-err` : undefined });
 
   return (

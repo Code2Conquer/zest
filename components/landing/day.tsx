@@ -80,17 +80,38 @@ export function OneDay() {
   const narrow = useRef<(HTMLLIElement | null)[]>([]);
   const strip = useRef<HTMLOListElement>(null);
 
-  // Which moment is current: the one crossing the middle of the screen (wide) or snapped into view (phone).
+  // Which moment is current. Wide screens: the one whose middle is nearest the middle of the screen,
+  // checked on scroll (a thin "middle line" can fall between moments and miss a jump). Phones: the
+  // card snapped into view in the strip.
   useEffect(() => {
-    const pickFrom = (list: (HTMLLIElement | null)[]) => (entries: IntersectionObserverEntry[]) => {
-      for (const e of entries) if (e.isIntersecting) setActive(list.indexOf(e.target as HTMLLIElement));
+    let frame = 0;
+    const nearest = () => {
+      frame = 0;
+      const mid = window.innerHeight / 2;
+      let best = -1, dist = Infinity;
+      wide.current.forEach((el, k) => {
+        if (!el || !el.offsetParent) return;
+        const r = el.getBoundingClientRect();
+        const d = Math.abs(r.top + r.height / 2 - mid);
+        if (d < dist) [best, dist] = [k, d];
+      });
+      if (best >= 0) setActive(best);
     };
-    const a = new IntersectionObserver(pickFrom(wide.current), { rootMargin: "-48% 0px -48% 0px" });
-    const b = new IntersectionObserver(pickFrom(narrow.current), { root: strip.current, threshold: 0.6 });
-    wide.current.forEach((el) => el && a.observe(el));
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(nearest);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    nearest();
+    const b = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setActive(narrow.current.indexOf(e.target as HTMLLIElement));
+      },
+      { root: strip.current, threshold: 0.6 },
+    );
     narrow.current.forEach((el) => el && b.observe(el));
     return () => {
-      a.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
       b.disconnect();
     };
   }, []);
@@ -132,7 +153,7 @@ export function OneDay() {
       {/* Phones and tablets: Soundbox above, the day as a swipe */}
       <div className="lg:hidden">
         <div className="flex justify-center rounded-[28px] bg-[var(--lp-paper)] px-4 py-8">{box}</div>
-        <ol ref={strip} aria-label={pick({ en: "Moments in Meena's day", hi: "मीना के दिन के पल" })} className="-mx-[var(--lp-m)] mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[var(--lp-m)] pb-3 [scrollbar-width:none]">
+        <ol ref={strip} tabIndex={0} aria-label={pick({ en: "Moments in Meena's day", hi: "मीना के दिन के पल" })} className="-mx-[var(--lp-m)] mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[var(--lp-m)] pb-3 [scrollbar-width:none]">
           {MOMENTS.map((x, k) => (
             <li key={x.id} ref={(el) => void (narrow.current[k] = el)} className="w-[86%] max-w-[420px] shrink-0 snap-center rounded-[24px] bg-[var(--lp-paper)] p-5">
               <MomentHead m={x} />
@@ -169,7 +190,7 @@ function Live({ on }: { on: boolean }) {
   const { pick } = useApp();
   return (
     <div data-ui className={`grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] ${on ? "dy-play" : ""}`}>
-      <div className="dy-a rounded-2xl bg-[var(--lp-paper)] p-4 ring-1 ring-[var(--lp-line)]">
+      <div className="dy-a rounded-2xl bg-[var(--lp-paper)] p-4 outline outline-1 -outline-offset-1 outline-[var(--lp-line)]">
         <p className="flex items-center gap-2 text-[14px] text-[var(--lp-muted)]">
           <Search aria-hidden size={15} /> ghar ka khana green park
         </p>
@@ -177,7 +198,7 @@ function Live({ on }: { on: boolean }) {
         <p className="text-[14px] text-[var(--lp-muted)]">{pick({ en: "Delivers in Green Park · Open till 9:30 pm", hi: "ग्रीन पार्क में डिलीवरी · रात 9:30 तक खुला" })}</p>
         <span className="mt-3 inline-flex min-h-9 items-center rounded-full bg-[#2a5db0] px-4 text-[14px] font-semibold text-white">{pick({ en: "Order", hi: "ऑर्डर करें" })}</span>
       </div>
-      <div className="dy-b flex items-center gap-3 rounded-2xl bg-[var(--lp-paper)] p-4 ring-1 ring-[var(--lp-line)] sm:flex-col sm:justify-center">
+      <div className="dy-b flex items-center gap-3 rounded-2xl bg-[var(--lp-paper)] p-4 outline outline-1 -outline-offset-1 outline-[var(--lp-line)] sm:flex-col sm:justify-center">
         <QrCode aria-hidden size={56} />
         <p className="text-[13px] font-semibold sm:text-center">{pick({ en: "Counter QR", hi: "काउंटर QR" })}</p>
       </div>
@@ -192,7 +213,7 @@ function Lunch({ on }: { on: boolean }) {
   const { pick } = useApp();
   const flats = ["A-102", "A-305", "B-14", "B-201", "C-7", "C-410"];
   return (
-    <div data-ui className={`rounded-2xl bg-[var(--lp-paper)] p-4 ring-1 ring-[var(--lp-line)] ${on ? "dy-play" : ""}`}>
+    <div data-ui className={`rounded-2xl bg-[var(--lp-paper)] p-4 outline outline-1 -outline-offset-1 outline-[var(--lp-line)] ${on ? "dy-play" : ""}`}>
       <ul className="grid grid-cols-3 gap-2 text-[13px]">
         {flats.map((f, k) => (
           <li key={f} className="dy-drop rounded-xl bg-[var(--lp-sunken)] px-2.5 py-2" style={{ animationDelay: `${k * 120}ms` }}>
@@ -211,7 +232,7 @@ function Lunch({ on }: { on: boolean }) {
 function Ride({ on }: { on: boolean }) {
   const { pick } = useApp();
   return (
-    <div data-ui className={`rounded-2xl bg-[var(--lp-paper)] p-4 ring-1 ring-[var(--lp-line)] ${on ? "dy-play" : ""}`}>
+    <div data-ui className={`rounded-2xl bg-[var(--lp-paper)] p-4 outline outline-1 -outline-offset-1 outline-[var(--lp-line)] ${on ? "dy-play" : ""}`}>
       <svg viewBox="0 0 320 150" className="w-full" role="img" aria-label={pick({ en: "A rider's route through Green Park, stopping at six doors", hi: "ग्रीन पार्क में राइडर का रास्ता, छह दरवाज़ों पर रुकते हुए" })}>
         {[[20, 20], [120, 20], [220, 20], [20, 90], [120, 90], [220, 90]].map(([x, y], k) => (
           <rect key={k} x={x} y={y} width="80" height="44" rx="8" fill="var(--lp-sunken)" />
@@ -231,7 +252,7 @@ function Rahul({ on }: { on: boolean }) {
   const { pick } = useApp();
   return (
     <div data-ui className={`grid gap-3 sm:grid-cols-2 ${on ? "dy-play" : ""}`}>
-      <div className="dy-a rounded-2xl bg-[var(--lp-paper)] p-4 ring-1 ring-[var(--lp-line)]">
+      <div className="dy-a rounded-2xl bg-[var(--lp-paper)] p-4 outline outline-1 -outline-offset-1 outline-[var(--lp-line)]">
         <p className="text-[17px] font-semibold">Rahul</p>
         <p className="text-[14px] text-[var(--lp-muted)]">{pick({ en: "Rajma chawal, every Friday · 14 orders", hi: "राजमा चावल, हर शुक्रवार · 14 ऑर्डर" })}</p>
         <p className="mt-2 text-[14px]">{pick({ en: "Last order: last Friday", hi: "पिछला ऑर्डर: पिछले शुक्रवार" })}</p>
@@ -250,7 +271,7 @@ function Roti({ on }: { on: boolean }) {
   const { pick } = useApp();
   return (
     <div data-ui className={`space-y-3 ${on ? "dy-play" : ""}`}>
-      <div className="dy-a rounded-2xl bg-[var(--lp-paper)] p-4 ring-1 ring-[var(--lp-line)]">
+      <div className="dy-a rounded-2xl bg-[var(--lp-paper)] p-4 outline outline-1 -outline-offset-1 outline-[var(--lp-line)]">
         <p className="flex items-center gap-1 text-[14px] font-semibold">
           Priya <Star aria-hidden size={13} fill="currentColor" strokeWidth={0} className="text-[var(--lp-bad)]" /> 2
         </p>
@@ -271,8 +292,8 @@ function Diwali({ on }: { on: boolean }) {
   const { pick } = useApp();
   return (
     <div data-ui className={`grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)] ${on ? "dy-play" : ""}`}>
-      <img src="/photos/meena/sweets-box.jpg" alt={pick({ en: "A box of homemade sweets", hi: "घर की बनी मिठाई का डिब्बा" })} className="dy-a h-32 w-full rounded-2xl object-cover sm:w-36" loading="lazy" />
-      <div className="dy-c rounded-2xl bg-[var(--lp-paper)] p-4 ring-1 ring-[var(--lp-line)]">
+      <img src="/photos/meena/sweets-box-sm.jpg" alt={pick({ en: "A box of homemade sweets", hi: "घर की बनी मिठाई का डिब्बा" })} className="dy-a h-32 w-full rounded-2xl object-cover sm:w-36" loading="lazy" />
+      <div className="dy-c rounded-2xl bg-[var(--lp-paper)] p-4 outline outline-1 -outline-offset-1 outline-[var(--lp-line)]">
         <p className="text-[16px] font-semibold">{pick({ en: "Diwali sweets box · ₹450", hi: "दिवाली मिठाई का डिब्बा · ₹450" })}</p>
         <p className="text-[14px] text-[var(--lp-muted)]">{pick({ en: "For 38 regulars, plus a ₹500 Instagram ad within 3 km", hi: "38 पुराने ग्राहकों के लिए, और 3 किमी में ₹500 का Instagram विज्ञापन" })}</p>
         <div className="mt-3 flex gap-2">

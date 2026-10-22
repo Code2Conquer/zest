@@ -52,7 +52,7 @@ export function RestaurantStage() {
           const on = now.ch === c && phase !== "rest";
           const Icon = CH[c].icon;
           return (
-            <li key={c} className={`flex items-center gap-3 rounded-2xl p-3.5 transition-colors duration-500 ${on ? "bg-[var(--lp-paper)] ring-2 ring-[var(--z-turmeric)]" : "bg-[var(--lp-paper)] ring-1 ring-[var(--lp-line)]"}`}>
+            <li key={c} className={`flex items-center gap-3 rounded-2xl p-3.5 transition-colors duration-500 ${on ? "bg-[var(--lp-paper)] outline outline-2 -outline-offset-2 outline-[var(--z-turmeric)]" : "bg-[var(--lp-paper)] outline outline-1 -outline-offset-1 outline-[var(--lp-line)]"}`}>
               <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${on ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : "bg-[var(--lp-sunken)]"}`}>
                 <Icon aria-hidden size={18} />
               </span>

@@ -215,13 +215,13 @@ export const MEENA = {
   ownerFirstName: "Meena",
 };
 
-type SellerDish = { name: string; category: string; kind: DishKind; price: number; photo: string; description: string; bestseller?: boolean };
+type SellerDish = { name: string; category: string; kind: DishKind; price: number; photo: string; thumb: string; description: string; bestseller?: boolean };
 
 /** Meena's menu: home-style veg, lunch and breakfast, with a festive sweets box. Photos credited in public/photos/meena/credits.json. */
 export const MEENA_MENU: SellerDish[] = [
-  { name: "Rajma chawal", category: "Lunch", kind: "rajma-chawal", price: 90, photo: "/photos/meena/rajma-chawal.jpg", description: "Slow-cooked Punjabi rajma with steamed rice, the way it's made at home on Sundays.", bestseller: true },
-  { name: "Kadhi chawal", category: "Lunch", kind: "rajma-chawal", price: 90, photo: "/photos/meena/kadhi-chawal.jpg", description: "Besan kadhi with soft pakoras, tempered with ghee and red chilli, over rice." },
-  { name: "Thali", category: "Lunch", kind: "thali", price: 120, photo: "/photos/menu-thali.webp", description: "Dal, seasonal sabzi, rice, three rotis, salad and pickle.", bestseller: true },
-  { name: "Aloo paratha", category: "Breakfast", kind: "butter-naan", price: 60, photo: "/photos/meena/aloo-paratha.jpg", description: "Two whole-wheat parathas stuffed with spiced potato, with butter, curd and pickle.", bestseller: true },
-  { name: "Diwali sweets box", category: "Festive", kind: "gulab-jamun", price: 450, photo: "/photos/meena/sweets-box.jpg", description: "Half a kilo of homemade barfi, cham cham and kaju katli. Order a day ahead." },
+  { name: "Rajma chawal", category: "Lunch", kind: "rajma-chawal", price: 90, photo: "/photos/meena/rajma-chawal.jpg", thumb: "/photos/meena/rajma-chawal-sm.jpg", description: "Slow-cooked Punjabi rajma with steamed rice, the way it's made at home on Sundays.", bestseller: true },
+  { name: "Kadhi chawal", category: "Lunch", kind: "rajma-chawal", price: 90, photo: "/photos/meena/kadhi-chawal.jpg", thumb: "/photos/meena/kadhi-chawal-sm.jpg", description: "Besan kadhi with soft pakoras, tempered with ghee and red chilli, over rice." },
+  { name: "Thali", category: "Lunch", kind: "thali", price: 120, photo: "/photos/menu-thali.webp", thumb: "/photos/meena/thali-sm.jpg", description: "Dal, seasonal sabzi, rice, three rotis, salad and pickle.", bestseller: true },
+  { name: "Aloo paratha", category: "Breakfast", kind: "butter-naan", price: 60, photo: "/photos/meena/aloo-paratha.jpg", thumb: "/photos/meena/aloo-paratha-sm.jpg", description: "Two whole-wheat parathas stuffed with spiced potato, with butter, curd and pickle.", bestseller: true },
+  { name: "Diwali sweets box", category: "Festive", kind: "gulab-jamun", price: 450, photo: "/photos/meena/sweets-box.jpg", thumb: "/photos/meena/sweets-box-sm.jpg", description: "Half a kilo of homemade barfi, cham cham and kaju katli. Order a day ahead." },
 ];

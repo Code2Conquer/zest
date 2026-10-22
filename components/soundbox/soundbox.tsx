@@ -133,7 +133,7 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
       <figcaption className="mt-4 flex w-full max-w-[34ch] flex-col items-center gap-3 text-center">
         {caption && (
           <p key={`${caption.en}-${lang}`} className="sb-caption text-[17px] font-medium leading-snug" lang={lang}>
-            <span className="text-[var(--lp-faint)]">Zest: </span>“{pick(caption)}”
+            <span className="text-[var(--lp-muted)]">Zest: </span>“{pick(caption)}”
           </p>
         )}
         {clip && (

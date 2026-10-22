@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { Camera, Globe, MapPin, MessagesSquare, Search } from "lucide-react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
+import { Soon } from "./soon";
 
 // "Be the first name people find nearby": a phone searches for homemade rajma chawal and, as the
 // result appears, the four places Zest sets the seller up light in turn. One sequence when the
 // section comes into view, then still.
 
-const PANELS: { id: string; icon: typeof Globe; agent: Bi; title: Bi; text: Bi }[] = [
+const PANELS: { id: string; icon: typeof Globe; agent: Bi; title: Bi; text: Bi; soon?: boolean }[] = [
   {
     id: "site",
     icon: Globe,
@@ -19,6 +20,7 @@ const PANELS: { id: string; icon: typeof Globe; agent: Bi; title: Bi; text: Bi }
   },
   {
     id: "google",
+    soon: true,
     icon: MapPin,
     agent: { en: "Storefront", hi: "स्टोरफ़्रंट" },
     title: { en: "Google listing", hi: "Google लिस्टिंग" },
@@ -26,6 +28,7 @@ const PANELS: { id: string; icon: typeof Globe; agent: Bi; title: Bi; text: Bi }
   },
   {
     id: "ai",
+    soon: true,
     icon: MessagesSquare,
     agent: { en: "Growth", hi: "ग्रोथ" },
     title: { en: "AI answers", hi: "AI जवाब" },
@@ -33,6 +36,7 @@ const PANELS: { id: string; icon: typeof Globe; agent: Bi; title: Bi; text: Bi }
   },
   {
     id: "insta",
+    soon: true,
     icon: Camera,
     agent: { en: "Growth", hi: "ग्रोथ" },
     title: { en: "Instagram and Facebook", hi: "Instagram और Facebook" },
@@ -67,10 +71,11 @@ export function GetFound() {
     const p = PANELS[k];
     const lit = step >= k + 2;
     return (
-      <li key={p.id} className={`rounded-[22px] p-5 transition-colors duration-500 ${lit ? "bg-[var(--lp-paper)] ring-2 ring-[var(--z-turmeric)]" : "bg-[var(--lp-paper)] ring-1 ring-[var(--lp-line)]"}`}>
+      <li key={p.id} className={`rounded-[22px] p-5 transition-colors duration-500 ${lit ? "bg-[var(--lp-paper)] outline outline-2 -outline-offset-2 outline-[var(--z-turmeric)]" : "bg-[var(--lp-paper)] outline outline-1 -outline-offset-1 outline-[var(--lp-line)]"}`}>
         <p className="flex items-center justify-between gap-3">
           <span className="flex items-center gap-2 text-[17px] font-semibold">
             <p.icon aria-hidden size={18} className={lit ? "text-[var(--z-turmeric)]" : "text-[var(--lp-faint)]"} /> {pick(p.title)}
+            {p.soon && <Soon className="ml-1" />}
           </span>
           <span className="rounded-full bg-[var(--lp-sunken)] px-2.5 py-0.5 text-[12.5px] font-semibold">{pick(p.agent)}</span>
         </p>
@@ -87,11 +92,11 @@ export function GetFound() {
         <div className="h-[430px] overflow-hidden rounded-[26px] bg-white px-3.5 pt-8 text-[#1c1f23]">
           <p className="flex items-center gap-2 rounded-full bg-[#eef0f2] px-3.5 py-2.5 text-[13px]">
             <Search aria-hidden size={14} className="shrink-0 text-[#6f757c]" />
-            <span className="truncate">{step >= 0 ? <span className={step === 0 ? "gf-type" : ""}>{query}</span> : <span className="text-[#8d939a]">{pick({ en: "Search", hi: "खोजें" })}</span>}</span>
+            <span className="truncate">{step >= 0 ? <span className={step === 0 ? "gf-type" : ""}>{query}</span> : <span className="text-[#5f656c]">{pick({ en: "Search", hi: "खोजें" })}</span>}</span>
           </p>
           {step >= 1 && (
             <div className="gf-in mt-4 space-y-3 text-[13px]">
-              <div className="rounded-2xl p-3 ring-1 ring-[#d9dee3]">
+              <div className="rounded-2xl p-3 outline outline-1 -outline-offset-1 outline-[#d9dee3]">
                 <p className="text-[12px] text-[#545a61]">{pick({ en: "Home kitchen · 4.8 · 1.2 km", hi: "घर की रसोई · 4.8 · 1.2 किमी" })}</p>
                 <p className="mt-0.5 text-[16px] font-semibold text-[#2a5db0]">Meena&apos;s Kitchen</p>
                 <p className="text-[#545a61]">{pick({ en: "Rajma chawal ₹90 · Open till 9:30 pm", hi: "राजमा चावल ₹90 · रात 9:30 तक खुला" })}</p>

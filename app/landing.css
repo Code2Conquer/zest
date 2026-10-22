@@ -1,6 +1,6 @@
-/* Landing page. The product is a team of agents, so the page is mostly the product's own surfaces:
-   a console, cards, a search result. Light and dark follow the site's theme switch (data-theme on
-   <html>), falling back to the system setting. Flat colour, no gradients, no resting shadows. */
+/* The Zest website: the homepage and /restaurants. Source of truth: docs/landing-brief.md. Flat
+   colour from six tokens, no gradients, no resting shadows; one orchestrated moment per section,
+   and every move stops under prefers-reduced-motion. */
 
 .lp {
   /* The brief's six colours. Paper is the page, Ink the text and the device face, Turmeric the one
@@ -26,16 +26,7 @@
   --lp-accent-soft: #fbefd3;
   --lp-accent-ink: var(--z-ink);
   --lp-good: var(--z-leaf);
-  --lp-good-soft: #e3efe7;
   --lp-bad: var(--z-chilli);
-  --lp-bad-soft: #f8e3df;
-  --lp-band: var(--z-ink); /* the dark bands */
-  /* Interim: the current sections still reference these. They go when phases 3 and 4 replace them. */
-  --lp-zomato: var(--z-ink);
-  --lp-swiggy: var(--z-ink);
-  --lp-web: var(--z-leaf);
-  --lp-google: #2a5db0;
-  --lp-dine: var(--z-ink);
   --lp-m: clamp(16px, 4vw, 56px); /* the page's one pair of outer margins */
   --lp-max: 1240px;
   color-scheme: light;
@@ -56,10 +47,7 @@
     --lp-line: #3a3f45;
     --lp-accent-soft: #3b3018;
     --lp-good: #5fb07e;
-    --lp-good-soft: #1f3327;
     --lp-bad: #e2735f;
-    --lp-bad-soft: #3a221d;
-    --lp-band: #15181b;
     color-scheme: dark;
   }
 }
@@ -74,10 +62,7 @@
   --lp-line: #3a3f45;
   --lp-accent-soft: #3b3018;
   --lp-good: #5fb07e;
-  --lp-good-soft: #1f3327;
   --lp-bad: #e2735f;
-  --lp-bad-soft: #3a221d;
-  --lp-band: #15181b;
   color-scheme: dark;
 }
 
@@ -86,14 +71,6 @@
   max-width: calc(var(--lp-max) + 2 * var(--lp-m));
   margin-inline: auto;
   padding-inline: var(--lp-m);
-}
-
-/* Product surfaces: real interface pieces, so they keep a quiet border. */
-.lp-ui {
-  background: var(--lp-paper);
-  border: 1px solid var(--lp-line); /* taste-skill-ignore: interface surface */
-  border-radius: 18px;
-  color: var(--lp-ink);
 }
 
 .lp-btn {
@@ -140,13 +117,12 @@
 .lp-ghost:hover {
   transform: translateY(-2px);
 }
-.lp-btn:focus-visible,
-.lp-ghost:focus-visible,
-.lp-link:focus-visible,
-.lp-tab:focus-visible {
-  outline: 3px solid var(--lp-accent);
+/* Keyboard focus: one visible ring for every control on the website, including the demos. */
+.lp :where(a, button, summary, input, select, [tabindex]):focus-visible {
+  outline: 3px solid var(--z-turmeric);
   outline-offset: 3px;
 }
+
 .lp-link {
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -156,35 +132,6 @@
   text-decoration-thickness: 3px;
 }
 
-/* Entrances: short and early. The observer fires before a section reaches the screen, so nobody
-   watches content wait at half opacity. */
-.lp-in {
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 450ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 450ms cubic-bezier(0.2, 0.7, 0.2, 1);
-  transition-delay: calc(var(--i, 0) * 70ms);
-}
-.lp-seen .lp-in,
-.no-js .lp-in {
-  opacity: 1;
-  transform: none;
-}
-/* On a phone the page is long and read in a thumb-scroll: show each part at once, no waiting. */
-@media (max-width: 639px) {
-  .lp-in {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-}
-
-.lp-lift {
-  transition: transform 180ms ease;
-}
-.lp-lift:hover {
-  transform: translateY(-4px);
-}
-
 /* A line arriving in the agent console. */
 .lp-arrive {
   animation: lp-arrive 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -192,69 +139,6 @@
 @keyframes lp-arrive {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
-}
-
-/* An agent's panel replacing the last one. */
-.lp-swap {
-  animation: lp-swap 380ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-@keyframes lp-swap {
-  from { opacity: 0; transform: translateY(8px) scale(0.99); }
-  to { opacity: 1; transform: none; }
-}
-
-/* The cursor while an agent is writing. */
-.lp-caret {
-  display: inline-block;
-  width: 0.5em;
-  height: 1em;
-  margin-left: 2px;
-  vertical-align: -0.12em;
-  background: currentColor;
-  animation: lp-caret 1s steps(1) infinite;
-}
-@keyframes lp-caret {
-  50% { opacity: 0; }
-}
-
-/* Bars fill from the left once their section is on screen. */
-.lp-bar {
-  transform-origin: left;
-  transform: scaleX(0);
-  transition: transform 1000ms cubic-bezier(0.2, 0.7, 0.2, 1) 250ms;
-}
-.lp-seen .lp-bar,
-.no-js .lp-bar {
-  transform: none;
-}
-
-/* Live dots. */
-.lp-pulse {
-  animation: lp-pulse 1.8s ease-in-out infinite;
-}
-@keyframes lp-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-/* The progress line under the active agent tab, counting down to the next agent. */
-.lp-tick {
-  transform-origin: left;
-  animation: lp-tick var(--lp-tick, 7s) linear both;
-}
-@keyframes lp-tick {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-
-
-/* Zest Soundbox: the ticket feeding up out of the printer slot. */
-.lp-print {
-  animation: lp-print 1400ms cubic-bezier(0.3, 0.6, 0.2, 1) 500ms both;
-}
-@keyframes lp-print {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
 }
 
 /* Zest Soundbox: sound rings spreading from the speaker while it announces. */
@@ -268,36 +152,6 @@
   from { transform: scale(1); opacity: 0.9; }
   to { transform: scale(1.9); opacity: 0; }
 }
-
-/* An order arriving from its channel. */
-.lp-slide {
-  animation: lp-slide 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-@keyframes lp-slide {
-  from { opacity: 0; transform: translateX(-28px); }
-  to { opacity: 1; transform: none; }
-}
-
-/* The hero's rotating channel name. */
-.lp-word {
-  display: inline-block;
-  animation: lp-word 2600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-@keyframes lp-word {
-  0% { opacity: 0; transform: translateY(0.4em); }
-  12%, 85% { opacity: 1; transform: none; }
-  100% { opacity: 0; transform: translateY(-0.3em); }
-}
-
-/* A photograph settling in slowly behind the stage. */
-.lp-drift {
-  animation: lp-drift 14s ease-out both;
-}
-@keyframes lp-drift {
-  from { transform: scale(1.1); }
-  to { transform: scale(1); }
-}
-
 
 /* Agent flow: dashes travelling along a connector, and the active arc drawing itself in. */
 .lp-flow {
@@ -313,16 +167,6 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
-/* Demo: the rider's progress across a scene. */
-.lp-bar-go {
-  animation: lp-bar-go 3400ms cubic-bezier(0.3, 0.6, 0.4, 1) both;
-}
-@keyframes lp-bar-go {
-  from { transform: scaleX(0.08); }
-  to { transform: scaleX(0.85); }
-}
-
 
 /* Hero sequence: chalk lettering on the menu board, the scan, dishes lifting onto the page, the
    WhatsApp order and UPI chip, the order travelling to the Soundbox and the pointer pressing it. */
@@ -411,6 +255,22 @@
   to { opacity: 1; transform: scale(1); transform-box: fill-box; transform-origin: center; }
 }
 
+/* Get found: the search typing itself in, then the result arriving. */
+.gf-type {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: bottom;
+  animation: gf-type 1100ms steps(28, end) both;
+}
+@keyframes gf-type {
+  from { max-width: 0; }
+  to { max-width: 100%; }
+}
+.gf-in {
+  animation: dy-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
 .lp details > summary {
   list-style: none;
   cursor: pointer;
@@ -420,14 +280,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-in,
-  .lp-bar {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
   .lp-arrive,
-  .lp-swap,
+  .lp-ring,
+  .lp-flow,
+  .lp-arc,
+  .hs-scan,
+  .hs-lift,
+  .hs-bubble,
+  .hs-chip,
+  .hs-token,
+  .hs-cursor,
   .dy-a,
   .dy-b,
   .dy-c,
@@ -435,28 +297,12 @@
   .dy-tap,
   .dy-rider,
   .dy-door,
-  .hs-scan,
-  .hs-lift,
-  .hs-bubble,
-  .hs-chip,
-  .hs-token,
-  .hs-cursor,
-  .lp-flow,
-  .lp-arc,
-  .lp-bar-go,
-  .lp-print,
-  .lp-ring,
-  .lp-slide,
-  .lp-word,
-  .lp-drift,
-  .lp-caret,
-  .lp-pulse,
-  .lp-tick {
-    animation: none;
+  .gf-type,
+  .gf-in {
+    animation: none !important;
   }
   .lp-btn,
-  .lp-ghost,
-  .lp-lift {
+  .lp-ghost {
     transition: none;
   }
 }

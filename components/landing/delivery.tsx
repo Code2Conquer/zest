@@ -38,7 +38,7 @@ export function DeliveryMap() {
 
   return (
     <div ref={box} className="grid items-center gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-      <div data-ui className="rounded-[24px] bg-[var(--lp-paper)] p-3 ring-1 ring-[var(--lp-line)]">
+      <div data-ui className="rounded-[24px] bg-[var(--lp-paper)] p-3 outline outline-1 -outline-offset-1 outline-[var(--lp-line)]">
         <svg viewBox="0 0 560 260" className="w-full" role="img" aria-label={pick({ en: "A neighbourhood map: the kitchen and three guests at different distances", hi: "मोहल्ले का नक्शा: रसोई और अलग-अलग दूरी पर तीन ग्राहक" })}>
           {/* streets */}
           {[40, 130, 220].map((y) => (
@@ -49,7 +49,7 @@ export function DeliveryMap() {
           ))}
           {/* routes, drawn as each choice is made */}
           {CASES.map((c, k) => (
-            <path key={c.id} d={`M ${HOME.x} ${HOME.y} L ${c.x} ${HOME.y} L ${c.x} ${c.y}`} fill="none" stroke={k <= lit ? "var(--z-turmeric)" : "transparent"} strokeWidth="4" strokeDasharray="7 7" strokeLinecap="round" className={k === lit ? "lp-flow" : ""} />
+            <path key={c.id} d={`M ${HOME.x} ${HOME.y} L ${c.x} ${HOME.y} L ${c.x} ${c.y}`} fill="none" stroke={k <= lit ? "var(--z-turmeric)" : "transparent"} strokeWidth="4" strokeDasharray="7 7" strokeLinecap="round" />
           ))}
           {/* the kitchen */}
           <rect x={HOME.x - 16} y={HOME.y - 16} width="32" height="32" rx="8" fill="#1c1f23" />
@@ -68,7 +68,7 @@ export function DeliveryMap() {
       </div>
       <ol className="space-y-3">
         {CASES.map((c, k) => (
-          <li key={c.id} className={`rounded-2xl p-4 transition-colors duration-500 ${k <= lit ? "bg-[var(--lp-paper)] ring-2 ring-[var(--z-turmeric)]" : "bg-[var(--lp-paper)] ring-1 ring-[var(--lp-line)]"}`}>
+          <li key={c.id} className={`rounded-2xl p-4 transition-colors duration-500 ${k <= lit ? "bg-[var(--lp-paper)] outline outline-2 -outline-offset-2 outline-[var(--z-turmeric)]" : "bg-[var(--lp-paper)] outline outline-1 -outline-offset-1 outline-[var(--lp-line)]"}`}>
             <p className="flex items-center justify-between gap-3 text-[16px]">
               <span className="font-semibold">{pick(c.who)}</span>
               <span className={`rounded-full px-2.5 py-0.5 text-[13px] font-semibold ${k <= lit ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : "bg-[var(--lp-sunken)]"}`}>{pick(c.how)}</span>
