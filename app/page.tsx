@@ -8,7 +8,6 @@ import { DeliveryMap } from "@/components/landing/delivery";
 import { HeroSequence } from "@/components/landing/hero-sequence";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
-import { Soon } from "@/components/landing/soon";
 import { StickyStart } from "@/components/landing/sticky-start";
 import { Waitlist } from "@/components/landing/waitlist";
 import { Soundbox } from "@/components/soundbox/soundbox";
@@ -23,7 +22,7 @@ import { useApp } from "@/lib/state";
 const START = "/join?journey=new";
 
 const STEPS: { icon: typeof Plus; title: Bi; text: Bi }[] = [
-  { icon: UtensilsCrossed, title: { en: "Add your menu", hi: "अपना मेन्यू डालिए" }, text: { en: "Type your dishes and prices. Soon you can just send a photo of your menu.", hi: "अपनी डिश और दाम लिखिए। जल्द आप बस मेन्यू की फ़ोटो भेज सकेंगे।" } },
+  { icon: UtensilsCrossed, title: { en: "Add your menu", hi: "अपना मेन्यू डालिए" }, text: { en: "Send a photo of your menu, or type your dishes and prices.", hi: "अपने मेन्यू की फ़ोटो भेजिए, या डिश और दाम लिख दीजिए।" } },
   { icon: Share2, title: { en: "Share your link", hi: "अपना लिंक भेजिए" }, text: { en: "Send it to your society and WhatsApp groups, and put the QR on your counter.", hi: "उसे अपनी सोसाइटी और WhatsApp ग्रुप में भेजिए, और QR काउंटर पर लगाइए।" } },
   { icon: ShoppingBag, title: { en: "Get orders, get paid", hi: "ऑर्डर पाइए, पैसा पाइए" }, text: { en: "Orders arrive on WhatsApp. Customers pay by UPI, straight to your bank.", hi: "ऑर्डर WhatsApp पर आते हैं। ग्राहक UPI से पैसा देते हैं, सीधे आपके बैंक में।" } },
 ];
@@ -35,10 +34,10 @@ const WHY: { icon: typeof Plus; title: Bi; text: Bi }[] = [
   { icon: Languages, title: { en: "Hindi or English", hi: "हिंदी या अंग्रेज़ी" }, text: { en: "Write in Hinglish and Zest answers in kind.", hi: "हिंग्लिश में लिखिए, Zest उसी में जवाब देगा।" } },
 ];
 
-const FAQ: { q: Bi; a: Bi; soon?: boolean }[] = [
+const FAQ: { q: Bi; a: Bi }[] = [
   { q: { en: "Do I need to be on Zomato or Swiggy?", hi: "क्या मुझे Zomato या Swiggy पर होना ज़रूरी है?" }, a: { en: "No. Zest gives you your own ordering page. Zomato riders only deliver, when you want them to.", hi: "नहीं। Zest आपको अपना ऑर्डर पेज देता है। Zomato राइडर सिर्फ़ डिलीवरी करते हैं, जब आप चाहें।" } },
-  { q: { en: "Who delivers?", hi: "डिलीवरी कौन करता है?" }, a: { en: "You choose for each order: the customer picks up, your own helper delivers, or a Zomato rider takes it with live tracking.", hi: "हर ऑर्डर के लिए आप चुनिए: ग्राहक ख़ुद ले जाए, आपका हेल्पर पहुँचाए, या Zomato राइडर लाइव ट्रैकिंग के साथ ले जाए।" }, soon: true },
-  { q: { en: "Who pays for delivery?", hi: "डिलीवरी का पैसा कौन देता है?" }, a: { en: "You decide: the customer pays, you offer free delivery above an amount, or pickup only.", hi: "आप तय कीजिए: ग्राहक दे, एक रक़म से ऊपर आप मुफ़्त डिलीवरी दें, या सिर्फ़ पिकअप।" } },
+  { q: { en: "Who delivers?", hi: "डिलीवरी कौन करता है?" }, a: { en: "You choose for each order: the customer picks up, your own helper delivers, or a Zomato rider takes it with live tracking.", hi: "हर ऑर्डर के लिए आप चुनिए: ग्राहक ख़ुद ले जाए, आपका हेल्पर पहुँचाए, या Zomato राइडर लाइव ट्रैकिंग के साथ ले जाए।" } },
+  { q: { en: "Who pays for delivery?", hi: "डिलीवरी का पैसा कौन देता है?" }, a: { en: "Delivery is priced by distance. You decide: the customer pays, you offer free delivery above an amount, or pickup only.", hi: "डिलीवरी का दाम दूरी से तय होता है। आप तय कीजिए: ग्राहक दे, एक रक़म से ऊपर आप मुफ़्त डिलीवरी दें, या सिर्फ़ पिकअप।" } },
   { q: { en: "How do I get paid?", hi: "मुझे पैसा कैसे मिलेगा?" }, a: { en: "Customers pay by UPI, straight to your account.", hi: "ग्राहक UPI से पैसा देते हैं, सीधे आपके खाते में।" } },
   { q: { en: "What does it cost?", hi: "इसका ख़र्च कितना है?" }, a: { en: "Free to start.", hi: "शुरुआत मुफ़्त है।" } },
   { q: { en: "Does it work for a thela or a small stall?", hi: "क्या यह ठेले या छोटे स्टॉल के लिए भी है?" }, a: { en: "Yes. A phone with WhatsApp and a UPI ID is enough.", hi: "हाँ। WhatsApp वाला फ़ोन और UPI ID काफ़ी है।" } },
@@ -131,8 +130,7 @@ export default function Home() {
             <DeliveryMap />
           </div>
           <p className="mt-6 text-[15px] text-[var(--lp-muted)]">
-            {pick({ en: "Booking Zomato riders from Zest", hi: "Zest से Zomato राइडर बुक करना" })}
-            <Soon />
+            {pick({ en: "Delivery is priced by distance. You choose who pays: the customer, you, or free above an order amount.", hi: "डिलीवरी का दाम दूरी से तय होता है। कौन देगा, आप चुनिए: ग्राहक, आप, या एक रक़म से ऊपर के ऑर्डर पर मुफ़्त।" })}
           </p>
         </div>
       </section>
@@ -159,11 +157,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The Soundbox: one band, the waitlist behind a button */}
+      {/* The Soundbox: one band, the request form behind a button */}
       <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 bg-[#15181b] py-12 text-[#f1f1ec] lg:py-16">
         <div className="lp-wrap grid items-center gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
           <div>
-            <p className="text-[15px] font-semibold text-[var(--z-turmeric)]">{pick({ en: "Zest Soundbox · coming soon", hi: "Zest Soundbox · जल्द आ रहा है" })}</p>
+            <p className="text-[15px] font-semibold text-[var(--z-turmeric)]">Zest Soundbox</p>
             <h2 id="soundbox-h" className={`mt-2 ${H2}`}>
               {pick({ en: "Hear every order, without touching your phone.", hi: "हर ऑर्डर सुनिए, फ़ोन छुए बिना।" })}
             </h2>
@@ -178,7 +176,7 @@ export default function Home() {
                 <Waitlist page="/" section="soundbox" tone="dark" />
               ) : (
                 <button id="waitlist" type="button" onClick={() => setJoining(true)} className="lp-btn haldi scroll-mt-6">
-                  {pick({ en: "Join the Soundbox waitlist", hi: "Soundbox वेटलिस्ट में जुड़ें" })}
+                  {pick({ en: "Ask for a Soundbox", hi: "Soundbox मँगवाइए" })}
                 </button>
               )}
             </div>
@@ -199,10 +197,7 @@ export default function Home() {
             {FAQ.map((f) => (
               <details key={f.q.en} className="group rounded-2xl bg-[var(--lp-paper)] px-5 sm:px-6">
                 <summary className="flex min-h-[60px] items-center justify-between gap-4 py-4 text-[17px] font-semibold sm:text-[18px]">
-                  <span>
-                    {pick(f.q)}
-                    {f.soon && <Soon />}
-                  </span>
+                  <span>{pick(f.q)}</span>
                   <Plus aria-hidden size={22} className="shrink-0 transition-transform group-open:rotate-45" />
                 </summary>
                 <p className="max-w-[60ch] pb-5 text-[16px] leading-relaxed text-[var(--lp-muted)] sm:text-[17px]">{pick(f.a)}</p>

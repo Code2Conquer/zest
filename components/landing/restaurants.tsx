@@ -3,13 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Globe, MessageCircle, Store } from "lucide-react";
 import { Soundbox, type SoundboxState } from "@/components/soundbox/soundbox";
-import { MENU } from "@/lib/data";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
 // The pieces of /restaurants: orders from three channels arriving at one Soundbox, the Soundbox you
-// can press (including what happens when nobody does), the morning summary on WhatsApp and Rasoi 27's
-// own page on a phone.
+// can press (including what happens when nobody does) and the morning summary on WhatsApp.
 
 type Channel = "page" | "zomato" | "swiggy";
 const CH: Record<Channel, { name: Bi; icon: typeof Globe }> = {
@@ -18,8 +16,8 @@ const CH: Record<Channel, { name: Bi; icon: typeof Globe }> = {
   swiggy: { name: { en: "Swiggy", hi: "Swiggy" }, icon: Store },
 };
 const ARRIVALS: { ch: Channel; items: Bi; say: Bi; clip?: string }[] = [
+  { ch: "page", items: { en: "Party order: 12 chicken biryani", hi: "पार्टी ऑर्डर: 12 चिकन बिरयानी" }, say: { en: "New order on your page. A party order, twelve chicken biryani.", hi: "आपके पेज पर नया ऑर्डर. पार्टी ऑर्डर, बारह चिकन बिरयानी." } },
   { ch: "swiggy", items: { en: "2 paneer tikka", hi: "2 पनीर टिक्का" }, say: { en: "New order on Swiggy. Two paneer tikka.", hi: "स्विगी पर नया ऑर्डर. दो पनीर टिक्का." }, clip: "swiggy" },
-  { ch: "page", items: { en: "Dal makhani, 2 garlic naan", hi: "दाल मखनी, 2 गार्लिक नान" }, say: { en: "New order on your page. Dal makhani and two garlic naan.", hi: "आपके पेज पर नया ऑर्डर. दाल मखनी और दो गार्लिक नान." } },
   { ch: "zomato", items: { en: "Chicken biryani", hi: "चिकन बिरयानी" }, say: { en: "New order on Zomato. One chicken biryani.", hi: "ज़ोमैटो पर नया ऑर्डर. एक चिकन बिरयानी." } },
 ];
 
@@ -47,18 +45,19 @@ export function RestaurantStage() {
   const now = ARRIVALS[n % ARRIVALS.length];
   return (
     <div ref={box} className="grid items-center gap-8 sm:grid-cols-[minmax(0,1fr)_auto]">
-      <ul className="order-2 grid gap-3 sm:order-1">
+      {/* On a phone the channels sit in one row above the box; wider, they stack beside it. */}
+      <ul className="grid grid-cols-3 gap-2 sm:grid-cols-1 sm:gap-3">
         {(["page", "zomato", "swiggy"] as Channel[]).map((c) => {
           const on = now.ch === c && phase !== "rest";
           const Icon = CH[c].icon;
           return (
-            <li key={c} className={`flex items-center gap-3 rounded-2xl p-3.5 transition-colors duration-500 ${on ? "bg-[var(--lp-paper)] outline outline-2 -outline-offset-2 outline-[var(--z-turmeric)]" : "bg-[var(--lp-paper)] outline outline-1 -outline-offset-1 outline-[var(--lp-line)]"}`}>
+            <li key={c} className={`flex flex-col items-center gap-2 rounded-2xl p-2.5 text-center transition-colors duration-500 sm:flex-row sm:gap-3 sm:p-3.5 sm:text-left ${on ? "bg-[var(--lp-paper)] outline outline-2 -outline-offset-2 outline-[var(--z-turmeric)]" : "bg-[var(--lp-paper)] outline outline-1 -outline-offset-1 outline-[var(--lp-line)]"}`}>
               <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${on ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : "bg-[var(--lp-sunken)]"}`}>
                 <Icon aria-hidden size={18} />
               </span>
-              <div className="min-w-0 text-[15px]">
-                <p className="font-semibold">{pick(CH[c].name)}</p>
-                <p key={`${c}-${n}`} className={`text-[var(--lp-muted)] ${on ? "hs-chip" : ""}`}>
+              <div className="min-w-0 text-[14px] sm:text-[15px]">
+                <p className="font-semibold leading-tight">{pick(CH[c].name)}</p>
+                <p key={`${c}-${n}`} className={`hidden text-[var(--lp-muted)] sm:block ${on ? "hs-chip" : ""}`}>
                   {on ? pick(now.items) : pick({ en: "Waiting for orders", hi: "ऑर्डर का इंतज़ार" })}
                 </p>
               </div>
@@ -66,7 +65,7 @@ export function RestaurantStage() {
           );
         })}
       </ul>
-      <div className="order-1 flex justify-center sm:order-2">
+      <div className="flex justify-center">
         <Soundbox size="sm" stable state={phase === "arrive" ? "ringing" : phase === "speak" ? "speaking" : "idle"} caption={phase === "rest" && n === 0 ? undefined : now.say} clip={now.clip} />
       </div>
     </div>
@@ -141,37 +140,6 @@ export function MorningSummary() {
           </div>
           <p className="ml-auto w-fit rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2 text-[14.5px]">{pick({ en: "Yes, post it", hi: "हाँ, पोस्ट करो" })}</p>
         </div>
-      </div>
-    </div>
-  );
-}
-
-/** Rasoi 27's own ordering page, drawn on a phone with its real menu. */
-export function RasoiPhone() {
-  const items = ["m1", "m3", "m2"].map((id) => MENU.find((m) => m.id === id)!);
-  return (
-    <div data-ui className="mx-auto w-[248px] shrink-0 rounded-[32px] bg-[#1c1f23] p-[7px]">
-      <div className="overflow-hidden rounded-[26px] bg-[#fafaf6] text-[#1c1f23]">
-        <div className="relative h-[110px]">
-          <img src="/photos/menu-paneer-tikka.webp" alt="" className="size-full object-cover" loading="lazy" />
-          <span aria-hidden className="absolute left-1/2 top-1.5 h-4 w-16 -translate-x-1/2 rounded-full bg-[#1c1f23]" />
-        </div>
-        <div className="px-3.5 pt-3">
-          <p className="text-[17px] font-bold leading-tight">Rasoi 27</p>
-          <p className="text-[12px] text-[#545a61]">North Indian · Biryani · Indiranagar</p>
-        </div>
-        <ul className="space-y-1 p-2.5">
-          {items.map((m) => (
-            <li key={m.id} className="flex items-center gap-2.5 rounded-xl bg-white p-1.5">
-              <img src={m.photo} alt="" className="size-11 shrink-0 rounded-lg object-cover" loading="lazy" />
-              <div className="min-w-0 flex-1">
-                <p className="text-[12.5px] font-semibold leading-tight">{m.name}</p>
-                <p className="text-[12px]">₹{m.price.zomato}</p>
-              </div>
-              <span className="rounded-md border border-[#2f7a4c] px-1.5 py-0.5 text-[10.5px] font-bold text-[#2f7a4c]">ADD</span>
-            </li>
-          ))}
-        </ul>
       </div>
     </div>
   );

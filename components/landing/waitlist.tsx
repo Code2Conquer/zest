@@ -5,7 +5,7 @@ import { Check, Loader2 } from "lucide-react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
-// The Soundbox waitlist form. Each error sits under its field and says exactly what to fix; on
+// The "Ask for a Soundbox" form (stored in the soundbox_waitlist table). Each error sits under its field and says exactly what to fix; on
 // success the form is replaced by the confirmation. `page` and `section` record where it was filled.
 
 type Field = "name" | "business" | "phone" | "city" | "type";
@@ -31,7 +31,7 @@ const validPhone = (v: string) => {
   return /^[6-9]\d{9}$/.test(d);
 };
 
-const SOUNDBOX_DONE: Bi = { en: "You're on the list. We'll WhatsApp you when the Soundbox is ready for your kitchen.", hi: "आप लिस्ट में हैं। Soundbox आपकी रसोई के लिए तैयार होते ही हम आपको WhatsApp करेंगे।" };
+const SOUNDBOX_DONE: Bi = { en: "Thanks. We'll WhatsApp you to set up your Soundbox.", hi: "धन्यवाद। आपका Soundbox लगाने के लिए हम आपको WhatsApp करेंगे।" };
 
 export function Waitlist({ page, section, defaultType = "", tone = "light", done = SOUNDBOX_DONE }: { page: "/" | "/restaurants"; section: string; defaultType?: string; tone?: "light" | "dark"; done?: Bi }) {
   const { pick } = useApp();
@@ -141,7 +141,7 @@ export function Waitlist({ page, section, defaultType = "", tone = "light", done
       )}
       <button type="submit" disabled={state === "sending"} className="lp-btn haldi mt-6 w-full sm:w-auto">
         {state === "sending" && <Loader2 aria-hidden size={18} className="animate-spin" />}
-        {pick({ en: "Join the waitlist", hi: "वेटलिस्ट में जुड़ें" })}
+        {pick({ en: "Ask for a Soundbox", hi: "Soundbox मँगवाइए" })}
       </button>
     </form>
   );

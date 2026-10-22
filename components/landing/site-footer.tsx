@@ -20,7 +20,7 @@ export function SiteFooter() {
             <ul className="flex flex-wrap gap-x-6 gap-y-3 text-[16px]">
               {[
                 ["/join?journey=new", { en: "Start free", hi: "मुफ़्त शुरू करें" }],
-                ["#waitlist", { en: "Join the Soundbox waitlist", hi: "Soundbox वेटलिस्ट" }],
+                ["#waitlist", { en: "Ask for a Soundbox", hi: "Soundbox मँगवाइए" }],
                 ["/restaurants", { en: "Zest for restaurants", hi: "रेस्टोरेंट के लिए Zest" }],
                 ["/r/meenas-kitchen", { en: "Sample seller", hi: "सैंपल विक्रेता" }],
                 ["/login", { en: "Log in", hi: "लॉग इन" }],
