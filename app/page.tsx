@@ -2,15 +2,16 @@
 
 import "./landing.css";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Check, Minus, Plus } from "lucide-react";
+import { ArrowRight, BellRing, Bike, Check, Hand, Languages, MessageCircle, PhoneOff, Plus, Printer, Search, Star, Tablet, Utensils } from "lucide-react";
 import { ThemeToggle, Wordmark } from "@/components/bits";
 import { RouterDialog } from "@/components/landing/router";
-import { AGENT_ICON, AgentConsole, ApprovalTrail, GrowthCard, GuestCard, MenuSync, PayoutCard, PhonePage, ReviewCard, SearchResult, SetupCard, type AgentId } from "@/components/landing/mocks";
+import { GuestCard, MenuSync, PhonePage, ReviewCard, SearchResult } from "@/components/landing/mocks";
+import { CHANNEL, DeliveryCard, GrowthPanel, OfferCard, SyncDemo, ZestyDevice, ZestyStage, type ChannelId } from "@/components/landing/zesty";
 
-// The pitch: Zest is a team of AI agents that runs a restaurant's online business around the clock
-// (its own website and Google, Zomato and Swiggy, payouts, reviews, regulars, offers) and brings the
-// owner in only for decisions. It starts from a listing link and an email connection. Every picture
-// of the product on this page is the product's own interface with the sample restaurant's data.
+// The pitch: Zest turns the people who already know a restaurant into orders, on its own website,
+// WhatsApp and Google, delivered by Zomato riders and announced in the kitchen by Zesty, the order
+// soundbox. AI agents run the rest. Marketplaces keep bringing new customers; Zest serves the ones
+// who already know you, and keeps every menu in sync.
 
 /** Sections bring their parts in the first time they come near the screen. */
 function useReveal() {
@@ -26,7 +27,6 @@ function useReveal() {
           }
         }
       },
-      // Fire a little before the section arrives, so its parts are already moving when it is seen.
       { rootMargin: "0px 0px 15% 0px", threshold: 0 },
     );
     els.forEach((el) => io.observe(el));
@@ -43,57 +43,66 @@ function joinUrl(raw: string) {
   return `/join?${q}`;
 }
 
-const AGENTS: { id: AgentId; name: string; does: string; asks: string }[] = [
-  { id: "website", name: "Website", does: "Builds your own ordering page from your listing, keeps it in step with your menu, and writes it the way Google reads it.", asks: "before your page goes live" },
-  { id: "listings", name: "Listings", does: "Keeps dishes, prices, stock and hours the same on Zomato, Swiggy and your page, and spots the ones that drift.", asks: "before any price changes" },
-  { id: "payouts", name: "Payouts", does: "Reads every payout mail and statement, explains where each rupee went, and drafts disputes for wrong deductions.", asks: "before a dispute is sent" },
-  { id: "reviews", name: "Reviews", does: "Drafts a reply to every review on every app, in your voice, and tells you what keeps coming up.", asks: "before a reply is posted" },
-  { id: "guests", name: "Guests", does: "Remembers everyone who orders from your page: what they order, how often and how they like it. Zomato and Swiggy keep their customers; these ones are yours.", asks: "before their details are used" },
-  { id: "growth", name: "Growth", does: "Runs offers inside the budget you set and shows which dishes are winning and which are losing stars.", asks: "before an offer starts" },
+const WORDS = ["regulars", "Instagram", "Google", "WhatsApp", "own website"];
+
+const AGENTS: { id: string; name: string; does: string; asks: string; panel: React.ReactNode }[] = [
+  {
+    id: "presence",
+    name: "Presence",
+    does: "Builds and runs your website, your WhatsApp ordering and your Google profile, from your Zomato listing.",
+    asks: "before anything goes live",
+    panel: (
+      <div className="grid items-end gap-5 sm:grid-cols-[minmax(0,1fr)_auto]">
+        <SearchResult />
+        <PhonePage className="mx-auto" />
+      </div>
+    ),
+  },
+  { id: "growth", name: "Growth", does: "Sets you up for search and AI answers, keeps Instagram pointing at your menu, and runs Meta ads inside your budget.", asks: "before spending a rupee", panel: <GrowthPanel /> },
+  { id: "menu", name: "Menu", does: "One menu, one set of prices and one stock list, correct everywhere you sell.", asks: "before a price changes", panel: <MenuSync /> },
+  { id: "offers", name: "Offers", does: "Welcome offers for new guests and rewards for regulars, from one set of rules.", asks: "before an offer starts", panel: <OfferCard /> },
+  { id: "delivery", name: "Delivery", does: "Books a Zomato rider when food is ready, tracks every order and flags delays.", asks: "when an order is running late", panel: <DeliveryCard /> },
+  { id: "reviews", name: "Reviews", does: "Answers every review and complaint in your voice, wherever it's posted, and spots the issues that keep coming back.", asks: "before a reply is posted", panel: <ReviewCard /> },
 ];
 
-const PANEL: Record<AgentId, React.ReactNode> = {
-  website: (
-    <div className="grid items-end gap-5 sm:grid-cols-[minmax(0,1fr)_auto]">
-      <SearchResult />
-      <PhonePage className="mx-auto" />
-    </div>
-  ),
-  listings: <MenuSync />,
-  payouts: <PayoutCard />,
-  reviews: <ReviewCard />,
-  guests: <GuestCard />,
-  growth: <GrowthCard />,
-};
+const ZESTY_FEATURES: { icon: typeof Check; title: string; text: string }[] = [
+  { icon: Languages, title: "Speaks every order", text: "Out loud, in Hindi or English, from every channel." },
+  { icon: Hand, title: "One big button", text: "Accept with oily hands. No phone, no passcode." },
+  { icon: Printer, title: "Prints the ticket", text: "A kitchen printer built in." },
+  { icon: Bike, title: "“Food ready” calls the rider", text: "No waiting, no phone calls." },
+  { icon: Utensils, title: "“Dal makhani khatam”", text: "Say it or press it, and the dish goes off every menu." },
+  { icon: BellRing, title: "Never misses an order", text: "If nobody accepts, it gets louder, then calls the owner." },
+];
 
-const COMPARE: [string, string, string][] = [
-  ["What it does", "Rings up bills and prints kitchen tickets", "Grows and runs your business online"],
-  ["Your own website and Google", "An add-on, if at all", "Built from your listing, written for search"],
-  ["Zomato and Swiggy", "Passes orders to the counter", "Menu, prices, payouts and reviews kept right"],
-  ["Payouts", "A report for you to read", "Every rupee explained, disputes drafted"],
-  ["Reviews and regulars", "Not its job", "Replies drafted, regulars remembered"],
-  ["When you're closed", "Waits for you", "Agents keep working, and ask before acting"],
-  ["To start", "Hardware, setup visit, training", "A listing link and your email"],
+const BOARD: { ch: ChannelId; who: string; items: string; total: number; state: string }[] = [
+  { ch: "web", who: "Ananya R.", items: "2 butter naan, dal makhani", total: 367, state: "Cooking" },
+  { ch: "zomato", who: "#7841", items: "Paneer tikka, 2 butter naan", total: 486, state: "Rider 4 min away" },
+  { ch: "whatsapp", who: "Rahul M.", items: "Chicken biryani, raita", total: 409, state: "Accepted" },
+  { ch: "swiggy", who: "#3390", items: "Dal makhani, jeera rice", total: 342, state: "Ready" },
 ];
 
 const FAQ: { q: string; a: string }[] = [
-  { q: "Does Zest replace Zomato or Swiggy?", a: "No. Your listings keep running as they do. Zest's agents look after them for you, and your own page brings in the customers who already know you." },
-  { q: "Will the agents change things without asking?", a: "No. Menu and price changes, review replies, disputes and offers all wait for your yes. Offers stop at the limit you set, and every change has a record and an undo." },
-  { q: "Why does Zest need my email?", a: "Zomato and Swiggy send payout mails, statements and review alerts to your inbox. Zest reads only those, so it can explain your money and answer your reviews. You can disconnect it any time." },
-  { q: "Do I need a POS or new hardware?", a: "No. Keep your billing counter as it is. Zest runs on the phone, tablet or laptop you already have." },
-  { q: "How do customers pay on my page?", a: "By UPI straight to your own UPI ID, or at the counter. The money comes to you directly; Zest never holds it." },
-  { q: "Which languages does it speak?", a: "Write to Zest in English, Hindi or Hinglish and it answers the same way." },
+  { q: "Do I need to leave Zomato or Swiggy?", a: "No. Zest works alongside them. Your listings keep running as they do, and Zest keeps their menus in sync with everything else." },
+  { q: "Who delivers my orders?", a: "Zomato riders, with live tracking for your guest. Zest books the rider when you press “Food ready”." },
+  { q: "What if I miss an order?", a: "Zesty won't let you. It announces every order, gets louder if nobody accepts, and then calls your phone." },
+  { q: "Who owns my customer data?", a: "You do. Orders on your website, WhatsApp and Google come with your guest's name, number and favourite dishes, and they stay yours." },
+  { q: "Which languages does Zesty speak?", a: "Hindi and English today, with more Indian languages on the way. Write to the agents in Hinglish and they'll answer in kind." },
+  { q: "Do I need a tech person?", a: "No. If you can use WhatsApp, you can use Zest. Paste your Zomato link and the rest is set up for you." },
 ];
 
 export default function Landing() {
   const root = useReveal();
   const [routerOpen, setRouterOpen] = useState(false);
   const [link, setLink] = useState("");
-  const [agent, setAgent] = useState<AgentId>("website");
+  const [word, setWord] = useState(0);
+  const [agent, setAgent] = useState(AGENTS[0].id);
   const [auto, setAuto] = useState(true);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("start") === "1") setRouterOpen(true);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => setWord((w) => (w + 1) % WORDS.length), 2600);
+    return () => clearInterval(t);
   }, []);
 
   // The agent tabs walk through on their own until someone picks one.
@@ -119,20 +128,20 @@ export default function Landing() {
   const current = AGENTS.find((a) => a.id === agent)!;
 
   const linkForm = (id: string) => (
-    <form onSubmit={start} className="flex w-full max-w-[560px] flex-col gap-2 rounded-[28px] bg-[var(--lp-paper)] p-2 sm:flex-row sm:rounded-full">
+    <form onSubmit={start} className="flex w-full max-w-[560px] flex-col gap-2 rounded-[28px] bg-[#151b17] p-2 sm:flex-row sm:rounded-full">
       <label htmlFor={id} className="sr-only">
-        Your Zomato or Swiggy link
+        Your Zomato link
       </label>
       <input
         id={id}
         value={link}
         onChange={(e) => setLink(e.target.value)}
         inputMode="url"
-        placeholder="Paste your Zomato or Swiggy link"
-        className="min-h-12 min-w-0 flex-1 rounded-full bg-transparent px-4 text-[18px] text-[var(--lp-ink)] outline-none placeholder:text-[var(--lp-faint)]"
+        placeholder="Paste your Zomato link"
+        className="min-h-12 min-w-0 flex-1 rounded-full bg-transparent px-4 text-[18px] text-[#eaf0eb] outline-none placeholder:text-[#8b988f]"
       />
-      <button type="submit" className="lp-btn shrink-0">
-        Start free <ArrowRight aria-hidden size={18} />
+      <button type="submit" className="lp-btn haldi shrink-0">
+        Get started free <ArrowRight aria-hidden size={18} />
       </button>
     </form>
   );
@@ -143,81 +152,182 @@ export default function Landing() {
         <style>{`.lp-in,.lp-bar{opacity:1!important;transform:none!important}`}</style>
       </noscript>
 
-      {/* Header */}
-      <header className="lp-wrap flex h-[76px] items-center justify-between gap-6">
-        <a href="/" aria-label="Zest home">
-          <Wordmark className="text-[30px]" />
-        </a>
-        <nav aria-label="Sections" className="hidden items-center gap-8 text-[16px] font-medium lg:flex">
-          <a href="#agents" className="hover:underline hover:underline-offset-4">
-            Agents
+      {/* Hero, on the dark kitchen band */}
+      <div className="bg-[var(--lp-band)] text-[#eaf0eb]">
+        <header className="lp-wrap flex h-[76px] items-center justify-between gap-6">
+          <a href="/" aria-label="Zest home">
+            <Wordmark className="text-[30px]" />
           </a>
-          <a href="#control" className="hover:underline hover:underline-offset-4">
-            How you stay in charge
-          </a>
-          <a href="#compare" className="hover:underline hover:underline-offset-4">
-            Zest vs billing software
-          </a>
-        </nav>
-        <div className="flex items-center gap-2 text-[16px] font-medium sm:gap-4">
-          <ThemeToggle />
-          <a href="/login" className="hidden px-2 hover:underline hover:underline-offset-4 sm:inline">
-            Log in
-          </a>
-          <button type="button" onClick={() => setRouterOpen(true)} className="lp-btn min-h-11 px-5 text-[14px]">
-            Get started
-          </button>
-        </div>
-      </header>
+          <nav aria-label="Sections" className="hidden items-center gap-8 text-[16px] font-medium lg:flex">
+            {[
+              ["#how", "How it works"],
+              ["#zesty", "Zesty"],
+              ["#agents", "Agents"],
+              ["#faq", "Questions"],
+            ].map(([href, label]) => (
+              <a key={href} href={href} className="text-[#cdd8d0] hover:text-white">
+                {label}
+              </a>
+            ))}
+          </nav>
+          <div className="flex items-center gap-2 text-[16px] font-medium sm:gap-4">
+            <ThemeToggle />
+            <a href="/login" className="hidden px-2 text-[#cdd8d0] hover:text-white sm:inline">
+              Log in
+            </a>
+            <button type="button" onClick={() => setRouterOpen(true)} className="lp-btn haldi min-h-11 px-5 text-[15px]">
+              Get started
+            </button>
+          </div>
+        </header>
 
-      {/* Hero */}
-      <section data-reveal aria-labelledby="hero-h" className="lp-wrap grid grid-cols-[minmax(0,1fr)] items-center gap-12 pb-24 pt-10 lg:grid-cols-[minmax(0,13fr)_minmax(0,11fr)] lg:gap-16 lg:pb-32 lg:pt-16">
-        <div>
-          <h1 id="hero-h" className="lp-in lp-display text-[34px] leading-[1.04] sm:text-[52px] lg:text-[clamp(44px,4vw,58px)]" style={i(0)}>
-            An AI team that runs
-            <br className="hidden sm:block" /> your restaurant online.
-          </h1>
-          <p className={`lp-in mt-6 max-w-[33em] sm:text-[20px] ${LEAD}`} style={i(2)}>
-            Zest's agents build your website, get you found on Google, keep Zomato and Swiggy in shape, check every payout and answer every review. Day and night. They come to you only when a decision is yours.
-          </p>
-          <div className="lp-in mt-9" style={i(3)}>
-            {linkForm("hero-link")}
-            <p className="mt-4 px-2 text-[14px] text-[var(--lp-muted)]">
-              A link and your email is all it takes. No link?{" "}
-              <button type="button" onClick={openDemo} className="lp-link font-medium text-[var(--lp-ink)]">
-                Watch the agents on a sample restaurant
-              </button>
+        <section data-reveal aria-labelledby="hero-h" className="lp-wrap grid grid-cols-[minmax(0,1fr)] items-center gap-12 pb-20 pt-10 lg:grid-cols-[minmax(0,11fr)_minmax(0,12fr)] lg:gap-14 lg:pb-28 lg:pt-14">
+          <div>
+            <h1 id="hero-h" className="lp-in lp-display text-[36px] leading-[1.04] sm:text-[54px] lg:text-[clamp(46px,4.2vw,62px)]" style={i(0)}>
+              Every order, not just the app orders.
+            </h1>
+            <p className="lp-in lp-display mt-4 text-[24px] leading-tight text-[#cdd8d0] sm:text-[32px]" style={i(1)}>
+              Orders from your{" "}
+              <span className="relative inline-block min-w-[6.5em] text-[var(--lp-accent)]">
+                <span key={word} className="lp-word" aria-hidden>
+                  {WORDS[word]}.
+                </span>
+                <span className="sr-only">regulars, Instagram, Google, WhatsApp and your own website.</span>
+              </span>
+            </p>
+            <p className="lp-in mt-6 max-w-[33em] text-[18px] leading-relaxed text-[#b9c7bd]" style={i(2)}>
+              Zest turns the people who already know your restaurant into orders: your own website, WhatsApp and Google ordering, delivered by Zomato riders and announced in your kitchen by Zesty. AI agents run the rest, around the clock.
+            </p>
+            <div className="lp-in mt-9" style={i(3)}>
+              {linkForm("hero-link")}
+              <p className="mt-4 px-2 text-[15px] text-[#a9b8ae]">
+                Your ordering website is ready in minutes.{" "}
+                <button type="button" onClick={openDemo} className="lp-link font-medium text-white">
+                  Or try a sample restaurant
+                </button>
+              </p>
+            </div>
+          </div>
+          <div className="lp-in" style={i(2)}>
+            <ZestyStage />
+          </div>
+        </section>
+      </div>
+
+      {/* The problem */}
+      <section data-reveal aria-labelledby="problem-h" className="py-24 lg:py-32">
+        <div className="lp-wrap grid items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-20">
+          <div>
+            <h2 id="problem-h" className={`lp-in ${H2}`} style={i(0)}>
+              Your best customers can't order from you.
+            </h2>
+            <ul className="mt-10 space-y-6">
+              {(
+                [
+                  [PhoneOff, "A regular calls at 9 pm. The line is busy."],
+                  [MessageCircle, "Someone DMs on Instagram asking for the menu. Nobody replies until morning."],
+                  [Search, "Google shows your restaurant with no way to order."],
+                  [Tablet, "Three tablets beep in the kitchen. One order gets missed."],
+                ] as const
+              ).map(([Icon, text], k) => (
+                <li key={text} className="lp-in flex gap-4 text-[18px] leading-snug sm:text-[22px]" style={i(k + 1)}>
+                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[var(--lp-paper)]">
+                    <Icon aria-hidden size={20} />
+                  </span>
+                  <span className="pt-2">{text}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="lp-in lp-display mt-12 text-[clamp(24px,2.4vw,32px)] leading-tight [text-wrap:balance]" style={i(5)}>
+              The demand is already there. <span className="text-[var(--lp-muted)]">It just has nowhere to go.</span>
             </p>
           </div>
-        </div>
-        <div className="lp-in" style={i(2)}>
-          <AgentConsole />
+          <figure className="lp-in mx-auto w-full max-w-[380px]" style={i(2)}>
+            <video
+              className="aspect-[9/16] w-full rounded-[28px] bg-[#0b0f0d] object-cover"
+              src="https://upload.wikimedia.org/wikipedia/commons/transcoded/2/2b/Making_tandoori_bread_in_Old_Delhi.ogv/Making_tandoori_bread_in_Old_Delhi.ogv.1080p.vp9.webm"
+              poster="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Making_tandoori_bread_in_Old_Delhi.ogv/960px--Making_tandoori_bread_in_Old_Delhi.ogv.jpg"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-label="A tandoor cook in Old Delhi slapping rotis onto the oven wall during service"
+            />
+            <figcaption className="mt-3 px-2 text-[14px] text-[var(--lp-muted)]">9 pm in a busy kitchen. Nobody has a free hand for a phone.</figcaption>
+          </figure>
         </div>
       </section>
 
-      {/* The idea in one line */}
-      <section data-reveal aria-labelledby="idea-h" className="bg-[var(--lp-paper)] py-24 lg:py-32">
-        <div className="lp-wrap grid gap-12 lg:grid-cols-12">
-          <div className="lg:col-span-6">
-            <h2 id="idea-h" className={`lp-in ${H2}`} style={i(0)}>
-              Software makes you do the work. Zest does it.
-            </h2>
-            <figure className="lp-in mt-10 overflow-hidden rounded-[24px]" style={i(1)}>
-              <img src="/photos/team-pass.webp" alt="Plates going out at the pass during dinner service" width={1600} height={1200} className="aspect-[16/10] w-full object-cover" />
-              <figcaption className="bg-[var(--lp-sunken)] px-5 py-3 text-[14px] text-[var(--lp-muted)]">11:48 pm. The kitchen is closing. The agents are not.</figcaption>
-            </figure>
-          </div>
-          <div className="lp-in grid content-center gap-10 sm:grid-cols-3 lg:col-span-5 lg:col-start-8 lg:grid-cols-1" style={i(2)}>
-            {[
-              ["24×7", "Agents watch your listings, inbox and page while you cook, serve and sleep."],
-              ["1 inbox", "Everything that needs you, in one place, each with the reason and a yes or no."],
-              ["0 forms", "Start from your Zomato or Swiggy link. Zest reads the rest."],
-            ].map(([big, text]) => (
-              <div key={big}>
-                <p className="lp-display text-[clamp(30px,3.6vw,52px)] leading-none text-[var(--lp-ink)]">{big}</p>
-                <p className="mt-3 text-[18px] leading-relaxed text-[var(--lp-muted)]">{text}</p>
+      {/* How it works */}
+      <section id="how" data-reveal aria-labelledby="how-h" className="scroll-mt-6 bg-[var(--lp-paper)] py-24 lg:py-32">
+        <div className="lp-wrap">
+          <h2 id="how-h" className={`lp-in max-w-[20ch] ${H2}`} style={i(0)}>
+            Found. Ordered. Delivered. Done right.
+          </h2>
+          <div className="mt-14 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <Step i={1} title="Get found" text="On Google, in AI answers like ChatGPT, on Instagram and through Meta ads.">
+              <p className="text-[var(--lp-muted)]">best dal makhani near me</p>
+              <p className="mt-2 text-[16px] text-[var(--lp-google)]">Rasoi 27, Indiranagar</p>
+              <p className="mt-0.5 text-[var(--lp-muted)]">4.2 · Open now · ₹600 for two</p>
+              <span className="mt-3 inline-flex min-h-9 items-center rounded-full bg-[var(--lp-google)] px-4 font-semibold text-white">Order online</span>
+            </Step>
+            <Step i={2} title="Get ordered" text="Your own website, WhatsApp and phone, with offers for new and returning guests." chat>
+              <p className="ml-auto w-fit max-w-[85%] rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2">1 dal makhani, 2 garlic naan please</p>
+              <p className="mt-2 w-fit max-w-[85%] rounded-xl rounded-tl-sm bg-white px-3 py-2">Done, ₹367 with your ₹75 welcome offer. Ready in 25 min.</p>
+            </Step>
+            <Step i={3} title="Get delivered" text="Zomato riders pick up and deliver, with live tracking for your guest.">
+              <p className="flex items-center gap-2 font-semibold">
+                <Bike aria-hidden size={16} /> Rider arriving in 4 min
+              </p>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--lp-ground)]">
+                <span className="lp-bar block h-full w-[70%] rounded-full bg-[var(--lp-zomato)]" />
               </div>
-            ))}
+              <p className="mt-2 text-[var(--lp-muted)]">Ananya is tracking it live</p>
+            </Step>
+            <Step i={4} title="Get it right" text="Zesty announces every order in your kitchen, and reviews and complaints are handled for you.">
+              <p className="flex items-center gap-1 font-semibold">
+                5 <Star aria-hidden size={13} fill="currentColor" strokeWidth={0} className="text-[var(--lp-accent)]" /> “Hot, quick, and they remembered no onions.”
+              </p>
+              <p className="mt-2 text-[var(--lp-muted)]">Reply posted: “Thank you, Ananya! See you Friday.”</p>
+            </Step>
+          </div>
+        </div>
+      </section>
+
+      {/* Zesty */}
+      <section id="zesty" data-reveal aria-labelledby="zesty-h" className="scroll-mt-6 bg-[var(--lp-band)] py-24 text-[#eaf0eb] lg:py-32">
+        <div className="lp-wrap">
+          <div className="mx-auto max-w-[46rem] text-center">
+            <h2 id="zesty-h" className={`lp-in ${H2}`} style={i(0)}>
+              Meet Zesty. It hears every order so you don't have to.
+            </h2>
+            <p className="lp-in mt-5 text-[18px] leading-relaxed text-[#b9c7bd]" style={i(1)}>
+              A small box on your counter that speaks every new order out loud, in your language, from every channel. Press the big button to accept and it prints the kitchen ticket. When the food is ready, press again and the rider is on the way.
+            </p>
+          </div>
+          <div className="mt-12 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-14">
+            <ul className="grid gap-8 sm:grid-cols-2 lg:order-1 lg:grid-cols-1 lg:text-right">
+              {ZESTY_FEATURES.slice(0, 3).map((f, k) => (
+                <Feature key={f.title} f={f} i={k + 2} right />
+              ))}
+            </ul>
+            <div className="lp-in order-first flex justify-center pt-[140px] lg:order-2" style={i(2)}>
+              <ZestyLoop />
+            </div>
+            <ul className="grid gap-8 sm:grid-cols-2 lg:order-3 lg:grid-cols-1">
+              {ZESTY_FEATURES.slice(3).map((f, k) => (
+                <Feature key={f.title} f={f} i={k + 3} />
+              ))}
+            </ul>
+          </div>
+          <div className="lp-in mt-16 flex flex-col items-center gap-6 text-center" style={i(4)}>
+            <p className="lp-display max-w-[24ch] text-[clamp(24px,2.6vw,36px)] leading-tight [text-wrap:balance]">
+              You've trusted a soundbox with your payments. <span className="text-[var(--lp-accent)]">Trust Zesty with your orders.</span>
+            </p>
+            <button type="button" onClick={() => setRouterOpen(true)} className="lp-btn haldi">
+              Join the Zesty pilot <ArrowRight aria-hidden size={18} />
+            </button>
           </div>
         </div>
       </section>
@@ -227,16 +337,15 @@ export default function Landing() {
         <div className="lp-wrap">
           <div className="max-w-[44rem]">
             <h2 id="agents-h" className={`lp-in ${H2}`} style={i(0)}>
-              Six agents. One job each.
+              A team that never sleeps. You make the calls.
             </h2>
             <p className={`lp-in mt-5 ${LEAD}`} style={i(1)}>
-              Organic and paid, your own page and every app: each agent owns one part of your online business and works on it all the time.
+              Six AI agents, each running one part of your restaurant online, every hour of every day.
             </p>
           </div>
           <div className="mt-14 grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
             <div role="tablist" aria-label="Agents" className="lp-in grid content-start gap-1.5" style={i(2)}>
               {AGENTS.map((a) => {
-                const Icon = AGENT_ICON[a.id];
                 const on = a.id === agent;
                 return (
                   <button
@@ -251,11 +360,9 @@ export default function Landing() {
                     }}
                     className={`lp-tab relative overflow-hidden rounded-2xl px-5 py-4 text-left transition-colors ${on ? "bg-[var(--lp-paper)]" : "hover:bg-[var(--lp-sunken)]"}`}
                   >
-                    <span className="flex items-center gap-3 text-[18px] font-semibold">
-                      <span className={`grid size-9 place-items-center rounded-xl ${on ? "bg-[var(--lp-accent)] text-[var(--lp-accent-ink)]" : "bg-[var(--lp-sunken)]"}`}>
-                        <Icon aria-hidden size={18} />
-                      </span>
-                      {a.name}
+                    <span className="flex items-center justify-between gap-3 text-[18px] font-semibold">
+                      {a.name} agent
+                      {on && <span className="lp-pulse size-2 rounded-full bg-[var(--lp-good)]" aria-hidden />}
                     </span>
                     {on && (
                       <>
@@ -269,141 +376,136 @@ export default function Landing() {
                   </button>
                 );
               })}
+              <p className="mt-4 px-5 text-[16px] font-medium">They learn from every edit you make. The more you approve, the less you need to.</p>
             </div>
             <div id="agent-panel" role="tabpanel" aria-label={`${current.name} agent`} className="lp-in lg:min-h-[520px]" style={i(3)}>
               <div key={agent} className="lp-swap">
-                {PANEL[agent]}
+                {current.panel}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Control */}
-      <section id="control" data-reveal aria-labelledby="control-h" className="scroll-mt-6 bg-[var(--lp-paper)] py-24 lg:py-32">
-        <div className="lp-wrap grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-          <div>
-            <h2 id="control-h" className={`lp-in ${H2}`} style={i(0)}>
-              They do the work. You make the calls.
+      {/* One menu */}
+      <section data-reveal aria-labelledby="sync-h" className="bg-[var(--lp-paper)] py-24 lg:py-32">
+        <div className="lp-wrap">
+          <div className="max-w-[44rem]">
+            <h2 id="sync-h" className={`lp-in ${H2}`} style={i(0)}>
+              Change it once. It's right everywhere.
             </h2>
             <p className={`lp-in mt-5 ${LEAD}`} style={i(1)}>
-              Nothing that touches your prices, your customers or your money goes out without your yes. Give your staff a PIN instead of your password, and see who did what.
+              Tap “khatam” on Zesty and the dish goes off your website, your WhatsApp menu, Google and every app you sell on, in seconds.
             </p>
-            <ul className="lp-in mt-8 space-y-4 text-[18px]" style={i(2)}>
-              {[
-                "Every suggestion comes with the reason, in one line",
-                "Offers stop at the spending limit you set",
-                "Every change is on record, with undo",
-                "Staff see only what their role needs",
-              ].map((t) => (
-                <li key={t} className="flex gap-3">
-                  <Check aria-hidden size={20} className="mt-0.5 shrink-0 text-[var(--lp-good)]" />
-                  {t}
-                </li>
-              ))}
-            </ul>
           </div>
-          <div className="lp-in" style={i(2)}>
-            <ApprovalTrail />
+          <div className="lp-in mt-14" style={i(2)}>
+            <SyncDemo />
           </div>
         </div>
       </section>
 
-      {/* Compare */}
-      <section id="compare" data-reveal aria-labelledby="compare-h" className="scroll-mt-6 py-24 lg:py-32">
-        <div className="lp-wrap">
-          <div className="max-w-[44rem]">
-            <h2 id="compare-h" className={`lp-in ${H2}`} style={i(0)}>
-              Not another billing app.
+      {/* Your customers */}
+      <section data-reveal aria-labelledby="yours-h" className="py-24 lg:py-32">
+        <div className="lp-wrap grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+          <div>
+            <h2 id="yours-h" className={`lp-in ${H2}`} style={i(0)}>
+              Your guests. Your data. Your relationship.
             </h2>
             <p className={`lp-in mt-5 ${LEAD}`} style={i(1)}>
-              Billing software records what already happened at your counter. Zest works on what happens next, online. Keep your billing counter as it is: Zest sits beside it.
+              Orders on your website belong to you: names, numbers, favourite dishes. Zomato delivers the food; it doesn't get your customer list.
             </p>
+            <img src="/photos/team-guests.webp" alt="Regulars sharing a long table at dinner" width={1600} height={1200} loading="lazy" className="lp-in mt-10 aspect-[16/10] w-full rounded-[24px] object-cover" style={i(2)} />
           </div>
-          <ul className="lp-in mt-10 grid gap-3 sm:hidden" style={i(2)}>
-            {COMPARE.map(([row, pos, zest]) => (
-              <li key={row} className="rounded-2xl bg-[var(--lp-paper)] p-5 text-[16px]">
-                <p className="font-semibold">{row}</p>
-                <p className="mt-3 flex gap-2 text-[var(--lp-muted)]">
-                  <Minus aria-hidden size={18} className="mt-0.5 shrink-0 text-[var(--lp-faint)]" />
-                  {pos}
-                </p>
-                <p className="mt-2 flex gap-2 font-medium">
-                  <Check aria-hidden size={18} className="mt-0.5 shrink-0 text-[var(--lp-good)]" />
-                  {zest}
-                </p>
-              </li>
-            ))}
-          </ul>
-          <div className="lp-in mt-12 hidden sm:block" style={i(2)}>
-            <table className="w-full border-separate border-spacing-0 text-left text-[16px]">
-              <thead>
-                <tr>
-                  <th className="w-[26%] pb-4 font-medium text-[var(--lp-muted)]">
-                    <span className="sr-only">Compared on</span>
-                  </th>
-                  <th className="w-[34%] pb-4 pl-5 text-[18px] font-semibold text-[var(--lp-muted)]">Billing and POS software</th>
-                  <th className="w-[40%] rounded-t-2xl bg-[var(--lp-paper)] px-5 pb-4 pt-5 text-[18px] font-semibold">
-                    <Wordmark className="text-[24px]" />
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARE.map(([row, pos, zest], n) => (
-                  <tr key={row}>
-                    <th scope="row" className="py-4 pr-4 align-top font-semibold">
-                      {row}
-                    </th>
-                    <td className="py-4 pl-5 align-top text-[var(--lp-muted)]">
-                      <span className="flex gap-2">
-                        <Minus aria-hidden size={18} className="mt-0.5 shrink-0 text-[var(--lp-faint)]" />
-                        {pos}
+          <div className="lp-in" style={i(2)}>
+            <GuestCard />
+          </div>
+        </div>
+      </section>
+
+      {/* Marketplaces */}
+      <section data-reveal aria-labelledby="apps-h" className="bg-[var(--lp-paper)] py-24 lg:py-32">
+        <div className="lp-wrap">
+          <h2 id="apps-h" className={`lp-in max-w-[28ch] ${H2}`} style={i(0)}>
+            New guests on the apps. Regulars on Zest.
+          </h2>
+          <div className="mt-12 grid items-start gap-12 lg:grid-cols-2 lg:gap-20">
+            <p className={`lp-in lg:order-2 ${LEAD}`} style={i(1)}>
+              Keep selling on Zomato and Swiggy: they bring you people who don't know you yet. Zest brings all your orders onto one board, keeps your menu in sync, and answers every review, wherever it's posted.
+            </p>
+            <div data-ui className="lp-in lp-ui p-4 lg:order-1" style={i(2)}>
+              <p className="flex items-center justify-between px-1 text-[14px] font-semibold">
+                Every order, one board
+                <span className="flex items-center gap-1.5 text-[var(--lp-good)]">
+                  <span className="lp-pulse size-2 rounded-full bg-[var(--lp-good)]" /> Live
+                </span>
+              </p>
+              <ul className="mt-3 space-y-2">
+                {BOARD.map((o) => {
+                  const c = CHANNEL[o.ch];
+                  return (
+                    <li key={o.who} className="flex items-center gap-3 rounded-xl bg-[var(--lp-ground)] px-3.5 py-3">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-xl" style={{ background: c.color }}>
+                        <c.icon aria-hidden size={16} className="text-white" />
                       </span>
-                    </td>
-                    <td className={`bg-[var(--lp-paper)] px-5 py-4 align-top font-medium ${n === COMPARE.length - 1 ? "rounded-b-2xl" : ""}`}>
-                      <span className="flex gap-2">
-                        <Check aria-hidden size={18} className="mt-0.5 shrink-0 text-[var(--lp-good)]" />
-                        {zest}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <div className="min-w-0 flex-1 text-[14px]">
+                        <p className="font-semibold">
+                          {c.name} · {o.who}
+                        </p>
+                        <p className="truncate text-[var(--lp-muted)]">{o.items}</p>
+                      </div>
+                      <div className="text-right text-[14px]">
+                        <p className="font-semibold tabular-nums">₹{o.total}</p>
+                        <p className="text-[var(--lp-muted)]">{o.state}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Start */}
-      <section data-reveal aria-labelledby="start-h" className="bg-[var(--lp-console)] py-24 text-[var(--lp-console-ink)] lg:py-32">
+      <section data-reveal aria-labelledby="start-h" className="bg-[var(--lp-band)] py-24 text-[#eaf0eb] lg:py-32">
         <div className="lp-wrap grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
           <div>
             <h2 id="start-h" className={`lp-in ${H2}`} style={i(0)}>
               Live before lunch.
             </h2>
-            <p className="lp-in mt-5 text-[18px] leading-relaxed text-[var(--lp-console-muted)]" style={i(1)}>
-              Paste your Zomato or Swiggy link and Zest builds your page from it: menu, photos, prices, ratings. Connect your email and the payout and review agents start reading. That's the whole setup.
-            </p>
-            <div className="lp-in mt-9" style={i(2)}>
+            <ol className="mt-10 space-y-6">
+              {[
+                ["Paste your Zomato link.", "Zest reads your menu, photos, prices and ratings."],
+                ["Your website and menu are ready in minutes.", "Share it on Instagram, WhatsApp and Google."],
+                ["Zesty arrives at your kitchen.", "Plug it in, and every order speaks up."],
+              ].map(([t, d], k) => (
+                <li key={t} className="lp-in flex gap-4" style={i(k + 1)}>
+                  <span aria-hidden className="mt-1 grid size-9 shrink-0 place-items-center rounded-full bg-[var(--lp-accent)] text-[#121a16]">
+                    <Check size={18} strokeWidth={3} />
+                  </span>
+                  <div>
+                    <p className="text-[22px] font-semibold leading-snug">{t}</p>
+                    <p className="mt-1 text-[18px] text-[#a9b8ae]">{d}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <div className="lp-in mt-10" style={i(4)}>
               {linkForm("start-link")}
-              <p className="mt-4 px-2 text-[14px] text-[var(--lp-console-muted)]">Sign in with Google next. No card, no hardware.</p>
             </div>
           </div>
-          <div className="lp-in" style={i(3)}>
-            <SetupCard />
+          <div className="lp-in flex justify-center" style={i(2)}>
+            <PhonePage />
           </div>
         </div>
       </section>
 
       {/* Questions */}
-      <section data-reveal aria-labelledby="faq-h" className="py-24 lg:py-32">
+      <section id="faq" data-reveal aria-labelledby="faq-h" className="scroll-mt-6 py-24 lg:py-32">
         <div className="lp-wrap grid gap-10 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <h2 id="faq-h" className={`lp-in ${H2}`} style={i(0)}>
-              Questions owners ask
-            </h2>
-            <img src="/photos/team-guests.webp" alt="Regulars sharing a long table" width={1600} height={1200} className="lp-in mt-10 hidden aspect-[4/5] w-full rounded-[24px] object-cover lg:block" style={i(1)} />
-          </div>
+          <h2 id="faq-h" className={`lp-in lg:col-span-4 ${H2}`} style={i(0)}>
+            Questions owners ask
+          </h2>
           <div className="lp-in grid gap-3 lg:col-span-7 lg:col-start-6" style={i(1)}>
             {FAQ.map((f, n) => (
               <details key={f.q} open={n === 0} className="group rounded-2xl bg-[var(--lp-paper)] px-6">
@@ -423,8 +525,15 @@ export default function Landing() {
         <div className="lp-wrap grid gap-10 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_repeat(2,minmax(0,1fr))]">
           <div>
             <Wordmark className="text-[36px]" />
-            <p className="mt-4 max-w-[26em] text-[16px] leading-relaxed text-[var(--lp-muted)]">AI agents that run your restaurant online, day and night.</p>
+            <p className="mt-4 max-w-[26em] text-[16px] leading-relaxed text-[var(--lp-muted)]">Every order, not just the app orders.</p>
             <p className="mt-8 text-[14px] text-[var(--lp-muted)]">© 2026 Zest</p>
+            <p className="mt-2 max-w-[40em] text-[14px] text-[var(--lp-muted)]">
+              Video:{" "}
+              <a href="https://commons.wikimedia.org/wiki/File:Making_tandoori_bread_in_Old_Delhi.ogv" className="underline underline-offset-2">
+                “Making tandoori bread in Old Delhi”
+              </a>{" "}
+              by Fowler&amp;fowler, CC BY-SA 4.0, via Wikimedia Commons.
+            </p>
           </div>
           <div className="flex flex-col items-start gap-3 text-[16px]">
             <p className="font-semibold">Start</p>
@@ -444,7 +553,7 @@ export default function Landing() {
               Sample restaurant
             </button>
             <a href="/r/rasoi-27" className="text-[var(--lp-muted)] hover:underline hover:underline-offset-4">
-              A restaurant's own page
+              A restaurant's own website
             </a>
           </div>
         </div>
@@ -453,4 +562,45 @@ export default function Landing() {
       <RouterDialog open={routerOpen} onClose={() => setRouterOpen(false)} />
     </div>
   );
+}
+
+/** One step of "how it works": what happens, and a small piece of what it looks like. */
+function Step({ i, title, text, chat = false, children }: { i: number; title: string; text: string; chat?: boolean; children: React.ReactNode }) {
+  return (
+    <div className="lp-in lp-lift flex flex-col rounded-[24px] bg-[var(--lp-ground)] p-6" style={{ "--i": i } as React.CSSProperties}>
+      <p className="text-[22px] font-semibold">{title}</p>
+      <p className="mt-2 text-[16px] leading-relaxed text-[var(--lp-muted)]">{text}</p>
+      <div data-ui className={`mt-auto pt-6`}>
+        <div className={`rounded-2xl p-4 text-[14px] ${chat ? "bg-[#e5ddd5] text-[#121a16]" : "bg-[var(--lp-paper)]"}`}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function Feature({ f, i, right = false }: { f: (typeof ZESTY_FEATURES)[number]; i: number; right?: boolean }) {
+  return (
+    <li className="lp-in" style={{ "--i": i } as React.CSSProperties}>
+      <p className={`flex items-center gap-2 text-[18px] font-semibold ${right ? "lg:justify-end" : ""}`}>
+        <f.icon aria-hidden size={19} className="text-[var(--lp-accent)]" /> {f.title}
+      </p>
+      <p className="mt-1 text-[16px] leading-relaxed text-[#a9b8ae]">{f.text}</p>
+    </li>
+  );
+}
+
+/** Zesty on its own in the product section: an order arrives, is accepted, the next one arrives. */
+function ZestyLoop() {
+  const [k, setK] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => setK((v) => v + 1), 2800);
+    return () => clearInterval(t);
+  }, []);
+  const orders = [
+    { ch: "whatsapp" as const, guest: "Rahul M.", items: "Chicken biryani, raita", total: 409, say: "", sayHi: "" },
+    { ch: "web" as const, guest: "Ananya R.", items: "2 butter naan, 1 dal makhani", total: 367, say: "", sayHi: "" },
+    { ch: "google" as const, guest: "Priya S.", items: "Paneer tikka, 2 garlic naan", total: 427, say: "", sayHi: "" },
+  ];
+  const n = Math.floor(k / 2);
+  return <ZestyDevice order={orders[n % orders.length]} n={n} accepted={k % 2 === 1} onAccept={() => setK((v) => (v % 2 ? v : v + 1))} />;
 }

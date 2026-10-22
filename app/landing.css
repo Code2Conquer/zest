@@ -12,6 +12,7 @@
   --lp-faint: #6f7a73;
   --lp-line: #dde2dc;
   --lp-console: #0f1712; /* the agent console stays dark in both themes */
+  --lp-band: #0b0f0d; /* the dark kitchen bands (hero, Zesty, start) */
   --lp-console-2: #18231c;
   --lp-console-ink: #e8eee9;
   --lp-console-muted: #9fb0a5;
@@ -45,6 +46,7 @@
     --lp-line: #27322b;
     --lp-console: #070b09;
     --lp-console-2: #111a14;
+    --lp-band: #141d17;
     --lp-accent-soft: #33290f;
     --lp-swiggy: #e08a1a;
     --lp-web: #5cb88a;
@@ -67,6 +69,7 @@
   --lp-line: #27322b;
   --lp-console: #070b09;
   --lp-console-2: #111a14;
+  --lp-band: #141d17;
   --lp-accent-soft: #33290f;
   --lp-swiggy: #e08a1a;
   --lp-web: #5cb88a;
@@ -162,6 +165,14 @@
   opacity: 1;
   transform: none;
 }
+/* On a phone the page is long and read in a thumb-scroll: show each part at once, no waiting. */
+@media (max-width: 639px) {
+  .lp-in {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
 
 .lp-lift {
   transition: transform 180ms ease;
@@ -232,6 +243,57 @@
   to { transform: scaleX(1); }
 }
 
+
+/* Zesty: the ticket feeding up out of the printer slot. */
+.lp-print {
+  animation: lp-print 1400ms cubic-bezier(0.3, 0.6, 0.2, 1) 500ms both;
+}
+@keyframes lp-print {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Zesty: sound rings spreading from the speaker while it announces. */
+.lp-ring {
+  animation: lp-ring 1600ms cubic-bezier(0.2, 0.6, 0.3, 1) 3 both;
+}
+.lp-ring.late {
+  animation-delay: 500ms;
+}
+@keyframes lp-ring {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(1.9); opacity: 0; }
+}
+
+/* An order arriving from its channel. */
+.lp-slide {
+  animation: lp-slide 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes lp-slide {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The hero's rotating channel name. */
+.lp-word {
+  display: inline-block;
+  animation: lp-word 2600ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes lp-word {
+  0% { opacity: 0; transform: translateY(0.4em); }
+  12%, 85% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-0.3em); }
+}
+
+/* A photograph settling in slowly behind the stage. */
+.lp-drift {
+  animation: lp-drift 14s ease-out both;
+}
+@keyframes lp-drift {
+  from { transform: scale(1.1); }
+  to { transform: scale(1); }
+}
+
 .lp details > summary {
   list-style: none;
   cursor: pointer;
@@ -249,6 +311,11 @@
   }
   .lp-arrive,
   .lp-swap,
+  .lp-print,
+  .lp-ring,
+  .lp-slide,
+  .lp-word,
+  .lp-drift,
   .lp-caret,
   .lp-pulse,
   .lp-tick {
