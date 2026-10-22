@@ -67,7 +67,13 @@ function JoinInner() {
       </p>
     );
   }
-  return <JoinForm key={outlet?.id ?? "new"} journey={journey} platforms={platforms} initial={fromOutlet(outlet)} />;
+  // A listing link pasted on the landing page arrives as ?zomato= or ?swiggy=.
+  const initial = fromOutlet(outlet);
+  for (const p of PLATFORMS) {
+    const link = params.get(p);
+    if (link && !initial.listings[p]) initial.listings = { ...initial.listings, [p]: link };
+  }
+  return <JoinForm key={outlet?.id ?? "new"} journey={journey} platforms={platforms} initial={initial} />;
 }
 
 function JoinForm({ journey, platforms, initial }: { journey: Journey; platforms: Platform[]; initial: Form }) {

@@ -1,573 +1,669 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import { ArrowDown, ArrowRight, BookOpen, Check, ChefHat, IndianRupee, Play, Plus, ReceiptText, ShieldCheck, Star, Store, TrendingUp } from "lucide-react";
-import { LangToggle, Wordmark } from "@/components/bits";
-import { HeroStage } from "@/components/landing/hero-stage";
-import { JourneyRouter, RouterDialog } from "@/components/landing/router";
-import { Showcase } from "@/components/landing/showcase";
+import "./landing.css";
+import { useEffect, useRef, useState } from "react";
+import QRCode from "qrcode";
+import { Star } from "lucide-react";
+import { Wordmark } from "@/components/bits";
+import { RouterDialog } from "@/components/landing/router";
+import { MENU, ORDERS, PAYOUTS } from "@/lib/data";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
-const BRIGADE: { icon: typeof Star; photo: string; alt: string; role: Bi; name: Bi; does: Bi }[] = [
-  {
-    icon: ChefHat,
-    role: { en: "Head chef", hi: "हेड शेफ़" },
-    photo: "team-chef",
-    alt: "A chef finishing plates under copper pass lamps",
-    name: { en: "Zest", hi: "Zest" },
-    does: { en: "Takes your message, decides who handles it, and checks the work before it reaches you.", hi: "आपका मैसेज लेता है, तय करता है कौन संभालेगा, और काम आप तक पहुँचने से पहले जाँचता है।" },
-  },
-  {
-    icon: BookOpen,
-    role: { en: "Menu", hi: "मेन्यू" },
-    photo: "team-menu",
-    alt: "A South Indian meal on a banana leaf",
-    name: { en: "Menu agent", hi: "मेन्यू एजेंट" },
-    does: { en: "Keeps prices, photos and stock in sync on every platform. Pauses dishes the moment you run out.", hi: "हर प्लेटफ़ॉर्म पर क़ीमत, फ़ोटो और स्टॉक एक जैसा रखता है। सामान ख़त्म होते ही डिश रोक देता है।" },
-  },
-  {
-    icon: ReceiptText,
-    role: { en: "Pass", hi: "पास" },
-    photo: "team-pass",
-    alt: "Plates lined up at the pass, ready to go out",
-    name: { en: "Orders agent", hi: "ऑर्डर एजेंट" },
-    does: { en: "Watches every ticket, flags late ones, and tells riders and customers before they ask.", hi: "हर टिकट पर नज़र, देर वाले पकड़ता है, और राइडर व ग्राहक को पूछने से पहले बताता है।" },
-  },
-  {
-    icon: Star,
-    role: { en: "Front of house", hi: "फ़्रंट ऑफ़ हाउस" },
-    photo: "team-guests",
-    alt: "Guests eating together at a long table",
-    name: { en: "Reviews agent", hi: "रिव्यू एजेंट" },
-    does: { en: "Replies to every review and complaint in your voice, and spots patterns like cold dal on Fridays.", hi: "हर रिव्यू और शिकायत का आपके अंदाज़ में जवाब, और पैटर्न पकड़ता है, जैसे शुक्रवार को ठंडी दाल।" },
-  },
-  {
-    icon: IndianRupee,
-    role: { en: "Galla", hi: "गल्ला" },
-    photo: "team-money",
-    alt: "Tandoori chicken with naan and chutneys",
-    name: { en: "Money agent", hi: "पैसे वाला एजेंट" },
-    does: { en: "Matches payouts to orders and your bank, explains every deduction, and disputes the wrong ones.", hi: "पेआउट को ऑर्डर और बैंक से मिलाता है, हर कटौती समझाता है, और ग़लत वाली पर डिस्प्यूट करता है।" },
-  },
-  {
-    icon: TrendingUp,
-    role: { en: "Growth", hi: "ग्रोथ" },
-    photo: "team-rider",
-    alt: "A delivery rider heading down a narrow street",
-    name: { en: "Growth agent", hi: "ग्रोथ एजेंट" },
-    does: { en: "Plans promos and ads with a spend cap, then stops them on its own if they aren't paying off.", hi: "ख़र्च सीमा के साथ प्रोमो और ऐड प्लान करता है, और फ़ायदा न हो तो अपने-आप रोक देता है।" },
-  },
+// The landing page. One idea runs it: the kitchen order ticket. Every job Zest does reaches the owner
+// as a ticket to approve, so the ticket's shape (a square slip, notched on both sides, with a printed
+// band) is the page's only motif: the hero card, the interface panels, the setup card, the FAQ slips.
+
+const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+
+/** Sections fade their parts in, one after another, the first time they scroll into view. */
+function useReveal() {
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const els = root.current?.querySelectorAll<HTMLElement>("[data-reveal]") ?? [];
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            e.target.classList.add("lp-seen");
+            io.unobserve(e.target);
+          }
+        }
+      },
+      { threshold: 0.18 },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+  return root;
+}
+
+const PHOTOS: { src: string; caption: Bi }[] = [
+  { src: "/photos/team-pass.webp", caption: { en: "Plates at the pass, dinner service", hi: "डिनर सर्विस में पास पर तैयार प्लेटें" } },
+  { src: "/photos/team-chef.webp", caption: { en: "Finishing plates under the pass lamps", hi: "पास की लाइट के नीचे प्लेट सजाते शेफ़" } },
+  { src: "/photos/team-guests.webp", caption: { en: "A long table of regulars", hi: "रेगुलर मेहमानों की लंबी टेबल" } },
+  { src: "/photos/team-rider.webp", caption: { en: "An order leaving for delivery", hi: "डिलीवरी के लिए निकलता ऑर्डर" } },
 ];
 
-// The four things an owner gets, grouped by outcome. The same grouping runs through the nav and footer.
-const PILLARS: { id: string; icon: typeof Star; name: Bi; line: Bi; points: Bi[]; soon?: Bi }[] = [
-  {
-    id: "service",
-    icon: ChefHat,
-    name: { en: "Run service", hi: "सर्विस चलाएँ" },
-    line: { en: "Every order and every table, on one screen.", hi: "हर ऑर्डर और हर टेबल, एक स्क्रीन पर।" },
-    points: [
-      { en: "Live orders from Zomato, Swiggy, dine-in and your own page", hi: "Zomato, Swiggy, डाइन-इन और आपके पेज के लाइव ऑर्डर" },
-      { en: "Tables, bills, bookings and the waitlist", hi: "टेबल, बिल, बुकिंग और वेटलिस्ट" },
-      { en: "One menu, with stock and prices synced everywhere", hi: "एक मेन्यू, स्टॉक और क़ीमत हर जगह एक जैसी" },
-      { en: "Staff sign in with a PIN and see only their work", hi: "स्टाफ़ PIN से साइन इन करते हैं और सिर्फ़ अपना काम देखते हैं" },
-    ],
-  },
-  {
-    id: "direct",
-    icon: Store,
-    name: { en: "Sell direct", hi: "सीधे बेचें" },
-    line: { en: "A page of your own for the customers who already know you.", hi: "उन ग्राहकों के लिए आपका अपना पेज जो आपको पहले से जानते हैं।" },
-    points: [
-      { en: "Your restaurant page with menu, photos, ratings and price for two", hi: "आपका रेस्टोरेंट पेज: मेन्यू, फ़ोटो, रेटिंग और दो लोगों का ख़र्च" },
-      { en: "Table QR codes, so guests order from their seat", hi: "टेबल QR कोड, ताकि मेहमान अपनी सीट से ऑर्डर करें" },
-      { en: "Payment by UPI straight to you, or at the counter", hi: "भुगतान UPI से सीधे आपको, या काउंटर पर" },
-      { en: "A customer list that builds itself", hi: "अपने-आप बनती ग्राहक सूची" },
-    ],
-    soon: { en: "Coming next: ordering on WhatsApp and points for regulars", hi: "आगे: WhatsApp पर ऑर्डर और रेगुलर के लिए पॉइंट" },
-  },
-  {
-    id: "money",
-    icon: IndianRupee,
-    name: { en: "Know your money", hi: "अपना हिसाब जानें" },
-    line: { en: "Every payout, read and explained for you.", hi: "हर पेआउट, पढ़ा और समझाया हुआ।" },
-    points: [
-      { en: "Payout mails and statements read from your inbox", hi: "पेआउट मेल और स्टेटमेंट आपके इनबॉक्स से पढ़े जाते हैं" },
-      { en: "Sales, fees, ads and deductions, line by line", hi: "बिक्री, फ़ीस, ऐड और कटौती, एक-एक लाइन" },
-      { en: "Wrong charges found and disputes drafted", hi: "ग़लत कटौती पकड़ी जाती है और डिस्प्यूट तैयार" },
-      { en: "Yesterday's sales by channel, every morning", hi: "हर सुबह कल की बिक्री, हर चैनल की" },
-    ],
-  },
-  {
-    id: "grow",
-    icon: TrendingUp,
-    name: { en: "Grow", hi: "बढ़ें" },
-    line: { en: "More good reviews and better-run promos, with less effort.", hi: "ज़्यादा अच्छे रिव्यू और बेहतर प्रोमो, कम मेहनत में।" },
-    points: [
-      { en: "A reply to every review, drafted in your voice", hi: "हर रिव्यू का जवाब, आपके अंदाज़ में" },
-      { en: "Promos and ads with a hard spend cap", hi: "पक्की ख़र्च सीमा वाले प्रोमो और ऐड" },
-      { en: "Campaigns that pause themselves when they stop paying off", hi: "फ़ायदा न हो तो अपने-आप रुकने वाले कैंपेन" },
-      { en: "Festival and slow-hour ideas from your own orders", hi: "आपके ऑर्डर से त्योहार और धीमे घंटों के आइडिया" },
-    ],
-  },
+/** The kitchen, in four photographs that crossfade slowly like light moving through a day. */
+function Room() {
+  const { pick } = useApp();
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => {
+      if (document.visibilityState === "visible") setI((n) => (n + 1) % PHOTOS.length);
+    }, 5600);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <figure className="relative m-0 h-[30svh] overflow-hidden sm:h-[48svh] lg:sticky lg:top-3 lg:h-[calc(100svh-24px)]">
+      {PHOTOS.map((p, n) => (
+        <img key={p.src} src={p.src} alt={pick(p.caption)} width={1600} height={1200} loading={n === 0 ? "eager" : "lazy"} className={`lp-fade size-full object-cover ${n === i ? "on" : ""}`} />
+      ))}
+      <figcaption className="absolute bottom-0 left-0 bg-[var(--lp-ink)] px-4 py-2.5 text-[15px] text-[var(--lp-paper)]">{pick(PHOTOS[i].caption)}</figcaption>
+    </figure>
+  );
+}
+
+function Perf({ className = "" }: { className?: string }) {
+  return (
+    <div aria-hidden className={`perf ${className}`}>
+      {Array.from({ length: 80 }, (_, k) => (
+        <span key={k} />
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+// Interface fragments: real pieces of the Zest app, at real size, with real sample data.
+
+type Rail = "all" | "zomato" | "swiggy" | "web" | "dine";
+type RailOrder = { id: string; channel: "zomato" | "swiggy" | "dine" | "web"; items: string; amount: number; placedAt: string; status: string; prepMins: number };
+const RAIL_ORDERS: RailOrder[] = [
+  ...(ORDERS.filter((o) => ["7841", "3390", "T4"].includes(o.id)) as RailOrder[]),
+  { id: "W-0012", channel: "web", items: "Chole bhature x2, masala chaas", amount: 438, placedAt: "8:44 pm", status: "preparing" as const, prepMins: 6 },
+];
+const CH_NAME = { zomato: "Zomato", swiggy: "Swiggy", dine: "Dine-in", web: "Your page" } as const;
+const CH_COLOR = { zomato: "var(--lp-zomato)", swiggy: "var(--lp-swiggy)", dine: "var(--ch-dine)", web: "var(--ch-direct)" } as const;
+
+function OrderRail({ rail }: { rail: Rail }) {
+  const { lang } = useApp();
+  const hi = lang === "hi";
+  const status = (s: string, mins: number) =>
+    s === "delayed" ? (hi ? `देर, ${mins} मिनट` : `Running late, ${mins} min`) : s === "ready" ? (hi ? "पिकअप के लिए तैयार" : "Ready for pickup") : hi ? `बन रहा है, ${mins} मिनट` : `Preparing, ${mins} min`;
+  return (
+    <div data-ui className="flex h-full flex-col gap-2.5 bg-[var(--lp-ground)] p-5 text-[var(--lp-ink)] sm:p-7">
+      <p className="flex items-baseline justify-between text-[15px]">
+        <span className="font-semibold">{hi ? "किचन में, अभी" : "In the kitchen now"}</span>
+        <span className="text-[var(--lp-muted)]">{hi ? "लाइव" : "Live"}</span>
+      </p>
+      {RAIL_ORDERS.map((o) => {
+        const dim = rail !== "all" && o.channel !== rail;
+        return (
+          <div key={o.id} className={`bg-[var(--lp-paper)] px-4 py-3 transition-opacity duration-300 ${dim ? "opacity-30" : ""}`}>
+            <p className="flex items-baseline justify-between gap-3 text-[15px]">
+              <span className="inline-flex items-center gap-1.5 font-medium">
+                <span className="size-2 rounded-full" style={{ background: CH_COLOR[o.channel] }} />
+                {CH_NAME[o.channel]}
+              </span>
+              <span className="text-[var(--lp-muted)]">
+                #{o.id}, {o.placedAt}
+              </span>
+            </p>
+            <p className="mt-1 text-[15px] font-medium">{o.items}</p>
+            <div className="mt-2 h-1.5 bg-[var(--sunken)]">
+              <div className="lp-bar h-full" style={{ width: `${Math.min(100, (o.prepMins / 15) * 100)}%`, background: o.status === "delayed" ? "var(--lp-zomato)" : o.status === "ready" ? "var(--veg)" : "var(--haldi-deep)" }} />
+            </div>
+            <p className={`mt-1.5 flex justify-between text-[15px] ${o.status === "delayed" ? "font-medium text-[var(--lp-zomato)]" : "text-[var(--lp-muted)]"}`}>
+              <span>{status(o.status, o.prepMins)}</span>
+              <span className="text-[var(--lp-ink)]">{inr(o.amount)}</span>
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** The payout explainer: the page's one live thing. Switch platform and the whole field follows. */
+function PayoutShowcase() {
+  const { lang } = useApp();
+  const hi = lang === "hi";
+  const [p, setP] = useState<"zomato" | "swiggy">("swiggy");
+  const [cur, prev] = PAYOUTS.filter((x) => x.platform === p);
+  const drop = prev.net - cur.net;
+  const wrong = p === "swiggy" ? { amount: 412, order: "3381", mins: 6 } : { amount: 180, order: "7802", mins: 4 };
+  const name = p === "zomato" ? "Zomato" : "Swiggy";
+  const field = p === "zomato" ? "var(--lp-zomato)" : "var(--lp-swiggy)";
+  const lines: [Bi, number][] = [
+    [{ en: "Sales", hi: "बिक्री" }, cur.gross],
+    [{ en: "Commission", hi: "कमीशन" }, -cur.commission],
+    [{ en: "Ads", hi: "ऐड" }, -cur.ads],
+    [{ en: "Deductions", hi: "कटौती" }, -cur.deductions],
+  ];
+
+  return (
+    <section data-reveal aria-labelledby="payout-h" className="relative overflow-hidden transition-colors duration-500" style={{ background: field, color: p === "zomato" ? "#fff" : "#17201c" }}>
+      <div className="relative z-10 grid min-h-[92svh] grid-cols-[minmax(0,1fr)] gap-10 px-[var(--lp-m)] py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div>
+          <h2 id="payout-h" className="lp-in font-sign max-w-[16ch] text-[clamp(22px,2.6vw,36px)] leading-[1.05]" style={{ "--i": 0 } as React.CSSProperties}>
+            {hi ? `${name} पेआउट कम क्यों आया` : `Why the ${name} payout fell`}
+          </h2>
+          <p className="lp-in mt-3 max-w-[44ch] text-[18px] leading-relaxed" style={{ "--i": 1 } as React.CSSProperties}>
+            {hi ? "Zest आपके इनबॉक्स से स्टेटमेंट पढ़कर एक-एक लाइन समझाता है, और ग़लत कटौती पर डिस्प्यूट तैयार रखता है।" : "Zest reads the statement in your inbox, explains it line by line, and has the dispute ready for the wrong charge."}
+          </p>
+          <div data-ui className="tkt lp-in mt-8 w-full max-w-[440px] bg-[var(--lp-paper)] text-[var(--lp-ink)]" style={{ "--i": 2 } as React.CSSProperties}>
+            <Perf className="h-3 text-[var(--lp-ink)]" />
+            <div className="px-7 pb-6 pt-5">
+              <p className="flex items-baseline justify-between text-[15px]">
+                <span className="font-semibold">{name} · 7 to 13 Oct</span>
+                <span className="font-medium text-[var(--lp-zomato)]">
+                  −{inr(drop)} {hi ? "पिछले हफ़्ते से" : "on last week"}
+                </span>
+              </p>
+              <p className="mt-1 text-[clamp(32px,3.6vw,56px)] font-semibold leading-none tracking-tight">{inr(cur.net)}</p>
+              <dl className="mt-4 space-y-1.5 text-[15px]">
+                {lines.map(([l, v]) => (
+                  <div key={l.en} className="flex justify-between">
+                    <dt className="text-[var(--lp-muted)]">{hi ? l.hi : l.en}</dt>
+                    <dd className={v < 0 ? "text-[var(--lp-muted)]" : "font-medium"}>{v < 0 ? `−${inr(-v)}` : inr(v)}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="mt-5 bg-[var(--turmeric-soft)] px-4 py-3 text-[15px] leading-snug">
+                <p className="font-semibold">{hi ? `${inr(wrong.amount)} की ग़लत कटौती` : `${inr(wrong.amount)} charged by mistake`}</p>
+                <p className="mt-0.5 text-[var(--lp-muted)]">
+                  {hi
+                    ? `ऑर्डर #${wrong.order} ग्राहक ने खाना बनना शुरू होने के ${wrong.mins} मिनट बाद कैंसल किया। डिस्प्यूट तैयार है।`
+                    : `Order #${wrong.order} was cancelled ${wrong.mins} minutes after cooking started. Dispute drafted.`}
+                </p>
+                <span className="mt-2.5 inline-flex min-h-10 items-center bg-[var(--lp-ink)] px-4 font-medium text-[var(--lp-paper)]">{hi ? "डिस्प्यूट भेजें" : "Raise dispute"}</span>
+              </div>
+            </div>
+          </div>
+          <p className="mt-4 text-[15px]">{hi ? "सैंपल रेस्टोरेंट, Rasoi 27 का हफ़्ता।" : "A week at the sample restaurant, Rasoi 27."}</p>
+        </div>
+
+        {/* The switch, blown up and cropped by the field's right and bottom edges. */}
+        <div className="relative min-h-[90px] sm:min-h-[30svh] lg:min-h-0">
+          <div
+            data-ui
+            role="radiogroup"
+            aria-label={hi ? "प्लेटफ़ॉर्म चुनें" : "Choose a platform"}
+            className="absolute bottom-[var(--lp-m)] right-[var(--lp-m)] flex bg-[#fff] p-[0.12em] text-[clamp(30px,5vw,80px)] font-semibold leading-none text-[var(--lp-ink)]"
+          >
+            {(["zomato", "swiggy"] as const).map((x) => (
+              <button
+                key={x}
+                type="button"
+                role="radio"
+                aria-checked={p === x}
+                onClick={() => setP(x)}
+                className="px-[0.45em] py-[0.32em] transition-colors duration-300"
+                style={p === x ? { background: x === "zomato" ? "var(--lp-zomato)" : "var(--lp-swiggy)", color: x === "zomato" ? "#fff" : "#17201c" } : undefined}
+              >
+                {x === "zomato" ? "Zomato" : "Swiggy"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const SETUP: { clause: Bi; field: string; ink: string }[] = [
+  { clause: { en: "First, sign in with Google.", hi: "पहले, Google से साइन इन करें।" }, field: "#e4e7e3", ink: "#17201c" },
+  { clause: { en: "Then paste your Zomato link.", hi: "फिर अपना Zomato लिंक डालें।" }, field: "#d6e4da", ink: "#17201c" },
+  { clause: { en: "Connect your inbox.", hi: "अपना इनबॉक्स जोड़ें।" }, field: "#f2b035", ink: "#17201c" },
+  { clause: { en: "Open your page, add your team.", hi: "अपना पेज खोलें, टीम जोड़ें।" }, field: "#12261b", ink: "#eef2ec" },
 ];
 
-// What an owner juggles today, all of which Zest brings into one place.
-const TODAY: Bi[] = [
-  { en: "Two partner apps", hi: "दो पार्टनर ऐप" },
-  { en: "Three tablets at the counter", hi: "काउंटर पर तीन टैबलेट" },
-  { en: "A notebook for bookings", hi: "बुकिंग की कॉपी" },
-  { en: "Payouts buried in email", hi: "ईमेल में दबे पेआउट" },
-  { en: "Regulars ordering on WhatsApp", hi: "WhatsApp पर रेगुलर के ऑर्डर" },
-  { en: "Reviews nobody has time for", hi: "रिव्यू जिनके लिए समय नहीं" },
-  { en: "Staff asking for your password", hi: "स्टाफ़ आपका पासवर्ड माँगता है" },
-];
+/** The setup ticket, further along in each field. */
+function SetupCard({ step, qr }: { step: number; qr: string | null }) {
+  const { lang } = useApp();
+  const hi = lang === "hi";
+  const rows: [Bi, Bi][] = [
+    [{ en: "Signed in", hi: "साइन इन" }, { en: "aditi@rasoi27.in", hi: "aditi@rasoi27.in" }],
+    [{ en: "Listing read", hi: "लिस्टिंग पढ़ी" }, { en: `${MENU.length} dishes, 4.2 rating, ₹600 for two`, hi: `${MENU.length} डिश, 4.2 रेटिंग, दो लोगों का ₹600` }],
+    [{ en: "Inbox", hi: "इनबॉक्स" }, { en: "4 payouts, 2 statements", hi: "4 पेआउट, 2 स्टेटमेंट" }],
+    [{ en: "Your page", hi: "आपका पेज" }, { en: "Live, with table QR codes", hi: "लाइव, टेबल QR के साथ" }],
+  ];
+  return (
+    <div data-ui className="tkt lp-lift w-[260px] bg-[#fff] text-[#17201c]">
+      <Perf className="h-3 text-[#17201c]" />
+      <div className="px-5 pb-5 pt-4">
+        <p className="text-[18px] font-semibold">Rasoi 27</p>
+        <p className="text-[15px] text-[#3e4a44]">{hi ? "इंदिरानगर, बेंगलुरु" : "Indiranagar, Bengaluru"}</p>
+        <ul className="mt-3 space-y-1.5 text-[15px]">
+          {rows.map(([k, v], i) => (
+            <li key={k.en} className={`flex gap-2 ${i > step ? "max-lg:hidden lg:opacity-0" : ""}`}>
+              <span className="tkt-dot mt-[0.4em] shrink-0 text-[#2b6a4b]" aria-hidden />
+              <span>
+                <span className="font-medium">{hi ? k.hi : k.en}</span> · {hi ? v.hi : v.en}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {step === 3 && qr && <img src={qr} alt={hi ? "Rasoi 27 के पेज का QR कोड" : "QR code for Rasoi 27's page"} width={96} height={96} className="mt-3" />}
+      </div>
+    </div>
+  );
+}
 
-const STEPS: { title: Bi; body: Bi }[] = [
-  { title: { en: "Sign in with Google", hi: "Google से साइन इन करें" }, body: { en: "No forms to fill and nothing to install. It works on the phone or laptop you already have.", hi: "कोई लंबा फ़ॉर्म नहीं, कुछ इंस्टॉल नहीं। आपके फ़ोन या लैपटॉप पर चलता है।" } },
-  { title: { en: "Paste your Zomato or Swiggy link", hi: "अपना Zomato या Swiggy लिंक डालें" }, body: { en: "Your menu, photos, ratings and details come in on their own.", hi: "आपका मेन्यू, फ़ोटो, रेटिंग और जानकारी अपने-आप आ जाती है।" } },
-  { title: { en: "Connect your email and platforms", hi: "ईमेल और प्लेटफ़ॉर्म जोड़ें" }, body: { en: "Payouts, statements and orders start showing up, explained.", hi: "पेआउट, स्टेटमेंट और ऑर्डर दिखने लगते हैं, समझाए हुए।" } },
-  { title: { en: "Open your page and add your team", hi: "अपना पेज खोलें और टीम जोड़ें" }, body: { en: "Share your link and table QR codes, and give staff a PIN.", hi: "अपना लिंक और टेबल QR शेयर करें, और स्टाफ़ को PIN दें।" } },
-];
-
-const FAQ: { q: Bi; a: Bi }[] = [
+const FAQ: { tab: Bi; q: Bi; a: Bi }[] = [
   {
+    tab: { en: "Zomato & Swiggy", hi: "Zomato और Swiggy" },
     q: { en: "Does Zest replace Zomato or Swiggy?", hi: "क्या Zest, Zomato या Swiggy की जगह लेता है?" },
-    a: {
-      en: "No. Zest works alongside them. Your listings keep running as they do, and Zest helps you run them better: orders, menu, reviews and payouts in one place. Your own page is for customers who already know you.",
-      hi: "नहीं। Zest उनके साथ काम करता है। आपकी लिस्टिंग वैसे ही चलती हैं, और Zest उन्हें बेहतर चलाने में मदद करता है: ऑर्डर, मेन्यू, रिव्यू और पेआउट एक जगह। आपका अपना पेज उन ग्राहकों के लिए है जो आपको पहले से जानते हैं।",
-    },
+    a: { en: "No. Your listings keep running as they do, and Zest helps you run them: orders, menu, reviews and payouts in one place. Your own page is for customers who already know you.", hi: "नहीं। आपकी लिस्टिंग वैसे ही चलती हैं, और Zest उन्हें चलाने में मदद करता है: ऑर्डर, मेन्यू, रिव्यू और पेआउट एक जगह। आपका पेज उन ग्राहकों के लिए है जो आपको पहले से जानते हैं।" },
   },
   {
+    tab: { en: "Approval", hi: "मंज़ूरी" },
+    q: { en: "Will the AI change things without asking?", hi: "क्या AI बिना पूछे कुछ बदलेगा?" },
+    a: { en: "No. Every price change, reply, dispute and promo arrives as a ticket you approve. Promos carry a hard spend cap, and everything is on record with undo.", hi: "नहीं। हर क़ीमत, जवाब, डिस्प्यूट और प्रोमो एक टिकट बनकर आता है जिसे आप मंज़ूर करते हैं। प्रोमो पर पक्की ख़र्च सीमा, और हर काम का रिकॉर्ड और undo।" },
+  },
+  {
+    tab: { en: "Staff", hi: "स्टाफ़" },
+    q: { en: "Can my staff use it without my password?", hi: "क्या स्टाफ़ मेरे पासवर्ड के बिना इस्तेमाल कर सकता है?" },
+    a: { en: "Yes. Give each person a role and a 4-digit PIN. The kitchen sees only the order board; managers can do more; only you see everything.", hi: "हाँ। हर व्यक्ति को एक रोल और 4 अंकों का PIN दें। किचन सिर्फ़ ऑर्डर बोर्ड देखता है; मैनेजर ज़्यादा कर सकते हैं; सब कुछ सिर्फ़ आप देखते हैं।" },
+  },
+  {
+    tab: { en: "Hardware", hi: "हार्डवेयर" },
     q: { en: "Do I need a POS or new hardware?", hi: "क्या POS या नया हार्डवेयर चाहिए?" },
-    a: { en: "No. Zest runs on the phone, tablet or laptop you already use. Connections to POS systems such as Petpooja are on the way.", hi: "नहीं। Zest आपके मौजूदा फ़ोन, टैबलेट या लैपटॉप पर चलता है। Petpooja जैसे POS से कनेक्शन आ रहे हैं।" },
+    a: { en: "No. Zest runs on the phone, tablet or laptop you already have. Connections to POS systems such as Petpooja are on the way.", hi: "नहीं। Zest आपके मौजूदा फ़ोन, टैबलेट या लैपटॉप पर चलता है। Petpooja जैसे POS से कनेक्शन आ रहे हैं।" },
   },
   {
-    q: { en: "Can my staff use it without my login?", hi: "क्या स्टाफ़ मेरे लॉगिन के बिना इस्तेमाल कर सकता है?" },
-    a: { en: "Yes. Add each person with a role and a 4-digit PIN. Kitchen staff see only the order board; managers can do more; only you see everything.", hi: "हाँ। हर व्यक्ति को एक रोल और 4 अंकों का PIN दें। किचन स्टाफ़ सिर्फ़ ऑर्डर बोर्ड देखता है; मैनेजर ज़्यादा कर सकते हैं; सब कुछ सिर्फ़ आप देखते हैं।" },
-  },
-  {
-    q: { en: "Will the AI change things without asking?", hi: "क्या AI बिना पूछे कुछ बदल देगा?" },
-    a: { en: "No. Every change to a platform, every reply and every promo starts as a draft you approve. Promos have a hard spend cap, and everything is on record with undo.", hi: "नहीं। प्लेटफ़ॉर्म पर हर बदलाव, हर जवाब और हर प्रोमो पहले ड्राफ़्ट बनता है जिसे आप मंज़ूर करते हैं। प्रोमो पर पक्की ख़र्च सीमा, और हर काम का रिकॉर्ड और undo।" },
-  },
-  {
+    tab: { en: "Payments", hi: "भुगतान" },
     q: { en: "How do customers pay on my page?", hi: "मेरे पेज पर ग्राहक भुगतान कैसे करते हैं?" },
     a: { en: "By UPI straight to your own UPI ID, or at the counter. The money comes to you directly; Zest never holds it.", hi: "UPI से सीधे आपके UPI ID पर, या काउंटर पर। पैसा सीधे आपके पास आता है; Zest कभी नहीं रखता।" },
   },
   {
-    q: { en: "Can I use it in Hindi?", hi: "क्या मैं इसे हिंदी में इस्तेमाल कर सकता हूँ?" },
-    a: { en: "Yes. The whole app works in Hindi and English, and the assistant replies in Hindi when you write in Hindi or Hinglish.", hi: "हाँ। पूरा ऐप हिंदी और अंग्रेज़ी में चलता है, और आप हिंदी या हिंग्लिश में लिखें तो असिस्टेंट हिंदी में जवाब देता है।" },
+    tab: { en: "Hindi", hi: "हिंदी" },
+    q: { en: "Can I use it in Hindi?", hi: "क्या इसे हिंदी में इस्तेमाल कर सकते हैं?" },
+    a: { en: "Yes. The whole app works in Hindi and English, and the assistant answers in Hindi when you write in Hindi or Hinglish.", hi: "हाँ। पूरा ऐप हिंदी और अंग्रेज़ी में चलता है, और आप हिंदी या हिंग्लिश में लिखें तो असिस्टेंट हिंदी में जवाब देता है।" },
   },
 ];
-
-const WORKS_WITH: [string, string][] = [
-  ["Zomato", "var(--ch-zomato)"],
-  ["Swiggy", "var(--ch-swiggy)"],
-  ["Dine-in", "var(--ch-dine)"],
-  ["Your own page", "var(--ch-direct)"],
-  ["WhatsApp", "var(--veg)"],
-  ["Gmail", "var(--ink-2)"],
-  ["UPI", "var(--ink-2)"],
-];
+const FAQ_FIELDS = ["#fff", "#e4e7e3", "#e1efe6"];
 
 export default function Landing() {
-  const { t, pick, state } = useApp();
+  const { pick, lang } = useApp();
+  const hi = lang === "hi";
+  const root = useReveal();
   const [routerOpen, setRouterOpen] = useState(false);
-  // Links elsewhere in the app use /?start=1 to open "Where is your restaurant today?" directly.
+  const [rail, setRail] = useState<Rail>("all");
+  const [faq, setFaq] = useState(0);
+  const [qr, setQr] = useState<string | null>(null);
+  const [platform, setPlatform] = useState<"zomato" | "swiggy">("zomato");
+  const [link, setLink] = useState("");
+
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("start") === "1") setRouterOpen(true);
+    QRCode.toDataURL(`${window.location.origin}/r/rasoi-27`, { margin: 0, width: 192 }).then(setQr, () => {});
   }, []);
-  const reduce = useReducedMotion();
-  const hi = state.lang === "hi";
 
   async function openDemo() {
     await fetch("/api/outlet/demo", { method: "POST" });
     window.location.href = "/app";
   }
 
-  const rise = (delay: number) =>
-    reduce ? {} : { initial: { opacity: 0, y: 18 }, animate: { opacity: 1, y: 0 }, transition: { delay, duration: 0.6, ease: [0.2, 0.7, 0.2, 1] as const } };
-  const reveal = (i = 0) =>
-    reduce ? {} : { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, amount: 0.3 }, transition: { delay: i * 0.07, duration: 0.6, ease: [0.2, 0.7, 0.2, 1] as const } };
+  function startWithLink(e: React.FormEvent) {
+    e.preventDefault();
+    const q = new URLSearchParams({ journey: "live", live: platform, ...(link.trim() ? { [platform]: link.trim() } : {}) });
+    window.location.href = `/join?${q}`;
+  }
 
-  const startButton = (tone: "dark" | "light") => (
-    <button
-      type="button"
-      onClick={() => setRouterOpen(true)}
-      className={`group inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-[1.05rem] font-medium transition-transform hover:-translate-y-0.5 ${tone === "dark" ? "bg-haldi text-[#17201c] shadow-[0_14px_34px_-14px_rgba(242,176,53,0.7)]" : "bg-ink text-paper"}`}
-    >
-      {hi ? "शुरू करें" : "Get started"}
-      <ArrowRight aria-hidden className="size-4 transition-transform group-hover:translate-x-0.5" />
-    </button>
-  );
-
-  const eyebrow = (text: string, tone: "light" | "dark" = "light") => (
-    <p className={`text-[0.8rem] font-medium uppercase tracking-[0.14em] ${tone === "dark" ? "text-[#f4efe6]/55" : "text-muted"}`}>{text}</p>
-  );
+  const i = (n: number) => ({ "--i": n }) as React.CSSProperties;
+  const RAILS: [Rail, Bi][] = [
+    ["all", { en: "All", hi: "सभी" }],
+    ["zomato", { en: "Zomato", hi: "Zomato" }],
+    ["swiggy", { en: "Swiggy", hi: "Swiggy" }],
+    ["web", { en: "Your page", hi: "आपका पेज" }],
+    ["dine", { en: "Dine-in", hi: "डाइन-इन" }],
+  ];
 
   return (
-    <div className="min-h-dvh overflow-x-clip">
-      {/* Hero */}
-      <section className="relative isolate overflow-hidden bg-[#0e1511] text-[#f4efe6]">
-        <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_80%_40%,rgba(242,176,53,0.16),transparent_70%),radial-gradient(40%_50%_at_10%_90%,rgba(178,58,42,0.18),transparent_70%)]" />
-        <div aria-hidden className="grain absolute inset-0 -z-10 opacity-[0.07]" />
-        <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-8">
-          <Wordmark className="text-[1.9rem] text-[#f4efe6] [&_.bg-turmeric]:bg-haldi" />
-          <nav aria-label="Sections" className="hidden items-center gap-8 text-[0.95rem] text-[#f4efe6]/75 md:flex">
-            <a href="#platform" className="hover:text-[#f4efe6]">{hi ? "प्लेटफ़ॉर्म" : "Platform"}</a>
-            <a href="#agents" className="hover:text-[#f4efe6]">{hi ? "AI एजेंट" : "AI agents"}</a>
-            <a href="#start" className="hover:text-[#f4efe6]">{hi ? "शुरुआत कैसे करें" : "Get set up"}</a>
-            <a href="#faq" className="hover:text-[#f4efe6]">{hi ? "सवाल" : "FAQ"}</a>
-          </nav>
-          <div className="flex items-center gap-3">
-            <LangToggle />
-            <a href="/login" className="hidden text-[0.95rem] text-[#f4efe6]/80 hover:text-[#f4efe6] sm:block">
-              {hi ? "लॉग इन" : "Log in"}
-            </a>
-            <button type="button" onClick={() => setRouterOpen(true)} className="hidden rounded-full bg-haldi px-5 py-2.5 text-[0.95rem] font-medium text-[#17201c] transition-colors hover:bg-[#f6c25a] sm:block">
-              {hi ? "शुरू करें" : "Get started"}
-            </button>
-          </div>
-        </header>
+    <div ref={root} className="lp min-h-dvh overflow-x-clip">
+      <noscript>
+        <style>{`.lp-in{opacity:1!important;transform:none!important}`}</style>
+      </noscript>
 
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-20 pt-8 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:pb-28 lg:pt-12">
-          <div>
-            <motion.p {...rise(0)} className="inline-flex items-center gap-2 rounded-full bg-white/[0.06] px-3.5 py-1.5 text-sm text-[#f4efe6]/80 ring-1 ring-white/10">
-              <span aria-hidden className="size-1.5 rounded-full bg-haldi" />
-              {hi ? "रेस्टोरेंट चलाने के लिए एक ही ऐप" : "The one app to run your restaurant"}
-            </motion.p>
-            <motion.h1 {...rise(0.08)} className="font-sign mt-6 max-w-[16ch] text-[clamp(2.6rem,5.6vw,4.6rem)] leading-[0.94]">
-              {hi ? (
-                <>
-                  पूरा रेस्टोरेंट, <span className="text-haldi">एक ऐप से।</span>
-                </>
-              ) : (
-                <>
-                  Run your whole restaurant <span className="text-haldi">from one app.</span>
-                </>
-              )}
-            </motion.h1>
-            <motion.p {...rise(0.2)} className="mt-7 max-w-[50ch] text-[1.2rem] leading-relaxed text-[#f4efe6]/75">
-              {hi
-                ? "Zomato और Swiggy के ऑर्डर, आपकी टेबल, आपका अपना ऑर्डरिंग पेज, पेआउट, रिव्यू और स्टाफ़, सब एक जगह। AI एजेंट रोज़ का काम करते हैं, आप बस मंज़ूरी देते हैं। हिंदी या अंग्रेज़ी में।"
-                : "Zomato and Swiggy orders, your tables, your own ordering page, payouts, reviews and staff, together in one place. AI agents do the busywork and you just approve. In Hindi or English."}
-            </motion.p>
-            <motion.div {...rise(0.32)} className="mt-9 flex flex-wrap items-center gap-4">
-              {startButton("dark")}
-              <button type="button" onClick={openDemo} className="group inline-flex items-center gap-3 rounded-full py-2 pl-2 pr-5 text-[1.05rem] font-medium text-[#f4efe6] ring-1 ring-white/20 transition-colors hover:bg-white/5">
-                <span className="grid size-10 place-items-center rounded-full bg-white/10 transition-colors group-hover:bg-white/20">
-                  <Play aria-hidden className="size-4 fill-current" />
-                </span>
-                <span className="text-left leading-tight">
-                  {t("landing.demo")}
-                  <span className="block text-[0.8rem] font-normal text-[#f4efe6]/60">{hi ? "Rasoi 27, बिना साइन-अप" : "Rasoi 27, no sign-up needed"}</span>
-                </span>
+      {/* Hero: a printed ticket beside the room */}
+      <section className="grid grid-cols-[minmax(0,1fr)] gap-3 p-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="order-2 lg:order-1">
+          <div className="tkt flex min-h-full flex-col bg-[var(--lp-paper)] lg:min-h-[calc(100svh-24px)]">
+            <Perf className="h-10 text-[var(--lp-ink)] sm:h-14" />
+            <div className="flex flex-1 flex-col items-center px-4 pb-10 pt-7 text-center sm:px-12 sm:pt-10">
+              <div className="hidden w-full justify-end sm:flex">
+                <LpLang />
+              </div>
+              <Wordmark className="text-[clamp(56px,8vw,120px)] sm:mt-6" />
+              <h1 className="font-sign mt-6 text-[28px] leading-[1.04] [text-wrap:balance] sm:text-[44px] lg:text-[clamp(36px,3.4vw,52px)]">
+                {hi ? (
+                  <>
+                    रेस्टोरेंट चलाइए,
+                    <br />
+                    ऐप नहीं।
+                  </>
+                ) : (
+                  <>
+                    Run the restaurant,
+                    <br />
+                    not the apps.
+                  </>
+                )}
+              </h1>
+              <p className="mt-6 max-w-[40ch] text-[18px] leading-relaxed">
+                {hi
+                  ? "Zest आपके Zomato और Swiggy अकाउंट, टेबल और इनबॉक्स पर नज़र रखता है, हर पेआउट समझाता है, और सुधार तैयार रखता है। आप बस मंज़ूरी देते हैं।"
+                  : "Zest watches your Zomato and Swiggy accounts, your tables and your inbox, explains every payout and drafts the fixes. You approve."}
+              </p>
+              <button type="button" onClick={() => setRouterOpen(true)} className="lp-btn mt-8">
+                {hi ? "अपना रेस्टोरेंट जोड़ें" : "Set up my restaurant"}
               </button>
-            </motion.div>
-            <motion.ul {...rise(0.44)} className="mt-12 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#f4efe6]/60">
-              {(hi ? ["दो मिनट में शुरू", "Zomato और Swiggy के साथ", "कोई नया हार्डवेयर नहीं"] : ["Set up in two minutes", "Works with Zomato and Swiggy", "No new hardware"]).map((x) => (
-                <li key={x} className="inline-flex items-center gap-2">
-                  <Check aria-hidden className="size-4 text-haldi" />
-                  {x}
-                </li>
-              ))}
-            </motion.ul>
+              <nav aria-label={hi ? "और देखें" : "More"} className="mt-auto flex flex-wrap justify-center gap-x-7 gap-y-2 pt-10 text-[15px]">
+                <button type="button" onClick={openDemo} className="lp-link">
+                  {hi ? "डेमो किचन आज़माएँ" : "Try the demo kitchen"}
+                </button>
+                <a href="/r/rasoi-27" className="lp-link">
+                  {hi ? "एक रेस्टोरेंट पेज देखें" : "See a restaurant page"}
+                </a>
+                <a href="/login" className="lp-link">
+                  {hi ? "लॉग इन" : "Log in"}
+                </a>
+              </nav>
+            </div>
           </div>
-          <HeroStage />
+        </div>
+        <div className="order-1 lg:order-2">
+          <Room />
         </div>
       </section>
 
-      {/* Works with */}
-      <section className="border-b border-line">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-10 gap-y-4 px-4 py-8 sm:px-8">
-          <p className="text-sm text-muted">{hi ? "उन सबके साथ जो आप पहले से इस्तेमाल करते हैं" : "Works with what you already use"}</p>
-          <ul className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-[1.1rem] font-semibold text-ink-2">
-            {WORKS_WITH.map(([name, color]) => (
-              <li key={name} className="inline-flex items-center gap-2">
-                <span aria-hidden className="size-2.5 rounded-full" style={{ background: color }} />
-                {hi && name === "Your own page" ? "आपका अपना पेज" : hi && name === "Dine-in" ? "डाइन-इन" : name}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* The problem */}
-      <section className="mx-auto grid max-w-7xl items-center gap-14 px-4 py-24 sm:px-8 lg:grid-cols-[1fr_1.05fr]">
-        <motion.div {...reveal()}>
-          {eyebrow(hi ? "आज का हाल" : "The way it is today")}
-          <h2 className="font-sign mt-3 max-w-[14ch] text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1]">{hi ? "रेस्टोरेंट एक काम नहीं, चालीस काम है।" : "A restaurant isn't one job. It's forty."}</h2>
-          <p className="mt-5 max-w-[50ch] text-lg leading-relaxed text-ink-2">
-            {hi
-              ? "Zomato और Swiggy ग्राहक लाते हैं। बाक़ी सब आपके ज़िम्मे: टैबलेट, कॉपी, ईमेल, WhatsApp, और स्टाफ़। हर एक अलग जगह। Zest इन्हें एक ऐप में ले आता है, ताकि आप खाने और मेहमानों पर ध्यान दे सकें।"
-              : "Zomato and Swiggy bring the customers. Everything else lands on you: tablets, notebooks, inboxes, WhatsApp and staff, each in a different place. Zest brings it into one app, so you can get back to the food and the guests."}
-          </p>
-        </motion.div>
-        <motion.div {...reveal(1)} className="relative rounded-[28px] bg-surface p-6 shadow-[0_0_0_1px_var(--line)] sm:p-8">
-          <ul className="flex flex-wrap gap-2.5">
-            {TODAY.map((x, i) => (
-              <li key={x.en} className="rounded-full bg-sunken px-4 py-2 text-[0.95rem] text-ink-2" style={{ transform: `rotate(${((i * 37) % 7) - 3}deg)` }}>
-                {pick(x)}
-              </li>
-            ))}
-          </ul>
-          <div className="my-6 flex items-center gap-3 text-muted">
-            <span className="h-px flex-1 bg-line" />
-            <ArrowDown aria-hidden className="size-5" />
-            <span className="h-px flex-1 bg-line" />
-          </div>
-          <div className="flex items-center gap-4 rounded-2xl bg-curry p-5 text-[#eef2ec]">
-            <Wordmark className="text-[1.7rem] text-[#eef2ec] [&_.bg-turmeric]:bg-haldi" />
-            <p className="text-[0.95rem] leading-snug text-[#eef2ec]/80">{hi ? "एक ऐप। एक लॉगिन। आपकी पूरी टीम।" : "One app. One login. Your whole team."}</p>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Platform pillars */}
-      <section id="platform" className="scroll-mt-8 bg-surface py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-8">
-          <div className="max-w-3xl">
-            {eyebrow(hi ? "प्लेटफ़ॉर्म" : "The platform")}
-            <h2 className="font-sign mt-3 text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1]">{hi ? "रेस्टोरेंट को जो कुछ चाहिए, सब एक जगह।" : "Everything your restaurant runs on."}</h2>
-            <p className="mt-5 max-w-[56ch] text-lg leading-relaxed text-ink-2">
-              {hi ? "चार हिस्से, एक ऐप। हर हिस्सा उसी डेटा पर चलता है, इसलिए कुछ दो बार नहीं करना पड़ता।" : "Four parts, one app. Each runs on the same data, so nothing has to be done twice."}
-            </p>
-          </div>
-          <ul className="mt-14 grid gap-5 md:grid-cols-2">
-            {PILLARS.map((p, i) => (
-              <motion.li key={p.id} {...reveal(i)} className="flex flex-col rounded-[28px] bg-paper p-7 shadow-[0_0_0_1px_var(--line)] sm:p-9">
-                <span className="grid size-12 place-items-center rounded-2xl bg-curry text-haldi">
-                  <p.icon aria-hidden className="size-6" />
-                </span>
-                <h3 className="mt-6 text-[1.6rem] font-semibold tracking-[-0.02em]">{pick(p.name)}</h3>
-                <p className="mt-1 text-lg text-ink-2">{pick(p.line)}</p>
-                <ul className="mt-6 space-y-3">
-                  {p.points.map((x) => (
-                    <li key={x.en} className="flex gap-3 leading-relaxed">
-                      <Check aria-hidden className="mt-1 size-4 shrink-0 text-leaf" />
-                      {pick(x)}
-                    </li>
-                  ))}
-                </ul>
-                {p.soon && <p className="mt-6 rounded-xl bg-turmeric-soft px-4 py-2.5 text-sm text-ink">{pick(p.soon)}</p>}
-                <div className="mt-auto pt-6">
-                  {p.id === "direct" ? (
-                    <a href="/r/rasoi-27" className="inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline">
-                      {hi ? "सैंपल रेस्टोरेंट का पेज देखें" : "See a sample restaurant page"}
-                      <ArrowRight aria-hidden className="size-4" />
-                    </a>
-                  ) : (
-                    <button type="button" onClick={openDemo} className="inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline">
-                      {hi ? "डेमो किचन में देखें" : "See it in the demo kitchen"}
-                      <ArrowRight aria-hidden className="size-4" />
-                    </button>
-                  )}
-                </div>
-              </motion.li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* Product tour */}
-      <section id="product" className="mx-auto max-w-7xl scroll-mt-8 px-4 py-24 sm:px-8">
-        {eyebrow(hi ? "काम करते हुए देखें" : "See it at work")}
-        <h2 className="font-sign mt-3 max-w-[18ch] text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1]">{hi ? "हर स्क्रीन के पीछे एक एजेंट।" : "Behind every screen, an agent at work."}</h2>
-        <p className="mb-12 mt-5 max-w-[56ch] text-lg leading-relaxed text-ink-2">{hi ? "एजेंट ड्राफ़्ट तैयार करते हैं, आप हाँ कहते हैं।" : "The agents prepare the work. You say yes."}</p>
-        <Showcase />
-      </section>
-
-      {/* The brigade */}
-      <section id="agents" className="scroll-mt-8 bg-curry text-[#eef2ec]">
-        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-8">
-          {eyebrow(hi ? "AI एजेंट" : "AI agents", "dark")}
-          <h2 className="font-sign mt-3 max-w-[16ch] text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1] text-haldi">
-            {hi ? "आपकी किचन ब्रिगेड, AI वाली।" : "A kitchen brigade that never takes a day off."}
-          </h2>
-          <p className="mt-5 max-w-[54ch] text-lg leading-relaxed text-[#eef2ec]/75">
-            {hi
-              ? "हर एजेंट का एक काम है, जैसे बड़ी किचन में होता है। Zest हेड शेफ़ है: आपकी बात सुनता है और सही एजेंट को देता है।"
-              : "Each agent has one station, the way a big kitchen works. Zest is the head chef: it hears what you need and hands it to the right station."}
-          </p>
-          <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {BRIGADE.map((b, i) => (
-              <motion.li key={b.name.en} {...reveal(i % 3)} className="group overflow-hidden rounded-3xl bg-curry-2 ring-1 ring-white/10">
-                <div className="relative aspect-[16/10] overflow-hidden">
-                  <img src={`/photos/${b.photo}.webp`} alt={b.alt} width={800} height={600} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-105" />
-                  <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-curry-2 via-curry-2/10 to-transparent" />
-                  <span className="absolute bottom-4 left-5 grid size-11 place-items-center rounded-full bg-haldi text-ink shadow-lg">
-                    <b.icon aria-hidden className="size-5" />
-                  </span>
-                </div>
-                <div className="px-6 pb-7 pt-3">
-                  <p className="text-sm text-[#eef2ec]/60">{pick(b.role)}</p>
-                  <h3 className="text-[1.3rem] font-semibold">{pick(b.name)}</h3>
-                  <p className="mt-2 leading-relaxed text-[#eef2ec]/80">{pick(b.does)}</p>
-                </div>
-              </motion.li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* Get set up in four steps */}
-      <section id="start" className="mx-auto max-w-7xl scroll-mt-8 px-4 py-24 sm:px-8">
-        <div className="flex flex-wrap items-end justify-between gap-6">
+      {/* Orders: the live board beside spare text */}
+      <section data-reveal aria-labelledby="orders-h" className="grid min-h-[88svh] grid-cols-[minmax(0,1fr)] items-center gap-10 px-[var(--lp-m)] py-24 lg:grid-cols-2">
+        <div className="flex flex-col justify-between gap-10 lg:order-2 lg:min-h-[560px]">
           <div>
-            {eyebrow(hi ? "शुरुआत" : "Getting started")}
-            <h2 className="font-sign mt-3 max-w-[16ch] text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1]">{hi ? "चार क़दम में तैयार।" : "Up and running in four steps."}</h2>
-          </div>
-          {startButton("light")}
-        </div>
-        <ol className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((s, i) => (
-            <motion.li key={s.title.en} {...reveal(i)} className="relative rounded-[24px] bg-surface p-6 shadow-[0_0_0_1px_var(--line)]">
-              <span className="font-sign text-[2.6rem] leading-none text-haldi-deep">{String(i + 1).padStart(2, "0")}</span>
-              <h3 className="mt-5 text-[1.2rem] font-semibold leading-snug">{pick(s.title)}</h3>
-              <p className="mt-2 leading-relaxed text-ink-2">{pick(s.body)}</p>
-            </motion.li>
-          ))}
-        </ol>
-      </section>
-
-      {/* Trust */}
-      <section className="mx-auto max-w-7xl px-4 pb-24 sm:px-8">
-        <div className="grid items-center gap-10 rounded-[28px] bg-surface p-8 shadow-[0_0_0_1px_var(--line)] sm:p-12 lg:grid-cols-[1.2fr_1fr]">
-          <div>
-            <ShieldCheck aria-hidden className="size-9 text-leaf" />
-            <h2 className="mt-4 text-[clamp(1.6rem,3vw,2.3rem)] font-semibold leading-tight tracking-[-0.02em]">
-              {hi ? "आपकी मंज़ूरी के बिना कुछ भी किचन से बाहर नहीं जाता।" : "Nothing leaves the kitchen without your OK."}
+            <h2 id="orders-h" className="lp-in font-sign text-[clamp(32px,3.6vw,56px)] leading-[1.02]" style={i(0)}>
+              {hi ? "हर ऑर्डर, एक बोर्ड।" : "Every order, one board."}
             </h2>
-            <ul className="mt-5 space-y-2.5 text-[1.05rem] leading-relaxed text-ink-2">
-              {[
-                { en: "Every change starts as a draft that you approve.", hi: "हर बदलाव पहले ड्राफ़्ट बनता है, आप मंज़ूर करते हैं।" },
-                { en: "Hard spend caps on every promo and ad.", hi: "प्रोमो और ऐड पर पक्की ख़र्च सीमा।" },
-                { en: "Passwords stay encrypted and are never shown to the AI.", hi: "पासवर्ड एन्क्रिप्टेड रहते हैं और AI को नहीं दिखते।" },
-                { en: "Each person sees only what their role needs.", hi: "हर व्यक्ति सिर्फ़ वही देखता है जो उसके काम के लिए ज़रूरी है।" },
-                { en: "A record of everything, with undo.", hi: "हर काम का रिकॉर्ड, और वापस लेने का विकल्प।" },
-              ].map((x) => (
-                <li key={x.en} className="flex gap-3">
-                  <Check aria-hidden className="mt-1.5 size-4 shrink-0 text-leaf" />
-                  {pick(x)}
-                </li>
-              ))}
-            </ul>
+            <p className="lp-in mt-6 max-w-[40ch] text-[18px] leading-relaxed" style={i(1)}>
+              {hi
+                ? "Zomato, Swiggy, आपकी टेबल और आपके अपने पेज के ऑर्डर कुछ सेकंड में एक लाइव बोर्ड पर। देर वाला टिकट ग्राहक के फ़ोन से पहले लाल हो जाता है।"
+                : "Zomato, Swiggy, your tables and your own page land on one live board within seconds. A late ticket turns red before the customer calls."}
+            </p>
           </div>
-          <div className="ticket mx-auto w-full max-w-sm rotate-[-2deg] px-5 py-5">
-            <div className="flex items-baseline justify-between text-[0.8rem]">
-              <span className="text-muted">{hi ? "मेन्यू एजेंट" : "Menu agent"}</span>
-              <span className="font-medium text-turmeric">{t("ticket.needsOk")}</span>
-            </div>
-            <p className="mt-2 font-medium">{hi ? "चोले भटूरे की क़ीमत ₹199 करें" : "Set chole bhature to ₹199"}</p>
-            <p className="mt-1 text-sm text-ink-2">{hi ? "Swiggy पर ₹10 कम है, Zomato से मिलाना है।" : "It's ₹10 cheaper on Swiggy. Match Zomato."}</p>
-            <div className="tear my-4" />
-            <div className="flex gap-2">
-              <span className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-paper">{t("ticket.approve")}</span>
-              <span className="rounded-full px-4 py-2 text-sm text-ink shadow-[inset_0_0_0_1px_var(--line)]">{t("ticket.edit")}</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section id="faq" className="scroll-mt-8 border-t border-line bg-surface">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-24 sm:px-8 lg:grid-cols-[1fr_1.6fr]">
-          <div>
-            {eyebrow(hi ? "सवाल" : "Questions")}
-            <h2 className="font-sign mt-3 max-w-[12ch] text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[1]">{hi ? "जो मालिक अक्सर पूछते हैं।" : "What owners ask us."}</h2>
-          </div>
-          <div className="divide-y divide-line border-y border-line">
-            {FAQ.map((f) => (
-              <details key={f.q.en} className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[1.15rem] font-medium">
-                  {pick(f.q)}
-                  <Plus aria-hidden className="size-5 shrink-0 text-muted transition-transform group-open:rotate-45" />
-                </summary>
-                <p className="mt-3 max-w-[64ch] leading-relaxed text-ink-2">{pick(f.a)}</p>
-              </details>
+          <div role="tablist" aria-label={hi ? "चैनल" : "Channel"} className="lp-in flex flex-wrap gap-x-6 gap-y-2 text-[18px]" style={i(2)}>
+            {RAILS.map(([id, label]) => (
+              <button key={id} type="button" role="tab" aria-selected={rail === id} onClick={() => setRail(id)} className={rail === id ? "font-semibold underline decoration-[3px] underline-offset-8" : "text-[var(--lp-muted)] hover:text-[var(--lp-ink)]"}>
+                {pick(label)}
+              </button>
             ))}
           </div>
+          <div className="lp-in grid grid-cols-2 gap-1" style={i(3)}>
+            <button type="button" onClick={openDemo} className="flex min-h-[72px] items-center bg-[var(--lp-ink)] px-5 text-left text-[18px] font-medium text-[var(--lp-paper)] transition-transform hover:-translate-y-0.5">
+              {hi ? "डेमो किचन आज़माएँ" : "Try the demo kitchen"}
+            </button>
+            <a href="/r/rasoi-27" className="flex min-h-[72px] items-center bg-[var(--sunken)] px-5 text-[18px] font-medium transition-transform hover:-translate-y-0.5">
+              {hi ? "एक रेस्टोरेंट पेज देखें" : "See a restaurant page"}
+            </a>
+          </div>
+        </div>
+        <div className="tkt lp-in aspect-square w-full max-w-[640px] overflow-hidden bg-[var(--lp-field)] p-5 sm:p-8 lg:order-1" style={i(1)}>
+          <div className="h-full overflow-hidden">
+            <OrderRail rail={rail} />
+          </div>
         </div>
       </section>
 
-      {/* Get started, over a table of curries */}
-      <section className="relative isolate overflow-hidden text-[#f4efe6]">
-        <img src="/photos/cta-curries.webp" alt="" width={1800} height={900} loading="lazy" decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover" />
-        <div aria-hidden className="absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgba(14,21,17,0.94)_25%,rgba(14,21,17,0.6)_60%,rgba(14,21,17,0.35))]" />
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-24 sm:px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
-          <div>
-            <h2 className="font-sign max-w-[12ch] text-[clamp(2.2rem,5vw,3.8rem)] leading-[0.95]">{t("landing.title")}</h2>
-            <p className="mt-4 max-w-[44ch] text-lg leading-relaxed text-[#f4efe6]/75">
-              {hi ? "Google से साइन इन करें और दो मिनट में शुरू करें। कोई POS या नया हार्डवेयर नहीं चाहिए।" : "Sign in with Google and start in two minutes. No POS or new hardware needed."}
+      {/* What Zest does, in one paragraph with picture words */}
+      <section data-reveal aria-labelledby="does-h" className="bg-[var(--lp-paper)] px-[var(--lp-m)] py-28">
+        <h2 id="does-h" className="lp-in font-sign text-[clamp(32px,3.6vw,56px)] leading-[1.02]" style={i(0)}>
+          {hi ? "जो काम Zest सँभालता है" : "The work Zest takes off you"}
+        </h2>
+        <p className="lp-in mt-10 max-w-[30em] text-[clamp(22px,2.6vw,36px)] font-medium leading-[1.3]" style={i(0)}>
+          {hi ? "Zest हर पेआउट मेल पढ़ता है " : "Zest reads every payout mail "}
+          <Slot>
+            <span className="flex h-full items-center justify-center bg-[var(--lp-field)] text-[0.42em] font-semibold text-[var(--lp-accent)]">₹67,238</span>
+          </Slot>
+          {hi ? " और ग़लत कटौती पकड़ता है, हर रिव्यू का जवाब तैयार करता है " : " and finds the wrong charges, drafts a reply to every review "}
+          <Slot>
+            <span className="flex h-full items-center justify-center gap-[0.1em] bg-[var(--turmeric-soft)] text-[0.42em] font-semibold">
+              4.2
+              <Star aria-hidden className="size-[0.8em] fill-[var(--haldi-deep)] text-[var(--haldi-deep)]" />
+            </span>
+          </Slot>
+          {hi ? ", एक मेन्यू " : ", keeps one menu "}
+          <Slot>
+            <img src="/photos/menu-dal-makhani.webp" alt={hi ? "दाल मखनी" : "Dal makhani"} className="size-full object-cover" />
+          </Slot>
+          {hi ? " को हर ऐप पर स्टॉक में रखता है, और स्टाफ़ को पासवर्ड की जगह PIN देता है " : " in stock on every app, and gives your staff a PIN "}
+          <Slot>
+            <span className="flex h-full items-center justify-center gap-[0.12em] bg-[var(--lp-ink)]">
+              {[0, 1, 2, 3].map((k) => (
+                <span key={k} className="size-[0.16em] rounded-full bg-[var(--lp-paper)]" />
+              ))}
+            </span>
+          </Slot>
+          {hi ? "।" : " instead of your password."}
+        </p>
+        <div className="mt-[72px] grid lg:grid-cols-12">
+          <div className="lg:col-start-7 lg:col-span-6">
+            <p className="lp-in max-w-[44ch] text-[18px] leading-relaxed" style={i(1)}>
+              {hi
+                ? "हर काम एक किचन टिकट की तरह आपके पास आता है। आप हाँ कहें, तभी जाता है, और हर बदलाव का रिकॉर्ड और undo रहता है।"
+                : "Every job reaches you as a ticket, like an order at the pass. Nothing goes out until you approve it, and every change is on record with undo."}
             </p>
-            <button type="button" onClick={openDemo} className="mt-8 inline-flex items-center gap-2 text-[#f4efe6]/80 underline-offset-4 hover:text-[#f4efe6] hover:underline">
-              <Play aria-hidden className="size-3.5 fill-current" />
-              {t("landing.demo")}
+            <button type="button" onClick={() => setRouterOpen(true)} className="lp-btn lp-in mt-6" style={i(2)}>
+              {hi ? "अपना रेस्टोरेंट जोड़ें" : "Set up my restaurant"}
             </button>
           </div>
-          <div className="rounded-3xl bg-paper p-6 text-ink shadow-[0_30px_60px_-30px_rgba(0,0,0,0.8)] sm:p-8">
-            <JourneyRouter />
+        </div>
+      </section>
+
+      {/* The live thing: a week's payout, explained */}
+      <PayoutShowcase />
+
+      {/* Getting set up: one ticket, four fields */}
+      <section data-reveal aria-labelledby="setup-h" className="grid lg:grid-cols-4">
+        {SETUP.map((s, n) => (
+          <div key={s.clause.en} className="relative flex flex-col px-5 py-10 sm:min-h-[64svh] lg:min-h-[84svh] lg:px-6" style={{ background: s.field, color: s.ink }}>
+            {n === 0 && (
+              <h2 id="setup-h" className="lp-in font-sign text-[clamp(22px,2.6vw,36px)] leading-[1.05]" style={i(0)}>
+                {hi ? "लंच से पहले तैयार" : "Ready before lunch"}
+              </h2>
+            )}
+            <div className="lp-in mt-10 flex flex-1 items-start justify-center lg:mt-[22svh]" style={i(n + 1)}>
+              <SetupCard step={n} qr={qr} />
+            </div>
+            <p className="lp-in mt-10 max-w-[16ch] text-[clamp(22px,2.6vw,36px)] font-medium leading-[1.15]" style={i(n + 2)}>
+              {pick(s.clause)}
+            </p>
+          </div>
+        ))}
+      </section>
+
+      {/* FAQ: questions filed like tickets in a drawer */}
+      <section data-reveal aria-labelledby="faq-h" className="px-[var(--lp-m)] py-28">
+        <div className="mx-auto max-w-[920px]">
+          <h2 id="faq-h" className="lp-in font-sign text-[clamp(32px,3.6vw,56px)] leading-[1.02]" style={i(0)}>
+            {hi ? "मालिक क्या पूछते हैं" : "What owners ask"}
+          </h2>
+          <div className="lp-in mt-12" style={i(1)}>
+            {FAQ.map((f, n) => {
+              const open = faq === n;
+              return (
+                <div
+                  key={f.q.en}
+                  className="lp-card relative"
+                  style={{ background: FAQ_FIELDS[n % FAQ_FIELDS.length], marginTop: n ? -12 : 0, zIndex: n, "--tab-x": `min(${n * 150}px, calc(100% - 230px))` } as React.CSSProperties}
+                >
+                  <p className="flex h-10 items-center px-4 text-[15px] font-medium" style={{ marginLeft: `min(${n * 150}px, calc(100% - 230px))` }}>
+                    {pick(f.tab)}
+                  </p>
+                  <button type="button" aria-expanded={open} onClick={() => setFaq(n)} className="flex w-full items-center justify-between gap-6 px-6 pb-6 pt-4 text-left text-[18px] font-semibold">
+                    {pick(f.q)}
+                    <span aria-hidden className={`relative block size-5 shrink-0 transition-transform before:absolute before:left-0 before:top-[9px] before:h-[2px] before:w-5 before:bg-current after:absolute after:left-[9px] after:top-0 after:h-5 after:w-[2px] after:bg-current ${open ? "rotate-45" : ""}`} />
+                  </button>
+                  {open && <p className="max-w-[56ch] px-6 pb-8 text-[15px] leading-relaxed">{pick(f.a)}</p>}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* Footer, grouped the same way as the platform */}
-      <footer className="bg-curry text-[#eef2ec]/70">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-8 md:grid-cols-[1.4fr_repeat(3,1fr)]">
-          <div>
-            <Wordmark className="text-2xl text-[#eef2ec]" />
-            <p className="mt-3 max-w-[30ch] text-sm leading-relaxed">{hi ? "रेस्टोरेंट चलाने के लिए एक ही ऐप। हिंदी और अंग्रेज़ी में।" : "The one app to run your restaurant. In Hindi and English."}</p>
+      {/* The first step, already open */}
+      <section data-reveal aria-labelledby="start-h" className="grid gap-12 bg-[var(--lp-accent)] px-[var(--lp-m)] py-20 text-[var(--lp-accent-ink)] lg:grid-cols-12 lg:items-end lg:py-28">
+        <div className="lg:col-span-6 lg:self-end">
+          <h2 id="start-h" className="lp-in font-sign text-[clamp(40px,5vw,80px)] leading-[0.95]" style={i(0)}>
+            {hi ? (
+              <>
+                आपका बैक ऑफ़िस,
+                <br />
+                तैयार।
+              </>
+            ) : (
+              <>
+                Your back
+                <br />
+                office, open.
+              </>
+            )}
+          </h2>
+          <p className="lp-in mt-6 max-w-[40ch] text-[18px] leading-relaxed" style={i(1)}>
+            {hi
+              ? "अपना लिस्टिंग लिंक डालें। Zest आपका मेन्यू, फ़ोटो और रेटिंग पढ़ लेता है, और सर्विस से पहले आपका रेस्टोरेंट तैयार।"
+              : "Paste your listing link. Zest reads your menu, photos and ratings, and your restaurant is set up before service."}
+          </p>
+        </div>
+        <form data-ui onSubmit={startWithLink} className="lp-in w-full bg-[#fff] p-7 sm:p-9 lg:max-w-[440px] lg:p-7 text-[#17201c] lg:col-span-5 lg:col-start-8" style={i(2)}>
+          <p className="text-[18px] font-semibold">{hi ? "अपना रेस्टोरेंट जोड़ें" : "Set up your restaurant"}</p>
+          <div role="radiogroup" aria-label={hi ? "आप कहाँ लिस्टेड हैं" : "Where you're listed"} className="mt-5 grid grid-cols-2 bg-[#e4e7e3] p-1 text-[15px]">
+            {(["zomato", "swiggy"] as const).map((x) => (
+              <button key={x} type="button" role="radio" aria-checked={platform === x} onClick={() => setPlatform(x)} className={`min-h-11 font-medium transition-colors ${platform === x ? "bg-[#fff]" : "text-[#3e4a44]"}`}>
+                {x === "zomato" ? "Zomato" : "Swiggy"}
+              </button>
+            ))}
           </div>
+          <label className="mt-5 block text-[15px] text-[#3e4a44]">
+            {hi ? `आपका ${platform === "zomato" ? "Zomato" : "Swiggy"} लिंक` : `Your ${platform === "zomato" ? "Zomato" : "Swiggy"} link`}
+            <input
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              inputMode="url"
+              placeholder={platform === "zomato" ? "zomato.com/bangalore/your-restaurant" : "swiggy.com/restaurants/your-restaurant"}
+              className="mt-1.5 block w-full bg-[#eef0ed] px-4 py-3.5 text-[15px] text-[#17201c] outline-none focus:ring-2 focus:ring-[#17201c]"
+            />
+          </label>
+          <p className="mt-2 text-[15px] text-[#3e4a44]">{hi ? "लिंक नहीं है? ख़ाली छोड़ें, बाद में जोड़ सकते हैं।" : "No link handy? Leave it empty and add it later."}</p>
+          <button type="submit" className="lp-btn mt-6 w-full">
+            {hi ? "अपना रेस्टोरेंट जोड़ें" : "Set up my restaurant"}
+          </button>
+        </form>
+      </section>
+
+      {/* The mark, built large */}
+      <footer className="bg-[var(--lp-field)] px-[var(--lp-m)] pb-[var(--lp-m)] pt-16 text-[var(--lp-field-ink)]">
+        <div className="grid gap-10 text-[15px] sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="text-sm font-medium text-[#eef2ec]">{hi ? "प्लेटफ़ॉर्म" : "Platform"}</p>
-            <ul className="mt-3 space-y-2 text-sm">
-              {PILLARS.map((p) => (
-                <li key={p.id}>
-                  <a href="#platform" className="hover:text-[#eef2ec]">
-                    {pick(p.name)}
-                  </a>
-                </li>
-              ))}
+            <p className="font-semibold">{hi ? "Zest क्या करता है" : "What Zest does"}</p>
+            <ul className="mt-3 space-y-2 opacity-90">
+              <li>{hi ? "लाइव ऑर्डर" : "Live orders"}</li>
+              <li>{hi ? "पेआउट, समझाए हुए" : "Payouts, explained"}</li>
+              <li>{hi ? "रिव्यू के जवाब" : "Review replies"}</li>
+              <li>{hi ? "आपका अपना पेज" : "Your own page"}</li>
             </ul>
           </div>
           <div>
-            <p className="text-sm font-medium text-[#eef2ec]">{hi ? "शुरू करें" : "Get started"}</p>
-            <ul className="mt-3 space-y-2 text-sm">
+            <p className="font-semibold">{hi ? "शुरू करें" : "Start"}</p>
+            <ul className="mt-3 space-y-2">
               <li>
-                <button type="button" onClick={() => setRouterOpen(true)} className="hover:text-[#eef2ec]">
+                <button type="button" onClick={() => setRouterOpen(true)} className="lp-link">
                   {hi ? "अपना रेस्टोरेंट जोड़ें" : "Set up my restaurant"}
                 </button>
               </li>
               <li>
-                <a href="/login" className="hover:text-[#eef2ec]">{hi ? "लॉग इन" : "Log in"}</a>
+                <a href="/login" className="lp-link">
+                  {hi ? "लॉग इन" : "Log in"}
+                </a>
               </li>
               <li>
-                <a href="/login/staff" className="hover:text-[#eef2ec]">{hi ? "स्टाफ़ साइन-इन" : "Staff sign-in"}</a>
+                <a href="/login/staff" className="lp-link">
+                  {hi ? "स्टाफ़ साइन-इन" : "Staff sign-in"}
+                </a>
               </li>
             </ul>
           </div>
           <div>
-            <p className="text-sm font-medium text-[#eef2ec]">{hi ? "देखें" : "See it"}</p>
-            <ul className="mt-3 space-y-2 text-sm">
+            <p className="font-semibold">{hi ? "देखें" : "See it"}</p>
+            <ul className="mt-3 space-y-2">
               <li>
-                <button type="button" onClick={openDemo} className="hover:text-[#eef2ec]">
-                  {t("landing.demo")}
+                <button type="button" onClick={openDemo} className="lp-link">
+                  {hi ? "डेमो किचन" : "Demo kitchen"}
                 </button>
               </li>
               <li>
-                <a href="/r/rasoi-27" className="hover:text-[#eef2ec]">{hi ? "सैंपल रेस्टोरेंट पेज" : "Sample restaurant page"}</a>
-              </li>
-              <li>
-                <a href="#faq" className="hover:text-[#eef2ec]">{hi ? "सवाल" : "FAQ"}</a>
+                <a href="/r/rasoi-27" className="lp-link">
+                  {hi ? "रेस्टोरेंट पेज" : "Restaurant page"}
+                </a>
               </li>
             </ul>
           </div>
+          <div>
+            <p className="font-semibold">{hi ? "भाषा" : "Language"}</p>
+            <div className="mt-3">
+              <LpLang />
+            </div>
+          </div>
+        </div>
+        <div className="mt-14 flex flex-wrap items-center justify-between gap-4 text-[15px]">
+          <p>© 2026 Zest</p>
+          <button type="button" onClick={() => setRouterOpen(true)} className="lp-btn on-dark min-h-11 px-5 text-[15px]">
+            {hi ? "अपना रेस्टोरेंट जोड़ें" : "Set up my restaurant"}
+          </button>
+        </div>
+        <div className="mt-14 flex h-[clamp(110px,23vw,360px)] items-end gap-1">
+          {[
+            ["Z", 1, "#f2b035", "#17201c"],
+            ["E", 0.82, "#eef2ec", "#12261b"],
+            ["S", 0.72, "#c62f3b", "#fff"],
+            ["T", 0.88, "#2b6a4b", "#eef2ec"],
+          ].map(([ch, h, bg, fg]) => (
+            <div key={ch as string} className="tkt flex flex-1 items-end justify-center overflow-hidden" style={{ height: `${(h as number) * 100}%`, background: bg as string, color: fg as string }}>
+              <span className="font-sign translate-y-[0.12em] text-[clamp(72px,16vw,260px)] leading-none">
+                {ch}
+              </span>
+            </div>
+          ))}
         </div>
       </footer>
 
       <RouterDialog open={routerOpen} onClose={() => setRouterOpen(false)} />
+    </div>
+  );
+}
+
+/** An inline picture slot in the statement: 1em tall, set just below the baseline. */
+function Slot({ children }: { children: React.ReactNode }) {
+  return (
+    <span data-ui className="mx-[0.12em] inline-block h-[1em] w-[1.9em] translate-y-[0.12em] overflow-hidden rounded-[0.18em] align-baseline">
+      {children}
+    </span>
+  );
+}
+
+/** English / Hindi, as two plain words; the current one in full ink and underlined. */
+function LpLang() {
+  const { lang, setLang } = useApp();
+  return (
+    <div role="group" aria-label="Language" className="flex gap-4 text-[15px]">
+      {(["en", "hi"] as const).map((l) => (
+        <button key={l} type="button" aria-pressed={lang === l} onClick={() => setLang(l)} className={lang === l ? "font-semibold underline decoration-2 underline-offset-4" : "opacity-80 hover:opacity-100"}>
+          {l === "en" ? "English" : "हिंदी"}
+        </button>
+      ))}
     </div>
   );
 }

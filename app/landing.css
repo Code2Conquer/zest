@@ -1,0 +1,165 @@
+/* Landing page. One motif runs the system: the kitchen order ticket, a square slip with a notch
+   cut into each side and a printed band along its top. Flat fields of the brand's colours,
+   no gradients, no resting shadows, no thin rules. */
+
+.lp {
+  --lp-ground: var(--paper);
+  --lp-paper: var(--surface);
+  --lp-ink: var(--ink);
+  --lp-muted: var(--ink-2);
+  --lp-field: #12261b; /* curry-leaf green */
+  --lp-field-ink: #eef2ec;
+  --lp-accent: #f2b035; /* haldi */
+  --lp-accent-ink: #17201c;
+  --lp-zomato: #c62f3b;
+  --lp-swiggy: #d9820a;
+  --lp-notch: 14px;
+  --lp-m: clamp(18px, 2.2vw, 32px); /* the page's one pair of outer margins */
+  background: var(--lp-ground);
+  color: var(--lp-ink);
+}
+
+/* The ticket: square corners, a V-notch cut into the middle of each side. */
+.tkt {
+  clip-path: polygon(0 0, 100% 0, 100% calc(50% - var(--lp-notch)), calc(100% - var(--lp-notch)) 50%, 100% calc(50% + var(--lp-notch)), 100% 100%, 0 100%, 0 calc(50% + var(--lp-notch)), var(--lp-notch) 50%, 0 calc(50% - var(--lp-notch)));
+}
+
+/* The printed band along a ticket's top edge: alternating filled bars. */
+.perf {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  contain: inline-size; /* the bars must never set the width of what holds them */
+}
+.perf > span {
+  flex: 0 0 28px;
+  height: 100%;
+}
+.perf > span:nth-child(odd) {
+  background: currentColor;
+}
+
+/* The ticket as bullet and as the button's hover. */
+.tkt-dot {
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 0, 100% 35%, 75% 50%, 100% 65%, 100% 100%, 0 100%, 0 65%, 25% 50%, 0 35%);
+}
+.lp-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 52px;
+  padding: 0 1.6rem;
+  background: var(--lp-ink);
+  color: var(--lp-paper);
+  font-weight: 600;
+  font-size: 1.125rem;
+  transition: transform 150ms ease, background-color 150ms ease;
+}
+.lp-btn:hover {
+  transform: translateY(-2px);
+}
+.lp-btn:active {
+  transform: translateY(0);
+}
+.lp-btn.on-dark {
+  background: var(--lp-accent);
+  color: var(--lp-accent-ink);
+}
+.lp-link {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px;
+}
+.lp-link:hover {
+  text-decoration-thickness: 3px;
+}
+
+/* Kitchen photographs crossfading in the hero: light shifting through the day. */
+.lp-fade {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.6s ease;
+}
+.lp-fade.on {
+  opacity: 1;
+  animation: lp-drift 9s ease-out both;
+}
+/* The photo on screen drifts in slowly, like a camera settling on the pass. */
+@keyframes lp-drift {
+  from { transform: scale(1.08); }
+  to { transform: scale(1); }
+}
+
+/* Prep bars fill from the left once the board is on screen. */
+.lp-bar {
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 1100ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms;
+}
+.lp-seen .lp-bar,
+.no-js .lp-bar {
+  transform: none;
+}
+
+/* Entrances: each part of a section rises in turn when the section arrives. */
+.lp-in {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: calc(var(--i, 0) * 80ms);
+}
+.lp-seen .lp-in {
+  opacity: 1;
+  transform: none;
+}
+.no-js .lp-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Cards in a field rise a little under the pointer. */
+.lp-lift {
+  transition: transform 150ms ease;
+}
+.lp-lift:hover {
+  transform: translateY(-6px);
+}
+
+/* FAQ cards: a filled slip with its tab cut into the top edge. */
+.lp-card {
+  clip-path: polygon(var(--tab-x, 0px) 0, calc(var(--tab-x, 0px) + 220px) 0, calc(var(--tab-x, 0px) + 220px) 40px, 100% 40px, 100% 100%, 0 100%, 0 40px, var(--tab-x, 0px) 40px);
+}
+
+@media (max-width: 640px) {
+  .lp-card {
+    clip-path: polygon(var(--tab-x, 0px) 0, calc(var(--tab-x, 0px) + 140px) 0, calc(var(--tab-x, 0px) + 140px) 40px, 100% 40px, 100% 100%, 0 100%, 0 40px, var(--tab-x, 0px) 40px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-fade.on {
+    animation: none;
+  }
+  .lp-bar {
+    transform: none;
+  }
+  .lp-fade,
+  .lp-bar,
+  .lp-in,
+  .lp-btn,
+  .lp-lift {
+    transition: none;
+  }
+  .lp-in {
+    opacity: 1;
+    transform: none;
+  }
+}
