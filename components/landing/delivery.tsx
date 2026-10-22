@@ -40,13 +40,20 @@ export function DeliveryMap() {
     <div ref={box} className="grid items-center gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
       <div data-ui className="rounded-[24px] bg-[var(--lp-paper)] p-3 outline outline-1 -outline-offset-1 outline-[var(--lp-line)]">
         <svg viewBox="0 0 560 260" className="w-full" role="img" aria-label={pick({ en: "A neighbourhood map: the kitchen and three guests at different distances", hi: "मोहल्ले का नक्शा: रसोई और अलग-अलग दूरी पर तीन ग्राहक" })}>
-          {/* streets */}
+          {/* the neighbourhood, drawn like a phone map: land, parks, roads with names */}
+          <rect width="560" height="260" rx="14" fill="#efe9dc" />
+          <rect x="285" y="150" width="100" height="58" rx="10" fill="#cfe3c2" />
+          <text x="335" y="183" textAnchor="middle" fontSize="11" fill="#4c7a3d">Deer Park</text>
+          <rect x="18" y="160" width="70" height="48" rx="10" fill="#cfe3c2" />
           {[40, 130, 220].map((y) => (
-            <rect key={y} x="0" y={y} width="560" height="10" fill="var(--lp-sunken)" />
+            <rect key={y} x="0" y={y} width="560" height="11" fill="#fff" stroke="#e0d8c8" />
           ))}
           {[100, 260, 400].map((x) => (
-            <rect key={x} x={x} y="0" width="10" height="260" fill="var(--lp-sunken)" />
+            <rect key={x} x={x} y="0" width="11" height="260" fill="#fff" stroke="#e0d8c8" />
           ))}
+          <text x="470" y="126" textAnchor="middle" fontSize="10.5" fill="#8a8172">Aurobindo Marg</text>
+          <text x="180" y="36" textAnchor="middle" fontSize="10.5" fill="#8a8172">Green Park Main</text>
+          <text x="500" y="250" textAnchor="middle" fontSize="11" fontWeight="600" fill="#8a8172">HAUZ KHAS</text>
           {/* routes, drawn as each choice is made */}
           {CASES.map((c, k) => (
             <path key={c.id} d={`M ${HOME.x} ${HOME.y} L ${c.x} ${HOME.y} L ${c.x} ${c.y}`} fill="none" stroke={k <= lit ? "var(--z-turmeric)" : "transparent"} strokeWidth="4" strokeDasharray="7 7" strokeLinecap="round" />

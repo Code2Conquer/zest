@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Mic, Volume2 } from "lucide-react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 import "./soundbox.css";
 
-// The Zest Soundbox: a steel rounded-square box with an ink face, a turmeric ring that moves like a
-// voice when it speaks, one big button on top (accept, then food ready), a push-to-talk button on its
-// side and a slot that prints a KOT downward. Drawn in SVG and CSS; the states are props so a page can
-// play a scene through it. Audio only ever plays on a tap.
+// The Zest Soundbox "Halo": a round chalk puck with a light ring set into its top. The ring glows when an
+// order comes in, moves while Zest speaks, turns green when accepted and red when an order waits too
+// long. Press the top to accept (and again when the food is ready); hold the side button to talk.
+// The KOT comes out of a separate ticket printer, an add-on that sits next to it. Drawn in SVG and CSS;
+// the states are props so a page can play a scene through it. Audio only ever plays on a tap.
 
 export type SoundboxState = "idle" | "ringing" | "speaking" | "printing" | "accepted" | "escalating";
 
@@ -17,7 +18,7 @@ export type SoundboxProps = {
   state: SoundboxState;
   /** What Zest says, shown under the box in the selected language. */
   caption?: Bi;
-  /** Lines of the KOT, printed while `state` is "printing" or after it. */
+  /** Lines of the KOT, printed by the ticket printer while `state` is "printing" or after it. No ticket, no printer. */
   ticket?: { title: string; lines: string[]; foot?: string } | null;
   /** Show the printed ticket even when not printing (it stays out once printed). */
   showTicket?: boolean;
@@ -34,87 +35,103 @@ export type SoundboxProps = {
   className?: string;
 };
 
-const RAYS = 36;
-
 export function Soundbox({ state, caption, ticket, showTicket = false, clip, onPress, onTalk, size = "md", stable = false, bare = false, className = "" }: SoundboxProps) {
   const { pick, lang } = useApp();
   const printed = !!ticket && (state === "printing" || showTicket);
+  // Gradient ids per instance: a page has several boxes, some inside display:none.
+  const id = useId().replace(/[^a-zA-Z0-9]/g, "");
 
-  const box = size === "xs" ? 140 : size === "sm" ? 208 : 260;
+  const box = size === "xs" ? 150 : size === "sm" ? 210 : 260;
+  const paper = size === "xs" ? box : Math.max(box * 0.86, 176);
   const label = pick(
     {
       idle: { en: "Zest Soundbox, waiting for orders", hi: "Zest Soundbox, ऑर्डर का इंतज़ार" },
       ringing: { en: "Zest Soundbox, new order", hi: "Zest Soundbox, नया ऑर्डर" },
       speaking: { en: "Zest Soundbox, speaking", hi: "Zest Soundbox, बोल रहा है" },
-      printing: { en: "Zest Soundbox, printing the ticket", hi: "Zest Soundbox, टिकट छाप रहा है" },
+      printing: { en: "Zest Soundbox, order accepted, ticket printing", hi: "Zest Soundbox, ऑर्डर मंज़ूर, टिकट छप रहा है" },
       accepted: { en: "Zest Soundbox, order accepted", hi: "Zest Soundbox, ऑर्डर मंज़ूर" },
       escalating: { en: "Zest Soundbox, order not accepted yet", hi: "Zest Soundbox, ऑर्डर अभी मंज़ूर नहीं हुआ" },
     }[state],
   );
 
   return (
-    <figure className={`sb flex flex-col items-center ${className}`} data-state={state} style={{ "--sb": `${box}px` } as React.CSSProperties}>
-      <div className="relative" style={{ width: box, height: box + box * 0.14 }}>
-        {/* Big button on top */}
+    <figure className={`sb flex flex-col items-center ${className}`} data-state={state}>
+      <div className="relative" style={{ width: box, height: box * 0.56 }}>
+        <svg viewBox="0 0 200 112" className="absolute inset-0 size-full overflow-visible" role="img" aria-label={label}>
+          <defs>
+            <linearGradient id={`${id}-side`} x1="0" x2="1">
+              <stop offset="0" stopColor="#c9c2b4" />
+              <stop offset="0.45" stopColor="#e4ded2" />
+              <stop offset="1" stopColor="#b3ab9c" />
+            </linearGradient>
+            <radialGradient id={`${id}-top`} cx="0.4" cy="0.3" r="0.8">
+              <stop offset="0" stopColor="#f6f2ea" />
+              <stop offset="1" stopColor="#ddd6c8" />
+            </radialGradient>
+            <radialGradient id={`${id}-dish`} cx="0.5" cy="0.6" r="0.6">
+              <stop offset="0" stopColor="#e9e3d7" />
+              <stop offset="1" stopColor="#d6cfc1" />
+            </radialGradient>
+            <filter id={`${id}-blur`} x="-30%" y="-60%" width="160%" height="220%">
+              <feGaussianBlur stdDeviation="5" />
+            </filter>
+          </defs>
+          {/* light pooling on the counter, and the shadow */}
+          <ellipse cx="100" cy="88" rx="98" ry="22" className="sb-pool" filter={`url(#${id}-blur)`} />
+          <ellipse cx="100" cy="84" rx="80" ry="13" fill="#000" opacity="0.16" filter={`url(#${id}-blur)`} />
+          {/* side band */}
+          <path d="M14 48 V68 A86 30 0 0 0 186 68 V48 Z" fill={`url(#${id}-side)`} />
+          <rect x="150" y="66" width="16" height="4" rx="2" transform="rotate(-8 158 68)" fill="#9d9586" />
+          {/* top and the pressable dish */}
+          <ellipse cx="100" cy="48" rx="86" ry="30" fill={`url(#${id}-top)`} />
+          <g className="sb-dish">
+            <ellipse cx="100" cy="48" rx="52" ry="18" fill={`url(#${id}-dish)`} />
+            <text x="100" y="52" textAnchor="middle" fontSize="15" fontWeight="600" fill="#cbc4b6" transform="translate(0 20.8) scale(1 0.6)" letterSpacing="3">
+              zest
+            </text>
+          </g>
+          {/* the light ring in its groove */}
+          <ellipse cx="100" cy="48" rx="58" ry="20.5" fill="none" stroke="#a69e8f" strokeWidth="3.2" />
+          <ellipse cx="100" cy="48" rx="58" ry="20.5" className="sb-glow" filter={`url(#${id}-blur)`} />
+          <ellipse cx="100" cy="48" rx="58" ry="20.5" className="sb-ring" />
+        </svg>
+
+        {/* Press the top */}
         <button
           type="button"
           onClick={onPress}
           disabled={!onPress}
           aria-label={state === "accepted" ? pick({ en: "Food ready", hi: "खाना तैयार" }) : pick({ en: "Accept the order", hi: "ऑर्डर मंज़ूर करें" })}
-          className="sb-button absolute left-1/2 top-0 z-20 -translate-x-1/2"
-          style={{ width: box * 0.3, height: box * 0.3 }}
-        >
-          <span className="sb-button-cap" />
+          className="sb-button absolute rounded-[50%]"
+          style={{ left: "16%", top: "13%", width: "68%", height: "60%" }}
+        />
+        {/* Hold to talk, on the side */}
+        <button type="button" onClick={onTalk} disabled={!onTalk} aria-label={pick({ en: "Push to talk", hi: "बोलने के लिए दबाएँ" })} className="sb-talk absolute grid place-items-center rounded-full" style={{ left: "71%", top: "52%", width: Math.max(24, box * 0.13), height: Math.max(24, box * 0.13) }}>
+          {onTalk && <Mic aria-hidden size={Math.round(box * 0.05)} />}
         </button>
-
-        {/* Push to talk, on the right side */}
-        <button type="button" onClick={onTalk} disabled={!onTalk} aria-label={pick({ en: "Push to talk", hi: "बोलने के लिए दबाएँ" })} className="sb-talk absolute z-20 grid place-items-center" style={{ right: -box * 0.045, top: box * 0.42, width: box * 0.07, height: box * 0.22 }}>
-          <Mic aria-hidden size={Math.round(box * 0.05)} />
-        </button>
-
-        {/* Body and face */}
-        <div className="sb-body absolute inset-x-0 bottom-0 z-10" style={{ height: box, borderRadius: box * 0.22 }}>
-          <div className="sb-face absolute grid place-items-center" style={{ inset: box * 0.07, borderRadius: box * 0.16 }}>
-            <svg viewBox="0 0 200 200" className="size-[86%]" role="img" aria-label={label}>
-              {/* the voice ring: short rays that move like a waveform while Zest speaks */}
-              <g className="sb-rays">
-                {Array.from({ length: RAYS }, (_, k) => (
-                  <g key={k} transform={`rotate(${(360 / RAYS) * k} 100 100)`}>
-                    <rect x="98.5" y="14" width="3" height="16" rx="1.5" className="sb-ray" style={{ animationDelay: `${((k * 7) % RAYS) * -0.045}s` }} />
-                  </g>
-                ))}
-              </g>
-              <circle cx="100" cy="100" r="64" className="sb-ring" />
-              {/* speaker grille */}
-              {Array.from({ length: 9 }, (_, r) =>
-                Array.from({ length: 9 }, (_, c) => {
-                  const x = 60 + c * 10, y = 60 + r * 10;
-                  return (x - 100) ** 2 + (y - 100) ** 2 <= 40 ** 2 ? <circle key={`${r}-${c}`} cx={x} cy={y} r="2.1" className="sb-hole" /> : null;
-                }),
-              )}
-            </svg>
-          </div>
-          {/* Ticket slot, front bottom */}
-          <span className="sb-slot absolute left-1/2 -translate-x-1/2" style={{ bottom: box * 0.035, width: box * 0.56, height: 5 }} />
-        </div>
-
       </div>
 
-      {/* The KOT, printing downward out of the slot */}
+      {/* The ticket printer (add-on) and the KOT feeding out of it */}
       {ticket && (printed || stable) && (
-        <div aria-hidden={!printed || undefined} className="relative z-0 overflow-hidden" style={{ width: size === "xs" ? box : Math.max(box * 0.86, 170), marginTop: -box * 0.05 }}>
-          <div className={`sb-ticket font-kot ${state === "printing" ? "is-printing" : ""} ${printed ? "" : "invisible"}`} style={size === "xs" ? { fontSize: 10.5, padding: "10px 8px 14px" } : undefined}>
-            <p className="font-semibold">{ticket.title}</p>
-            {ticket.lines.map((l) => {
-              const [name, price] = l.split("|");
-              return (
-                <p key={l} className="flex justify-between gap-3">
-                  <span>{name}</span>
-                  {price && <span className="tabular-nums">{price}</span>}
-                </p>
-              );
-            })}
-            {ticket.foot && <p className="mt-1.5">{ticket.foot}</p>}
+        <div className="relative z-0 flex flex-col items-center" style={{ marginTop: box * 0.06 }}>
+          <div className="sb-printer relative" style={{ width: paper + 18, height: Math.round(box * 0.15) }} title={pick({ en: "Ticket printer (add-on)", hi: "टिकट प्रिंटर (ऐड-ऑन)" })}>
+            <span className="sb-led absolute rounded-full" style={{ right: 10, top: "38%", width: 6, height: 6 }} />
+            <span className="sb-slot absolute inset-x-[9px] bottom-0 h-[4px] rounded-full" />
+          </div>
+          <div aria-hidden={!printed || undefined} className="overflow-hidden" style={{ width: paper }}>
+            <div className={`sb-ticket font-kot ${state === "printing" ? "is-printing" : ""} ${printed ? "" : "invisible"}`} style={size === "xs" ? { fontSize: 10.5, padding: "10px 8px 14px" } : undefined}>
+              <p className="font-semibold">{ticket.title}</p>
+              {ticket.lines.map((l) => {
+                const [name, price] = l.split("|");
+                return (
+                  <p key={l} className="flex justify-between gap-3">
+                    <span>{name}</span>
+                    {price && <span className="tabular-nums">{price}</span>}
+                  </p>
+                );
+              })}
+              {ticket.foot && <p className="mt-1.5">{ticket.foot}</p>}
+            </div>
           </div>
         </div>
       )}
@@ -139,7 +156,7 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
 }
 
 /** "Hear it": plays the clip in the selected language, only on a tap. Keeps its space when there's no clip. */
-export function HearIt({ clip }: { clip?: string }) {
+export function HearIt({ clip, dark = false }: { clip?: string; dark?: boolean }) {
   const { pick, lang } = useApp();
   const audio = useRef<HTMLAudioElement | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -160,9 +177,9 @@ export function HearIt({ clip }: { clip?: string }) {
       disabled={!clip}
       aria-hidden={!clip || undefined}
       tabIndex={clip ? undefined : -1}
-      className={`inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--lp-sunken)] px-4 text-[15px] font-semibold transition-colors hover:bg-[var(--lp-line)] ${clip ? "" : "invisible"}`}
+      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors ${dark ? "bg-[#2a2723] text-[#efe9df] hover:bg-[#3a3631]" : "bg-[var(--lp-sunken)] hover:bg-[var(--lp-line)]"} ${clip ? "" : "invisible"}`}
     >
-      <Volume2 aria-hidden size={17} className={playing ? "text-[var(--lp-accent)]" : ""} />
+      <Volume2 aria-hidden size={17} className={playing ? "text-[var(--z-turmeric)]" : ""} />
       {pick({ en: "Hear it", hi: "सुनिए" })}
     </button>
   );

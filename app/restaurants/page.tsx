@@ -135,8 +135,8 @@ export default function Restaurants() {
               <ul className="grid gap-5 sm:grid-cols-2">
                 {[
                   { icon: Languages, t: { en: "Speaks every order", hi: "हर ऑर्डर बोलकर बताता है" } },
-                  { icon: Hand, t: { en: "One button to accept", hi: "मंज़ूर करने के लिए एक बटन" } },
-                  { icon: Printer, t: { en: "Prints the KOT", hi: "KOT छापता है" } },
+                  { icon: Hand, t: { en: "Press the top to accept", hi: "मंज़ूर करने के लिए ऊपर दबाइए" } },
+                  { icon: Printer, t: { en: "Add the ticket printer and every order prints as a KOT", hi: "टिकट प्रिंटर जोड़िए, हर ऑर्डर KOT में छपेगा" } },
                   { icon: BellRing, t: { en: "Gets louder if an order is missed, then calls you", hi: "ऑर्डर छूटे तो आवाज़ तेज़, फिर आपको फ़ोन" } },
                 ].map((f) => (
                   <li key={f.t.en} className="flex items-start gap-3 text-[18px] font-medium leading-snug">
@@ -166,20 +166,20 @@ export default function Restaurants() {
               })}
             </p>
           </div>
-          <dl className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-5">
-            {RESTAURANT_AGENTS.map((x) => (
-              <div key={x.name.en}>
-                <dt className="text-[17px] font-semibold">
-                  {pick(x.name)}
-                  {x.soon && <Soon />}
-                </dt>
-                <dd className="mt-1 text-[15px] leading-relaxed text-[var(--lp-muted)]">{pick(x.does)}</dd>
-              </div>
-            ))}
-          </dl>
           <div className="mt-6">
             <AgentFlow cast="restaurant" />
           </div>
+          <dl className="mt-8 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-5">
+            {RESTAURANT_AGENTS.map((x) => (
+              <div key={x.name.en}>
+                <dt className="text-[16px] font-semibold">
+                  {pick(x.name)}
+                  {x.soon && <Soon />}
+                </dt>
+                <dd className="mt-1 text-[14.5px] leading-snug text-[var(--lp-muted)]">{pick(x.does)}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 

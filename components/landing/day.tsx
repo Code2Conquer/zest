@@ -124,7 +124,7 @@ export function OneDay() {
   }, [active]);
 
   const m = MOMENTS[active];
-  const box = <Soundbox size="sm" stable state={speaking ? "speaking" : "idle"} caption={m.say} />;
+  const box = <Soundbox stable state={speaking ? "speaking" : "idle"} caption={m.say} />;
 
   return (
     <div>
@@ -211,20 +211,45 @@ function Live({ on }: { on: boolean }) {
 
 function Lunch({ on }: { on: boolean }) {
   const { pick } = useApp();
-  const flats = ["A-102", "A-305", "B-14", "B-201", "C-7", "C-410"];
+  const pays = [
+    ["A-102", "Rajma chawal", 90],
+    ["A-305", "Thali", 120],
+    ["B-14", "Rajma chawal", 90],
+    ["B-201", "Thali", 120],
+    ["C-7", "Aloo paratha ×2", 120],
+    ["C-410", "Thali", 120],
+  ] as const;
   return (
-    <div data-ui className={`rounded-2xl bg-[var(--lp-paper)] p-4 outline outline-1 -outline-offset-1 outline-[var(--lp-line)] ${on ? "dy-play" : ""}`}>
-      <ul className="grid grid-cols-3 gap-2 text-[13px]">
-        {flats.map((f, k) => (
-          <li key={f} className="dy-drop rounded-xl bg-[var(--lp-sunken)] px-2.5 py-2" style={{ animationDelay: `${k * 120}ms` }}>
-            <p className="font-semibold">{f}</p>
-            <p className="text-[var(--lp-muted)]">{k % 2 ? "Thali" : "Rajma chawal"}</p>
+    <div data-ui className={`grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] ${on ? "dy-play" : ""}`}>
+      {/* the phone's notifications: UPI payments landing one after another */}
+      <ul className="space-y-1.5 rounded-2xl bg-[#1c1f23] p-2.5 text-[13px] text-white">
+        {pays.map(([flat, dish, amt], k) => (
+          <li key={flat} className="dy-drop flex items-center gap-2.5 rounded-xl bg-[#2b2f35] px-3 py-2" style={{ animationDelay: `${k * 140}ms` }}>
+            <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-[#2f7a4c] text-[12px] font-bold">₹</span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold">{pick({ en: `₹${amt} received`, hi: `₹${amt} मिले` })}</span>
+              <span className="block truncate text-[#b8bec5]">
+                UPI · {flat} · {dish}
+              </span>
+            </span>
+            <span className="text-[11px] text-[#9aa1a8]">12:{String(15 + k * 3).padStart(2, "0")}</span>
           </li>
         ))}
       </ul>
-      <p className="dy-c mt-3 flex items-center gap-2 rounded-xl bg-[var(--lp-accent-soft)] px-3 py-2.5 text-[14px] font-semibold">
-        <Bike aria-hidden size={16} /> {pick({ en: "One delivery · Green Park · rider at 12:45", hi: "एक डिलीवरी · ग्रीन पार्क · राइडर 12:45 पर" })}
-      </p>
+      {/* one rider for all six */}
+      <div className="dy-c self-start rounded-2xl bg-[var(--lp-paper)] p-4 outline outline-1 -outline-offset-1 outline-[var(--lp-line)]">
+        <p className="text-[13px] font-semibold text-[var(--lp-muted)]">{pick({ en: "Zomato rider booked", hi: "Zomato राइडर बुक" })}</p>
+        <div className="mt-3 flex items-center gap-3">
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[#cb202d] text-white">
+            <Bike aria-hidden size={20} />
+          </span>
+          <div>
+            <p className="text-[16px] font-semibold">Ravi</p>
+            <p className="text-[13.5px] text-[var(--lp-muted)]">{pick({ en: "Pickup 12:45 · 6 drops, one building", hi: "पिकअप 12:45 · 6 ऑर्डर, एक बिल्डिंग" })}</p>
+          </div>
+        </div>
+        <p className="mt-3 rounded-xl bg-[var(--lp-sunken)] px-3 py-2 text-[13.5px]">{pick({ en: "₹660 in. One trip instead of six.", hi: "₹660 आए। छह की जगह एक चक्कर।" })}</p>
+      </div>
     </div>
   );
 }
@@ -234,16 +259,26 @@ function Ride({ on }: { on: boolean }) {
   return (
     <div data-ui className={`rounded-2xl bg-[var(--lp-paper)] p-4 outline outline-1 -outline-offset-1 outline-[var(--lp-line)] ${on ? "dy-play" : ""}`}>
       <svg viewBox="0 0 320 150" className="w-full" role="img" aria-label={pick({ en: "A rider's route through Green Park, stopping at six doors", hi: "ग्रीन पार्क में राइडर का रास्ता, छह दरवाज़ों पर रुकते हुए" })}>
-        {[[20, 20], [120, 20], [220, 20], [20, 90], [120, 90], [220, 90]].map(([x, y], k) => (
-          <rect key={k} x={x} y={y} width="80" height="44" rx="8" fill="var(--lp-sunken)" />
+        <rect width="320" height="150" rx="10" fill="#efe9dc" />
+        {[[20, 20, "A"], [120, 20, "B"], [220, 20, "C"], [20, 90, "D"], [120, 90, "E"], [220, 90, "F"]].map(([x, y, b]) => (
+          <g key={b}>
+            <rect x={x} y={y} width="80" height="44" rx="6" fill="#e2dccd" />
+            <text x={+x + 40} y={+y + 27} textAnchor="middle" fontSize="11" fill="#8a8172">
+              {pick({ en: `Block ${b}`, hi: `ब्लॉक ${b}` })}
+            </text>
+          </g>
         ))}
-        <path d="M 10 75 H 110 V 140 H 210 V 75 H 310" fill="none" stroke="var(--lp-line)" strokeWidth="4" strokeLinecap="round" />
+        <path d="M 10 75 H 110 V 140 H 210 V 75 H 310" fill="none" stroke="#fff" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M 10 75 H 110 V 140 H 210 V 75 H 310" fill="none" stroke="#4a8fe0" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         {[[60, 75], [110, 110], [160, 140], [210, 110], [260, 75], [300, 75]].map(([x, y], k) => (
           <circle key={k} cx={x} cy={y} r="5" fill="var(--z-leaf)" className="dy-door" style={{ animationDelay: `${600 + k * 380}ms` }} />
         ))}
-        <circle r="9" cx="0" cy="0" fill="var(--lp-accent)" stroke="#1c1f23" strokeWidth="2" className="dy-rider" />
+        <circle r="9" cx="0" cy="0" fill="#cb202d" stroke="#fff" strokeWidth="2.5" className="dy-rider" />
       </svg>
-      <p className="mt-2 text-[14px] text-[var(--lp-muted)]">{pick({ en: "Each guest got a tracking link.", hi: "हर ग्राहक को ट्रैकिंग लिंक मिला।" })}</p>
+      <p className="mt-3 flex items-center gap-2 rounded-xl bg-[#dcf8c6] px-3 py-2 text-[14px] text-[#1c1f23]">
+        <MessageCircle aria-hidden size={15} className="shrink-0 text-[#1f6b3a]" />
+        {pick({ en: "Each guest got this on WhatsApp: “Ravi is on the way with your lunch. Track: zest.link/t/302”", hi: "हर ग्राहक को WhatsApp पर मिला: “रवि आपका लंच लेकर आ रहे हैं। ट्रैक करें: zest.link/t/302”" })}
+      </p>
     </div>
   );
 }

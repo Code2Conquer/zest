@@ -20,14 +20,6 @@ export const AGENT_INFO: Record<AgentId, { name: Bi; icon: LucideIcon }> = {
   payouts: { name: { en: "Payouts", hi: "पेआउट" }, icon: IndianRupee },
 };
 
-// Five places on the loop; each cast puts its agents in them in this order.
-const ANGLES = [180, 252, 324, 36, 108];
-const CX = 650, CY = 230, RX = 220, RY = 150;
-const point = (angle: number) => {
-  const t = (angle * Math.PI) / 180;
-  return { x: Math.round(CX + RX * Math.cos(t)), y: Math.round(CY + RY * Math.sin(t)) };
-};
-
 type InputId = "web" | "whatsapp" | "google" | "instagram" | "phone" | "soundbox" | "zomato" | "swiggy" | "email";
 const SELLER_INPUTS: { id: InputId; icon: LucideIcon; name: Bi }[] = [
   { id: "web", icon: Globe, name: { en: "Your page", hi: "आपका पेज" } },
@@ -46,13 +38,15 @@ const RESTAURANT_INPUTS: { id: InputId; icon: LucideIcon; name: Bi }[] = [
   { id: "soundbox", icon: Mic, name: { en: "Zest Soundbox", hi: "Zest Soundbox" } },
 ];
 
-type Scenario = { id: string; tab: Bi; input: InputId; heard: Bi; steps: { agent: AgentId; text: Bi }[]; outcomes: { label: Bi; value: Bi }[] };
+type Scenario = { id: string; tab: Bi; input: InputId; heard: Bi; steps: { agent: AgentId; text: Bi; ask?: boolean }[]; outcomes: { label: Bi; value: Bi }[]; from?: Bi; raw?: Bi; reply?: Bi };
 const SELLER_SCENARIOS: Scenario[] = [
   {
     id: "order",
     tab: { en: "A new order", hi: "नया ऑर्डर" },
     input: "whatsapp",
     heard: { en: "2 aloo paratha, 1 rajma chawal, from Flat 302", hi: "फ़्लैट 302 से 2 आलू पराठा, 1 राजमा चावल" },
+    from: { en: "WhatsApp · Flat 302", hi: "WhatsApp · फ़्लैट 302" },
+    raw: { en: "Hi aunty, 2 aloo paratha and 1 rajma chawal please. Flat 302. Paid on UPI.", hi: "नमस्ते आंटी, 2 आलू पराठा और 1 राजमा चावल भेज दीजिए। फ़्लैट 302। UPI से पैसे भेज दिए।" },
     steps: [
       { agent: "storefront", text: { en: "Order taken on WhatsApp, ₹270 paid by UPI", hi: "WhatsApp पर ऑर्डर लिया, UPI से ₹270 मिले" } },
       { agent: "orders", text: { en: "Soundbox spoke it, KOT printed, rider booked for 1:05", hi: "Soundbox ने बोला, KOT छपा, 1:05 के लिए राइडर बुक" } },
@@ -70,6 +64,8 @@ const SELLER_SCENARIOS: Scenario[] = [
     tab: { en: "A lunch rush", hi: "लंच की भीड़" },
     input: "web",
     heard: { en: "Six lunch orders from Green Park in 20 minutes", hi: "20 मिनट में ग्रीन पार्क से छह लंच ऑर्डर" },
+    from: { en: "Your page · 12:20 to 12:40", hi: "आपका पेज · 12:20 से 12:40" },
+    raw: { en: "6 new orders from Green Park: 3 thali, 2 rajma chawal, 1 aloo paratha", hi: "ग्रीन पार्क से 6 नए ऑर्डर: 3 थाली, 2 राजमा चावल, 1 आलू पराठा" },
     steps: [
       { agent: "orders", text: { en: "Grouped into one delivery, one rider at 12:45", hi: "सब एक डिलीवरी में, 12:45 पर एक राइडर" } },
       { agent: "storefront", text: { en: "Thali paused at 30 plates, so no promise is broken", hi: "30 थाली के बाद थाली रोकी, ताकि कोई वादा न टूटे" } },
@@ -86,8 +82,11 @@ const SELLER_SCENARIOS: Scenario[] = [
     tab: { en: "A quiet Tuesday", hi: "सुस्त मंगलवार" },
     input: "google",
     heard: { en: "Lunch orders are slower than a usual Tuesday", hi: "आज लंच ऑर्डर आम मंगलवार से कम हैं" },
+    from: { en: "Zest · 12:30 pm", hi: "Zest · 12:30 बजे" },
+    raw: { en: "Only 3 lunch orders so far. A usual Tuesday has 11 by now.", hi: "अब तक सिर्फ़ 3 लंच ऑर्डर। आम मंगलवार को इस वक़्त तक 11 होते हैं।" },
+    reply: { en: "Post it", hi: "पोस्ट कर दो" },
     steps: [
-      { agent: "growth", text: { en: "Drafted an Instagram post: today's thali", hi: "Instagram पोस्ट तैयार: आज की थाली" } },
+      { agent: "growth", text: { en: "Drafted an Instagram post: today's thali", hi: "Instagram पोस्ट तैयार: आज की थाली" }, ask: true },
       { agent: "regulars", text: { en: "Today's menu sent to 12 regulars who order on Tuesdays", hi: "मंगलवार वाले 12 पुराने ग्राहकों को आज का मेन्यू भेजा" } },
       { agent: "storefront", text: { en: "Thali moved to the top of your page", hi: "थाली आपके पेज पर सबसे ऊपर" } },
     ],
@@ -102,8 +101,11 @@ const SELLER_SCENARIOS: Scenario[] = [
     tab: { en: "A complaint", hi: "एक शिकायत" },
     input: "whatsapp",
     heard: { en: "“The roti was hard,” on WhatsApp", hi: "WhatsApp पर: “रोटी सख़्त थी”" },
+    from: { en: "WhatsApp · Priya", hi: "WhatsApp · प्रिया" },
+    raw: { en: "Aunty, the roti was really hard today.", hi: "आंटी, आज रोटी बहुत सख़्त थी।" },
+    reply: { en: "Send it, and give her the free roti", hi: "भेज दो, और रोटी मुफ़्त दे दो" },
     steps: [
-      { agent: "reviews", text: { en: "Apology drafted in your voice", hi: "आपकी भाषा में माफ़ी का जवाब तैयार" } },
+      { agent: "reviews", text: { en: "Apology drafted in your voice", hi: "आपकी भाषा में माफ़ी का जवाब तैयार" }, ask: true },
       { agent: "regulars", text: { en: "A free roti added to Priya's next order", hi: "प्रिया के अगले ऑर्डर में एक रोटी मुफ़्त" } },
       { agent: "orders", text: { en: "Note on tomorrow's KOTs: pack rotis in foil", hi: "कल के KOT पर नोट: रोटी फ़ॉइल में पैक करें" } },
     ],
@@ -118,8 +120,11 @@ const SELLER_SCENARIOS: Scenario[] = [
     tab: { en: "A festival is coming", hi: "त्योहार आ रहा है" },
     input: "instagram",
     heard: { en: "Diwali is in 8 days", hi: "दिवाली में 8 दिन बचे हैं" },
+    from: { en: "Calendar", hi: "कैलेंडर" },
+    raw: { en: "Diwali is in 8 days.", hi: "दिवाली में 8 दिन बचे हैं।" },
+    reply: { en: "Yes, ₹500 is fine", hi: "हाँ, ₹500 ठीक है" },
     steps: [
-      { agent: "growth", text: { en: "Suggested a ₹450 sweets box and a ₹500 ad within 3 km", hi: "₹450 का मिठाई डिब्बा और 3 किमी में ₹500 का विज्ञापन सुझाया" } },
+      { agent: "growth", text: { en: "Suggested a ₹450 sweets box and a ₹500 ad within 3 km", hi: "₹450 का मिठाई डिब्बा और 3 किमी में ₹500 का विज्ञापन सुझाया" }, ask: true },
       { agent: "storefront", text: { en: "Sweets box on your page, pre-orders open", hi: "मिठाई का डिब्बा पेज पर, प्री-ऑर्डर खुले" } },
       { agent: "regulars", text: { en: "38 regulars told, a day before", hi: "38 पुराने ग्राहकों को एक दिन पहले बताया" } },
     ],
@@ -137,6 +142,8 @@ const RESTAURANT_SCENARIOS: Scenario[] = [
     tab: { en: "A Swiggy rush", hi: "स्विगी पर भीड़" },
     input: "swiggy",
     heard: { en: "14 Swiggy orders in 30 minutes", hi: "30 मिनट में स्विगी के 14 ऑर्डर" },
+    from: { en: "Swiggy · 1:00 to 1:30 pm", hi: "स्विगी · 1:00 से 1:30 बजे" },
+    raw: { en: "14 new orders in 30 minutes", hi: "30 मिनट में 14 नए ऑर्डर" },
     steps: [
       { agent: "orders", text: { en: "Soundbox read each one; KOTs printed in order", hi: "Soundbox ने हर ऑर्डर बोला; KOT क्रम से छपे" } },
       { agent: "growth", text: { en: "Paused the Swiggy lunch offer until the rush clears", hi: "भीड़ कम होने तक स्विगी लंच ऑफ़र रोका" } },
@@ -153,10 +160,13 @@ const RESTAURANT_SCENARIOS: Scenario[] = [
     tab: { en: "A low payout", hi: "कम पेआउट" },
     input: "email",
     heard: { en: "Swiggy paid ₹4,502 less than last week", hi: "स्विगी ने पिछले हफ़्ते से ₹4,502 कम दिए" },
+    from: { en: "Email · Swiggy payouts", hi: "ईमेल · स्विगी पेआउट" },
+    raw: { en: "Your weekly payout: ₹38,214. Statement attached.", hi: "आपका साप्ताहिक पेआउट: ₹38,214। स्टेटमेंट साथ में।" },
+    reply: { en: "File the dispute", hi: "डिस्प्यूट भेज दो" },
     steps: [
       { agent: "payouts", text: { en: "Statement read: commission, ads, and ₹412 taken for a cancelled order", hi: "स्टेटमेंट पढ़ा: कमीशन, विज्ञापन, और कैंसल ऑर्डर पर ₹412 कटे" } },
       { agent: "growth", text: { en: "Ads cost ₹4,500 and brought 31 orders", hi: "विज्ञापन पर ₹4,500 लगे, 31 ऑर्डर आए" } },
-      { agent: "payouts", text: { en: "Dispute drafted for the ₹412", hi: "₹412 के लिए डिस्प्यूट तैयार" } },
+      { agent: "payouts", text: { en: "Dispute drafted for the ₹412", hi: "₹412 के लिए डिस्प्यूट तैयार" }, ask: true },
     ],
     outcomes: [
       { label: { en: "Every line", hi: "हर लाइन" }, value: { en: "Explained", hi: "समझाई" } },
@@ -169,8 +179,11 @@ const RESTAURANT_SCENARIOS: Scenario[] = [
     tab: { en: "A bad review", hi: "ख़राब रिव्यू" },
     input: "zomato",
     heard: { en: "2 stars on Zomato: “the dal was cold”", hi: "ज़ोमैटो पर 2 स्टार: “दाल ठंडी थी”" },
+    from: { en: "Zomato review · Karthik, 2 stars", hi: "ज़ोमैटो रिव्यू · कार्तिक, 2 स्टार" },
+    raw: { en: "The dal was cold when it reached.", hi: "दाल पहुँची तो ठंडी थी।" },
+    reply: { en: "Post the reply", hi: "जवाब पोस्ट कर दो" },
     steps: [
-      { agent: "reviews", text: { en: "Reply drafted in your voice", hi: "आपकी भाषा में जवाब तैयार" } },
+      { agent: "reviews", text: { en: "Reply drafted in your voice", hi: "आपकी भाषा में जवाब तैयार" }, ask: true },
       { agent: "orders", text: { en: "Third cold-dal review: KOTs now say “pack dal sealed”", hi: "ठंडी दाल का तीसरा रिव्यू: अब KOT पर “दाल सील करके पैक करें”" } },
       { agent: "regulars", text: { en: "A ₹75 credit for Karthik on your own page", hi: "आपके अपने पेज पर कार्तिक के लिए ₹75 का क्रेडिट" } },
     ],
@@ -185,8 +198,11 @@ const RESTAURANT_SCENARIOS: Scenario[] = [
     tab: { en: "A slow weekday", hi: "सुस्त दिन" },
     input: "google",
     heard: { en: "Weekday lunch orders are below usual", hi: "आज लंच ऑर्डर आम दिनों से कम हैं" },
+    from: { en: "Zest · 12:45 pm", hi: "Zest · 12:45 बजे" },
+    raw: { en: "Weekday lunch orders are 30% below usual.", hi: "आज लंच ऑर्डर आम दिनों से 30% कम हैं।" },
+    reply: { en: "Run it, keep the cap", hi: "चलाओ, सीमा वही रखो" },
     steps: [
-      { agent: "growth", text: { en: "Weekday lunch offer on Swiggy, capped at ₹3,000", hi: "स्विगी पर वीकडे लंच ऑफ़र, ₹3,000 तक सीमित" } },
+      { agent: "growth", text: { en: "Weekday lunch offer on Swiggy, capped at ₹3,000", hi: "स्विगी पर वीकडे लंच ऑफ़र, ₹3,000 तक सीमित" }, ask: true },
       { agent: "regulars", text: { en: "Lunch menu sent to 40 regulars from your page", hi: "आपके पेज के 40 पुराने ग्राहकों को लंच मेन्यू भेजा" } },
       { agent: "orders", text: { en: "Kitchen told to prep 20 extra thalis", hi: "किचन को 20 थाली ज़्यादा तैयार रखने को कहा" } },
     ],
@@ -199,31 +215,35 @@ const RESTAURANT_SCENARIOS: Scenario[] = [
 ];
 
 const CAST = {
-  seller: { agents: ["storefront", "orders", "regulars", "reviews", "growth"] as AgentId[], inputs: SELLER_INPUTS, scenarios: SELLER_SCENARIOS, who: { en: "Meena", hi: "मीना" } },
-  restaurant: { agents: ["orders", "payouts", "reviews", "regulars", "growth"] as AgentId[], inputs: RESTAURANT_INPUTS, scenarios: RESTAURANT_SCENARIOS, who: { en: "you", hi: "आप" } },
+  seller: { agents: ["storefront", "orders", "regulars", "reviews", "growth"] as AgentId[], inputs: SELLER_INPUTS, scenarios: SELLER_SCENARIOS, group: { en: "Meena's Kitchen · Zest team", hi: "मीना की रसोई · Zest टीम" } },
+  restaurant: { agents: ["orders", "payouts", "reviews", "regulars", "growth"] as AgentId[], inputs: RESTAURANT_INPUTS, scenarios: RESTAURANT_SCENARIOS, group: { en: "Rasoi 27 · Zest team", hi: "रसोई 27 · Zest टीम" } },
 };
 
-const STEP_MS = 1800;
+// Each agent's name colour in the chat, like names in a WhatsApp group.
+const TINT: Record<AgentId, string> = { storefront: "#1d6fd8", orders: "#b54708", regulars: "#7a3fd0", reviews: "#b4235f", growth: "#0f7466", payouts: "#4a7311" };
+const STEP_MS = 2000;
+const TYPING_MS = 700;
 
 export function AgentFlow({ cast = "seller" }: { cast?: keyof typeof CAST }) {
   const { pick } = useApp();
-  const { agents: ORDER, inputs: INPUTS, scenarios: SCENARIOS, who } = CAST[cast];
-  const at = (a: AgentId) => point(ANGLES[ORDER.indexOf(a)]);
+  const { agents: ORDER, inputs: INPUTS, scenarios: SCENARIOS, group } = CAST[cast];
   const box = useRef<HTMLDivElement>(null);
   const [s, setS] = useState(0);
   const [step, setStep] = useState(0);
+  const [typing, setTyping] = useState(false);
   const [auto, setAuto] = useState(true);
   const [visible, setVisible] = useState(false);
   const [still, setStill] = useState(false);
   const sc = SCENARIOS[s % SCENARIOS.length];
-  const total = sc.steps.length;
+  // Messages after the incoming one: each agent's post, then your answer if one was asked for.
+  const total = sc.steps.length + (sc.reply ? 1 : 0);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setStill(true);
       return;
     }
-    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.25 });
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.3 });
     if (box.current) io.observe(box.current);
     return () => io.disconnect();
   }, []);
@@ -231,164 +251,136 @@ export function AgentFlow({ cast = "seller" }: { cast?: keyof typeof CAST }) {
   useEffect(() => {
     if (still) {
       setStep(total + 1);
+      setTyping(false);
       return;
     }
     if (!visible) return;
+    // step 0: only the incoming message. 1..total: one more message each, after a moment of "typing".
+    if (step >= 1 && step <= total && typing) {
+      const t = setTimeout(() => setTyping(false), TYPING_MS);
+      return () => clearTimeout(t);
+    }
     const t = setTimeout(
       () => {
-        if (step <= total) setStep(step + 1);
+        if (step < total) {
+          setTyping(step + 1 <= sc.steps.length);
+          setStep(step + 1);
+        } else if (step === total) setStep(total + 1);
         else if (auto) {
           setS((v) => (v + 1) % SCENARIOS.length);
           setStep(0);
         }
       },
-      step === 0 ? 1100 : step > total ? 3200 : STEP_MS,
+      step === 0 ? 1200 : step > total ? 3600 : STEP_MS,
     );
     return () => clearTimeout(t);
-  }, [step, total, auto, visible, still]);
-
-  const done = Math.min(step, total);
-  const active = step >= 1 && step <= total ? sc.steps[step - 1].agent : null;
-  const lit = new Set(sc.steps.slice(0, done).map((x) => x.agent));
-  const finished = step > total;
-
-  const arc = (() => {
-    if (!active) return null;
-    const from = step >= 2 ? at(sc.steps[step - 2].agent) : { x: CX - RX, y: CY };
-    const to = at(active);
-    if (Math.hypot(from.x - to.x, from.y - to.y) < 1) return null;
-    return `M ${from.x} ${from.y} A ${RX} ${RY} 0 0 1 ${to.x} ${to.y}`;
-  })();
+  }, [step, typing, total, auto, visible, still, sc.steps.length, SCENARIOS.length]);
 
   function choose(k: number) {
     setAuto(false);
     setS(k);
-    setStep(still ? SCENARIOS[k].steps.length + 1 : 0);
+    setTyping(false);
+    setStep(still ? total + 1 : 0);
   }
 
+  const shown = typing ? step - 1 : Math.min(step, total);
+  const posts = sc.steps.slice(0, Math.min(shown, sc.steps.length));
+  const answered = !!sc.reply && shown > sc.steps.length;
+  const finished = step > total;
+  const inp = INPUTS.find((x) => x.id === sc.input)!;
+  const typer = typing ? sc.steps[step - 1]?.agent : null;
+  const time = (k: number) => `${12 + Math.floor((14 + k) / 60)}:${String((14 + k) % 60).padStart(2, "0")}`;
+
   return (
-    <div ref={box} data-ui className="overflow-hidden rounded-[28px] bg-[#1c1f23] text-[#f1f1ec] outline outline-1 -outline-offset-1 outline-[#33383e]">
-      <div role="tablist" aria-label={pick({ en: "Scenarios", hi: "हालात" })} className="flex flex-wrap justify-center gap-2 px-5 pt-7">
-        {SCENARIOS.map((x, k) => (
-          <button
-            key={x.id}
-            type="button"
-            role="tab"
-            aria-selected={k === s}
-            onClick={() => choose(k)}
-            className={`lp-tab min-h-11 rounded-full border px-4 text-[15px] transition-colors ${k === s ? "border-[var(--z-turmeric)] bg-[#2a2e33] text-white" : "border-[#3a3f45] text-[#b4b9be] hover:text-white"}`}
-          >
-            {pick(x.tab)}
-          </button>
-        ))}
-      </div>
-
-      {/* Wide screens: the loop */}
-      <div className="relative mx-auto hidden aspect-[1100/460] w-full max-w-[1180px] lg:block">
-        <svg aria-hidden viewBox="0 0 1100 460" className="absolute inset-0 size-full">
-          <line x1="104" y1="230" x2="176" y2="230" stroke="#4a5058" strokeWidth="1.5" strokeDasharray="5 6" className="lp-flow" />
-          <line x1="364" y1="230" x2={CX - RX - 30} y2="230" stroke="#4a5058" strokeWidth="1.5" strokeDasharray="5 6" className="lp-flow" />
-          <ellipse cx={CX} cy={CY} rx={RX} ry={RY} fill="none" stroke="#3a3f45" strokeWidth="1.5" strokeDasharray="5 7" />
-          {arc && <path key={`${s}-${step}`} d={arc} fill="none" stroke="var(--z-turmeric)" strokeWidth="3" strokeDasharray="6 7" strokeLinecap="round" className="lp-flow lp-arc" />}
-          <line x1={CX + RX + 30} y1="230" x2="950" y2="230" stroke={finished ? "var(--z-turmeric)" : "#4a5058"} strokeWidth="1.5" strokeDasharray="5 6" className="lp-flow" />
-          <path d="M 950 224 L 960 230 L 950 236 Z" fill={finished ? "var(--z-turmeric)" : "#4a5058"} />
-        </svg>
-
-        <ul className="absolute left-[2%] top-[8%] grid h-[84%] content-between">
-          {INPUTS.map((x) => {
-            const on = x.id === sc.input;
-            return (
-              <li key={x.id} title={pick(x.name)} className={`grid size-11 place-items-center rounded-xl border transition-colors duration-500 ${on ? "border-[var(--z-turmeric)] bg-[#2a2e33] text-[var(--z-turmeric)]" : "border-[#33383e] bg-[#202428] text-[#80868d]"}`}>
-                <x.icon aria-hidden size={18} />
-                <span className="sr-only">{pick(x.name)}</span>
-              </li>
-            );
-          })}
-        </ul>
-
-        <div className="absolute left-[16.4%] top-[22%] flex h-[56%] w-[16.4%] flex-col items-center justify-center gap-4 rounded-[22px] border border-[#4a5058] bg-[#22262b] px-3 py-4">
-          <p className="text-[13px] font-semibold text-[#b4b9be]">{step === 0 ? pick({ en: "Understanding", hi: "समझ रहा है" }) : pick({ en: "Understood", hi: "समझ लिया" })}</p>
-          <p key={`${s}-heard`} className="lp-arrive text-center text-[15px] leading-snug text-white">
-            {pick(sc.heard)}
-          </p>
-        </div>
-
-        <div className="absolute left-[44%] top-[40%] w-[30%] text-center" aria-live="polite">
-          <p className="text-[17px] font-semibold text-[var(--z-turmeric)]">{pick(sc.tab)}</p>
-          <p key={`${s}-${step}`} className="lp-arrive mt-1 text-[15px] leading-snug text-[#d9dee3]">
-            {active ? pick(sc.steps[step - 1].text) : finished ? pick({ en: `Done. Only the decisions came to ${who.en === "you" ? "you" : who.en}.`, hi: who.en === "you" ? "हो गया। आपके पास सिर्फ़ फ़ैसले आए।" : "हो गया। मीना के पास सिर्फ़ फ़ैसले आए।" }) : pick({ en: "Coming in…", hi: "आ रहा है…" })}
-          </p>
-        </div>
-
-        {ORDER.map((a) => {
-          const p = at(a);
-          const info = AGENT_INFO[a];
-          const on = a === active;
-          const was = lit.has(a) && !on;
-          return (
-            <div key={a} className="absolute flex w-[150px] -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: `${((p.x / 1100) * 100).toFixed(2)}%`, top: `${((p.y / 460) * 100).toFixed(2)}%` }}>
-              <span className={`relative grid size-14 place-items-center rounded-full border-2 transition-colors duration-500 ${on ? "border-[var(--z-turmeric)] bg-[#2a2e33] text-[var(--z-turmeric)]" : was ? "border-[#d9dee3] bg-[#2a2e33] text-[#d9dee3]" : "border-[#3a3f45] bg-[#202428] text-[#80868d]"}`}>
-                {on && <span aria-hidden className="lp-ring absolute -inset-1.5 rounded-full border-2 border-[var(--z-turmeric)]" />}
-                <info.icon aria-hidden size={21} />
-              </span>
-              <span className={`mt-2 text-center text-[14px] font-semibold leading-tight ${on || was ? "text-white" : "text-[#9298a0]"}`}>{pick(info.name)}</span>
-            </div>
-          );
-        })}
-
-        <div className="absolute right-[1%] top-[16%] w-[12.5%]">
-          <p className="text-[15px] font-semibold text-[var(--z-turmeric)]">{pick({ en: "What changed", hi: "क्या बदला" })}</p>
-          <ul className="mt-3 space-y-4">
-            {sc.outcomes.map((o, k) => (
-              <li key={`${s}-${o.label.en}`} className={`transition-opacity duration-500 ${finished || done > k ? "opacity-100" : "opacity-25"}`}>
-                <p className="text-[13px] leading-snug text-[#9298a0]">{pick(o.label)}</p>
-                <p className="lp-display text-[26px] leading-tight text-white">{pick(o.value)}</p>
-              </li>
-            ))}
-          </ul>
+    <div ref={box} data-ui className="grid grid-cols-[minmax(0,1fr)] gap-6 rounded-[28px] bg-[var(--lp-sunken)] p-4 sm:p-6 lg:grid-cols-[minmax(0,15rem)_minmax(0,24rem)_minmax(0,1fr)] lg:items-start lg:gap-8">
+      {/* What happened: pick one, or let them play in turn */}
+      <div>
+        <p className="text-[14px] font-semibold text-[var(--lp-muted)]">{pick({ en: "Pick what happens", hi: "चुनिए क्या होता है" })}</p>
+        <div role="tablist" aria-label={pick({ en: "Scenarios", hi: "हालात" })} className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0 lg:flex-col">
+          {SCENARIOS.map((x, k) => (
+            <button
+              key={x.id}
+              type="button"
+              role="tab"
+              aria-selected={k === s}
+              onClick={() => choose(k)}
+              className={`lp-tab min-h-11 shrink-0 rounded-2xl border px-4 py-2 text-left text-[15px] font-semibold transition-colors ${k === s ? "border-[var(--lp-ink)] bg-[var(--lp-surface)]" : "border-[var(--lp-line)] text-[var(--lp-muted)] hover:text-[var(--lp-ink)]"}`}
+            >
+              {pick(x.tab)}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Phones and tablets: the same story, top to bottom */}
-      <div className="px-5 pb-7 pt-6 lg:hidden">
-        <div className="flex items-center gap-3 rounded-2xl border border-[#4a5058] bg-[#22262b] p-4">
-          {(() => {
-            const inp = INPUTS.find((x) => x.id === sc.input)!;
-            return (
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-[var(--z-turmeric)] text-[var(--z-turmeric)]">
-                <inp.icon aria-hidden size={18} />
-              </span>
-            );
-          })()}
-          <p className="text-[15px] leading-snug">{pick(sc.heard)}</p>
+      {/* The team chat */}
+      <div className="mx-auto w-full max-w-[24rem] overflow-hidden rounded-[30px] border-[6px] border-[#1c1f23] bg-[#1c1f23]">
+        <div className="flex items-center gap-3 bg-[#0b6e5f] px-4 py-3 text-white">
+          <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-[#e9a31a] text-[15px] font-bold text-[#1c1f23]">Z</span>
+          <div className="min-w-0">
+            <p className="truncate text-[15px] font-semibold">{pick(group)}</p>
+            <p className="truncate text-[12.5px] text-[#d2ece6]">{typer ? pick({ en: `${AGENT_INFO[typer].name.en} is typing…`, hi: `${AGENT_INFO[typer].name.hi} लिख रहा है…` }) : [...ORDER.map((a) => pick(AGENT_INFO[a].name)), pick({ en: "You", hi: "आप" })].join(", ")}</p>
+          </div>
         </div>
-        <ol className="mt-3 space-y-2" style={{ minHeight: Math.max(...SCENARIOS.map((x) => x.steps.length)) * 88 }}>
-          {sc.steps.map((x, k) => {
+        <ol aria-live="polite" className="flex h-[29rem] flex-col justify-end gap-2 overflow-hidden bg-[#efe7dc] px-3 py-3 text-[#1c1f23]">
+          {/* what came in */}
+          <li key={`${s}-in`} className="lp-arrive mx-auto w-[92%] rounded-xl border border-[#e2d6c3] bg-[#fff8e6] px-3 py-2">
+            <p className="flex items-center gap-1.5 text-[12.5px] font-semibold text-[#8a6100]">
+              <inp.icon aria-hidden size={13} /> {pick(sc.from ?? inp.name)}
+            </p>
+            <p className="mt-0.5 text-[14.5px] leading-snug">{pick(sc.raw ?? sc.heard)}</p>
+          </li>
+          {posts.map((x, k) => {
             const info = AGENT_INFO[x.agent];
-            const on = k === step - 1;
-            const was = k < step - 1 || finished;
             return (
-              <li key={`${s}-${k}`} className={`flex items-start gap-3 rounded-2xl border p-3.5 transition-colors duration-500 ${on ? "border-[var(--z-turmeric)] bg-[#2a2e33]" : "border-[#33383e]"}`}>
-                <span className={`grid size-9 shrink-0 place-items-center rounded-full ${on ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : on || was ? "bg-[#2a2e33] text-[#d9dee3]" : "bg-[#24282d] text-[#80868d]"}`}>
-                  <info.icon aria-hidden size={16} />
-                </span>
-                <div className="text-[15px] leading-snug">
-                  <p className={`font-semibold ${on || was ? "text-white" : "text-[#a3a9b0]"}`}>{pick(info.name)}</p>
-                  <p className={on || was ? "text-[#d9dee3]" : "text-[#a3a9b0]"}>{pick(x.text)}</p>
-                </div>
+              <li key={`${s}-${k}`} className="lp-arrive max-w-[86%] self-start rounded-xl rounded-tl-sm bg-white px-3 py-2 shadow-[0_1px_0_rgb(0_0_0/0.08)]">
+                <p className="flex items-center gap-1.5 text-[12.5px] font-semibold" style={{ color: TINT[x.agent] }}>
+                  <info.icon aria-hidden size={13} /> {pick(info.name)}
+                </p>
+                <p className="mt-0.5 text-[14.5px] leading-snug">{pick(x.text)}</p>
+                {x.ask && (
+                  <p className="mt-2 flex gap-2 text-[13px] font-semibold">
+                    <span className={`rounded-full px-3 py-1 ${answered ? "bg-[#d9fdd3] text-[#0b6e5f]" : "bg-[#0b6e5f] text-white"}`}>{answered ? pick({ en: "Approved", hi: "मंज़ूर" }) : pick({ en: "Approve", hi: "मंज़ूर करें" })}</span>
+                    {!answered && <span className="rounded-full border border-[#c9c2b4] px-3 py-1 text-[#4a4f55]">{pick({ en: "Change", hi: "बदलें" })}</span>}
+                  </p>
+                )}
+                <p className="mt-0.5 text-right text-[11px] text-[#7c8288]">{time(k)}</p>
               </li>
             );
           })}
+          {typer && (
+            <li key={`${s}-typing-${step}`} aria-hidden className="self-start rounded-xl rounded-tl-sm bg-white px-3 py-2.5">
+              <span className="lp-typing flex gap-1">
+                <i className="size-1.5 rounded-full bg-[#9aa0a6]" />
+                <i className="size-1.5 rounded-full bg-[#9aa0a6]" />
+                <i className="size-1.5 rounded-full bg-[#9aa0a6]" />
+              </span>
+            </li>
+          )}
+          {answered && (
+            <li key={`${s}-reply`} className="lp-arrive max-w-[80%] self-end rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2">
+              <p className="text-[14.5px] leading-snug">{pick(sc.reply!)}</p>
+              <p className="mt-0.5 text-right text-[11px] text-[#5d7a62]">{time(sc.steps.length)} ✓✓</p>
+            </li>
+          )}
         </ol>
-        <p className="mt-5 text-[14px] font-semibold text-[var(--z-turmeric)]">{pick({ en: "What changed", hi: "क्या बदला" })}</p>
-        <ul className="mt-2 grid grid-cols-3 gap-3">
+      </div>
+
+      {/* What changed */}
+      <div>
+        <p className="text-[14px] font-semibold text-[var(--lp-muted)]">{pick({ en: "What changed", hi: "क्या बदला" })}</p>
+        <ul className="mt-3 grid grid-cols-3 gap-4 lg:grid-cols-1 lg:gap-5">
           {sc.outcomes.map((o) => (
-            <li key={o.label.en}>
-              <p className="lp-display text-[22px] leading-tight text-white">{pick(o.value)}</p>
-              <p className="mt-0.5 text-[13px] leading-snug text-[#9298a0]">{pick(o.label)}</p>
+            <li key={`${s}-${o.label.en}`}>
+              <p className={`lp-display text-[clamp(26px,3vw,40px)] leading-none ${finished ? "lp-arrive" : "text-[var(--lp-muted)]"}`}>{finished ? pick(o.value) : "–"}</p>
+              <p className="mt-1 text-[14px] leading-snug text-[var(--lp-muted)]">{pick(o.label)}</p>
             </li>
           ))}
         </ul>
+        <p className="mt-6 max-w-[22rem] text-[15px] leading-snug">
+          {sc.reply
+            ? pick({ en: "The agents did the work. The one decision came to you, as a WhatsApp message.", hi: "काम एजेंट ने किया। फ़ैसला एक WhatsApp मैसेज बनकर आपके पास आया।" })
+            : pick({ en: "Nothing needed you. The agents handled it and told you what they did.", hi: "आपकी ज़रूरत नहीं पड़ी। एजेंट ने संभाला और बताया क्या किया।" })}
+        </p>
       </div>
     </div>
   );

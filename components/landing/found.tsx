@@ -96,11 +96,15 @@ export function GetFound() {
           </p>
           {step >= 1 && (
             <div className="gf-in mt-4 space-y-3 text-[13px]">
-              <div className="rounded-2xl p-3 outline outline-1 -outline-offset-1 outline-[#d9dee3]">
+              <div className="flex gap-3 rounded-2xl p-3 outline outline-1 -outline-offset-1 outline-[#d9dee3]">
+                <div className="min-w-0 flex-1">
                 <p className="text-[12px] text-[#545a61]">{pick({ en: "Home kitchen · 4.8 · 1.2 km", hi: "घर की रसोई · 4.8 · 1.2 किमी" })}</p>
                 <p className="mt-0.5 text-[16px] font-semibold text-[#2a5db0]">Meena&apos;s Kitchen</p>
                 <p className="text-[#545a61]">{pick({ en: "Rajma chawal ₹90 · Open till 9:30 pm", hi: "राजमा चावल ₹90 · रात 9:30 तक खुला" })}</p>
                 <span className="mt-2.5 inline-flex min-h-8 items-center rounded-full bg-[#2a5db0] px-3.5 font-semibold text-white">{pick({ en: "Order", hi: "ऑर्डर करें" })}</span>
+                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/photos/meena/rajma-chawal-sm.jpg" alt="" className="size-12 shrink-0 rounded-xl object-cover" loading="lazy" />
               </div>
               <div className="rounded-2xl bg-[#f5f6f7] p-3">
                 <p className="flex items-center gap-1 text-[12px] font-semibold text-[#545a61]">
@@ -108,7 +112,11 @@ export function GetFound() {
                 </p>
                 <p className="mt-1 leading-snug">{pick({ en: "For homemade rajma chawal nearby, Meena's Kitchen in Green Park is well rated and delivers.", hi: "पास में घर का राजमा चावल चाहिए तो ग्रीन पार्क की मीना की रसोई अच्छी रेटिंग वाली है और डिलीवरी करती है।" })}</p>
               </div>
-              <div className="h-16 rounded-2xl bg-[#f5f6f7]" />
+              <div className="rounded-2xl p-3 text-[#545a61] outline outline-1 -outline-offset-1 outline-[#e6e9ec]">
+                <p className="text-[12px]">{pick({ en: "Tiffin service · 3.9 · 4.6 km", hi: "टिफ़िन सर्विस · 3.9 · 4.6 किमी" })}</p>
+                <p className="mt-0.5 text-[15px] font-semibold">Sharma Tiffins</p>
+                <p>{pick({ en: "No menu online · Call to order", hi: "ऑनलाइन मेन्यू नहीं · ऑर्डर के लिए कॉल करें" })}</p>
+              </div>
             </div>
           )}
         </div>

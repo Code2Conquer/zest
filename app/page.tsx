@@ -1,6 +1,7 @@
 "use client";
 
 import "./landing.css";
+import dynamic from "next/dynamic";
 import { BellRing, Bike, Hand, Languages, Mic, Plus, Printer } from "lucide-react";
 import { AudienceSplit } from "@/components/landing/audience-split";
 import { OneDay } from "@/components/landing/day";
@@ -11,10 +12,15 @@ import { HeroSequence } from "@/components/landing/hero-sequence";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
 import { Soon } from "@/components/landing/soon";
-import { SoundboxDemo } from "@/components/landing/soundbox-demo";
 import { Waitlist } from "@/components/landing/waitlist";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
+
+// The 3D Soundbox is far down the page: its code loads after the page is up.
+const Halo3D = dynamic(() => import("@/components/soundbox/halo-3d").then((m) => m.Halo3D), {
+  ssr: false,
+  loading: () => <div className="aspect-[4/3] rounded-[28px] bg-[#0e0d0c] sm:aspect-[16/10]" />,
+});
 
 // The homepage, for small food businesses not on Zomato or Swiggy: home kitchens, tiffin services,
 // small cloud kitchens, shops and stalls. Source of truth: docs/landing-brief.md. Every string is in
@@ -22,7 +28,7 @@ import { useApp } from "@/lib/state";
 
 const AGENT_LIST: { name: Bi; does: Bi }[] = [
   { name: { en: "Storefront", hi: "स्टोरफ़्रंट" }, does: { en: "Your website from a menu photo, set up for Google search, WhatsApp ordering, UPI payments, your Google listing, the counter QR", hi: "मेन्यू की फ़ोटो से आपकी वेबसाइट, Google सर्च के लिए तैयार, WhatsApp ऑर्डर, UPI पेमेंट, आपकी Google लिस्टिंग, काउंटर QR" } },
-  { name: { en: "Orders and delivery", hi: "ऑर्डर और डिलीवरी" }, does: { en: "Accepts, prints the KOT, picks pickup, your own helper or a Zomato rider, tracks to the door", hi: "ऑर्डर मंज़ूर करता है, KOT छापता है, पिकअप, आपका अपना हेल्पर या Zomato राइडर चुनता है, दरवाज़े तक ट्रैक करता है" } },
+  { name: { en: "Orders and delivery", hi: "ऑर्डर और डिलीवरी" }, does: { en: "Accepts, sends the KOT to your printer, picks pickup, your own helper or a Zomato rider, tracks to the door", hi: "ऑर्डर मंज़ूर करता है, KOT प्रिंटर पर भेजता है, पिकअप, आपका अपना हेल्पर या Zomato राइडर चुनता है, दरवाज़े तक ट्रैक करता है" } },
   { name: { en: "Regulars", hi: "पुराने ग्राहक" }, does: { en: "Remembers every guest and their usual, welcome offers for new guests, reminders that bring regulars back", hi: "हर ग्राहक और उनकी पसंद याद रखता है, नए ग्राहकों के लिए स्वागत ऑफ़र, पुराने ग्राहकों को वापस लाने वाले रिमाइंडर" } },
   { name: { en: "Reviews", hi: "रिव्यू" }, does: { en: "Asks every guest how it was, answers complaints in your voice, spots repeat problems", hi: "हर ग्राहक से पूछता है कैसा लगा, आपकी भाषा में शिकायतों का जवाब देता है, बार-बार की परेशानी पकड़ता है" } },
   { name: { en: "Growth", hi: "ग्रोथ" }, does: { en: "Shows up in AI answers, Instagram posts and ads on Instagram and Facebook within your budget, spots what people nearby search for, suggests new combos, lunch boxes and festive hampers", hi: "AI जवाबों में दिखता है, Instagram पोस्ट और आपके बजट में Instagram व Facebook विज्ञापन, आस-पास लोग क्या खोजते हैं यह देखता है, नए कॉम्बो, लंच बॉक्स और त्योहार के डिब्बे सुझाता है" } },
@@ -31,8 +37,8 @@ const AGENT_LIST: { name: Bi; does: Bi }[] = [
 
 const FEATURES: { icon: typeof Mic; text: Bi }[] = [
   { icon: Languages, text: { en: "Speaks every order", hi: "हर ऑर्डर बोलकर बताता है" } },
-  { icon: Hand, text: { en: "One big button, works with floury hands", hi: "एक बड़ा बटन, आटे वाले हाथों से भी चलता है" } },
-  { icon: Printer, text: { en: "Prints the ticket", hi: "किचन टिकट छापता है" } },
+  { icon: Hand, text: { en: "Press the top to accept, even with floury hands", hi: "मंज़ूर करने के लिए ऊपर दबाइए, आटे वाले हाथों से भी" } },
+  { icon: Printer, text: { en: "Add the ticket printer and every order prints as a KOT", hi: "टिकट प्रिंटर जोड़िए, हर ऑर्डर KOT में छपेगा" } },
   { icon: Bike, text: { en: "“Food ready” calls the rider", hi: "“खाना तैयार” दबाते ही राइडर बुलाता है" } },
   { icon: Mic, text: { en: "Push to talk: say a dish is finished, it's off your menu", hi: "बोलकर बताइए: डिश ख़त्म कहिए, मेन्यू से हट जाएगी" } },
   { icon: BellRing, text: { en: "Never misses an order: gets louder, then calls your phone", hi: "कोई ऑर्डर नहीं छूटता: आवाज़ तेज़ करता है, फिर आपको फ़ोन करता है" } },
@@ -131,25 +137,25 @@ export default function Home() {
             </h2>
             <p className={LEAD}>
               {pick({
-                en: "Five agents pass each job between them until it's done. They learn from every edit you make: the more you approve, the less you need to.",
-                hi: "पाँच एजेंट हर काम आपस में आगे बढ़ाते हैं, जब तक वह पूरा न हो जाए। आप जो भी बदलाव करते हैं, उससे वे सीखते हैं: जितना आप मंज़ूर करेंगे, उतना कम पूछना पड़ेगा।",
+                en: "Think of a WhatsApp group with five helpers in it. Something happens, they handle it and post what they did. When it costs money or goes out in your name, they ask you first.",
+                hi: "सोचिए एक WhatsApp ग्रुप, जिसमें पाँच मददगार हैं। कुछ भी हो, वे संभालते हैं और बताते हैं क्या किया। जहाँ पैसा लगे या आपके नाम से कुछ जाए, वहाँ पहले आपसे पूछते हैं।",
               })}
             </p>
           </div>
-          <dl className="mt-8 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-5">
-            {AGENT_LIST.map((x) => (
-              <div key={x.name.en}>
-                <dt className="text-[17px] font-semibold">
-                  {pick(x.name)}
-                  {x.name.en === "Growth" && <Soon />}
-                </dt>
-                <dd className="mt-1 text-[15px] leading-relaxed text-[var(--lp-muted)]">{pick(x.does)}</dd>
-              </div>
-            ))}
-          </dl>
           <div className="mt-6">
             <AgentFlow />
           </div>
+          <dl className="mt-8 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-5">
+            {AGENT_LIST.map((x) => (
+              <div key={x.name.en}>
+                <dt className="text-[16px] font-semibold">
+                  {pick(x.name)}
+                  {x.name.en === "Growth" && <Soon />}
+                </dt>
+                <dd className="mt-1 text-[14.5px] leading-snug text-[var(--lp-muted)]">{pick(x.does)}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
@@ -186,49 +192,31 @@ export default function Home() {
             </h2>
             <p className={`mt-3 ${LEAD}`}>
               {pick({
-                en: "A small box on your counter that speaks every order out loud, in Hindi or English. Press the big button to accept and it prints the kitchen ticket. Press again when the food is ready and the rider is on the way. No phone in your hand while you cook.",
-                hi: "काउंटर पर रखा एक छोटा डिब्बा, जो हर ऑर्डर हिंदी या अंग्रेज़ी में बोलकर बताता है। बड़ा बटन दबाइए, ऑर्डर मंज़ूर और किचन टिकट छप जाता है। खाना तैयार होने पर फिर दबाइए, राइडर रास्ते में। खाना बनाते समय हाथ में फ़ोन नहीं।",
+                en: "A small round box on your counter that speaks every order out loud, in Hindi or English. Its ring lights up when an order comes in. Press the top to accept, and press again when the food is ready and the rider is on the way. No phone in your hand while you cook.",
+                hi: "काउंटर पर रखा एक छोटा गोल डिब्बा, जो हर ऑर्डर हिंदी या अंग्रेज़ी में बोलकर बताता है। ऑर्डर आते ही इसकी रिंग जल उठती है। मंज़ूर करने के लिए ऊपर दबाइए, खाना तैयार होने पर फिर दबाइए, राइडर रास्ते में। खाना बनाते समय हाथ में फ़ोन नहीं।",
               })}
             </p>
           </div>
-          <div className="mt-8 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-12">
-            <ul className="hidden space-y-10 text-right lg:block">
-              {FEATURES.slice(0, 3).map((f) => (
-                <li key={f.text.en} className="flex items-start justify-end gap-3 text-[18px] font-medium leading-snug">
-                  {pick(f.text)}
-                  <f.icon aria-hidden size={20} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
-                </li>
-              ))}
-            </ul>
-            <div className="flex flex-col items-center">
-              <SoundboxDemo />
-              <p className="mt-4 max-w-[30ch] text-center text-[14px] text-[var(--lp-muted)]">{pick({ en: "Press the big button, or the side button to talk.", hi: "बड़ा बटन दबाइए, या बोलने के लिए साइड वाला बटन।" })}</p>
-            </div>
-            <ul className="hidden space-y-10 lg:block">
-              {FEATURES.slice(3).map((f) => (
-                <li key={f.text.en} className="flex items-start gap-3 text-[18px] font-medium leading-snug">
-                  <f.icon aria-hidden size={20} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
-                  {pick(f.text)}
-                </li>
-              ))}
-            </ul>
-            <ul className="grid gap-4 sm:grid-cols-2 lg:hidden">
-              {FEATURES.map((f) => (
-                <li key={f.text.en} className="flex items-start gap-3 text-[17px] font-medium leading-snug">
-                  <f.icon aria-hidden size={20} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
-                  {pick(f.text)}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="mt-6 grid items-start gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-            <p className="text-[22px] font-semibold leading-snug [text-wrap:balance]">
-              {pick({ en: "You trust a soundbox with your payments. Now trust one with your orders.", hi: "पेमेंट के लिए आप साउंडबॉक्स पर भरोसा करते हैं। अब ऑर्डर के लिए भी कीजिए।" })}
-            </p>
+          <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:gap-12">
+            <Halo3D />
             <div>
-              <p className="mb-4 text-[17px] font-semibold">{pick({ en: "Join the Soundbox waitlist", hi: "Soundbox वेटलिस्ट में जुड़ें" })}</p>
-              <Waitlist page="/" section="soundbox" />
+              <ul className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-1">
+                {FEATURES.map((f) => (
+                  <li key={f.text.en} className="flex items-start gap-3 text-[17px] font-medium leading-snug">
+                    <f.icon aria-hidden size={20} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
+                    {pick(f.text)}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-6 text-[15px] text-[var(--lp-muted)]">{pick({ en: "100 mm across, 32 mm tall. The ticket printer is a separate add-on.", hi: "100 मिमी चौड़ा, 32 मिमी ऊँचा। टिकट प्रिंटर अलग से जुड़ता है।" })}</p>
+              <p className="mt-6 text-[20px] font-semibold leading-snug [text-wrap:balance]">
+                {pick({ en: "You trust a soundbox with your payments. Now trust one with your orders.", hi: "पेमेंट के लिए आप साउंडबॉक्स पर भरोसा करते हैं। अब ऑर्डर के लिए भी कीजिए।" })}
+              </p>
             </div>
+          </div>
+          <div className="mt-8 max-w-[46rem]">
+            <p className="mb-4 text-[17px] font-semibold">{pick({ en: "Join the Soundbox waitlist", hi: "Soundbox वेटलिस्ट में जुड़ें" })}</p>
+            <Waitlist page="/" section="soundbox" />
           </div>
         </div>
       </section>

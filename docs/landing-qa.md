@@ -10,14 +10,14 @@ Pages: `/` (small food businesses) and `/restaurants`. Brief: `docs/landing-brie
 | Keyboard focus | Pass. Tabbing through `/` and `/restaurants` reaches every control, including the scenario tabs, the Soundbox's buttons, "Hear it", the waitlist fields and every FAQ; each shows a 3px turmeric ring. The phone swipe strip is focusable for arrow-key scrolling. |
 | Contrast | Pass. Lighthouse accessibility: `/` 97 before the last fix (one placeholder at 4.3:1, since darkened to 5.3:1), `/restaurants` 100. |
 | No horizontal scroll at 360 px | Pass, in English and Hindi, on both pages (checked by toggling the language live). The "One day" moments on phones scroll sideways on purpose, inside their own strip. |
-| Lighthouse mobile performance, throttled (production build) | `/` 84 to 90 over five runs (FCP 1.5 s, simulated LCP 3.6 to 4.4 s, TBT 0 ms, CLS 0), `/restaurants` 90 to 94 (CLS 0.011). Below 90 on some runs: the LCP is the hero paragraph, which paints with the first paint (70 ms unthrottled), but Lighthouse's simulation counts every script loaded before that paint, mostly the 148 KB React/Next runtime. Earlier fixes: the 700 KB Devanagari font is no longer preloaded, the hero uses thumbnails, and the Latin-extended Anek file (needed for ₹) is now preloaded, which cut FCP from 2.3 s to 1.5 s. |
+| Lighthouse mobile performance, throttled (production build) | `/` 84 (FCP 1.7 s, simulated LCP 4.4 s, TBT 0 ms, CLS 0), `/restaurants` 89 (CLS 0.011). Below the 90 target: the LCP is the hero paragraph, which paints with the first paint (70 ms unthrottled), but Lighthouse's simulation counts every script loaded before that paint, mostly the 148 KB React/Next runtime. The 3D Soundbox loads only after the page is up, and draws only while on screen. |
 | Hindi parity | Every visible and spoken string on both pages has Hindi. The seller's own menu board, ordering page and KOTs stay as the seller writes them. Devanagari gets a taller line height. |
 
 ## Honesty pass: "Coming soon" labels
 
 Labelled (not live in the codebase or switched off in production):
 
-- Zest Soundbox: section headings on both pages, and "Soundbox announcing Zomato/Swiggy orders" under the restaurants hero
+- Zest Soundbox: section headings on both pages; the 3D Halo is labelled "Concept render"; the ticket printer is described as a separate add-on; and "Soundbox announcing Zomato/Swiggy orders" under the restaurants hero
 - Menu-photo onboarding: on "Upload menu photo" (the code exists in `/start` and `lib/server/vision.ts`, but needs `ANTHROPIC_API_KEY`, which isn't set in production; remove the label once it is)
 - WhatsApp onboarding and ordering: on "Start on WhatsApp"
 - Zomato rider booking: "Delivery, your way" heading, FAQ "Who delivers?" (both pages)
@@ -44,7 +44,7 @@ Found already working:
 | No all-caps eyebrows, no decorative middle-dot strings | Pass. The only capitals are printed KOT tickets and the ordering page's ADD buttons. Middle dots appear only as data separators (time · agent, area · type). |
 | No identical rounded card grids | Pass. |
 | One orchestrated moment per section, nothing else moves on its own | Pass after a fix: the delivery route's dashes kept moving after the sequence and now stop. Loops (hero, agents, restaurants hero) repeat no faster than every 8 s and pause off screen. |
-| Only food, kitchens, phones and the Soundbox as imagery | Pass. |
+| Only food, kitchens, phones and the Soundbox as imagery | Pass. Mock-ups use screens owners already know: a WhatsApp group for the agents, UPI payment alerts, a phone map with a Zomato rider, a search result with the dish photo. |
 | Every homepage headline reads naturally to a home-kitchen owner, in Hindi too | Pass, in my reading; worth a native speaker's pass. |
 | Every button says exactly what happens | Partial. "Upload menu photo" leads to sign-up, and "Start on WhatsApp" scrolls to the waitlist; both carry "Coming soon" until those flows exist. |
 
