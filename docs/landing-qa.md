@@ -54,4 +54,4 @@ Found already working:
 - Hero order total: 2 aloo paratha (₹60) + 1 rajma chawal (₹90) is ₹210; the brief's "Paid ₹270" is kept by adding a ₹60 Zomato rider line to the KOT.
 - "Hear it" clips were generated with the macOS Lekha (Hindi) and Rishi (Indian English) voices, not recorded by a person.
 - Meena's dish photos are from Wikimedia Commons (CC BY / CC BY-SA), credited in the footer and in `public/photos/meena/credits.json`.
-- `/dev/soundbox` (every Soundbox state on one page) exists for review on the preview and should be deleted before merge.
+- `/dev/soundbox` (every Soundbox state on one page) was used for review on the preview and removed before merge.

@@ -2,6 +2,7 @@
 
 import "./landing.css";
 import { BellRing, Bike, Hand, Languages, Mic, Plus, Printer } from "lucide-react";
+import { AudienceSplit } from "@/components/landing/audience-split";
 import { OneDay } from "@/components/landing/day";
 import { DeliveryMap } from "@/components/landing/delivery";
 import { AgentFlow } from "@/components/landing/flow";
@@ -78,7 +79,7 @@ export default function Home() {
       <SiteHeader start={{ href: "/join?journey=new", label: { en: "Start free", hi: "मुफ़्त शुरू करें" } }} />
 
       {/* Hero */}
-      <section aria-labelledby="hero-h" className="lp-wrap pb-20 pt-6 lg:pb-28 lg:pt-12">
+      <section aria-labelledby="hero-h" className="lp-wrap pb-12 pt-4 lg:pb-16 lg:pt-8">
         <h1 id="hero-h" className="lp-display max-w-[17ch] text-[40px] leading-[1.02] [text-wrap:balance] sm:text-[60px] xl:max-w-none xl:text-[clamp(60px,5.4vw,80px)]">
           {pick({ en: "Your kitchen, online in a minute. Zest does the rest.", hi: "आपकी रसोई, एक मिनट में ऑनलाइन। बाक़ी सब Zest करेगा।" })}
         </h1>
@@ -103,22 +104,24 @@ export default function Home() {
         </div>
       </section>
 
+      <AudienceSplit current="home" />
+
       {/* One day at Meena's Kitchen */}
-      <section id="day" aria-labelledby="day-h" className="scroll-mt-4 py-20 lg:py-28">
+      <section id="day" aria-labelledby="day-h" className="scroll-mt-4 py-12 lg:py-16">
         <div className="lp-wrap">
           <h2 id="day-h" className={H2}>
             {pick({ en: "One day at Meena's Kitchen.", hi: "मीना की रसोई में एक दिन।" })}
           </h2>
           <p className={`mt-4 ${LEAD}`}>{pick({ en: "Meena cooks. Zest's agents do everything else.", hi: "मीना खाना बनाती हैं। बाक़ी सब Zest के एजेंट करते हैं।" })}</p>
-          <div className="mt-12">
+          <div className="mt-8">
             <OneDay />
           </div>
-          <p className="mt-10 text-[18px] font-semibold">{pick({ en: "Anything that costs money or goes public waits for your OK.", hi: "जिसमें पैसा लगे या जो सबको दिखे, वह आपकी हाँ के बिना नहीं होता।" })}</p>
+          <p className="mt-6 text-[18px] font-semibold">{pick({ en: "Anything that costs money or goes public waits for your OK.", hi: "जिसमें पैसा लगे या जो सबको दिखे, वह आपकी हाँ के बिना नहीं होता।" })}</p>
         </div>
       </section>
 
       {/* The agents */}
-      <section id="agents" aria-labelledby="agents-h" className="scroll-mt-4 py-20 lg:py-28">
+      <section id="agents" aria-labelledby="agents-h" className="scroll-mt-4 py-12 lg:py-16">
         <div className="lp-wrap">
           <div className="grid gap-6 lg:grid-cols-2 lg:items-end lg:gap-16">
             <h2 id="agents-h" className={H2}>
@@ -131,7 +134,7 @@ export default function Home() {
               })}
             </p>
           </div>
-          <dl className="mt-12 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-5">
+          <dl className="mt-8 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-5">
             {AGENT_LIST.map((x) => (
               <div key={x.name.en}>
                 <dt className="text-[17px] font-semibold">
@@ -142,14 +145,14 @@ export default function Home() {
               </div>
             ))}
           </dl>
-          <div className="mt-12">
+          <div className="mt-8">
             <AgentFlow />
           </div>
         </div>
       </section>
 
       {/* Get found */}
-      <section id="found" aria-labelledby="found-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-20 lg:py-28">
+      <section id="found" aria-labelledby="found-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-12 lg:py-16">
         <div className="lp-wrap">
           <h2 id="found-h" className={H2}>
             {pick({ en: "Be the first name people find nearby.", hi: "आस-पास खोजने वालों को सबसे पहले आपका नाम दिखे।" })}
@@ -160,10 +163,10 @@ export default function Home() {
               hi: "जब कोई “ghar ka khana near me” या “ग्रीन पार्क में टिफ़िन सर्विस” खोजे, तो आपकी रसोई ऑर्डर बटन के साथ दिखनी चाहिए। लोग जहाँ भी खोजते हैं, Zest आपको वहाँ तैयार करता है और जानकारी ताज़ा रखता है।",
             })}
           </p>
-          <div className="mt-12">
+          <div className="mt-8">
             <GetFound />
           </div>
-          <p className="mt-10 max-w-[44em] text-[18px] leading-relaxed">
+          <p className="mt-6 max-w-[44em] text-[18px] leading-relaxed">
             {pick({ en: "Zest watches what people search for nearby and tells you what to add:", hi: "Zest देखता है कि आस-पास लोग क्या खोज रहे हैं और बताता है क्या जोड़ें:" })}{" "}
             <span className="font-semibold">{pick({ en: "“Many people near you search for Jain thali. Want to add one?”", hi: "“आपके आस-पास बहुत लोग जैन थाली खोजते हैं। एक जोड़ें?”" })}</span>
             <Soon />
@@ -172,7 +175,7 @@ export default function Home() {
       </section>
 
       {/* The Soundbox */}
-      <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-20 lg:py-28">
+      <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-12 lg:py-16">
         <div className="lp-wrap">
           <div className="max-w-[46rem]">
             <h2 id="soundbox-h" className={H2}>
@@ -186,7 +189,7 @@ export default function Home() {
               })}
             </p>
           </div>
-          <div className="mt-14 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-12">
+          <div className="mt-8 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-12">
             <ul className="hidden space-y-10 text-right lg:block">
               {FEATURES.slice(0, 3).map((f) => (
                 <li key={f.text.en} className="flex items-start justify-end gap-3 text-[18px] font-medium leading-snug">
@@ -216,7 +219,7 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <div className="mt-16 grid items-start gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+          <div className="mt-6 grid items-start gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
             <p className="text-[22px] font-semibold leading-snug [text-wrap:balance]">
               {pick({ en: "You trust a soundbox with your payments. Now trust one with your orders.", hi: "पेमेंट के लिए आप साउंडबॉक्स पर भरोसा करते हैं। अब ऑर्डर के लिए भी कीजिए।" })}
             </p>
@@ -229,7 +232,7 @@ export default function Home() {
       </section>
 
       {/* Delivery, your way */}
-      <section aria-labelledby="delivery-h" className="bg-[var(--lp-sunken)] py-20 lg:py-28">
+      <section aria-labelledby="delivery-h" className="bg-[var(--lp-sunken)] py-12 lg:py-16">
         <div className="lp-wrap">
           <h2 id="delivery-h" className={H2}>
             {pick({ en: "Pickup, your helper or a Zomato rider. Zest picks the best way.", hi: "पिकअप, आपका हेल्पर या Zomato राइडर। सबसे अच्छा तरीक़ा Zest चुनता है।" })}
@@ -241,14 +244,14 @@ export default function Home() {
               hi: "पास के ग्राहक ख़ुद ले जा सकते हैं। छोटी दूरी आपका अपना हेल्पर जा सकता है, ग्राहक को ट्रैकिंग लिंक के साथ। बाक़ी सब Zomato राइडर ले जाते हैं, और एक बिल्डिंग के लंच ऑर्डर साथ जाते हैं।",
             })}
           </p>
-          <div className="mt-12">
+          <div className="mt-8">
             <DeliveryMap />
           </div>
         </div>
       </section>
 
       {/* Sold out? Just say it */}
-      <section aria-labelledby="soldout-h" className="py-20 lg:py-28">
+      <section aria-labelledby="soldout-h" className="py-12 lg:py-16">
         <div className="lp-wrap">
           <h2 id="soldout-h" className={H2}>
             {pick({ en: "Sold out? Just say it.", hi: "ख़त्म हो गया? बस बोल दीजिए।" })}
@@ -260,14 +263,14 @@ export default function Home() {
               hi: "Zest को बताइए कि कोई डिश ख़त्म हो गई, और वह सेकंडों में आपके पेज, WhatsApp मेन्यू, Google और Instagram से हट जाएगी। वापस आ गई कहिए, तो वापस आ जाएगी।",
             })}
           </p>
-          <div className="mt-12">
+          <div className="mt-8">
             <SoldOut />
           </div>
         </div>
       </section>
 
       {/* Your regulars */}
-      <section aria-labelledby="regulars-h" className="bg-[var(--lp-sunken)] py-20 lg:py-28">
+      <section aria-labelledby="regulars-h" className="bg-[var(--lp-sunken)] py-12 lg:py-16">
         <div className="lp-wrap grid items-start gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
           <div>
             <h2 id="regulars-h" className={H2}>
@@ -308,7 +311,7 @@ export default function Home() {
             <h2 id="start-h" className={H2}>
               {pick({ en: "Start in a minute.", hi: "एक मिनट में शुरू कीजिए।" })}
             </h2>
-            <ol className="mt-10 space-y-6">
+            <ol className="mt-6 space-y-6">
               {[
                 { en: "Send a photo of your menu, on the website or on WhatsApp.", hi: "अपने मेन्यू की फ़ोटो भेजिए, वेबसाइट पर या WhatsApp पर।" },
                 { en: "Your page goes live. Share it in your groups and put the QR on your counter.", hi: "आपका पेज लाइव। उसे अपने ग्रुप में भेजिए और QR काउंटर पर लगाइए।" },
@@ -336,7 +339,7 @@ export default function Home() {
       </section>
 
       {/* Questions */}
-      <section id="faq" aria-labelledby="faq-h" className="scroll-mt-4 py-20 lg:py-28">
+      <section id="faq" aria-labelledby="faq-h" className="scroll-mt-4 py-12 lg:py-16">
         <div className="lp-wrap grid gap-10 lg:grid-cols-12">
           <h2 id="faq-h" className={`lg:col-span-4 ${H2}`}>
             {pick({ en: "Questions sellers ask", hi: "विक्रेता क्या पूछते हैं" })}

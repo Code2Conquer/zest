@@ -3,6 +3,7 @@
 import "../landing.css";
 import { useState } from "react";
 import { BellRing, Hand, Languages, Lock, Plus, Printer } from "lucide-react";
+import { AudienceSplit } from "@/components/landing/audience-split";
 import { MorningSummary, RasoiPhone, RestaurantStage, RestaurantVoice } from "@/components/landing/restaurants";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { Soon } from "@/components/landing/soon";
@@ -51,7 +52,7 @@ export default function Restaurants() {
       <SiteHeader nav={NAV} start={{ href: "/join?journey=live", label: { en: "Get started free", hi: "मुफ़्त शुरू करें" } }} />
 
       {/* Hero */}
-      <section aria-labelledby="hero-h" className="lp-wrap pb-20 pt-6 lg:pb-28 lg:pt-12">
+      <section aria-labelledby="hero-h" className="lp-wrap pb-12 pt-4 lg:pb-16 lg:pt-8">
         <h1 id="hero-h" className="lp-display max-w-[17ch] text-[40px] leading-[1.02] [text-wrap:balance] sm:text-[60px] lg:max-w-none lg:text-[clamp(56px,5.2vw,80px)]">
           {pick({ en: "Never miss an order. Know every app by morning.", hi: "कोई ऑर्डर न छूटे। सुबह तक हर ऐप का हाल जानिए।" })}
         </h1>
@@ -101,8 +102,10 @@ export default function Restaurants() {
         </div>
       </section>
 
+      <AudienceSplit current="restaurants" />
+
       {/* One voice for every order */}
-      <section id="voice" aria-labelledby="voice-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-20 lg:py-28">
+      <section id="voice" aria-labelledby="voice-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-12 lg:py-16">
         <div className="lp-wrap">
           <h2 id="voice-h" className={H2}>
             {pick({ en: "One voice for every order.", hi: "हर ऑर्डर के लिए एक आवाज़।" })}
@@ -114,7 +117,7 @@ export default function Restaurants() {
               hi: "आपका पेज, Zomato और Swiggy, सब काउंटर पर रखा एक डिब्बा बोलकर बताता है। इसे बजने दीजिए और देखिए क्या होता है।",
             })}
           </p>
-          <div className="mt-12 grid items-start gap-12 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-20">
+          <div className="mt-8 grid items-start gap-12 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-20">
             <div className="flex flex-col items-center">
               <RestaurantVoice />
             </div>
@@ -132,7 +135,7 @@ export default function Restaurants() {
                   </li>
                 ))}
               </ul>
-              <p className="mb-4 mt-10 text-[17px] font-semibold">{pick({ en: "Join the Soundbox waitlist", hi: "Soundbox वेटलिस्ट में जुड़ें" })}</p>
+              <p className="mb-4 mt-6 text-[17px] font-semibold">{pick({ en: "Join the Soundbox waitlist", hi: "Soundbox वेटलिस्ट में जुड़ें" })}</p>
               <Waitlist page="/restaurants" section="restaurants-voice" defaultType="restaurant" />
             </div>
           </div>
@@ -140,7 +143,7 @@ export default function Restaurants() {
       </section>
 
       {/* Morning summary */}
-      <section id="summary" aria-labelledby="summary-h" className="scroll-mt-4 py-20 lg:py-28">
+      <section id="summary" aria-labelledby="summary-h" className="scroll-mt-4 py-12 lg:py-16">
         <div className="lp-wrap grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
           <div>
             <h2 id="summary-h" className={H2}>
@@ -168,7 +171,7 @@ export default function Restaurants() {
       </section>
 
       {/* A page for your regulars */}
-      <section id="page" aria-labelledby="page-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-20 lg:py-28">
+      <section id="page" aria-labelledby="page-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-12 lg:py-16">
         <div className="lp-wrap grid items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-20">
           <div>
             <h2 id="page-h" className={H2}>
@@ -195,7 +198,7 @@ export default function Restaurants() {
       </section>
 
       {/* Questions */}
-      <section id="faq" aria-labelledby="faq-h" className="scroll-mt-4 py-20 lg:py-28">
+      <section id="faq" aria-labelledby="faq-h" className="scroll-mt-4 py-12 lg:py-16">
         <div className="lp-wrap grid gap-10 lg:grid-cols-12">
           <h2 id="faq-h" className={`lg:col-span-4 ${H2}`}>
             {pick({ en: "Questions restaurants ask", hi: "रेस्टोरेंट क्या पूछते हैं" })}
