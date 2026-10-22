@@ -10,7 +10,6 @@ import { GetFound } from "@/components/landing/found";
 import { HeroSequence } from "@/components/landing/hero-sequence";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { SiteHeader } from "@/components/landing/site-header";
-import { SoldOut } from "@/components/landing/sold-out";
 import { Soon } from "@/components/landing/soon";
 import { SoundboxDemo } from "@/components/landing/soundbox-demo";
 import { Waitlist } from "@/components/landing/waitlist";
@@ -53,11 +52,12 @@ const FAQ: { q: Bi; a: Bi; soon?: boolean }[] = [
   { q: { en: "Do I need an FSSAI registration?", hi: "क्या FSSAI रजिस्ट्रेशन ज़रूरी है?" }, a: { en: "For delivery, yes. Zest helps you apply.", hi: "डिलीवरी के लिए, हाँ। Zest आवेदन में मदद करता है।" }, soon: true },
   { q: { en: "What does it cost?", hi: "इसका ख़र्च कितना है?" }, a: { en: "Free to start.", hi: "शुरुआत मुफ़्त है।" } },
   { q: { en: "Will people find me on Google?", hi: "क्या लोग मुझे Google पर ढूँढ पाएँगे?" }, a: { en: "Yes. Zest builds your website for search and sets up your Google listing. Home kitchens can show their delivery area without showing their address.", hi: "हाँ। Zest आपकी वेबसाइट सर्च के लिए बनाता है और Google लिस्टिंग तैयार करता है। घर की रसोई अपना पता दिखाए बिना डिलीवरी का इलाक़ा दिखा सकती है।" }, soon: true },
+  { q: { en: "Does it work for a thela or a small stall?", hi: "क्या यह ठेले या छोटे स्टॉल के लिए भी है?" }, a: { en: "Yes. A phone with WhatsApp and a UPI ID is enough. Write your menu on paper, send a photo, and your page is ready.", hi: "हाँ। WhatsApp वाला फ़ोन और UPI ID काफ़ी है। मेन्यू काग़ज़ पर लिखिए, फ़ोटो भेजिए, और आपका पेज तैयार।" } },
   { q: { en: "Do I need a smartphone?", hi: "क्या स्मार्टफ़ोन चाहिए?" }, a: { en: "A phone with WhatsApp is enough to start. The Soundbox lets you run orders without touching it.", hi: "शुरू करने के लिए WhatsApp वाला फ़ोन काफ़ी है। Soundbox से आप फ़ोन छुए बिना ऑर्डर चला सकते हैं।" } },
   { q: { en: "Which languages?", hi: "कौन-सी भाषाएँ?" }, a: { en: "Hindi and English today, more Indian languages soon. Write in Hinglish and Zest answers in kind.", hi: "अभी हिंदी और अंग्रेज़ी, जल्द और भारतीय भाषाएँ। हिंग्लिश में लिखिए, Zest उसी में जवाब देगा।" } },
 ];
 
-const H2 = "lp-display text-[clamp(34px,4vw,58px)] leading-[1.02] [text-wrap:balance]";
+const H2 = "lp-display text-[clamp(30px,3.4vw,48px)] leading-[1.04] [text-wrap:balance]";
 const LEAD = "max-w-[38em] text-[18px] leading-relaxed text-[var(--lp-muted)]";
 
 
@@ -79,7 +79,7 @@ export default function Home() {
       <SiteHeader start={{ href: "/join?journey=new", label: { en: "Start free", hi: "मुफ़्त शुरू करें" } }} />
 
       {/* Hero */}
-      <section aria-labelledby="hero-h" className="lp-wrap pb-12 pt-4 lg:pb-16 lg:pt-8">
+      <section aria-labelledby="hero-h" className="lp-wrap pb-8 pt-2 lg:pb-10 lg:pt-6">
         <h1 id="hero-h" className="lp-display max-w-[17ch] text-[40px] leading-[1.02] [text-wrap:balance] sm:text-[60px] xl:max-w-none xl:text-[clamp(60px,5.4vw,80px)]">
           {pick({ en: "Your kitchen, online in a minute. Zest does the rest.", hi: "आपकी रसोई, एक मिनट में ऑनलाइन। बाक़ी सब Zest करेगा।" })}
         </h1>
@@ -91,8 +91,10 @@ export default function Home() {
                 hi: "अपने मेन्यू की फ़ोटो भेजिए और आपका अपना ऑर्डर पेज तैयार, WhatsApp ऑर्डर, UPI पेमेंट और Zomato राइडर से डिलीवरी के साथ। Zest के AI एजेंट ऑर्डर लेते हैं, पुराने ग्राहकों को वापस लाते हैं और नए ग्राहक ढूँढते हैं। Zest Soundbox हर ऑर्डर बोलकर बताता है।",
               })}
             </p>
-            <div className="mt-8">{starts}</div>
-            <p className="mt-4 text-[16px] font-medium">{pick({ en: "Free to start. No app to learn.", hi: "शुरुआत मुफ़्त। कोई ऐप सीखने की ज़रूरत नहीं।" })}</p>
+            <div className="mt-6">{starts}</div>
+            <p className="mt-4 text-[16px] font-medium">
+              {pick({ en: "Free to start. No app to learn. Works for a home kitchen, a tiffin service or a thela.", hi: "शुरुआत मुफ़्त। कोई ऐप सीखने की ज़रूरत नहीं। घर की रसोई, टिफ़िन सर्विस या ठेले, सबके लिए।" })}
+            </p>
             <p className="mt-6 text-[16px] text-[var(--lp-muted)]">
               {pick({ en: "Already on Zomato or Swiggy?", hi: "पहले से Zomato या Swiggy पर हैं?" })}{" "}
               <a href="/restaurants" className="lp-link font-medium text-[var(--lp-ink)]">
@@ -107,13 +109,13 @@ export default function Home() {
       <AudienceSplit current="home" />
 
       {/* One day at Meena's Kitchen */}
-      <section id="day" aria-labelledby="day-h" className="scroll-mt-4 py-12 lg:py-16">
+      <section id="day" aria-labelledby="day-h" className="scroll-mt-4 py-10 lg:py-14">
         <div className="lp-wrap">
           <h2 id="day-h" className={H2}>
             {pick({ en: "One day at Meena's Kitchen.", hi: "मीना की रसोई में एक दिन।" })}
           </h2>
-          <p className={`mt-4 ${LEAD}`}>{pick({ en: "Meena cooks. Zest's agents do everything else.", hi: "मीना खाना बनाती हैं। बाक़ी सब Zest के एजेंट करते हैं।" })}</p>
-          <div className="mt-8">
+          <p className={`mt-3 ${LEAD}`}>{pick({ en: "Meena cooks. Zest's agents do everything else.", hi: "मीना खाना बनाती हैं। बाक़ी सब Zest के एजेंट करते हैं।" })}</p>
+          <div className="mt-6">
             <OneDay />
           </div>
           <p className="mt-6 text-[18px] font-semibold">{pick({ en: "Anything that costs money or goes public waits for your OK.", hi: "जिसमें पैसा लगे या जो सबको दिखे, वह आपकी हाँ के बिना नहीं होता।" })}</p>
@@ -121,7 +123,7 @@ export default function Home() {
       </section>
 
       {/* The agents */}
-      <section id="agents" aria-labelledby="agents-h" className="scroll-mt-4 py-12 lg:py-16">
+      <section id="agents" aria-labelledby="agents-h" className="scroll-mt-4 py-10 lg:py-14">
         <div className="lp-wrap">
           <div className="grid gap-6 lg:grid-cols-2 lg:items-end lg:gap-16">
             <h2 id="agents-h" className={H2}>
@@ -145,25 +147,25 @@ export default function Home() {
               </div>
             ))}
           </dl>
-          <div className="mt-8">
+          <div className="mt-6">
             <AgentFlow />
           </div>
         </div>
       </section>
 
       {/* Get found */}
-      <section id="found" aria-labelledby="found-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-12 lg:py-16">
+      <section id="found" aria-labelledby="found-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-10 lg:py-14">
         <div className="lp-wrap">
           <h2 id="found-h" className={H2}>
             {pick({ en: "Be the first name people find nearby.", hi: "आस-पास खोजने वालों को सबसे पहले आपका नाम दिखे।" })}
           </h2>
-          <p className={`mt-4 ${LEAD}`}>
+          <p className={`mt-3 ${LEAD}`}>
             {pick({
               en: "When someone searches “ghar ka khana near me” or “tiffin service in Green Park”, your kitchen should show up, with an Order button. Zest sets you up everywhere people look, and keeps it up to date.",
               hi: "जब कोई “ghar ka khana near me” या “ग्रीन पार्क में टिफ़िन सर्विस” खोजे, तो आपकी रसोई ऑर्डर बटन के साथ दिखनी चाहिए। लोग जहाँ भी खोजते हैं, Zest आपको वहाँ तैयार करता है और जानकारी ताज़ा रखता है।",
             })}
           </p>
-          <div className="mt-8">
+          <div className="mt-6">
             <GetFound />
           </div>
           <p className="mt-6 max-w-[44em] text-[18px] leading-relaxed">
@@ -175,14 +177,14 @@ export default function Home() {
       </section>
 
       {/* The Soundbox */}
-      <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-12 lg:py-16">
+      <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-10 lg:py-14">
         <div className="lp-wrap">
           <div className="max-w-[46rem]">
             <h2 id="soundbox-h" className={H2}>
               {pick({ en: "Meet the Zest Soundbox.", hi: "मिलिए Zest Soundbox से।" })}
               <Soon />
             </h2>
-            <p className={`mt-4 ${LEAD}`}>
+            <p className={`mt-3 ${LEAD}`}>
               {pick({
                 en: "A small box on your counter that speaks every order out loud, in Hindi or English. Press the big button to accept and it prints the kitchen ticket. Press again when the food is ready and the rider is on the way. No phone in your hand while you cook.",
                 hi: "काउंटर पर रखा एक छोटा डिब्बा, जो हर ऑर्डर हिंदी या अंग्रेज़ी में बोलकर बताता है। बड़ा बटन दबाइए, ऑर्डर मंज़ूर और किचन टिकट छप जाता है। खाना तैयार होने पर फिर दबाइए, राइडर रास्ते में। खाना बनाते समय हाथ में फ़ोन नहीं।",
@@ -232,51 +234,32 @@ export default function Home() {
       </section>
 
       {/* Delivery, your way */}
-      <section aria-labelledby="delivery-h" className="bg-[var(--lp-sunken)] py-12 lg:py-16">
+      <section aria-labelledby="delivery-h" className="bg-[var(--lp-sunken)] py-10 lg:py-14">
         <div className="lp-wrap">
           <h2 id="delivery-h" className={H2}>
             {pick({ en: "Pickup, your helper or a Zomato rider. Zest picks the best way.", hi: "पिकअप, आपका हेल्पर या Zomato राइडर। सबसे अच्छा तरीक़ा Zest चुनता है।" })}
             <Soon />
           </h2>
-          <p className={`mt-4 ${LEAD}`}>
+          <p className={`mt-3 ${LEAD}`}>
             {pick({
               en: "Nearby guests can pick up. Short trips can go with your own helper, with a tracking link for the guest. Everything else goes with Zomato riders, and lunch orders from one building travel together.",
               hi: "पास के ग्राहक ख़ुद ले जा सकते हैं। छोटी दूरी आपका अपना हेल्पर जा सकता है, ग्राहक को ट्रैकिंग लिंक के साथ। बाक़ी सब Zomato राइडर ले जाते हैं, और एक बिल्डिंग के लंच ऑर्डर साथ जाते हैं।",
             })}
           </p>
-          <div className="mt-8">
+          <div className="mt-6">
             <DeliveryMap />
           </div>
         </div>
       </section>
 
-      {/* Sold out? Just say it */}
-      <section aria-labelledby="soldout-h" className="py-12 lg:py-16">
-        <div className="lp-wrap">
-          <h2 id="soldout-h" className={H2}>
-            {pick({ en: "Sold out? Just say it.", hi: "ख़त्म हो गया? बस बोल दीजिए।" })}
-            <Soon />
-          </h2>
-          <p className={`mt-4 ${LEAD}`}>
-            {pick({
-              en: "Tell Zest a dish is finished and it's off your page, WhatsApp menu, Google and Instagram in seconds. Say it's back, and it's back.",
-              hi: "Zest को बताइए कि कोई डिश ख़त्म हो गई, और वह सेकंडों में आपके पेज, WhatsApp मेन्यू, Google और Instagram से हट जाएगी। वापस आ गई कहिए, तो वापस आ जाएगी।",
-            })}
-          </p>
-          <div className="mt-8">
-            <SoldOut />
-          </div>
-        </div>
-      </section>
-
       {/* Your regulars */}
-      <section aria-labelledby="regulars-h" className="bg-[var(--lp-sunken)] py-12 lg:py-16">
+      <section aria-labelledby="regulars-h" className="py-10 lg:py-14">
         <div className="lp-wrap grid items-start gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
           <div>
             <h2 id="regulars-h" className={H2}>
               {pick({ en: "Know your regulars. Bring them back.", hi: "अपने पुराने ग्राहकों को जानिए। उन्हें वापस लाइए।" })}
             </h2>
-            <p className={`mt-4 ${LEAD}`}>
+            <p className={`mt-3 ${LEAD}`}>
               {pick({
                 en: "Every order comes with your guest's name, number and favourite dishes, and they stay yours. Zest reminds them when their usual is on the menu, and welcomes new guests with an offer you choose.",
                 hi: "हर ऑर्डर के साथ ग्राहक का नाम, नंबर और पसंदीदा डिश आती है, और ये आपके ही रहते हैं। जब उनकी पसंद की डिश मेन्यू में हो, Zest उन्हें याद दिलाता है, और नए ग्राहकों का स्वागत आपके चुने ऑफ़र से करता है।",
@@ -339,7 +322,7 @@ export default function Home() {
       </section>
 
       {/* Questions */}
-      <section id="faq" aria-labelledby="faq-h" className="scroll-mt-4 py-12 lg:py-16">
+      <section id="faq" aria-labelledby="faq-h" className="scroll-mt-4 py-10 lg:py-14">
         <div className="lp-wrap grid gap-10 lg:grid-cols-12">
           <h2 id="faq-h" className={`lg:col-span-4 ${H2}`}>
             {pick({ en: "Questions sellers ask", hi: "विक्रेता क्या पूछते हैं" })}

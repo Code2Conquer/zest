@@ -124,21 +124,21 @@ export function OneDay() {
   }, [active]);
 
   const m = MOMENTS[active];
-  const box = <Soundbox size="sm" state={speaking ? "speaking" : "idle"} caption={m.say} />;
+  const box = <Soundbox size="sm" stable state={speaking ? "speaking" : "idle"} caption={m.say} />;
 
   return (
     <div>
       {/* Wide screens: the Soundbox stays, the day scrolls past it */}
       <div className="hidden gap-16 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <div>
-          <div className="sticky top-[10vh] flex flex-col items-center rounded-[28px] bg-[var(--lp-paper)] px-8 py-10">
+          <div className="sticky top-[8vh] flex flex-col items-center rounded-[28px] bg-[var(--lp-paper)] px-8 py-10">
             <p className="mb-6 text-[15px] font-semibold text-[var(--lp-muted)]">
               {pick(m.time)} · <span className="text-[var(--lp-ink)]">{pick(m.agent)}</span>
             </p>
             {box}
           </div>
         </div>
-        <ol className="space-y-[9vh] py-[12vh]">
+        <ol className="space-y-[6vh] py-[6vh]">
           {MOMENTS.map((x, k) => (
             <li key={x.id} ref={(el) => void (wide.current[k] = el)} aria-current={k === active ? "step" : undefined} className={`transition-opacity duration-500 ${k === active ? "opacity-100" : "opacity-40"}`}>
               <MomentHead m={x} />

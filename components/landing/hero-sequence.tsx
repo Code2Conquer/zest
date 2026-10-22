@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, MessageCircle } from "lucide-react";
-import { Soundbox, type SoundboxState } from "@/components/soundbox/soundbox";
+import { HearIt, Soundbox, type SoundboxState } from "@/components/soundbox/soundbox";
 import { MEENA_MENU } from "@/lib/data";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
-// The homepage's one big moment, about 8 seconds: a photo of Meena's handwritten menu board is
+// The homepage's one big moment, about 8 seconds: Meena's menu, handwritten on paper, is
 // scanned, its dishes lift onto her new ordering page, a WhatsApp order arrives and is paid by UPI,
 // the order travels into the Soundbox, which speaks it, prints the KOT and is accepted. Then it idles,
 // and while the hero is on screen a new order arrives every 10 seconds. It pauses off screen; with
@@ -86,56 +86,94 @@ export function HeroSequence() {
   const showOrder = at("bubble");
 
   return (
-    <div ref={box} className="relative grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[auto_auto] md:justify-center md:gap-8 xl:grid-cols-[auto_auto_auto] xl:items-start">
-      {/* The menu board photo and the ordering page, side by side */}
-      <div className="flex items-start justify-center gap-4 xl:contents">
-        <MenuBoard scanning={beat === "scan"} faded={lifted} />
-        <SellerPhone lifted={lifted} round={round} order={showOrder ? order : null} paid={at("paid")} />
+    <div ref={box}>
+      <div className="flex items-start justify-center gap-3 sm:gap-6">
+        {/* The handwritten note and the ordering page it becomes */}
+        <div className="relative sm:flex sm:items-start sm:gap-6">
+          <PaperNote scanning={beat === "scan"} lifted={lifted} />
+          <SellerPhone lifted={lifted} round={round} order={showOrder ? order : null} paid={at("paid")} />
+        </div>
+        {/* The Soundbox, where the order lands */}
+        <div className="relative pt-6 sm:pt-8">
+          {beat === "travel" && (
+            <span aria-hidden className="hs-token absolute -left-16 top-[90px] hidden rounded-full bg-[var(--lp-accent)] px-3 py-1 text-[13px] font-semibold text-[#1c1f23] xl:block">
+              #118
+            </span>
+          )}
+          {/* Both sizes are rendered and CSS shows one, so the box never resizes after load. */}
+          <div className="sm:hidden">
+            <Soundbox
+              size="xs"
+              bare
+              stable
+              state={sbState}
+              ticket={{ title: "MEENA'S KITCHEN", lines: ["KOT 118", ...order.ticket], foot: `Paid ₹${order.paid} UPI` }}
+              showTicket={at("print")}
+            />
+          </div>
+          <div className="hidden sm:block">
+            <Soundbox
+              size="sm"
+              bare
+              stable
+              state={sbState}
+              ticket={{ title: "MEENA'S KITCHEN", lines: ["KOT 118", ...order.ticket], foot: `Paid ₹${order.paid} UPI` }}
+              showTicket={at("print")}
+            />
+          </div>
+          {beat === "press" && <Cursor />}
+        </div>
       </div>
-      {/* The order travelling to the Soundbox */}
-      <div className="relative flex justify-center md:col-span-2 xl:col-span-1">
-        {beat === "travel" && (
-          <span aria-hidden className="hs-token absolute -left-28 top-[86px] hidden rounded-full bg-[var(--lp-accent)] px-3 py-1 text-[13px] font-semibold text-[#1c1f23] xl:block">
-            #118
-          </span>
-        )}
-        <Soundbox
-          size="sm"
-          state={sbState}
-          caption={caption}
-          clip={round === 0 ? (at("press") ? "accepted" : at("speak") ? "new-order" : undefined) : undefined}
-          ticket={{ title: "MEENA'S KITCHEN", lines: ["KOT 118", ...order.ticket], foot: `Paid ₹${order.paid} UPI` }}
-          showTicket={at("print")}
-        />
-        {beat === "press" && <Cursor />}
+      {/* What Zest says, in one fixed place so nothing below it moves */}
+      <div className="mt-4 flex min-h-[7.5rem] flex-col items-center gap-3 text-center">
+        <p key={`${caption?.en}`} className="sb-caption max-w-[34ch] text-[17px] font-medium leading-snug" aria-live="polite">
+          {caption && (
+            <>
+              <span className="text-[var(--lp-muted)]">Zest: </span>“{pick(caption)}”
+            </>
+          )}
+        </p>
+        <HearIt clip={round === 0 ? (at("press") ? "accepted" : at("speak") ? "new-order" : undefined) : undefined} />
       </div>
-      <p className="sr-only" aria-live="polite">
-        {caption ? pick(caption) : ""}
-      </p>
     </div>
   );
 }
 
 const ORDER_OF: Record<Beat, number> = { board: 0, scan: 1, lift: 2, bubble: 3, paid: 4, travel: 5, speak: 6, print: 7, press: 8, idle: 9 };
 
-/** A phone photo of Meena's handwritten menu board, with a scan line passing over it. */
-function MenuBoard({ scanning, faded }: { scanning: boolean; faded: boolean }) {
+/** Meena's menu, written by hand on a torn notebook page: what a home kitchen or a thela starts from.
+ * On a phone it sits over the ordering page and fades as the dishes arrive; on wider screens it sits
+ * beside it. */
+function PaperNote({ scanning, lifted }: { scanning: boolean; lifted: boolean }) {
   const { pick } = useApp();
+  const lines: Bi[] = [
+    { en: "Rajma chawal - 90", hi: "राजमा चावल - 90" },
+    { en: "Aloo paratha - 60", hi: "आलू पराठा - 60" },
+    { en: "Thali - 120", hi: "थाली - 120" },
+  ];
   return (
-    <figure className={`relative w-[118px] shrink-0 rotate-[-4deg] transition-opacity duration-700 sm:w-[150px] ${faded ? "opacity-60" : ""}`}>
-      <div className="overflow-hidden rounded-[18px] bg-[#1c1f23] p-[5px]">
-        <div className="relative overflow-hidden rounded-[14px] bg-[#2e3a33] px-2.5 pb-4 pt-3 text-[#f1efe4] sm:px-3">
-          <p className="hs-chalk text-[13px] sm:text-[15px]">Meena&apos;s Kitchen</p>
-          <ul className="hs-chalk mt-2 space-y-1.5 text-[12px] sm:text-[14px]">
-            <li>Rajma chawal 90</li>
-            <li>Aloo paratha 60</li>
-            <li>Thali 120</li>
+    <figure
+      className={`absolute left-1/2 top-16 z-20 w-[150px] -translate-x-1/2 rotate-[-4deg] transition-[opacity,transform] duration-700 sm:static sm:z-auto sm:w-[160px] sm:translate-x-0 ${lifted ? "pointer-events-none max-sm:scale-90 max-sm:opacity-0 sm:opacity-70" : ""}`}
+    >
+      <div className="note-paper relative overflow-hidden px-3.5 pb-4 pt-5 text-[#24348a]">
+        <svg aria-hidden className="absolute inset-0 size-full" preserveAspectRatio="none">
+          {Array.from({ length: 9 }, (_, k) => (
+            <line key={k} x1="0" x2="100%" y1={30 + k * 22} y2={30 + k * 22} stroke="#c9d6ea" strokeWidth="1" />
+          ))}
+          <line x1="18" x2="18" y1="0" y2="100%" stroke="#e8a3a3" strokeWidth="1" />
+        </svg>
+        <div className="font-hand relative leading-[22px]">
+          <p className="text-[17px] font-bold">{pick({ en: "Meena's Kitchen", hi: "मीना की रसोई" })}</p>
+          <ul className="mt-0.5 text-[15px]">
+            {lines.map((l) => (
+              <li key={l.en}>{pick(l)}</li>
+            ))}
           </ul>
-          <p className="hs-chalk mt-2 text-[11px] opacity-80 sm:text-[12px]">Order: 98xxx xxx01</p>
-          {scanning && <span aria-hidden className="hs-scan absolute inset-x-0 top-0 h-[3px] bg-[var(--lp-accent)]" />}
+          <p className="mt-0.5 text-[13px]">{pick({ en: "Order: 98xxx xxx01", hi: "ऑर्डर: 98xxx xxx01" })}</p>
         </div>
+        {scanning && <span aria-hidden className="hs-scan absolute inset-x-0 top-0 h-[3px] bg-[var(--lp-accent)]" />}
       </div>
-      <figcaption className="mt-2 text-center text-[13px] text-[var(--lp-muted)]">{pick({ en: "Your menu photo", hi: "आपके मेन्यू की फ़ोटो" })}</figcaption>
+      <figcaption className="mt-2 text-center text-[13px] text-[var(--lp-muted)]">{pick({ en: "Your menu, as you write it", hi: "आपका मेन्यू, जैसे आप लिखते हैं" })}</figcaption>
     </figure>
   );
 }
@@ -144,8 +182,8 @@ function MenuBoard({ scanning, faded }: { scanning: boolean; faded: boolean }) {
 function SellerPhone({ lifted, round, order, paid }: { lifted: boolean; round: number; order: Order | null; paid: boolean }) {
   const { pick } = useApp();
   return (
-    <div data-ui className="w-[196px] shrink-0 rounded-[30px] bg-[#1c1f23] p-[6px] sm:w-[220px]">
-      <div className="relative h-[372px] overflow-hidden rounded-[25px] bg-[#fafaf6] text-[#1c1f23] sm:h-[404px]">
+    <div data-ui className="w-[172px] shrink-0 rounded-[28px] bg-[#1c1f23] p-[5px] sm:w-[220px] sm:rounded-[30px] sm:p-[6px]">
+      <div className="relative h-[330px] overflow-hidden rounded-[23px] sm:h-[404px] sm:rounded-[25px] bg-[#fafaf6] text-[#1c1f23] sm:h-[404px]">
         <span aria-hidden className="absolute left-1/2 top-1.5 z-10 h-4 w-16 -translate-x-1/2 rounded-full bg-[#1c1f23]" />
         <div className="bg-[#e9a31a] px-3.5 pb-3 pt-8">
           <p className="text-[16px] font-bold leading-tight">Meena&apos;s Kitchen</p>
@@ -164,7 +202,7 @@ function SellerPhone({ lifted, round, order, paid }: { lifted: boolean; round: n
                 </p>
                 <p className="text-[12px]">₹{d.price}</p>
               </div>
-              <span className="rounded-md border border-[#2f7a4c] px-1.5 py-0.5 text-[10.5px] font-bold text-[#2f7a4c]">ADD</span>
+              <span className="rounded-md border border-[#2f7a4c] px-1.5 py-0.5 text-[10.5px] font-bold text-[#2f7a4c] max-sm:hidden">ADD</span>
             </li>
           ))}
         </ul>

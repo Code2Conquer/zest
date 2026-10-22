@@ -168,13 +168,8 @@
   to { opacity: 1; }
 }
 
-/* Hero sequence: chalk lettering on the menu board, the scan, dishes lifting onto the page, the
+/* Hero sequence: lettering on the note, the scan, dishes lifting onto the page, the
    WhatsApp order and UPI chip, the order travelling to the Soundbox and the pointer pressing it. */
-.hs-chalk {
-  font-variation-settings: "wdth" 88;
-  letter-spacing: 0.01em;
-  transform: rotate(-1deg);
-}
 .hs-scan {
   animation: hs-scan 1100ms ease-in-out both;
 }
@@ -313,6 +308,15 @@
   font-variation-settings: "wdth" 82; /* Anek's condensed width for big headlines */
   font-weight: 700;
   letter-spacing: -0.02em;
+}
+
+/* The seller's handwritten menu note: ballpoint on a torn notebook page. */
+.font-hand {
+  font-family: var(--font-hand), cursive;
+}
+.note-paper {
+  background: #fffef9;
+  clip-path: polygon(0 3%, 6% 0, 13% 2.5%, 20% 0.5%, 28% 3%, 36% 0, 44% 2%, 52% 0.5%, 60% 3%, 68% 0.5%, 76% 2.5%, 84% 0, 92% 2.5%, 100% 0.5%, 100% 100%, 0 100%);
 }
 
 /* KOT tickets and receipts: thermal-printer type. */

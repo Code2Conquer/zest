@@ -4,6 +4,7 @@ import "../landing.css";
 import { useState } from "react";
 import { BellRing, Hand, Languages, Lock, Plus, Printer } from "lucide-react";
 import { AudienceSplit } from "@/components/landing/audience-split";
+import { AgentFlow } from "@/components/landing/flow";
 import { MorningSummary, RasoiPhone, RestaurantStage, RestaurantVoice } from "@/components/landing/restaurants";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { Soon } from "@/components/landing/soon";
@@ -18,6 +19,7 @@ import { useApp } from "@/lib/state";
 
 const NAV: NavLink[] = [
   { href: "#voice", label: { en: "Soundbox", hi: "Soundbox" } },
+  { href: "#agents", label: { en: "Agents", hi: "एजेंट" } },
   { href: "#summary", label: { en: "Morning summary", hi: "सुबह की रिपोर्ट" } },
   { href: "#page", label: { en: "Your page", hi: "आपका पेज" } },
   { href: "#faq", label: { en: "Questions", hi: "सवाल" } },
@@ -31,7 +33,15 @@ const FAQ: { q: Bi; a: Bi; soon?: boolean }[] = [
   { q: { en: "Who delivers orders from my own page?", hi: "मेरे अपने पेज के ऑर्डर कौन पहुँचाता है?" }, a: { en: "Zomato riders, with live tracking.", hi: "Zomato राइडर, लाइव ट्रैकिंग के साथ।" }, soon: true },
 ];
 
-const H2 = "lp-display text-[clamp(34px,4vw,58px)] leading-[1.02] [text-wrap:balance]";
+const RESTAURANT_AGENTS: { name: Bi; does: Bi; soon?: boolean }[] = [
+  { name: { en: "Orders and delivery", hi: "ऑर्डर और डिलीवरी" }, does: { en: "Every app's orders spoken on the Soundbox, KOTs printed, late orders flagged", hi: "हर ऐप के ऑर्डर Soundbox पर बोले जाते हैं, KOT छपते हैं, देर वाले ऑर्डर पकड़े जाते हैं" }, soon: true },
+  { name: { en: "Payouts", hi: "पेआउट" }, does: { en: "Reads payout emails and statements, explains every line, drafts disputes", hi: "पेआउट ईमेल और स्टेटमेंट पढ़ता है, हर लाइन समझाता है, डिस्प्यूट तैयार करता है" } },
+  { name: { en: "Reviews", hi: "रिव्यू" }, does: { en: "Drafts replies to Zomato and Swiggy reviews in your voice, spots repeat problems", hi: "Zomato और Swiggy रिव्यू के जवाब आपकी भाषा में, बार-बार की परेशानी पकड़ता है" } },
+  { name: { en: "Regulars", hi: "पुराने ग्राहक" }, does: { en: "Brings regulars to your own page and reminds them when their usual is on", hi: "पुराने ग्राहकों को आपके अपने पेज पर लाता है और उनकी पसंद की डिश पर याद दिलाता है" }, soon: true },
+  { name: { en: "Growth", hi: "ग्रोथ" }, does: { en: "Offers and ads on the apps inside a budget you set, and what they really earned", hi: "आपके बजट में ऐप पर ऑफ़र और विज्ञापन, और उनसे असल में कितना मिला" } },
+];
+
+const H2 = "lp-display text-[clamp(30px,3.4vw,48px)] leading-[1.04] [text-wrap:balance]";
 const LEAD = "max-w-[38em] text-[18px] leading-relaxed text-[var(--lp-muted)]";
 
 
@@ -52,7 +62,7 @@ export default function Restaurants() {
       <SiteHeader nav={NAV} start={{ href: "/join?journey=live", label: { en: "Get started free", hi: "मुफ़्त शुरू करें" } }} />
 
       {/* Hero */}
-      <section aria-labelledby="hero-h" className="lp-wrap pb-12 pt-4 lg:pb-16 lg:pt-8">
+      <section aria-labelledby="hero-h" className="lp-wrap pb-8 pt-2 lg:pb-10 lg:pt-6">
         <h1 id="hero-h" className="lp-display max-w-[17ch] text-[40px] leading-[1.02] [text-wrap:balance] sm:text-[60px] lg:max-w-none lg:text-[clamp(56px,5.2vw,80px)]">
           {pick({ en: "Never miss an order. Know every app by morning.", hi: "कोई ऑर्डर न छूटे। सुबह तक हर ऐप का हाल जानिए।" })}
         </h1>
@@ -105,13 +115,13 @@ export default function Restaurants() {
       <AudienceSplit current="restaurants" />
 
       {/* One voice for every order */}
-      <section id="voice" aria-labelledby="voice-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-12 lg:py-16">
+      <section id="voice" aria-labelledby="voice-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-10 lg:py-14">
         <div className="lp-wrap">
           <h2 id="voice-h" className={H2}>
             {pick({ en: "One voice for every order.", hi: "हर ऑर्डर के लिए एक आवाज़।" })}
             <Soon />
           </h2>
-          <p className={`mt-4 ${LEAD}`}>
+          <p className={`mt-3 ${LEAD}`}>
             {pick({
               en: "Your page, Zomato and Swiggy, all spoken by one box on your counter. Let this one ring and see what happens.",
               hi: "आपका पेज, Zomato और Swiggy, सब काउंटर पर रखा एक डिब्बा बोलकर बताता है। इसे बजने दीजिए और देखिए क्या होता है।",
@@ -142,15 +152,46 @@ export default function Restaurants() {
         </div>
       </section>
 
+      {/* The agents, for restaurants on the apps */}
+      <section id="agents" aria-labelledby="agents-h" className="scroll-mt-4 py-10 lg:py-14">
+        <div className="lp-wrap">
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-end lg:gap-16">
+            <h2 id="agents-h" className={H2}>
+              {pick({ en: "Agents that work your Zomato and Swiggy business.", hi: "एजेंट जो आपका Zomato और Swiggy का काम संभालते हैं।" })}
+            </h2>
+            <p className={LEAD}>
+              {pick({
+                en: "They read what the apps send you, watch every order and review, and bring you only the decisions. Nothing that costs money or goes public happens without your OK.",
+                hi: "ऐप आपको जो भेजते हैं वे पढ़ते हैं, हर ऑर्डर और रिव्यू पर नज़र रखते हैं, और आपके पास सिर्फ़ फ़ैसले लाते हैं। जिसमें पैसा लगे या जो सबको दिखे, वह आपकी हाँ के बिना नहीं होता।",
+              })}
+            </p>
+          </div>
+          <dl className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-5">
+            {RESTAURANT_AGENTS.map((x) => (
+              <div key={x.name.en}>
+                <dt className="text-[17px] font-semibold">
+                  {pick(x.name)}
+                  {x.soon && <Soon />}
+                </dt>
+                <dd className="mt-1 text-[15px] leading-relaxed text-[var(--lp-muted)]">{pick(x.does)}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="mt-6">
+            <AgentFlow cast="restaurant" />
+          </div>
+        </div>
+      </section>
+
       {/* Morning summary */}
-      <section id="summary" aria-labelledby="summary-h" className="scroll-mt-4 py-12 lg:py-16">
+      <section id="summary" aria-labelledby="summary-h" className="scroll-mt-4 py-10 lg:py-14">
         <div className="lp-wrap grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
           <div>
             <h2 id="summary-h" className={H2}>
               {pick({ en: "Know how every app did, before you open them.", hi: "ऐप खोलने से पहले जानिए हर ऐप कैसा चला।" })}
               <Soon />
             </h2>
-            <p className={`mt-4 ${LEAD}`}>
+            <p className={`mt-3 ${LEAD}`}>
               {pick({
                 en: "Connect your email once. Zest reads the order, payout and rating emails from Zomato and Swiggy and sends you one summary every morning, on WhatsApp and out loud on the Soundbox.",
                 hi: "एक बार अपना ईमेल जोड़िए। Zest, Zomato और Swiggy के ऑर्डर, पेआउट और रेटिंग वाले ईमेल पढ़ता है और हर सुबह एक रिपोर्ट भेजता है, WhatsApp पर और Soundbox पर बोलकर।",
@@ -171,13 +212,13 @@ export default function Restaurants() {
       </section>
 
       {/* A page for your regulars */}
-      <section id="page" aria-labelledby="page-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-12 lg:py-16">
+      <section id="page" aria-labelledby="page-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-10 lg:py-14">
         <div className="lp-wrap grid items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-20">
           <div>
             <h2 id="page-h" className={H2}>
               {pick({ en: "Your regulars can order from you directly.", hi: "आपके पुराने ग्राहक सीधे आपसे ऑर्डर कर सकते हैं।" })}
             </h2>
-            <p className={`mt-4 ${LEAD}`}>
+            <p className={`mt-3 ${LEAD}`}>
               {pick({
                 en: "Paste your Zomato or Swiggy link and your own ordering page is ready, with your menu, photos and prices. Zomato riders deliver, and the guest stays yours.",
                 hi: "अपना Zomato या Swiggy लिंक डालिए और आपका अपना ऑर्डर पेज तैयार, आपके मेन्यू, फ़ोटो और क़ीमतों के साथ। Zomato राइडर डिलीवरी करते हैं, और ग्राहक आपका रहता है।",
@@ -198,7 +239,7 @@ export default function Restaurants() {
       </section>
 
       {/* Questions */}
-      <section id="faq" aria-labelledby="faq-h" className="scroll-mt-4 py-12 lg:py-16">
+      <section id="faq" aria-labelledby="faq-h" className="scroll-mt-4 py-10 lg:py-14">
         <div className="lp-wrap grid gap-10 lg:grid-cols-12">
           <h2 id="faq-h" className={`lg:col-span-4 ${H2}`}>
             {pick({ en: "Questions restaurants ask", hi: "रेस्टोरेंट क्या पूछते हैं" })}

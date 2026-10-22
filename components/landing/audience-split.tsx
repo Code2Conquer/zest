@@ -12,7 +12,7 @@ const SIDES: { id: "home" | "restaurants"; href: string; who: Bi; title: Bi; tex
   {
     id: "home",
     href: "/",
-    who: { en: "Home kitchens, tiffins, cloud kitchens, shops and stalls", hi: "घर की रसोई, टिफ़िन, क्लाउड किचन, दुकान और स्टॉल" },
+    who: { en: "Home kitchens, tiffins, thelas, shops and stalls", hi: "घर की रसोई, टिफ़िन, ठेले, दुकान और स्टॉल" },
     title: { en: "Not on Zomato or Swiggy yet?", hi: "अभी Zomato या Swiggy पर नहीं हैं?" },
     text: { en: "Your first online store from a menu photo, UPI payments, delivery by Zomato riders, and agents that do the online work.", hi: "मेन्यू की फ़ोटो से आपकी पहली ऑनलाइन दुकान, UPI पेमेंट, Zomato राइडर से डिलीवरी, और ऑनलाइन काम करने वाले एजेंट।" },
     cta: { en: "Zest for home kitchens", hi: "घर की रसोई के लिए Zest" },
@@ -30,12 +30,12 @@ const SIDES: { id: "home" | "restaurants"; href: string; who: Bi; title: Bi; tex
 export function AudienceSplit({ current }: { current: "home" | "restaurants" }) {
   const { pick } = useApp();
   return (
-    <section aria-label={pick({ en: "Which Zest is for you", hi: "आपके लिए कौन-सा Zest" })} className="lp-wrap pb-12 lg:pb-16">
+    <section aria-label={pick({ en: "Which Zest is for you", hi: "आपके लिए कौन-सा Zest" })} className="lp-wrap pb-8 lg:pb-10">
       <div className="grid overflow-hidden rounded-[28px] md:grid-cols-2">
         {SIDES.map((x) => {
           const here = x.id === current;
           return (
-            <div key={x.id} className={`flex flex-col p-6 sm:p-8 ${here ? "bg-[var(--lp-sunken)]" : "bg-[var(--z-turmeric)] text-[#1c1f23]"} ${x.id === "home" ? "md:order-1" : "md:order-2"}`}>
+            <div key={x.id} className={`flex flex-col p-5 sm:p-7 ${here ? "bg-[var(--lp-sunken)]" : "bg-[var(--z-turmeric)] text-[#1c1f23]"} ${x.id === "home" ? "md:order-1" : "md:order-2"}`}>
               <p className={`text-[14px] font-semibold ${here ? "text-[var(--lp-muted)]" : ""}`}>{pick(x.who)}</p>
               <h2 className="lp-display mt-2 text-[clamp(28px,3vw,40px)] leading-[1.05]">{pick(x.title)}</h2>
               <p className={`mt-3 max-w-[34em] text-[17px] leading-relaxed ${here ? "text-[var(--lp-muted)]" : ""}`}>{pick(x.text)}</p>

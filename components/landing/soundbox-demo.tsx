@@ -21,6 +21,7 @@ export function SoundboxDemo() {
   const s = STEPS[at];
   return (
     <Soundbox
+      stable
       state={s.state}
       caption={s.caption}
       clip={s.clip}

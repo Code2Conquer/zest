@@ -1,33 +1,35 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, Globe, Megaphone, MessageCircle, Mic, Phone, Search, Star, Store, Truck, Users, type LucideIcon } from "lucide-react";
+import { Camera, Globe, IndianRupee, Mail, Megaphone, MessageCircle, Mic, Phone, Search, Star, Store, Truck, Users, type LucideIcon } from "lucide-react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
-// The agents at work: something comes in on a channel, Zest understands it, and the five agents pass
-// the job around the loop, each doing its part, until "What changed" shows the result. Five scenarios
-// from Meena's Kitchen play in turn while the panel is on screen; picking one stops the rotation.
+// The agents at work: something comes in on a channel, Zest understands it, and five agents pass the
+// job around the loop, each doing its part, until "What changed" shows the result. Two casts: the
+// "seller" one (Meena's Kitchen, homepage) and the "restaurant" one (Rasoi 27 on Zomato and Swiggy).
+// Scenarios play in turn while the panel is on screen; picking one stops the rotation.
 
-type AgentId = "storefront" | "orders" | "regulars" | "reviews" | "growth";
+type AgentId = "storefront" | "orders" | "regulars" | "reviews" | "growth" | "payouts";
 export const AGENT_INFO: Record<AgentId, { name: Bi; icon: LucideIcon }> = {
   storefront: { name: { en: "Storefront", hi: "स्टोरफ़्रंट" }, icon: Store },
   orders: { name: { en: "Orders and delivery", hi: "ऑर्डर और डिलीवरी" }, icon: Truck },
   regulars: { name: { en: "Regulars", hi: "पुराने ग्राहक" }, icon: Users },
   reviews: { name: { en: "Reviews", hi: "रिव्यू" }, icon: Star },
   growth: { name: { en: "Growth", hi: "ग्रोथ" }, icon: Megaphone },
+  payouts: { name: { en: "Payouts", hi: "पेआउट" }, icon: IndianRupee },
 };
 
-const ORDER: AgentId[] = ["storefront", "orders", "regulars", "reviews", "growth"];
-const ANGLE: Record<AgentId, number> = { storefront: 180, orders: 252, regulars: 324, reviews: 36, growth: 108 };
+// Five places on the loop; each cast puts its agents in them in this order.
+const ANGLES = [180, 252, 324, 36, 108];
 const CX = 650, CY = 230, RX = 220, RY = 150;
-const at = (a: AgentId) => {
-  const t = (ANGLE[a] * Math.PI) / 180;
+const point = (angle: number) => {
+  const t = (angle * Math.PI) / 180;
   return { x: Math.round(CX + RX * Math.cos(t)), y: Math.round(CY + RY * Math.sin(t)) };
 };
 
-type InputId = "web" | "whatsapp" | "google" | "instagram" | "phone" | "soundbox";
-const INPUTS: { id: InputId; icon: LucideIcon; name: Bi }[] = [
+type InputId = "web" | "whatsapp" | "google" | "instagram" | "phone" | "soundbox" | "zomato" | "swiggy" | "email";
+const SELLER_INPUTS: { id: InputId; icon: LucideIcon; name: Bi }[] = [
   { id: "web", icon: Globe, name: { en: "Your page", hi: "आपका पेज" } },
   { id: "whatsapp", icon: MessageCircle, name: { en: "WhatsApp", hi: "WhatsApp" } },
   { id: "google", icon: Search, name: { en: "Google", hi: "Google" } },
@@ -35,9 +37,17 @@ const INPUTS: { id: InputId; icon: LucideIcon; name: Bi }[] = [
   { id: "phone", icon: Phone, name: { en: "Phone calls", hi: "फ़ोन कॉल" } },
   { id: "soundbox", icon: Mic, name: { en: "Zest Soundbox", hi: "Zest Soundbox" } },
 ];
+const RESTAURANT_INPUTS: { id: InputId; icon: LucideIcon; name: Bi }[] = [
+  { id: "zomato", icon: Store, name: { en: "Zomato", hi: "Zomato" } },
+  { id: "swiggy", icon: Store, name: { en: "Swiggy", hi: "Swiggy" } },
+  { id: "web", icon: Globe, name: { en: "Your page", hi: "आपका पेज" } },
+  { id: "email", icon: Mail, name: { en: "Email from the apps", hi: "ऐप के ईमेल" } },
+  { id: "google", icon: Search, name: { en: "Google", hi: "Google" } },
+  { id: "soundbox", icon: Mic, name: { en: "Zest Soundbox", hi: "Zest Soundbox" } },
+];
 
 type Scenario = { id: string; tab: Bi; input: InputId; heard: Bi; steps: { agent: AgentId; text: Bi }[]; outcomes: { label: Bi; value: Bi }[] };
-const SCENARIOS: Scenario[] = [
+const SELLER_SCENARIOS: Scenario[] = [
   {
     id: "order",
     tab: { en: "A new order", hi: "नया ऑर्डर" },
@@ -121,17 +131,91 @@ const SCENARIOS: Scenario[] = [
   },
 ];
 
+const RESTAURANT_SCENARIOS: Scenario[] = [
+  {
+    id: "rush",
+    tab: { en: "A Swiggy rush", hi: "स्विगी पर भीड़" },
+    input: "swiggy",
+    heard: { en: "14 Swiggy orders in 30 minutes", hi: "30 मिनट में स्विगी के 14 ऑर्डर" },
+    steps: [
+      { agent: "orders", text: { en: "Soundbox read each one; KOTs printed in order", hi: "Soundbox ने हर ऑर्डर बोला; KOT क्रम से छपे" } },
+      { agent: "growth", text: { en: "Paused the Swiggy lunch offer until the rush clears", hi: "भीड़ कम होने तक स्विगी लंच ऑफ़र रोका" } },
+      { agent: "reviews", text: { en: "Two ran late: apologies ready before the reviews come", hi: "दो ऑर्डर देर से गए: रिव्यू आने से पहले माफ़ी तैयार" } },
+    ],
+    outcomes: [
+      { label: { en: "Orders missed", hi: "छूटे ऑर्डर" }, value: { en: "0", hi: "0" } },
+      { label: { en: "Ran late", hi: "देर से गए" }, value: { en: "2", hi: "2" } },
+      { label: { en: "Your part", hi: "आपका काम" }, value: { en: "1 tap", hi: "1 टैप" } },
+    ],
+  },
+  {
+    id: "payout",
+    tab: { en: "A low payout", hi: "कम पेआउट" },
+    input: "email",
+    heard: { en: "Swiggy paid ₹4,502 less than last week", hi: "स्विगी ने पिछले हफ़्ते से ₹4,502 कम दिए" },
+    steps: [
+      { agent: "payouts", text: { en: "Statement read: commission, ads, and ₹412 taken for a cancelled order", hi: "स्टेटमेंट पढ़ा: कमीशन, विज्ञापन, और कैंसल ऑर्डर पर ₹412 कटे" } },
+      { agent: "growth", text: { en: "Ads cost ₹4,500 and brought 31 orders", hi: "विज्ञापन पर ₹4,500 लगे, 31 ऑर्डर आए" } },
+      { agent: "payouts", text: { en: "Dispute drafted for the ₹412", hi: "₹412 के लिए डिस्प्यूट तैयार" } },
+    ],
+    outcomes: [
+      { label: { en: "Every line", hi: "हर लाइन" }, value: { en: "Explained", hi: "समझाई" } },
+      { label: { en: "Taken by mistake", hi: "ग़लती से कटे" }, value: { en: "₹412", hi: "₹412" } },
+      { label: { en: "Waiting for you", hi: "आपका इंतज़ार" }, value: { en: "1 yes", hi: "1 हाँ" } },
+    ],
+  },
+  {
+    id: "review",
+    tab: { en: "A bad review", hi: "ख़राब रिव्यू" },
+    input: "zomato",
+    heard: { en: "2 stars on Zomato: “the dal was cold”", hi: "ज़ोमैटो पर 2 स्टार: “दाल ठंडी थी”" },
+    steps: [
+      { agent: "reviews", text: { en: "Reply drafted in your voice", hi: "आपकी भाषा में जवाब तैयार" } },
+      { agent: "orders", text: { en: "Third cold-dal review: KOTs now say “pack dal sealed”", hi: "ठंडी दाल का तीसरा रिव्यू: अब KOT पर “दाल सील करके पैक करें”" } },
+      { agent: "regulars", text: { en: "A ₹75 credit for Karthik on your own page", hi: "आपके अपने पेज पर कार्तिक के लिए ₹75 का क्रेडिट" } },
+    ],
+    outcomes: [
+      { label: { en: "Reply ready", hi: "जवाब तैयार" }, value: { en: "1 min", hi: "1 मिनट" } },
+      { label: { en: "Same problem", hi: "यही परेशानी" }, value: { en: "3 times", hi: "3 बार" } },
+      { label: { en: "Waiting for you", hi: "आपका इंतज़ार" }, value: { en: "1 yes", hi: "1 हाँ" } },
+    ],
+  },
+  {
+    id: "slow",
+    tab: { en: "A slow weekday", hi: "सुस्त दिन" },
+    input: "google",
+    heard: { en: "Weekday lunch orders are below usual", hi: "आज लंच ऑर्डर आम दिनों से कम हैं" },
+    steps: [
+      { agent: "growth", text: { en: "Weekday lunch offer on Swiggy, capped at ₹3,000", hi: "स्विगी पर वीकडे लंच ऑफ़र, ₹3,000 तक सीमित" } },
+      { agent: "regulars", text: { en: "Lunch menu sent to 40 regulars from your page", hi: "आपके पेज के 40 पुराने ग्राहकों को लंच मेन्यू भेजा" } },
+      { agent: "orders", text: { en: "Kitchen told to prep 20 extra thalis", hi: "किचन को 20 थाली ज़्यादा तैयार रखने को कहा" } },
+    ],
+    outcomes: [
+      { label: { en: "Extra orders", hi: "ज़्यादा ऑर्डर" }, value: { en: "+18", hi: "+18" } },
+      { label: { en: "Spent of your cap", hi: "सीमा में से ख़र्च" }, value: { en: "₹1,840", hi: "₹1,840" } },
+      { label: { en: "Your part", hi: "आपका काम" }, value: { en: "1 tap", hi: "1 टैप" } },
+    ],
+  },
+];
+
+const CAST = {
+  seller: { agents: ["storefront", "orders", "regulars", "reviews", "growth"] as AgentId[], inputs: SELLER_INPUTS, scenarios: SELLER_SCENARIOS, who: { en: "Meena", hi: "मीना" } },
+  restaurant: { agents: ["orders", "payouts", "reviews", "regulars", "growth"] as AgentId[], inputs: RESTAURANT_INPUTS, scenarios: RESTAURANT_SCENARIOS, who: { en: "you", hi: "आप" } },
+};
+
 const STEP_MS = 1800;
 
-export function AgentFlow() {
+export function AgentFlow({ cast = "seller" }: { cast?: keyof typeof CAST }) {
   const { pick } = useApp();
+  const { agents: ORDER, inputs: INPUTS, scenarios: SCENARIOS, who } = CAST[cast];
+  const at = (a: AgentId) => point(ANGLES[ORDER.indexOf(a)]);
   const box = useRef<HTMLDivElement>(null);
   const [s, setS] = useState(0);
   const [step, setStep] = useState(0);
   const [auto, setAuto] = useState(true);
   const [visible, setVisible] = useState(false);
   const [still, setStill] = useState(false);
-  const sc = SCENARIOS[s];
+  const sc = SCENARIOS[s % SCENARIOS.length];
   const total = sc.steps.length;
 
   useEffect(() => {
@@ -232,7 +316,7 @@ export function AgentFlow() {
         <div className="absolute left-[44%] top-[40%] w-[30%] text-center" aria-live="polite">
           <p className="text-[17px] font-semibold text-[var(--z-turmeric)]">{pick(sc.tab)}</p>
           <p key={`${s}-${step}`} className="lp-arrive mt-1 text-[15px] leading-snug text-[#d9dee3]">
-            {active ? pick(sc.steps[step - 1].text) : finished ? pick({ en: "Done. Only the decisions came to Meena.", hi: "हो गया। मीना के पास सिर्फ़ फ़ैसले आए।" }) : pick({ en: "Coming in…", hi: "आ रहा है…" })}
+            {active ? pick(sc.steps[step - 1].text) : finished ? pick({ en: `Done. Only the decisions came to ${who.en === "you" ? "you" : who.en}.`, hi: who.en === "you" ? "हो गया। आपके पास सिर्फ़ फ़ैसले आए।" : "हो गया। मीना के पास सिर्फ़ फ़ैसले आए।" }) : pick({ en: "Coming in…", hi: "आ रहा है…" })}
           </p>
         </div>
 
@@ -278,7 +362,7 @@ export function AgentFlow() {
           })()}
           <p className="text-[15px] leading-snug">{pick(sc.heard)}</p>
         </div>
-        <ol className="mt-3 space-y-2">
+        <ol className="mt-3 min-h-[350px] space-y-2">
           {sc.steps.map((x, k) => {
             const info = AGENT_INFO[x.agent];
             const on = k === step - 1;

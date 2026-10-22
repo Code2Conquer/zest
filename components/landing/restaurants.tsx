@@ -67,7 +67,7 @@ export function RestaurantStage() {
         })}
       </ul>
       <div className="order-1 flex justify-center sm:order-2">
-        <Soundbox size="sm" state={phase === "arrive" ? "ringing" : phase === "speak" ? "speaking" : "idle"} caption={phase === "rest" && n === 0 ? undefined : now.say} clip={now.clip} />
+        <Soundbox size="sm" stable state={phase === "arrive" ? "ringing" : phase === "speak" ? "speaking" : "idle"} caption={phase === "rest" && n === 0 ? undefined : now.say} clip={now.clip} />
       </div>
     </div>
   );
@@ -92,6 +92,7 @@ export function RestaurantVoice() {
         : { en: "New order on Swiggy. Two paneer tikka.", hi: "स्विगी पर नया ऑर्डर. दो पनीर टिक्का." };
   return (
     <Soundbox
+      stable
       state={state}
       caption={caption}
       clip={state === "escalating" ? "missed" : state === "ringing" ? "swiggy" : undefined}

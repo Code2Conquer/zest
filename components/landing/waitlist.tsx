@@ -13,7 +13,7 @@ const TYPES: { id: string; label: Bi }[] = [
   { id: "home_kitchen", label: { en: "Home kitchen", hi: "घर की रसोई" } },
   { id: "tiffin", label: { en: "Tiffin service", hi: "टिफ़िन सर्विस" } },
   { id: "cloud_kitchen", label: { en: "Cloud kitchen", hi: "क्लाउड किचन" } },
-  { id: "shop", label: { en: "Shop or stall", hi: "दुकान या स्टॉल" } },
+  { id: "shop", label: { en: "Shop, stall or thela", hi: "दुकान, स्टॉल या ठेला" } },
   { id: "restaurant", label: { en: "Restaurant on Zomato or Swiggy", hi: "Zomato या Swiggy पर रेस्टोरेंट" } },
 ];
 const ERR: Record<Field, Bi> = {

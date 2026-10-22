@@ -26,31 +26,21 @@ export type SoundboxProps = {
   onPress?: () => void;
   onTalk?: () => void;
   /** Smaller box for tight places (the sticky column, the restaurants hero on phones). */
-  size?: "md" | "sm";
+  size?: "md" | "sm" | "xs";
+  /** Keep the ticket, caption and "Hear it" spaces reserved, so a state change never moves the page. */
+  stable?: boolean;
+  /** No caption or "Hear it" under the box: the page shows them elsewhere. */
+  bare?: boolean;
   className?: string;
 };
 
 const RAYS = 36;
 
-export function Soundbox({ state, caption, ticket, showTicket = false, clip, onPress, onTalk, size = "md", className = "" }: SoundboxProps) {
+export function Soundbox({ state, caption, ticket, showTicket = false, clip, onPress, onTalk, size = "md", stable = false, bare = false, className = "" }: SoundboxProps) {
   const { pick, lang } = useApp();
-  const audio = useRef<HTMLAudioElement | null>(null);
-  const [playing, setPlaying] = useState(false);
   const printed = !!ticket && (state === "printing" || showTicket);
 
-  useEffect(() => () => audio.current?.pause(), []);
-
-  function hear() {
-    if (!clip) return;
-    audio.current?.pause();
-    const a = new Audio(`/audio/${clip}-${lang}.m4a`);
-    audio.current = a;
-    setPlaying(true);
-    a.onended = a.onerror = () => setPlaying(false);
-    a.play().catch(() => setPlaying(false));
-  }
-
-  const box = size === "sm" ? 208 : 260;
+  const box = size === "xs" ? 140 : size === "sm" ? 208 : 260;
   const label = pick(
     {
       idle: { en: "Zest Soundbox, waiting for orders", hi: "Zest Soundbox, ऑर्डर का इंतज़ार" },
@@ -111,9 +101,9 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
       </div>
 
       {/* The KOT, printing downward out of the slot */}
-      {printed && ticket && (
-        <div className="relative z-0 overflow-hidden" style={{ width: box * 0.86, marginTop: -box * 0.05 }}>
-          <div className={`sb-ticket font-kot ${state === "printing" ? "is-printing" : ""}`}>
+      {ticket && (printed || stable) && (
+        <div aria-hidden={!printed || undefined} className="relative z-0 overflow-hidden" style={{ width: size === "xs" ? box : Math.max(box * 0.86, 170), marginTop: -box * 0.05 }}>
+          <div className={`sb-ticket font-kot ${state === "printing" ? "is-printing" : ""} ${printed ? "" : "invisible"}`} style={size === "xs" ? { fontSize: 10.5, padding: "10px 8px 14px" } : undefined}>
             <p className="font-semibold">{ticket.title}</p>
             {ticket.lines.map((l) => {
               const [name, price] = l.split("|");
@@ -130,19 +120,50 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
       )}
 
       {/* What Zest says */}
-      <figcaption className="mt-4 flex w-full max-w-[34ch] flex-col items-center gap-3 text-center">
-        {caption && (
-          <p key={`${caption.en}-${lang}`} className="sb-caption text-[17px] font-medium leading-snug" lang={lang}>
-            <span className="text-[var(--lp-muted)]">Zest: </span>“{pick(caption)}”
-          </p>
-        )}
-        {clip && (
-          <button type="button" onClick={hear} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--lp-sunken)] px-4 text-[15px] font-semibold transition-colors hover:bg-[var(--lp-line)]">
-            <Volume2 aria-hidden size={17} className={playing ? "text-[var(--lp-accent)]" : ""} />
-            {pick({ en: "Hear it", hi: "सुनिए" })}
-          </button>
-        )}
-      </figcaption>
+      {!bare && (
+        <figcaption className="mt-4 flex w-full max-w-[34ch] flex-col items-center gap-3 text-center">
+          {(caption || stable) && (
+            <p key={`${caption?.en}-${lang}`} className={`sb-caption text-[17px] font-medium leading-snug ${stable ? "min-h-[5.6em]" : ""}`} lang={lang}>
+              {caption && (
+                <>
+                  <span className="text-[var(--lp-muted)]">Zest: </span>“{pick(caption)}”
+                </>
+              )}
+            </p>
+          )}
+          {(clip || stable) && <HearIt clip={clip} />}
+        </figcaption>
+      )}
     </figure>
+  );
+}
+
+/** "Hear it": plays the clip in the selected language, only on a tap. Keeps its space when there's no clip. */
+export function HearIt({ clip }: { clip?: string }) {
+  const { pick, lang } = useApp();
+  const audio = useRef<HTMLAudioElement | null>(null);
+  const [playing, setPlaying] = useState(false);
+  useEffect(() => () => audio.current?.pause(), []);
+  function hear() {
+    if (!clip) return;
+    audio.current?.pause();
+    const a = new Audio(`/audio/${clip}-${lang}.m4a`);
+    audio.current = a;
+    setPlaying(true);
+    a.onended = a.onerror = () => setPlaying(false);
+    a.play().catch(() => setPlaying(false));
+  }
+  return (
+    <button
+      type="button"
+      onClick={hear}
+      disabled={!clip}
+      aria-hidden={!clip || undefined}
+      tabIndex={clip ? undefined : -1}
+      className={`inline-flex min-h-11 items-center gap-2 rounded-full bg-[var(--lp-sunken)] px-4 text-[15px] font-semibold transition-colors hover:bg-[var(--lp-line)] ${clip ? "" : "invisible"}`}
+    >
+      <Volume2 aria-hidden size={17} className={playing ? "text-[var(--lp-accent)]" : ""} />
+      {pick({ en: "Hear it", hi: "सुनिए" })}
+    </button>
   );
 }
