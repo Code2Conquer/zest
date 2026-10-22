@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import { LangToggle, Wordmark } from "@/components/bits";
+import { ThemeToggle, Wordmark } from "@/components/bits";
 import { SignInCard } from "@/components/sign-in";
 
 function LoginInner() {
@@ -22,7 +22,7 @@ export default function Login() {
           <ChevronLeft aria-hidden className="size-5" />
           <Wordmark />
         </Link>
-        <LangToggle />
+        <ThemeToggle />
       </header>
       <main className="mx-auto max-w-xl px-4 pb-16 pt-6 sm:px-8">
         <Suspense>

@@ -10,7 +10,7 @@ const deva = Anek_Devanagari({ subsets: ["devanagari"], variable: "--font-anek-d
 
 export const metadata: Metadata = {
   title: "Zest",
-  description: "Run your restaurant on Zomato, Swiggy and dine-in, with an AI copilot.",
+  description: "AI agents that run your restaurant online: your website, Google, Zomato, Swiggy, payouts and reviews, around the clock.",
 };
 
 export const viewport: Viewport = {
@@ -24,7 +24,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${latin.variable} ${deva.variable}`}>
+    <html lang="en" className={`${latin.variable} ${deva.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Apply the saved light/dark choice before the first paint, so the page never flashes. */}
+        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem("zest:theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}` }} />
+      </head>
       <body>
         <AppStateProvider>{children}</AppStateProvider>
       </body>

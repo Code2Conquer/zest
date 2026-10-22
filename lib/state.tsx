@@ -25,14 +25,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
   const { data: outlet, error: outletError, setData } = useApi<OutletDTO>("/api/outlet");
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(LANG_KEY);
-      if (saved === "en" || saved === "hi") setLangState(saved);
-    } catch {
-      // Storage can be blocked; English it is.
-    }
-  }, []);
+  // The language switch is paused: screens stay in English, and the assistant answers in whatever
+  // language the owner writes in. Hindi copy stays in place for when the switch comes back.
 
   useEffect(() => {
     document.documentElement.lang = lang;

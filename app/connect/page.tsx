@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Check, ChevronLeft, Lock, Pencil } from "lucide-react";
-import { LangToggle, Wordmark } from "@/components/bits";
+import { ThemeToggle, Wordmark } from "@/components/bits";
 import { MailInsights } from "@/components/mail-insights";
 import { MailboxCard } from "@/components/mailbox-card";
 import { PlatformConnector } from "@/components/platform-connector";
@@ -36,7 +36,7 @@ export default function Connect() {
           <ChevronLeft aria-hidden className="size-5" />
           <Wordmark />
         </Link>
-        <LangToggle />
+        <ThemeToggle />
       </header>
 
       <main className="mx-auto grid max-w-6xl gap-12 px-4 pb-24 pt-6 sm:px-8 lg:grid-cols-[1fr_300px]">

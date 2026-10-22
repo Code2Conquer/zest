@@ -1,22 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Clock, MessageCircle, Search, Star } from "lucide-react";
+import { Check, Clock, Globe, Inbox, IndianRupee, Mail, MessageCircle, RotateCcw, Search, Sparkles, Star, Store, TrendingUp, Users } from "lucide-react";
 import { MENU, PAYOUTS } from "@/lib/data";
-import type { Bi } from "@/lib/i18n";
-import { useApp } from "@/lib/state";
 
 // The product, drawn as it looks inside Zest, with the sample restaurant's numbers. These are
-// interface pieces (data-ui), not illustrations: every label here exists in the app.
+// interface pieces (data-ui), not illustrations: every action here is one the agents take in the app.
 
 export const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 const dish = (id: string) => MENU.find((m) => m.id === id)!;
+const reduced = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 type Channel = "zomato" | "swiggy" | "web";
-const CH: Record<Channel, { name: Bi; color: string }> = {
-  zomato: { name: { en: "Zomato", hi: "Zomato" }, color: "var(--lp-zomato)" },
-  swiggy: { name: { en: "Swiggy", hi: "Swiggy" }, color: "var(--lp-swiggy)" },
-  web: { name: { en: "Your page", hi: "आपका पेज" }, color: "var(--lp-web)" },
+const CH: Record<Channel, { name: string; color: string }> = {
+  zomato: { name: "Zomato", color: "var(--lp-zomato)" },
+  swiggy: { name: "Swiggy", color: "var(--lp-swiggy)" },
+  web: { name: "Your page", color: "var(--lp-web)" },
 };
 
 function Dot({ c }: { c: Channel }) {
@@ -24,7 +23,7 @@ function Dot({ c }: { c: Channel }) {
 }
 
 function VegMark({ veg }: { veg: boolean }) {
-  const c = veg ? "var(--lp-good)" : "var(--lp-bad)";
+  const c = veg ? "#237433" : "#b8321f";
   return (
     <span aria-label={veg ? "Veg" : "Non-veg"} className="grid size-3.5 shrink-0 place-items-center rounded-[3px] border-[1.5px]" style={{ borderColor: c }}>
       <span className="size-1.5 rounded-full" style={{ background: c }} />
@@ -32,50 +31,136 @@ function VegMark({ veg }: { veg: boolean }) {
   );
 }
 
-/** The restaurant's own ordering page, on a phone. */
+export const AGENT_ICON = { website: Globe, listings: Store, payouts: IndianRupee, reviews: Star, guests: Users, growth: TrendingUp } as const;
+export type AgentId = keyof typeof AGENT_ICON;
+
+type Line = { t: string; agent: AgentId; name: string; text: string; ask?: string };
+const NIGHT: Line[] = [
+  { t: "11:48 pm", agent: "listings", name: "Listings", text: "Closed the day: 214 orders, ₹68,920 across Zomato, Swiggy and your page." },
+  { t: "1:12 am", agent: "payouts", name: "Payouts", text: "Read Swiggy's statement. ₹412 taken for order #3381, cancelled after cooking started.", ask: "Dispute drafted" },
+  { t: "2:05 am", agent: "website", name: "Website", text: "Gajar halwa is back on Zomato. Added it to your page with its photo and price." },
+  { t: "6:20 am", agent: "reviews", name: "Reviews", text: "Drafted replies to 3 new reviews, including a 2-star one about cold dal.", ask: "Replies ready" },
+  { t: "7:40 am", agent: "listings", name: "Listings", text: "Paneer tikka is ₹289 on Zomato and ₹299 on Swiggy.", ask: "Match prices?" },
+  { t: "9:00 am", agent: "growth", name: "Growth", text: "Weekday lunch offer: 46 orders, ₹1,840 spent of the ₹3,000 you allowed." },
+  { t: "9:15 am", agent: "guests", name: "Guests", text: "Ananya R. ordered from your page for the 12th time. Noted: less spice, Friday dinners." },
+];
+
+/** The hero: what the agents did overnight, arriving line by line, with the decisions left for the owner. */
+export function AgentConsole() {
+  // Five lines fit; each new one pushes the oldest out of view, like a log that never stops.
+  const FIT = 5;
+  const [n, setN] = useState(FIT);
+  useEffect(() => {
+    if (reduced()) return;
+    const t = setInterval(() => setN((v) => (v >= NIGHT.length + 2 ? FIT : v + 1)), 2400);
+    return () => clearInterval(t);
+  }, []);
+  const upto = Math.min(n, NIGHT.length);
+  const shown = NIGHT.slice(Math.max(0, upto - FIT), upto);
+  const asks = NIGHT.slice(0, upto).filter((l) => l.ask).length;
+  const writing = n < NIGHT.length;
+  return (
+    <div data-ui className="overflow-hidden rounded-[22px] border border-[var(--lp-line)] bg-[var(--lp-console)] text-[var(--lp-console-ink)]">
+      <div className="flex items-center justify-between gap-3 px-5 py-4">
+        <p className="flex items-center gap-2 text-[14px] font-semibold">
+          <Sparkles aria-hidden size={16} className="text-[var(--lp-accent)]" /> Rasoi 27 · overnight
+        </p>
+        <p className="flex items-center gap-2 text-[13px] text-[var(--lp-console-muted)]">
+          <span className="lp-pulse size-2 rounded-full bg-[#5cc07a]" /> 6 agents working
+        </p>
+      </div>
+      <ol className="flex flex-col justify-end gap-1 overflow-hidden px-3">
+        {shown.map((l, k) => {
+          const Icon = AGENT_ICON[l.agent];
+          return (
+            <li key={l.t} className={`flex shrink-0 gap-3 rounded-xl px-2.5 py-2.5 ${k === shown.length - 1 ? "lp-arrive bg-[var(--lp-console-2)]" : ""}`}>
+              <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-[var(--lp-console-2)] text-[var(--lp-accent)]">
+                <Icon aria-hidden size={15} />
+              </span>
+              <div className="min-w-0 flex-1 text-[14px] leading-snug">
+                <p className="text-[12.5px] text-[var(--lp-console-muted)]">
+                  {l.name} · {l.t}
+                </p>
+                <p className="mt-0.5">{l.text}</p>
+                {l.ask && <p className="mt-1.5 inline-flex rounded-full bg-[var(--lp-accent)] px-2.5 py-0.5 text-[12.5px] font-semibold text-[var(--lp-accent-ink)]">{l.ask}</p>}
+              </div>
+            </li>
+          );
+        })}
+        <li aria-hidden className={`shrink-0 px-2.5 py-2 text-[14px] text-[var(--lp-console-muted)] ${writing ? "" : "invisible"}`}>
+          working
+          <span className="lp-caret" />
+        </li>
+      </ol>
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[var(--lp-console-2)] px-5 py-4">
+        <p className="text-[14px]">
+          <span className="font-semibold">{asks} need you.</span> <span className="text-[var(--lp-console-muted)]">Everything else is done.</span>
+        </p>
+        <span className="inline-flex min-h-9 items-center rounded-full bg-[var(--lp-accent)] px-4 text-[14px] font-semibold text-[var(--lp-accent-ink)]">Review {asks}</span>
+      </div>
+    </div>
+  );
+}
+
+/** How the restaurant's own page reads in a Google result: the title and description Zest writes. */
+export function SearchResult() {
+  return (
+    <div data-ui className="lp-ui p-5">
+      <div className="flex items-center gap-2 rounded-full bg-[var(--lp-ground)] px-4 py-2.5 text-[14px]">
+        <Search aria-hidden size={15} className="text-[var(--lp-faint)]" /> dal makhani indiranagar order online
+      </div>
+      <div className="mt-5">
+        <p className="flex items-center gap-2 text-[13px] text-[var(--lp-muted)]">
+          <span className="grid size-6 place-items-center rounded-full bg-[var(--lp-accent)] text-[11px] font-bold text-[var(--lp-accent-ink)]">R</span>
+          Rasoi 27 › order
+        </p>
+        <p className="mt-1.5 text-[19px] leading-snug text-[var(--lp-google)]">Rasoi 27, Indiranagar · Order online</p>
+        <p className="mt-1 text-[14px] leading-relaxed text-[var(--lp-muted)]">Order North Indian, Biryani and Desserts from Rasoi 27 in Indiranagar, Bengaluru. About ₹600 for two. Pick up or order at your table.</p>
+        <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
+          {["Paneer tikka ₹289", "Dal makhani ₹249", "Chicken biryani ₹349"].map((x) => (
+            <span key={x} className="rounded-full bg-[var(--lp-sunken)] px-3 py-1">
+              {x}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** The restaurant's own ordering page, on a phone. Always drawn light, as the page itself opens. */
 export function PhonePage({ className = "" }: { className?: string }) {
-  const { pick } = useApp();
   const items = ["m1", "m3", "m2"].map(dish);
   return (
-    <div data-ui className={`w-[290px] rounded-[38px] bg-[var(--lp-ink)] p-[9px] ${className}`}>
-      <div className="overflow-hidden rounded-[30px] bg-[var(--lp-ground)]">
-        <div className="relative h-[120px]">
+    <div data-ui className={`w-[260px] rounded-[36px] bg-[#121a16] p-[8px] ${className}`}>
+      <div className="overflow-hidden rounded-[29px] bg-[#f4f5f2] text-[#121a16]">
+        <div className="relative h-[104px]">
           <img src="/photos/menu-paneer-tikka.webp" alt="" className="size-full object-cover" />
-          <span className="absolute left-1/2 top-2 h-5 w-20 -translate-x-1/2 rounded-full bg-[var(--lp-ink)]" />
+          <span className="absolute left-1/2 top-2 h-5 w-20 -translate-x-1/2 rounded-full bg-[#121a16]" />
         </div>
-        <div className="relative -mt-8 mx-3 rounded-2xl bg-white p-3.5">
-          <p className="text-[17px] font-semibold leading-tight">Rasoi 27</p>
-          <p className="text-[12px] text-[var(--lp-muted)]">North Indian · Biryani · Indiranagar</p>
+        <div className="relative mx-3 -mt-7 rounded-2xl bg-white p-3.5">
+          <p className="text-[16px] font-semibold leading-tight">Rasoi 27</p>
+          <p className="text-[12px] text-[#4d5953]">North Indian · Biryani · Indiranagar</p>
           <div className="mt-2 flex gap-1.5 text-[11px]">
             {(["zomato", "swiggy"] as const).map((p) => (
-              <span key={p} className="inline-flex items-center gap-1 rounded-md bg-[var(--lp-good)] px-1.5 py-0.5 font-semibold text-white">
+              <span key={p} className="inline-flex items-center gap-1 rounded-md bg-[#237433] px-1.5 py-0.5 font-semibold text-white">
                 {p === "zomato" ? "4.2" : "4.0"} <Star aria-hidden size={10} fill="currentColor" strokeWidth={0} />
-                <span className="font-normal opacity-90">{p === "zomato" ? "Zomato" : "Swiggy"}</span>
+                <span className="font-normal">{p === "zomato" ? "Zomato" : "Swiggy"}</span>
               </span>
             ))}
           </div>
-          <div className="mt-2 flex gap-1.5 text-[11px]">
-            <span className="rounded-full bg-[var(--lp-sunken)] px-2 py-0.5">₹600 {pick({ en: "for two", hi: "दो के लिए" })}</span>
-            <span className="rounded-full bg-[var(--lp-accent-soft)] px-2 py-0.5">{pick({ en: "Pickup · UPI", hi: "पिकअप · UPI" })}</span>
-          </div>
         </div>
-        <div className="mx-3 mt-2.5 flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-[12px] text-[var(--lp-muted)]">
-          <Search aria-hidden size={13} /> {pick({ en: "Search dishes", hi: "डिश खोजें" })}
-        </div>
-        <ul className="mt-1 px-3 pb-4">
+        <ul className="px-3 pb-3 pt-1">
           {items.map((m) => (
-            <li key={m.id} className="flex items-center gap-2.5 py-2.5">
+            <li key={m.id} className="flex items-center gap-2.5 py-2">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <VegMark veg={m.veg} />
-                  {m.bestseller && <span className="rounded bg-[var(--lp-accent-soft)] px-1 text-[9.5px] font-semibold uppercase tracking-wide">Bestseller</span>}
-                </div>
+                <VegMark veg={m.veg} />
                 <p className="mt-0.5 text-[13px] font-semibold leading-tight">{m.name}</p>
                 <p className="text-[12px]">{inr(m.price.zomato)}</p>
               </div>
               <div className="relative">
                 <img src={m.photo} alt="" className="size-14 rounded-xl object-cover" />
-                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-md border border-[var(--lp-line)] bg-white px-2.5 py-0.5 text-[11px] font-bold text-[var(--lp-good)]">ADD</span>
+                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-md bg-white px-2.5 py-0.5 text-[11px] font-bold text-[#237433]">ADD</span>
               </div>
             </li>
           ))}
@@ -85,26 +170,8 @@ export function PhonePage({ className = "" }: { className?: string }) {
   );
 }
 
-/** The alert an owner sees when someone orders from their page. */
-export function OrderPing({ className = "" }: { className?: string }) {
-  const { pick } = useApp();
-  return (
-    <div data-ui className={`lp-ui w-[270px] p-4 ${className}`}>
-      <p className="flex items-center gap-2 text-[12px] font-semibold text-[var(--lp-web)]">
-        <Dot c="web" /> {pick({ en: "New order on your page", hi: "आपके पेज पर नया ऑर्डर" })}
-      </p>
-      <p className="mt-1.5 text-[15px] font-semibold">Ananya R. · {inr(638)}</p>
-      <p className="text-[13px] text-[var(--lp-muted)]">Dal makhani, 2 garlic naan</p>
-      <p className="mt-2 rounded-lg bg-[var(--lp-accent-soft)] px-2.5 py-1.5 text-[12px]">
-        {pick({ en: "12th order · usually asks for less spice", hi: "12वाँ ऑर्डर · अक्सर कम तीखा माँगती हैं" })}
-      </p>
-    </div>
-  );
-}
-
-/** One dish, switched off once, gone from every app. */
+/** One dish, switched off once, gone from every app; and a price mismatch waiting for a yes. */
 export function MenuSync() {
-  const { pick } = useApp();
   const [off, setOff] = useState(false);
   const m = dish("m3");
   return (
@@ -113,97 +180,40 @@ export function MenuSync() {
         <img src={m.photo} alt="" className="size-14 rounded-xl object-cover" />
         <div className="min-w-0 flex-1">
           <p className="text-[16px] font-semibold">{m.name}</p>
-          <p className="text-[14px] text-[var(--lp-muted)]">{inr(m.price.zomato)} · {pick({ en: "121 orders this week", hi: "इस हफ़्ते 121 ऑर्डर" })}</p>
+          <p className="text-[14px] text-[var(--lp-muted)]">{inr(m.price.zomato)} · 121 orders this week</p>
         </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={!off}
-          aria-label={pick({ en: "In stock", hi: "स्टॉक में" })}
-          onClick={() => setOff((v) => !v)}
-          className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${off ? "bg-[#c9cfc8]" : "bg-[var(--lp-good)]"}`}
-        >
-          <span className={`absolute top-1 size-6 rounded-full bg-white transition-transform ${off ? "left-1" : "left-1 translate-x-6"}`} />
+        <button type="button" role="switch" aria-checked={!off} aria-label="In stock" onClick={() => setOff((v) => !v)} className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${off ? "bg-[var(--lp-line)]" : "bg-[var(--lp-good)]"}`}>
+          <span className={`absolute left-1 top-1 size-6 rounded-full bg-white transition-transform ${off ? "" : "translate-x-6"}`} />
         </button>
       </div>
       <ul className="mt-4 grid grid-cols-3 gap-2 text-[13px]">
         {(["zomato", "swiggy", "web"] as const).map((c, n) => (
           <li key={c} className="rounded-xl bg-[var(--lp-ground)] px-3 py-2.5">
             <p className="flex items-center gap-1.5 font-medium">
-              <Dot c={c} /> {pick(CH[c].name)}
+              <Dot c={c} /> {CH[c].name}
             </p>
             <p className={`mt-1 transition-colors ${off ? "text-[var(--lp-bad)]" : "text-[var(--lp-good)]"}`} style={{ transitionDelay: `${n * 140}ms` }}>
-              {off ? pick({ en: "Out of stock", hi: "स्टॉक ख़त्म" }) : pick({ en: "Live", hi: "लाइव" })}
+              {off ? "Out of stock" : "Live"}
             </p>
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-[13px] text-[var(--lp-muted)]">{pick({ en: "Tap the switch: one change, every app.", hi: "स्विच दबाएँ: एक बदलाव, हर ऐप पर।" })}</p>
-    </div>
-  );
-}
-
-type BoardOrder = { id: string; c: Channel | "dine"; items: string; amount: number; mins: number; late?: boolean };
-const BOARD: BoardOrder[] = [
-  { id: "W-0013", c: "web", items: "Veg thali, gajar halwa", amount: 412, mins: 1 },
-  { id: "#7841", c: "zomato", items: "Paneer tikka, 2 butter naan", amount: 486, mins: 9 },
-  { id: "#3390", c: "swiggy", items: "Dal makhani, jeera rice", amount: 342, mins: 21, late: true },
-  { id: "T4", c: "dine", items: "Thali x3, masala chaas x3", amount: 1170, mins: 12 },
-  { id: "#7852", c: "zomato", items: "Chicken biryani x2", amount: 698, mins: 4 },
-];
-
-/** Every channel's orders on one board; a new one lands every few seconds. */
-export function OrderBoard() {
-  const { pick } = useApp();
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const t = setInterval(() => setN((v) => v + 1), 3800);
-    return () => clearInterval(t);
-  }, []);
-  const list = Array.from({ length: 4 }, (_, k) => BOARD[(n + k) % BOARD.length]);
-  const color = (c: BoardOrder["c"]) => (c === "dine" ? "var(--lp-dine)" : CH[c].color);
-  const name = (c: BoardOrder["c"]) => (c === "dine" ? pick({ en: "Dine-in", hi: "डाइन-इन" }) : pick(CH[c].name));
-  return (
-    <div data-ui className="lp-ui p-4">
-      <p className="flex items-center justify-between px-1 text-[13px] font-semibold">
-        {pick({ en: "Orders now", hi: "अभी के ऑर्डर" })}
-        <span className="flex items-center gap-1.5 text-[var(--lp-good)]">
-          <span className="lp-pulse size-2 rounded-full bg-[var(--lp-good)]" /> Live
-        </span>
-      </p>
-      <ul className="mt-3 space-y-2">
-        {list.map((o, k) => (
-          <li key={`${o.id}-${n + k}`} className={`rounded-xl bg-[var(--lp-ground)] px-3.5 py-3 ${k === 0 ? "lp-arrive" : ""}`}>
-            <div className="flex items-center justify-between text-[13px]">
-              <span className="flex items-center gap-1.5 font-semibold">
-                <span aria-hidden className="size-2 rounded-full" style={{ background: color(o.c) }} />
-                {name(o.c)}
-              </span>
-              <span className="text-[var(--lp-muted)]">{o.id}</span>
-            </div>
-            <p className="mt-1 text-[14px]">{o.items}</p>
-            <div className="mt-2 flex items-center justify-between text-[13px]">
-              <span className={o.late ? "font-semibold text-[var(--lp-bad)]" : "text-[var(--lp-muted)]"}>
-                {o.late ? pick({ en: `Running late, ${o.mins} min`, hi: `देर हो रही, ${o.mins} मिनट` }) : pick({ en: `Preparing, ${o.mins} min`, hi: `बन रहा, ${o.mins} मिनट` })}
-              </span>
-              <span className="font-semibold">{inr(o.amount)}</span>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <p className="mt-3 text-[13px] text-[var(--lp-muted)]">Tap the switch: one change, every app.</p>
+      <div className="mt-4 flex items-start gap-2 rounded-xl bg-[var(--lp-accent-soft)] p-3 text-[14px]">
+        <Sparkles aria-hidden size={15} className="mt-0.5 shrink-0" />
+        <p>Paneer tikka is ₹289 on Zomato and ₹299 on Swiggy. Match them at ₹289?</p>
+      </div>
     </div>
   );
 }
 
 /** What Zest knows about a regular who orders from the restaurant's own page. */
 export function GuestCard() {
-  const { pick } = useApp();
-  const rows: [Bi, Bi][] = [
-    [{ en: "Orders", hi: "ऑर्डर" }, { en: "12 since June", hi: "जून से 12" }],
-    [{ en: "Spent", hi: "ख़र्च" }, { en: inr(7840), hi: inr(7840) }],
-    [{ en: "Usually", hi: "अक्सर" }, { en: "Dal makhani, 2 garlic naan", hi: "दाल मखनी, 2 गार्लिक नान" }],
-    [{ en: "Note", hi: "नोट" }, { en: "Less spice. Friday dinners.", hi: "कम तीखा। शुक्रवार डिनर।" }],
+  const rows: [string, string][] = [
+    ["Orders", "12 since June"],
+    ["Spent", inr(7840)],
+    ["Usually", "Dal makhani, 2 garlic naan"],
+    ["Note", "Less spice. Friday dinners."],
   ];
   return (
     <div data-ui className="lp-ui p-5">
@@ -211,22 +221,37 @@ export function GuestCard() {
         <span className="grid size-12 place-items-center rounded-full bg-[var(--lp-accent-soft)] text-[17px] font-semibold">AR</span>
         <div>
           <p className="text-[17px] font-semibold">Ananya Rao</p>
-          <p className="text-[14px] text-[var(--lp-muted)]">{pick({ en: "Regular · last order 9 days ago", hi: "रेगुलर · आख़िरी ऑर्डर 9 दिन पहले" })}</p>
+          <p className="text-[14px] text-[var(--lp-muted)]">Regular · orders from your page</p>
         </div>
       </div>
-      <dl className="mt-4 divide-y divide-[var(--lp-line)] text-[14px]">
+      <dl className="mt-4 space-y-1 text-[14px]">
         {rows.map(([k, v]) => (
-          <div key={k.en} className="flex justify-between gap-4 py-2">
-            <dt className="text-[var(--lp-muted)]">{pick(k)}</dt>
-            <dd className="text-right font-medium">{pick(v)}</dd>
+          <div key={k} className="flex justify-between gap-4 px-1 py-1.5">
+            <dt className="text-[var(--lp-muted)]">{k}</dt>
+            <dd className="text-right font-medium">{v}</dd>
           </div>
         ))}
       </dl>
       <div className="mt-3 rounded-xl bg-[var(--lp-ground)] p-3 text-[14px]">
         <p className="flex items-center gap-1.5 font-semibold">
-          <MessageCircle aria-hidden size={15} /> {pick({ en: "Zest suggests", hi: "Zest का सुझाव" })}
+          <MessageCircle aria-hidden size={15} /> Recent orders
         </p>
-        <p className="mt-1">{pick({ en: "She hasn't ordered in 9 days. Send her Friday's dal makhani offer on WhatsApp?", hi: "9 दिन से ऑर्डर नहीं किया। शुक्रवार का दाल मखनी ऑफ़र WhatsApp पर भेजें?" })}</p>
+        <ul className="mt-2 space-y-1.5">
+          {(
+            [
+              ["Fri, 3 Oct", "Dal makhani, 2 garlic naan", 638],
+              ["Fri, 26 Sep", "Dal makhani, jeera rice", 498],
+              ["Fri, 19 Sep", "Paneer tikka, 2 butter naan", 407],
+            ] as const
+          ).map(([d, what, amt]) => (
+            <li key={d} className="flex justify-between gap-3">
+              <span className="min-w-0 truncate">
+                <span className="text-[var(--lp-muted)]">{d}</span> · {what}
+              </span>
+              <span className="font-medium tabular-nums">{inr(amt)}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
@@ -234,7 +259,6 @@ export function GuestCard() {
 
 /** A low review with the reply Zest drafted. */
 export function ReviewCard() {
-  const { pick } = useApp();
   const [sent, setSent] = useState(false);
   return (
     <div data-ui className="lp-ui p-5">
@@ -248,17 +272,19 @@ export function ReviewCard() {
         </span>
       </p>
       <p className="mt-2 text-[15px]">“Dal was cold by the time it reached and the rice was less than usual.”</p>
-      <p className="mt-4 text-[13px] font-semibold text-[var(--lp-muted)]">{pick({ en: "Reply drafted in your voice", hi: "आपकी भाषा में तैयार जवाब" })}</p>
+      <p className="mt-4 flex items-center gap-1.5 text-[13px] font-semibold text-[var(--lp-muted)]">
+        <Sparkles aria-hidden size={14} /> Drafted in your voice
+      </p>
       <p className="mt-1.5 rounded-xl bg-[var(--lp-accent-soft)] p-3 text-[14px] leading-relaxed">
         Karthik, sorry the dal reached you cold, that's not how it leaves our kitchen. We've moved dal to sealed containers from today and added a ₹75 credit to your next order.
       </p>
-      <button type="button" onClick={() => setSent(true)} className={`mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 text-[14px] font-semibold transition-colors ${sent ? "bg-[var(--lp-good)] text-white" : "bg-[var(--lp-ink)] text-white"}`}>
+      <button type="button" onClick={() => setSent(true)} className={`mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-full px-4 text-[14px] font-semibold transition-colors ${sent ? "bg-[var(--lp-good)] text-white" : "bg-[var(--lp-ink)] text-[var(--lp-on-ink)]"}`}>
         {sent ? (
           <>
-            <Check aria-hidden size={15} /> {pick({ en: "Reply posted", hi: "जवाब पोस्ट हुआ" })}
+            <Check aria-hidden size={15} /> Reply posted
           </>
         ) : (
-          pick({ en: "Post reply", hi: "जवाब पोस्ट करें" })
+          "Approve and post"
         )}
       </button>
     </div>
@@ -267,94 +293,59 @@ export function ReviewCard() {
 
 /** A payout split into what the restaurant kept and where the rest went. */
 export function PayoutCard() {
-  const { pick } = useApp();
   const [p, setP] = useState<"zomato" | "swiggy">("swiggy");
   const cur = PAYOUTS.find((x) => x.platform === p)!;
   const parts = [
-    { label: { en: "You keep", hi: "आपको मिला" }, v: cur.net, color: "var(--lp-good)" },
-    { label: { en: "Commission", hi: "कमीशन" }, v: cur.commission, color: "#9aa59e" },
-    { label: { en: "Ads", hi: "ऐड" }, v: cur.ads, color: "var(--lp-accent)" },
-    { label: { en: "Deductions", hi: "कटौती" }, v: cur.deductions, color: "var(--lp-bad)" },
+    { label: "You keep", v: cur.net, color: "var(--lp-good)" },
+    { label: "Commission", v: cur.commission, color: "var(--lp-faint)" },
+    { label: "Ads", v: cur.ads, color: "var(--lp-accent)" },
+    { label: "Deductions", v: cur.deductions, color: "var(--lp-bad)" },
   ];
   const wrong = p === "swiggy" ? { amount: 412, order: "3381" } : { amount: 286, order: "7712" };
   return (
     <div data-ui className="lp-ui p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[14px] font-semibold text-[var(--lp-muted)]">{pick({ en: "Payout, 7 to 13 Oct", hi: "पेआउट, 7 से 13 अक्टूबर" })}</p>
-        <div role="radiogroup" aria-label={pick({ en: "Platform", hi: "प्लेटफ़ॉर्म" })} className="flex rounded-full bg-[var(--lp-ground)] p-1 text-[14px]">
+        <p className="text-[14px] font-semibold text-[var(--lp-muted)]">Payout, 7 to 13 Oct</p>
+        <div role="radiogroup" aria-label="Platform" className="flex rounded-full bg-[var(--lp-ground)] p-1 text-[14px]">
           {(["zomato", "swiggy"] as const).map((x) => (
-            <button key={x} type="button" role="radio" aria-checked={p === x} onClick={() => setP(x)} className={`min-h-9 rounded-full px-4 font-semibold transition-colors ${p === x ? (x === "zomato" ? "text-white" : "text-[var(--lp-ink)]") : "text-[var(--lp-muted)]"}`} style={p === x ? { background: CH[x].color } : undefined}>
-              {x === "zomato" ? "Zomato" : "Swiggy"}
+            <button key={x} type="button" role="radio" aria-checked={p === x} onClick={() => setP(x)} className={`min-h-9 rounded-full px-4 font-semibold transition-colors ${p === x ? (x === "zomato" ? "text-white" : "text-[#121a16]") : "text-[var(--lp-muted)]"}`} style={p === x ? { background: CH[x].color } : undefined}>
+              {CH[x].name}
             </button>
           ))}
         </div>
       </div>
-      <p className="mt-4 text-[14px] text-[var(--lp-muted)]">
-        {pick({ en: "Sales", hi: "बिक्री" })} {inr(cur.gross)}
-      </p>
-      <p className="text-[clamp(34px,3.6vw,48px)] font-semibold leading-tight tracking-tight">{inr(cur.net)}</p>
+      <p className="mt-4 text-[14px] text-[var(--lp-muted)]">Sales {inr(cur.gross)}</p>
+      <p className="text-[clamp(32px,3.4vw,44px)] font-semibold leading-tight tracking-tight">{inr(cur.net)}</p>
       <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-[var(--lp-ground)]">
         {parts.map((x) => (
-          <span key={x.label.en} className="lp-bar h-full" style={{ width: `${(x.v / cur.gross) * 100}%`, background: x.color }} />
+          <span key={x.label} className="lp-bar h-full" style={{ width: `${(x.v / cur.gross) * 100}%`, background: x.color }} />
         ))}
       </div>
       <ul className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-[14px]">
         {parts.map((x) => (
-          <li key={x.label.en} className="flex items-center justify-between gap-2">
+          <li key={x.label} className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-2 text-[var(--lp-muted)]">
               <span aria-hidden className="size-2.5 rounded-sm" style={{ background: x.color }} />
-              {pick(x.label)}
+              {x.label}
             </span>
-            <span className="font-medium">{inr(x.v)}</span>
+            <span className="font-medium tabular-nums">{inr(x.v)}</span>
           </li>
         ))}
       </ul>
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#fbe6e2] p-3.5 text-[14px]">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[var(--lp-bad-soft)] p-3.5 text-[14px]">
         <div>
-          <p className="font-semibold">{pick({ en: `${inr(wrong.amount)} deducted by mistake`, hi: `${inr(wrong.amount)} ग़लती से कटे` })}</p>
-          <p className="text-[var(--lp-muted)]">{pick({ en: `Order #${wrong.order} was cancelled after cooking started.`, hi: `ऑर्डर #${wrong.order} खाना बनने के बाद कैंसल हुआ।` })}</p>
+          <p className="font-semibold">{inr(wrong.amount)} deducted by mistake</p>
+          <p className="text-[var(--lp-muted)]">Order #{wrong.order} was cancelled after cooking started.</p>
         </div>
-        <span className="inline-flex min-h-9 items-center rounded-full bg-[var(--lp-ink)] px-4 font-semibold text-white">{pick({ en: "Dispute drafted", hi: "डिस्प्यूट तैयार" })}</span>
+        <span className="inline-flex min-h-9 items-center rounded-full bg-[var(--lp-ink)] px-4 font-semibold text-[var(--lp-on-ink)]">Approve dispute</span>
       </div>
     </div>
   );
 }
 
-/** An offer with a hard weekly cap, and how it is doing. */
-export function PromoCard() {
-  const { pick } = useApp();
+/** An offer with a hard weekly cap, and which dishes are winning or slipping. */
+export function GrowthCard() {
   const spent = 1840, cap = 3000;
-  return (
-    <div data-ui className="lp-ui p-5">
-      <p className="flex items-center justify-between text-[14px]">
-        <span className="flex items-center gap-1.5 font-semibold">
-          <Dot c="swiggy" /> {pick({ en: "Weekday lunch, 20% off", hi: "वीकडे लंच, 20% छूट" })}
-        </span>
-        <span className="rounded-full bg-[#e1efe6] px-2.5 py-0.5 text-[13px] font-semibold text-[var(--lp-good)]">{pick({ en: "Running", hi: "चालू" })}</span>
-      </p>
-      <div className="mt-4 grid grid-cols-3 gap-3">
-        {[
-          [pick({ en: "Orders", hi: "ऑर्डर" }), "46"],
-          [pick({ en: "Sales", hi: "बिक्री" }), inr(14260)],
-          [pick({ en: "Spent", hi: "ख़र्च" }), inr(spent)],
-        ].map(([k, v]) => (
-          <div key={k}>
-            <p className="text-[13px] text-[var(--lp-muted)]">{k}</p>
-            <p className="text-[20px] font-semibold">{v}</p>
-          </div>
-        ))}
-      </div>
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--lp-ground)]">
-        <span className="lp-bar block h-full rounded-full bg-[var(--lp-accent)]" style={{ width: `${(spent / cap) * 100}%` }} />
-      </div>
-      <p className="mt-2 text-[13px] text-[var(--lp-muted)]">{pick({ en: `Stops by itself at ${inr(cap)} this week`, hi: `इस हफ़्ते ${inr(cap)} पर अपने-आप रुकेगा` })}</p>
-    </div>
-  );
-}
-
-/** Which dishes sell, and where one is losing stars. */
-export function DishBoard() {
-  const { pick } = useApp();
   const rows = [
     { m: dish("m2"), z: 4.3, s: 4.2 },
     { m: dish("m1"), z: 4.4, s: 4.3 },
@@ -362,60 +353,114 @@ export function DishBoard() {
   ];
   return (
     <div data-ui className="lp-ui p-5">
-      <p className="text-[14px] font-semibold text-[var(--lp-muted)]">{pick({ en: "Dishes this week", hi: "इस हफ़्ते की डिश" })}</p>
-      <table className="mt-3 w-full text-[14px]">
+      <p className="flex items-center justify-between text-[14px]">
+        <span className="flex items-center gap-1.5 font-semibold">
+          <Dot c="swiggy" /> Weekday lunch, 20% off
+        </span>
+        <span className="rounded-full bg-[var(--lp-good-soft)] px-2.5 py-0.5 text-[13px] font-semibold text-[var(--lp-good)]">Running</span>
+      </p>
+      <div className="mt-4 grid grid-cols-3 gap-3">
+        {[
+          ["Orders", "46"],
+          ["Sales", inr(14260)],
+          ["Spent", inr(spent)],
+        ].map(([k, v]) => (
+          <div key={k}>
+            <p className="text-[13px] text-[var(--lp-muted)]">{k}</p>
+            <p className="text-[20px] font-semibold tabular-nums">{v}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--lp-ground)]">
+        <span className="lp-bar block h-full rounded-full bg-[var(--lp-accent)]" style={{ width: `${(spent / cap) * 100}%` }} />
+      </div>
+      <p className="mt-2 text-[13px] text-[var(--lp-muted)]">Stops by itself at {inr(cap)} this week</p>
+      <table className="mt-5 w-full text-[14px]">
         <thead>
           <tr className="text-left text-[13px] text-[var(--lp-muted)]">
-            <th className="pb-2 font-medium">{pick({ en: "Dish", hi: "डिश" })}</th>
-            <th className="pb-2 text-right font-medium">{pick({ en: "Orders", hi: "ऑर्डर" })}</th>
+            <th className="pb-2 font-medium">Dish</th>
+            <th className="pb-2 text-right font-medium">Orders</th>
             <th className="pb-2 text-right font-medium">Zomato</th>
             <th className="pb-2 text-right font-medium">Swiggy</th>
           </tr>
         </thead>
         <tbody>
           {rows.map(({ m, z, s, flag }) => (
-            <tr key={m.id} className="border-t border-[var(--lp-line)]">{/* taste-skill-ignore: table row */}
-              <td className="py-2.5">
+            <tr key={m.id}>
+              <td className="py-1.5">
                 <span className="flex items-center gap-2">
                   <img src={m.photo} alt="" className="size-8 rounded-lg object-cover" />
                   {m.name}
                 </span>
               </td>
-              <td className="py-2.5 text-right tabular-nums">{m.ordersLast7}</td>
-              <td className="py-2.5 text-right tabular-nums">{z.toFixed(1)}</td>
-              <td className={`py-2.5 text-right tabular-nums ${flag ? "font-semibold text-[var(--lp-bad)]" : ""}`}>{s.toFixed(1)}</td>
+              <td className="py-1.5 text-right tabular-nums">{m.ordersLast7}</td>
+              <td className="py-1.5 text-right tabular-nums">{z.toFixed(1)}</td>
+              <td className={`py-1.5 text-right tabular-nums ${flag ? "font-semibold text-[var(--lp-bad)]" : ""}`}>{s.toFixed(1)}</td>
             </tr>
           ))}
         </tbody>
       </table>
       <p className="mt-3 flex gap-2 rounded-xl bg-[var(--lp-accent-soft)] p-3 text-[14px]">
         <Clock aria-hidden size={16} className="mt-0.5 shrink-0" />
-        {pick({ en: "Dal makhani is 0.7 lower on Swiggy. Three reviews say it arrived cold: try sealed containers.", hi: "Swiggy पर दाल मखनी 0.7 कम है। तीन रिव्यू कहते हैं ठंडी पहुँची: सील डिब्बे आज़माएँ।" })}
+        Dal makhani is 0.7 lower on Swiggy. Three reviews say it arrived cold: try sealed containers.
       </p>
     </div>
   );
 }
 
-/** The next money in, per app, from the payout mails. */
-export function NextPayouts() {
-  const { pick } = useApp();
+/** The approval trail: what the owner said yes to, each with undo. */
+export function ApprovalTrail() {
+  const [undone, setUndone] = useState<string | null>(null);
+  const rows = [
+    { t: "Today, 9:20 am", what: "Swiggy dispute for ₹412 sent", who: "You approved" },
+    { t: "Today, 9:18 am", what: "3 review replies posted", who: "You approved, edited one" },
+    { t: "Yesterday, 8:12 pm", what: "Chole bhature ₹189 → ₹199 on all apps", who: "You approved" },
+    { t: "Yesterday, 4:40 pm", what: "Weekend offer paused at its ₹2,000 limit", who: "Stopped by itself" },
+  ];
   return (
     <div data-ui className="lp-ui p-5">
-      <p className="text-[14px] font-semibold text-[var(--lp-muted)]">{pick({ en: "Coming to your bank", hi: "आपके बैंक में आने वाला" })}</p>
+      <p className="flex items-center gap-2 text-[14px] font-semibold text-[var(--lp-muted)]">
+        <Inbox aria-hidden size={16} /> Approvals and record
+      </p>
       <ul className="mt-3 space-y-2">
-        {[...PAYOUTS]
-          .filter((x) => x.status === "upcoming")
-          .sort((a, b) => a.dateISO.localeCompare(b.dateISO))
-          .map((x) => (
-            <li key={x.platform} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--lp-ground)] px-3.5 py-3 text-[15px]">
-              <span className="flex items-center gap-2 font-semibold">
-                <Dot c={x.platform as Channel} /> {x.platform === "zomato" ? "Zomato" : "Swiggy"}
-              </span>
-              <span className="text-[var(--lp-muted)]">{x.date}</span>
-              <span className="font-semibold tabular-nums">{inr(x.net)}</span>
-            </li>
-          ))}
+        {rows.map((r) => (
+          <li key={r.t} className="flex items-center justify-between gap-3 rounded-xl bg-[var(--lp-ground)] px-3.5 py-3 text-[14px]">
+            <div className="min-w-0">
+              <p className={`font-medium ${undone === r.t ? "text-[var(--lp-faint)] line-through" : ""}`}>{r.what}</p>
+              <p className="text-[13px] text-[var(--lp-muted)]">
+                {r.t} · {undone === r.t ? "Undone" : r.who}
+              </p>
+            </div>
+            <button type="button" onClick={() => setUndone(undone === r.t ? null : r.t)} className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full px-3 text-[13px] font-semibold hover:bg-[var(--lp-sunken)]">
+              <RotateCcw aria-hidden size={14} /> {undone === r.t ? "Redo" : "Undo"}
+            </button>
+          </li>
+        ))}
       </ul>
+    </div>
+  );
+}
+
+/** The two things setup asks for: a listing link and an email connection. */
+export function SetupCard() {
+  return (
+    <div data-ui className="lp-ui space-y-3 p-5">
+      <div className="rounded-xl bg-[var(--lp-ground)] p-3.5">
+        <p className="text-[13px] text-[var(--lp-muted)]">Your Zomato link</p>
+        <p className="mt-0.5 truncate text-[15px] font-medium">zomato.com/bangalore/rasoi-27-indiranagar</p>
+        <p className="mt-2 flex items-center gap-1.5 text-[13px] text-[var(--lp-good)]">
+          <Check aria-hidden size={14} /> 11 dishes, photos and a 4.2 rating read
+        </p>
+      </div>
+      <div className="rounded-xl bg-[var(--lp-ground)] p-3.5">
+        <p className="text-[13px] text-[var(--lp-muted)]">Your email</p>
+        <p className="mt-0.5 flex items-center gap-1.5 text-[15px] font-medium">
+          <Mail aria-hidden size={15} /> owner@rasoi27.in
+        </p>
+        <p className="mt-2 flex items-center gap-1.5 text-[13px] text-[var(--lp-good)]">
+          <Check aria-hidden size={14} /> 4 payout mails and 2 statements found
+        </p>
+      </div>
     </div>
   );
 }

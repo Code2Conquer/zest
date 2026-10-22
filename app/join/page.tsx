@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronLeft, Loader2 } from "lucide-react";
-import { ChannelTag, LangToggle, Wordmark } from "@/components/bits";
+import { ChannelTag, ThemeToggle, Wordmark } from "@/components/bits";
 import { api, refreshAll } from "@/lib/api";
 import { cityName, parseListing } from "@/lib/listing";
 import { CHANNEL_NAME, PLATFORMS, type Platform } from "@/lib/platforms";
@@ -304,7 +304,7 @@ export default function Join() {
           <ChevronLeft aria-hidden className="size-5" />
           <Wordmark />
         </Link>
-        <LangToggle />
+        <ThemeToggle />
       </header>
       <main className="mx-auto max-w-4xl px-4 pb-24 pt-6 sm:px-8">
         <p className="text-sm font-medium uppercase tracking-wider text-muted">{hi ? "पहला क़दम" : "Step 1"}</p>

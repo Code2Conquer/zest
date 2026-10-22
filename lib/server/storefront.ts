@@ -46,6 +46,12 @@ async function shopBySlug(slug: string): Promise<Outlet> {
   return o;
 }
 
+/** Every real restaurant taking orders on its own page, for the sitemap. Sample restaurants stay out of search. */
+export async function listStorefronts() {
+  const rows = await db.select({ slug: outlets.slug }).from(outlets).where(and(eq(outlets.ordering, true), eq(outlets.isDemo, false)));
+  return rows.filter((r): r is { slug: string } => !!r.slug);
+}
+
 /** Open when no hours are set yet (not set ≠ closed), otherwise by the outlet's hours for the website channel. */
 async function openNow(outletId: string) {
   const { weekly, special } = await getHours(outletId);
@@ -87,6 +93,7 @@ export async function getStorefront(slug: string) {
   const photos = [...(pick((l) => l.photos) ?? []), ...menu.filter((m) => m.photoUrl && m.bestseller).map((m) => m.photoUrl!), ...menu.filter((m) => m.photoUrl && !m.bestseller).map((m) => m.photoUrl!)];
   return {
     name: o.name,
+    isDemo: o.isDemo,
     area: [o.area, o.city].filter(Boolean).join(", "),
     locality: o.area || pick((l) => l.locality) || "",
     address: o.address || pick((l) => l.address) || "",

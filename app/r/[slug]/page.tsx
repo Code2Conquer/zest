@@ -4,7 +4,7 @@ import { Suspense, use, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
 import { Check, Clock, IndianRupee, Loader2, Minus, Plus, Search, ShoppingBag, Star, Utensils, X } from "lucide-react";
-import { LangToggle } from "@/components/bits";
+import { ThemeToggle } from "@/components/bits";
 import { api } from "@/lib/api";
 import { useApp } from "@/lib/state";
 
@@ -122,7 +122,7 @@ function Storefront({ slug }: { slug: string }) {
           )}
         </div>
         <div className="absolute right-4 top-4 sm:right-8 sm:top-8">
-          <LangToggle />
+          <ThemeToggle className="bg-surface text-ink hover:bg-surface" />
         </div>
       </div>
 
