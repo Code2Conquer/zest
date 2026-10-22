@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Anek_Devanagari, Anek_Latin, IBM_Plex_Mono } from "next/font/google";
 import { AppStateProvider } from "@/lib/state";
 import "./globals.css";
@@ -27,11 +28,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${latin.variable} ${deva.variable} ${kot.variable}`} suppressHydrationWarning>
-      <head>
-        {/* Apply the saved light/dark choice before the first paint, so the page never flashes. */}
-        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem("zest:theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}` }} />
-      </head>
       <body>
+        {/* Apply the saved light/dark choice before hydration, so the page doesn't flash. */}
+        <Script id="zest-theme" strategy="beforeInteractive">{`try{var t=localStorage.getItem("zest:theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`}</Script>
         <AppStateProvider>{children}</AppStateProvider>
       </body>
     </html>
