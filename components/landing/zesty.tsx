@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bike, Camera, Check, Gift, Globe, MapPin, MessageCircle, Phone, Search, Store, Volume2 } from "lucide-react";
+import { Bike, Camera, Check, Globe, MessageCircle, Mic, Phone, Search, Store, Volume2 } from "lucide-react";
 import { MENU } from "@/lib/data";
 
 // Zesty, the order soundbox, and the pieces of the landing page that show orders moving: the hero
-// stage where every channel's orders arrive at Zesty, the one-menu sync demo, and the delivery and
-// offer cards. Zesty is drawn, not photographed: it is in pilot.
+// stage where every channel's orders arrive at Zesty, and the push-to-talk menu sync demo. Zesty is
+// drawn, not photographed: it is in pilot.
 
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 const reduced = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -84,7 +84,9 @@ export function ZestyDevice({ order, n, accepted, onAccept, small = false }: { o
         </div>
         {/* Buttons */}
         <div className="mt-5 flex items-center justify-between gap-3">
-          <span className="grid min-h-11 place-items-center rounded-full bg-[#2a312d] px-3 text-[13px] font-semibold">Khatam</span>
+          <span aria-label="Push to talk" className="grid size-12 place-items-center rounded-full bg-[#2a312d]">
+            <Mic aria-hidden size={19} />
+          </span>
           <button
             type="button"
             onClick={onAccept}
@@ -93,7 +95,9 @@ export function ZestyDevice({ order, n, accepted, onAccept, small = false }: { o
           >
             {accepted ? <Check size={30} strokeWidth={3} /> : "Accept"}
           </button>
-          <span className="grid min-h-11 place-items-center rounded-full bg-[#2a312d] px-3 text-[13px] font-semibold">Ready</span>
+          <span aria-label="Food ready" className="grid size-12 place-items-center rounded-full bg-[#2a312d]">
+            <Bike aria-hidden size={19} />
+          </span>
         </div>
       </div>
     </div>
@@ -189,13 +193,28 @@ const SYNC: { ch: ChannelId; where: string }[] = [
   { ch: "swiggy", where: "Swiggy" },
 ];
 
-/** One tap on Zesty's "Khatam" and the dish goes off everywhere, one channel after another. */
+/** Push to talk on Zesty: say the dish is finished and it goes off everywhere, one channel after another. */
 export function SyncDemo() {
   const [off, setOff] = useState(false);
+  const [talking, setTalking] = useState(false);
+  const [heard, setHeard] = useState<string | null>(null);
   const auto = useRef(true);
+  function say(next: boolean) {
+    setTalking(true);
+    setTimeout(() => {
+      setTalking(false);
+      setHeard(next ? "“Dal makhani khatam.”" : "“Dal makhani is back.”");
+      setOff(next);
+    }, 900);
+  }
   useEffect(() => {
     if (reduced()) return;
-    const t = setInterval(() => auto.current && setOff((v) => !v), 4200);
+    let next = true;
+    const t = setInterval(() => {
+      if (!auto.current) return;
+      say(next);
+      next = !next;
+    }, 4600);
     return () => clearInterval(t);
   }, []);
   const m = MENU.find((x) => x.id === "m3")!;
@@ -206,20 +225,31 @@ export function SyncDemo() {
           <img src={m.photo} alt="" className="size-14 rounded-xl object-cover" />
           <div className="min-w-0">
             <p className="text-[16px] font-semibold">{m.name}</p>
-            <p className={`text-[14px] ${off ? "text-[#f07d6b]" : "text-[#5cc07a]"}`}>{off ? "Out of stock everywhere" : "On every menu"}</p>
+            <p className={`text-[14px] ${off ? "text-[#f07d6b]" : "text-[#5cc07a]"}`}>{off ? "Off every menu" : "On every menu"}</p>
           </div>
         </div>
+        <p className="mt-4 min-h-[1.5em] text-center text-[16px] font-medium" aria-live="polite">
+          {talking ? (
+            <span className="text-[#a9b8ae]">
+              Listening<span className="lp-caret" />
+            </span>
+          ) : (
+            (heard ?? <span className="text-[#a9b8ae]">Say a dish is finished, or back.</span>)
+          )}
+        </p>
         <button
           type="button"
           onClick={() => {
             auto.current = false;
-            setOff((v) => !v);
+            say(!off);
           }}
-          className={`mt-4 flex min-h-14 w-full items-center justify-center rounded-full text-[17px] font-bold transition-colors active:scale-[0.98] ${off ? "bg-[#2a312d] text-[#eaf0eb]" : "bg-[var(--lp-accent)] text-[#121a16]"}`}
+          aria-label={off ? "Push to talk: say the dish is back" : "Push to talk: say the dish is finished"}
+          className={`relative mx-auto mt-4 grid size-20 place-items-center rounded-full transition-colors active:scale-95 ${talking ? "bg-[var(--lp-accent)] text-[#121a16]" : "bg-[#2a312d] text-[#eaf0eb]"}`}
         >
-          {off ? "Back in stock" : "Dal makhani khatam"}
+          {talking && <span aria-hidden className="lp-ring absolute inset-0 rounded-full border-2 border-[var(--lp-accent)]" />}
+          <Mic aria-hidden size={28} />
         </button>
-        <p className="mt-3 text-center text-[13px] text-[#a9b8ae]">Press it, or just say it to Zesty.</p>
+        <p className="mt-3 text-center text-[13px] text-[#a9b8ae]">Push to talk</p>
       </div>
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {SYNC.map(({ ch, where }, k) => {
@@ -239,110 +269,6 @@ export function SyncDemo() {
           );
         })}
       </ul>
-    </div>
-  );
-}
-
-/** A Zomato rider booked for a website order, with the guest's tracking. */
-export function DeliveryCard() {
-  const steps = ["Order accepted on Zesty", "Food ready: rider called", "Rider picked up", "Delivered to Ananya"];
-  const [at, setAt] = useState(1);
-  useEffect(() => {
-    if (reduced()) return;
-    const t = setInterval(() => setAt((v) => (v >= steps.length - 1 ? 0 : v + 1)), 1800);
-    return () => clearInterval(t);
-  }, [steps.length]);
-  return (
-    <div data-ui className="lp-ui p-5">
-      <p className="flex items-center justify-between text-[14px]">
-        <span className="flex items-center gap-2 font-semibold">
-          <Globe aria-hidden size={15} className="text-[var(--lp-web)]" /> Website order · {inr(367)}
-        </span>
-        <span className="flex items-center gap-1.5 text-[var(--lp-muted)]">
-          <Bike aria-hidden size={15} /> Zomato rider
-        </span>
-      </p>
-      <div className="relative mt-5 h-2 rounded-full bg-[var(--lp-ground)]">
-        <span className="absolute inset-y-0 left-0 rounded-full bg-[var(--lp-accent)] transition-[width] duration-700" style={{ width: `${(at / (steps.length - 1)) * 100}%` }} />
-        <span className="absolute top-1/2 grid size-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[var(--lp-ink)] text-[var(--lp-on-ink)] transition-[left] duration-700" style={{ left: `${(at / (steps.length - 1)) * 100}%` }}>
-          <Bike aria-hidden size={15} />
-        </span>
-      </div>
-      <ol className="mt-6 space-y-2 text-[14px]">
-        {steps.map((s, k) => (
-          <li key={s} className={`flex items-center gap-2 ${k <= at ? "" : "text-[var(--lp-faint)]"}`}>
-            {k <= at ? <Check aria-hidden size={15} className="text-[var(--lp-good)]" /> : <MapPin aria-hidden size={15} />}
-            {s}
-          </li>
-        ))}
-      </ol>
-      <p className="mt-4 rounded-xl bg-[var(--lp-ground)] p-3 text-[14px]">Ananya gets a live tracking link. If the rider is late, the agent tells you before she asks.</p>
-    </div>
-  );
-}
-
-/** Welcome offers for new guests and rewards for regulars, from one set of rules. */
-export function OfferCard() {
-  const rows = [
-    { who: "New guests", what: "₹75 off the first order on your website", used: "38 used this month", color: "var(--lp-web)" },
-    { who: "Regulars", what: "Free gajar halwa on every 5th order", used: "12 earned", color: "var(--lp-accent)" },
-    { who: "Quiet weekdays", what: "10% off lunch, Mon to Thu", used: "Runs until ₹3,000 is spent", color: "var(--lp-swiggy)" },
-  ];
-  return (
-    <div data-ui className="lp-ui p-5">
-      <p className="flex items-center gap-2 text-[14px] font-semibold text-[var(--lp-muted)]">
-        <Gift aria-hidden size={16} /> Offers running
-      </p>
-      <ul className="mt-3 space-y-2">
-        {rows.map((r) => (
-          <li key={r.who} className="rounded-xl bg-[var(--lp-ground)] p-3.5 text-[14px]">
-            <p className="flex items-center gap-2 font-semibold">
-              <span aria-hidden className="size-2 rounded-full" style={{ background: r.color }} /> {r.who}
-            </p>
-            <p className="mt-0.5">{r.what}</p>
-            <p className="mt-0.5 text-[13px] text-[var(--lp-muted)]">{r.used}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/** Ads on Meta and the search setup, inside one budget. */
-export function GrowthPanel() {
-  const spent = 2140, cap = 5000;
-  return (
-    <div data-ui className="lp-ui p-5">
-      <p className="text-[14px] font-semibold text-[var(--lp-muted)]">This week</p>
-      <div className="mt-3 grid grid-cols-3 gap-3">
-        {[
-          ["Found on Google", "1,240"],
-          ["Website visits", "610"],
-          ["Orders", "84"],
-        ].map(([k, v]) => (
-          <div key={k}>
-            <p className="text-[13px] text-[var(--lp-muted)]">{k}</p>
-            <p className="text-[22px] font-semibold tabular-nums">{v}</p>
-          </div>
-        ))}
-      </div>
-      <div className="mt-5 rounded-xl bg-[var(--lp-ground)] p-3.5 text-[14px]">
-        <p className="flex items-center justify-between font-semibold">
-          <span className="flex items-center gap-2">
-            <Camera aria-hidden size={15} /> Instagram ad · “Friday biryani”
-          </span>
-          <span className="text-[var(--lp-good)]">31 orders</span>
-        </p>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--lp-paper)]">
-          <span className="lp-bar block h-full rounded-full bg-[var(--lp-accent)]" style={{ width: `${(spent / cap) * 100}%` }} />
-        </div>
-        <p className="mt-2 text-[13px] text-[var(--lp-muted)]">
-          {inr(spent)} of your {inr(cap)} budget. Stops by itself.
-        </p>
-      </div>
-      <p className="mt-3 rounded-xl bg-[var(--lp-accent-soft)] p-3 text-[14px]">
-        When someone asks an AI assistant for “best dal makhani in Indiranagar”, your menu, prices and reviews are there for it to read.
-      </p>
     </div>
   );
 }

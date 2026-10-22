@@ -294,6 +294,31 @@
   to { transform: scale(1); }
 }
 
+
+/* Agent flow: dashes travelling along a connector, and the active arc drawing itself in. */
+.lp-flow {
+  animation: lp-flow 1.2s linear infinite;
+}
+@keyframes lp-flow {
+  to { stroke-dashoffset: -26; }
+}
+.lp-arc {
+  animation: lp-flow 1.2s linear infinite, lp-arc-in 700ms ease-out both;
+}
+@keyframes lp-arc-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Demo: the rider's progress across a scene. */
+.lp-bar-go {
+  animation: lp-bar-go 3400ms cubic-bezier(0.3, 0.6, 0.4, 1) both;
+}
+@keyframes lp-bar-go {
+  from { transform: scaleX(0.08); }
+  to { transform: scaleX(0.85); }
+}
+
 .lp details > summary {
   list-style: none;
   cursor: pointer;
@@ -311,6 +336,9 @@
   }
   .lp-arrive,
   .lp-swap,
+  .lp-flow,
+  .lp-arc,
+  .lp-bar-go,
   .lp-print,
   .lp-ring,
   .lp-slide,
