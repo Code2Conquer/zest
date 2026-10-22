@@ -17,7 +17,7 @@ Every line of homepage copy should make sense to a home-kitchen owner reading in
 ## 1. The story in one line
 
 **Homepage:** Get online orders. Deliver them yourself, or with Zomato.
-**Restaurants page:** Keep your Zomato and Swiggy orders. Add the ones they never see.
+**Restaurants page:** More orders, beyond the apps.
 
 Naming rules (apply across the codebase and copy):
 - "Zesty" is retired. The device is the **Zest Soundbox**. In speech bubbles and captions the speaker is simply **Zest**.
@@ -44,6 +44,7 @@ A busy Indian kitchen run by something calm and smart: steel counters, thermal K
 Replace the current theme colour (`#111613`) with Paper. Dark mode uses Ink as background, Turmeric unchanged. Buttons are Ink text on Turmeric for contrast.
 
 ### Type
+- **Website (homepage and /restaurants): Inter**, with Noto Sans Devanagari for Hindi, loaded only on those pages (`components/landing/site-fonts.ts`). Headlines bold, tracking -0.035em. The owner app keeps Anek.
 - **Anek Latin** for English and **Anek Devanagari** for हिंदी (Google Fonts, Indian foundry, matching widths). Condensed widths for big headlines, normal for body.
 - **IBM Plex Mono** only inside KOT tickets and receipts.
 - Sentence case. No all-caps eyebrows, no single-word colour accents in headlines, no "→" glued onto button labels.
@@ -65,7 +66,7 @@ Replace the current theme colour (`#111613`) with Paper. Dark mode uses Ink as b
 ## 3. Shared components
 
 ### Zest Soundbox (signature object)
-SVG/CSS, used on both pages.
+SVG/CSS, used on both pages. Graphite body with a champagne bevel, a glass top dish and a light ring in a groove, with soft contact shadows; the ticket printer matches in flat graphite.
 - Rounded-square steel box, Ink face, circular Turmeric ring that pulses as a voice waveform when Zest speaks.
 - One big round button on top (accept / food ready), a ticket slot that prints a KOT downward, a small push-to-talk button on the side.
 - States: idle, ringing, speaking, printing, accepted (Leaf flash), escalating (ring turns Chilli, pulses faster).
@@ -107,7 +108,6 @@ A two-part switch: **Home kitchen, tiffin or stall** | **Restaurant on Zomato or
 - **Headline:** Deliver it yourself, or let Zomato do it.
 - **Body:** For every order, you choose. The customer picks it up, your own helper takes it, or a Zomato rider delivers it with live tracking.
 - Visual: the neighbourhood map with pickup, helper and Zomato rider.
-- Line under it: *Delivery is priced by distance. You choose who pays: the customer, you, or free above an order amount.*
 
 ### Why Zest (four plain reasons)
 Your customers stay yours · Money straight to you · No app to learn · Hindi or English. One line each.
@@ -128,7 +128,7 @@ Do I need to be on Zomato or Swiggy? · Who delivers? · Who pays for delivery? 
 After the hero's buttons scroll away: "Online orders, delivered by you or Zomato." [Start free]. Hides at the closing call to action.
 
 ### Footer
-Online orders, delivered by you or by Zomato. · Start free · Ask for a Soundbox · Zest for restaurants · Sample seller · Log in · Staff sign-in · © 2026 Zest
+The wordmark, "Online orders, delivered by you or by Zomato." and © 2026 Zest. No link list. The homepage also carries the credit for Meena's CC BY-SA / CC BY photos; /restaurants uses Unsplash photos only and has no credit line.
 
 ### Removed from the homepage (October 2026 refocus)
 "One day at Meena's Kitchen", the agents section and demo, "Be the first name people find nearby", the regulars section, the six-feature Soundbox list and the 3D Soundbox, and the old two-card audience split. The agents demo was later removed from `/restaurants` too; the agents now show up as the morning summary and drafted review replies.
@@ -143,16 +143,16 @@ Rules: never ask a restaurant to leave or reduce the apps; no margin or commissi
 
 ### Hero
 - Audience switch above the headline (Restaurant selected).
-- **Headline:** Keep your Zomato and Swiggy orders. Add the ones they never see.
-- **Subhead:** Phone, WhatsApp and party orders on your own page, paid by UPI and delivered by Zomato riders. One Soundbox calls out every order, from every app.
+- **Headline:** More orders, beyond the apps.
+- **Subhead:** Stay on Zomato and Swiggy. Take the phone, WhatsApp and party orders they never see on your own page, paid by UPI and delivered by Zomato riders.
 - **Action:** paste your Zomato or Swiggy link → [Get your page free]. Under it: *Your page is ready in a minute, with your menu and photos. See a sample.*
-- Visual: three channels (Your page, Zomato, Swiggy) and one Soundbox; the loop opens with a party order arriving on the restaurant's own page.
+- Visual: Rasoi 27's own page on a phone with real dish photos, the Soundbox beside it and three channel chips (Your page, Zomato, Swiggy); the loop opens with a party order landing on the page.
 
 ### The orders you already get, and lose
-Four cards, each "Today:" (Chilli ✕) and "With Zest:" (Leaf ✓): regulars who call or WhatsApp · office and party orders · dine-in guests back at home (QR on the table and bill) · people who search your name. Line under: *Zomato and Swiggy bring you new customers. Your page catches everyone else.*
+Four photo-led cards, each "Today:" (Chilli ✕) and "With Zest:" (Leaf ✓): regulars who call or WhatsApp · office and party orders · dine-in guests back at home (QR on the table and bill) · people who search your name.
 
 ### How a direct order reaches your customer
-Five steps: orders on your page → pays by UPI → Soundbox calls it out and the KOT prints → a Zomato rider picks up from your counter → customer tracks it to the door. Three ways to deliver: Zomato rider (default), your own staff, pickup. *Delivery is priced by distance. You choose who pays.*
+Five steps: orders on your page → pays by UPI → Soundbox calls it out and the KOT prints → a Zomato rider picks up from your counter → customer tracks it to the door. Three ways to deliver: Zomato rider (default), your own staff, pickup.
 
 ### Built to sit alongside Zomato and Swiggy (Ink band)
 You stay on Zomato and Swiggy · Your menu comes from your listing · The riders you already know · One kitchen, one flow.
@@ -164,13 +164,13 @@ You stay on Zomato and Swiggy · Your menu comes from your listing · The riders
 - Interactive Soundbox (press to accept, escalates if ignored). [Ask for a Soundbox] opens the request form in place.
 
 ### Every app, one message every morning
-Order, payout and rating emails from Zomato and Swiggy become one WhatsApp summary; reviews come with a drafted reply. Privacy line: Zest only reads emails from your food apps, never sends or shares them, disconnect anytime.
+Order, payout and rating emails from Zomato and Swiggy become one WhatsApp summary, shown on a phone; reviews come with a drafted reply. [Connect your email].
 
 ### Questions restaurants ask
 Do I need to leave Zomato or Swiggy? · Will it change anything on the apps? · Who delivers orders from my page? · What does delivery cost? · Does the Soundbox work with my Zomato and Swiggy orders? · What does Zest read in my email? · What does it cost?
 
 ### Closing call to action (Turmeric band)
-**More orders, on top of the apps.** The same link box. Phones get the sticky start bar.
+**Keep the apps. Add your own orders.** The same link box. Phones get the sticky start bar.
 
 ---
 

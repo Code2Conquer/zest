@@ -1,11 +1,13 @@
 "use client";
 
 import "../landing.css";
+import Image from "next/image";
 import { useState } from "react";
-import { BellRing, Bike, Briefcase, Check, Hand, Lock, MonitorSmartphone, PhoneCall, Plus, Printer, QrCode, Search, ShoppingBag, Store, X } from "lucide-react";
+import { BellRing, Bike, Check, Hand, Mail, MonitorSmartphone, PhoneCall, Plus, Printer, ShoppingBag, X } from "lucide-react";
 import { AudienceSwitch } from "@/components/landing/audience-switch";
 import { MorningSummary, RestaurantStage, RestaurantVoice } from "@/components/landing/restaurants";
 import { SiteFooter } from "@/components/landing/site-footer";
+import { siteFonts } from "@/components/landing/site-fonts";
 import { SiteHeader, type NavLink } from "@/components/landing/site-header";
 import { StickyStart } from "@/components/landing/sticky-start";
 import { Waitlist } from "@/components/landing/waitlist";
@@ -30,27 +32,27 @@ const NAV: NavLink[] = [
 const START = "/join?journey=live";
 
 // The orders every restaurant already gets outside the apps: how they go today, and with Zest.
-const LOST: { icon: typeof Plus; who: Bi; today: Bi; zest: Bi }[] = [
+const LOST: { photo: string; who: Bi; today: Bi; zest: Bi }[] = [
   {
-    icon: PhoneCall,
+    photo: "/photos/dish-curry-naan.webp",
     who: { en: "Regulars who call or WhatsApp", hi: "फ़ोन या WhatsApp करने वाले पुराने ग्राहक" },
     today: { en: "Written on a slip, missed in the rush", hi: "पर्ची पर लिखा, भीड़ में छूट गया" },
     zest: { en: "They order on your page, pay by UPI and stay saved as your regular", hi: "वे आपके पेज पर ऑर्डर करते हैं, UPI से पैसा देते हैं और आपके पुराने ग्राहक के रूप में सेव रहते हैं" },
   },
   {
-    icon: Briefcase,
+    photo: "/photos/hero-biryani.webp",
     who: { en: "Office and party orders", hi: "ऑफ़िस और पार्टी के ऑर्डर" },
     today: { en: "Long calls, cash advance, details lost", hi: "लंबी कॉल, नकद एडवांस, बातें भूल गईं" },
     zest: { en: "One link for the whole order, paid in advance by UPI", hi: "पूरे ऑर्डर के लिए एक लिंक, UPI से पहले ही भुगतान" },
   },
   {
-    icon: QrCode,
+    photo: "/photos/team-guests.webp",
     who: { en: "Dine-in guests, back at home", hi: "डाइन-इन मेहमान, घर लौटकर" },
     today: { en: "They loved the food, then forgot your name", hi: "खाना पसंद आया, फिर नाम भूल गए" },
     zest: { en: "A QR on the table and the bill brings them back to your page", hi: "टेबल और बिल पर QR उन्हें वापस आपके पेज पर लाता है" },
   },
   {
-    icon: Search,
+    photo: "/photos/stage-scale.webp",
     who: { en: "People who search your name", hi: "आपका नाम खोजने वाले लोग" },
     today: { en: "Google shows your number, then a busy line", hi: "Google आपका नंबर दिखाता है, फिर लाइन व्यस्त" },
     zest: { en: "Your page shows up with an Order button", hi: "आपका पेज ऑर्डर बटन के साथ दिखता है" },
@@ -144,21 +146,21 @@ export default function Restaurants() {
   const [asking, setAsking] = useState(false);
 
   return (
-    <div className="lp min-h-dvh overflow-x-clip">
+    <div className={`lp min-h-dvh overflow-x-clip ${siteFonts}`}>
       <SiteHeader nav={NAV} start={{ href: START, label: { en: "Get started free", hi: "मुफ़्त शुरू करें" } }} />
 
       {/* Hero: keep the apps, add the orders they never see */}
       <section aria-labelledby="hero-h" className="lp-wrap pb-6 pt-2 sm:pb-12 lg:pb-16 lg:pt-4">
-        <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-2 lg:gap-12">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
           <div>
             <AudienceSwitch current="restaurants" />
-            <h1 id="hero-h" className="lp-display mt-6 max-w-[17ch] text-[40px] leading-[1.02] [text-wrap:balance] sm:mt-8 sm:text-[56px] xl:text-[60px]">
-              {pick({ en: "Keep your Zomato and Swiggy orders. Add the ones they never see.", hi: "Zomato और Swiggy के ऑर्डर वैसे ही रखिए। जो वहाँ तक नहीं पहुँचते, वे भी पाइए।" })}
+            <h1 id="hero-h" className="lp-display mt-6 text-[40px] leading-[1.02] [text-wrap:balance] sm:mt-8 sm:text-[60px] xl:text-[72px]">
+              {pick({ en: "More orders, beyond the apps.", hi: "ऐप के अलावा, और ऑर्डर।" })}
             </h1>
             <p className={`mt-5 ${LEAD}`}>
               {pick({
-                en: "Phone, WhatsApp and party orders on your own page, paid by UPI and delivered by Zomato riders. One Soundbox calls out every order, from every app.",
-                hi: "फ़ोन, WhatsApp और पार्टी के ऑर्डर आपके अपने पेज पर, UPI से भुगतान और Zomato राइडर से डिलीवरी। एक Soundbox हर ऐप का हर ऑर्डर बोलकर बताता है।",
+                en: "Stay on Zomato and Swiggy. Take the phone, WhatsApp and party orders they never see on your own page, paid by UPI and delivered by Zomato riders.",
+                hi: "Zomato और Swiggy पर बने रहिए। जो फ़ोन, WhatsApp और पार्टी के ऑर्डर वहाँ तक नहीं पहुँचते, उन्हें अपने पेज पर लीजिए, UPI से भुगतान और Zomato राइडर से डिलीवरी।",
               })}
             </p>
             <div className="mt-7">
@@ -189,14 +191,11 @@ export default function Restaurants() {
           </p>
           <ul className="mt-8 grid gap-4 sm:grid-cols-2">
             {LOST.map((x) => (
-              <li key={x.who.en} className="rounded-[24px] bg-[var(--lp-paper)] p-5 outline outline-1 -outline-offset-1 outline-[var(--lp-line)] sm:p-6">
-                <div className="flex items-center gap-3">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--lp-accent-soft)]">
-                    <x.icon aria-hidden size={20} />
-                  </span>
+              <li key={x.who.en} className="overflow-hidden rounded-[24px] bg-[var(--lp-sunken)]">
+                <Image src={x.photo} alt="" width={800} height={360} sizes="(min-width: 640px) 50vw, 100vw" className="h-36 w-full object-cover sm:h-44" />
+                <div className="p-5 sm:p-6">
                   <h3 className="text-[19px] font-semibold leading-snug">{pick(x.who)}</h3>
-                </div>
-                <p className="mt-4 flex gap-2.5 text-[16px] leading-snug text-[var(--lp-muted)]">
+                <p className="mt-3 flex gap-2.5 text-[16px] leading-snug text-[var(--lp-muted)]">
                   <X aria-hidden size={18} strokeWidth={2.5} className="mt-0.5 shrink-0 text-[var(--lp-bad)]" />
                   <span>
                     <span className="font-semibold">{pick({ en: "Today:", hi: "आज:" })}</span> {pick(x.today)}
@@ -208,12 +207,10 @@ export default function Restaurants() {
                     <span className="font-semibold">{pick({ en: "With Zest:", hi: "Zest के साथ:" })}</span> {pick(x.zest)}
                   </span>
                 </p>
+                </div>
               </li>
             ))}
           </ul>
-          <p className="mt-8 max-w-[40em] text-[19px] font-semibold leading-snug sm:text-[20px]">
-            {pick({ en: "Zomato and Swiggy bring you new customers. Your page catches everyone else.", hi: "Zomato और Swiggy आपको नए ग्राहक देते हैं। आपका पेज बाक़ी सबको पकड़ता है।" })}
-          </p>
         </div>
       </section>
 
@@ -232,7 +229,6 @@ export default function Restaurants() {
                   <s.icon aria-hidden size={20} />
                 </span>
                 <p className="pt-2.5 text-[17px] font-semibold leading-snug lg:mt-4 lg:pt-0">
-                  <span className="mr-1.5 text-[var(--lp-muted)]">{k + 1}.</span>
                   {pick(s.t)}
                 </p>
               </li>
@@ -246,12 +242,6 @@ export default function Restaurants() {
               </div>
             ))}
           </div>
-          <p className={`mt-6 ${LEAD}`}>
-            {pick({
-              en: "Delivery is priced by distance. You choose who pays: the customer, you, or free above an order amount.",
-              hi: "डिलीवरी का दाम दूरी से तय होता है। कौन देगा, आप चुनिए: ग्राहक, आप, या एक रक़म से ऊपर के ऑर्डर पर मुफ़्त।",
-            })}
-          </p>
         </div>
       </section>
 
@@ -263,7 +253,7 @@ export default function Restaurants() {
           </h2>
           <ul className="mt-8 grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
             {ALONGSIDE.map((a) => (
-              <li key={a.title.en} className="border-t border-[#3a3f45] pt-5">
+              <li key={a.title.en}>
                 <Check aria-hidden size={22} strokeWidth={3} className="text-[var(--z-turmeric)]" />
                 <h3 className="mt-3 text-[18px] font-semibold leading-snug">{pick(a.title)}</h3>
                 <p className="mt-1.5 text-[16px] leading-relaxed text-[#b4b9be]">{pick(a.text)}</p>
@@ -277,19 +267,18 @@ export default function Restaurants() {
       <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-12 lg:py-16">
         <div className="lp-wrap grid items-start gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
           <div>
-            <p className="text-[15px] font-semibold text-[var(--lp-muted)]">Zest Soundbox</p>
-            <h2 id="soundbox-h" className={`mt-2 ${H2}`}>
+            <h2 id="soundbox-h" className={H2}>
               {pick({ en: "Three tablets. One rush. No missed orders.", hi: "तीन टैबलेट। एक भीड़। कोई ऑर्डर नहीं छूटता।" })}
             </h2>
             <p className={`mt-4 ${LEAD}`}>
               {pick({
-                en: "One box on your counter calls out every order from Zomato, Swiggy and your page, in Hindi or English.",
-                hi: "काउंटर पर एक डिब्बा, जो Zomato, Swiggy और आपके पेज का हर ऑर्डर हिंदी या अंग्रेज़ी में बोलकर बताता है।",
+                en: "The Zest Soundbox sits on your counter and calls out every order from Zomato, Swiggy and your page, in Hindi or English.",
+                hi: "Zest Soundbox आपके काउंटर पर रहता है और Zomato, Swiggy और आपके पेज का हर ऑर्डर हिंदी या अंग्रेज़ी में बोलकर बताता है।",
               })}
             </p>
-            <ul className="mt-8 divide-y divide-[var(--lp-line)] border-y border-[var(--lp-line)]">
+            <ul className="mt-8 grid gap-2">
               {PAINS.map((p) => (
-                <li key={p.pain.en} className="grid gap-1 py-4 sm:grid-cols-2 sm:gap-6">
+                <li key={p.pain.en} className="grid gap-1 rounded-2xl bg-[var(--lp-sunken)] px-4 py-3.5 sm:grid-cols-2 sm:gap-6 sm:px-5">
                   <p className="flex items-start gap-2.5 text-[16px] text-[var(--lp-muted)]">
                     <X aria-hidden size={18} strokeWidth={2.5} className="mt-0.5 shrink-0 text-[var(--lp-bad)]" />
                     {pick(p.pain)}
@@ -331,13 +320,10 @@ export default function Restaurants() {
                 hi: "Zest, Zomato और Swiggy के ऑर्डर, पेआउट और रेटिंग वाले ईमेल पढ़ता है और WhatsApp पर एक रिपोर्ट भेजता है। जिन रिव्यू का जवाब देना है, उनका जवाब पहले से तैयार मिलता है।",
               })}
             </p>
-            <p className="mt-6 flex gap-3 text-[16px] font-medium leading-relaxed">
-              <Lock aria-hidden size={20} className="mt-0.5 shrink-0 text-[var(--lp-good)]" />
-              {pick({
-                en: "Zest only reads emails from your food apps. It never sends email, never shares it, and you can disconnect anytime.",
-                hi: "Zest सिर्फ़ आपके फ़ूड ऐप के ईमेल पढ़ता है। वह कभी ईमेल नहीं भेजता, कभी साझा नहीं करता, और आप कभी भी कनेक्शन हटा सकते हैं।",
-              })}
-            </p>
+            <a href={START} className="lp-btn haldi mt-7">
+              <Mail aria-hidden size={18} />
+              {pick({ en: "Connect your email", hi: "अपना ईमेल जोड़िए" })}
+            </a>
           </div>
           <MorningSummary />
         </div>
@@ -365,21 +351,15 @@ export default function Restaurants() {
 
       {/* Closing call to action */}
       <section id="final-start" aria-labelledby="start-h" className="bg-[var(--z-turmeric)] py-14 text-[#1c1f23] lg:py-20">
-        <div className="lp-wrap">
-          <div className="flex items-center gap-3">
-            <Store aria-hidden size={22} />
-            <p className="text-[16px] font-semibold">{pick({ en: "For restaurants on Zomato and Swiggy", hi: "Zomato और Swiggy वाले रेस्टोरेंट के लिए" })}</p>
-          </div>
-          <h2 id="start-h" className={`mt-3 ${H2}`}>
-            {pick({ en: "More orders, on top of the apps.", hi: "ऐप के ऊपर, और ऑर्डर।" })}
+        <div className="lp-wrap grid items-center gap-7 lg:grid-cols-2 lg:gap-12">
+          <h2 id="start-h" className={H2}>
+            {pick({ en: "Keep the apps. Add your own orders.", hi: "ऐप वैसे ही रखिए। अपने ऑर्डर भी जोड़िए।" })}
           </h2>
-          <div className="mt-7">
-            <LinkStart tone="turmeric" />
-          </div>
+          <LinkStart tone="turmeric" />
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter credits={false} />
 
       <StickyStart
         href={START}

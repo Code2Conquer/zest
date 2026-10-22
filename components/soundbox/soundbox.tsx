@@ -6,7 +6,7 @@ import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 import "./soundbox.css";
 
-// The Zest Soundbox "Halo": a round chalk puck with a light ring set into its top. The ring glows when an
+// The Zest Soundbox "Halo": a round graphite puck with a champagne bevel, a glass top and a light ring set into it. The ring glows when an
 // order comes in, moves while Zest speaks, turns green when accepted and red when an order waits too
 // long. Press the top to accept (and again when the food is ready); hold the side button to talk.
 // The KOT comes out of a separate ticket printer, an add-on that sits next to it. Drawn in SVG and CSS;
@@ -59,39 +59,81 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
       <div className="relative" style={{ width: box, height: box * 0.56 }}>
         <svg viewBox="0 0 200 112" className="absolute inset-0 size-full overflow-visible" role="img" aria-label={label}>
           <defs>
+            {/* graphite side: lit from the front-left, falling off to the edges and the bottom */}
             <linearGradient id={`${id}-side`} x1="0" x2="1">
-              <stop offset="0" stopColor="#c9c2b4" />
-              <stop offset="0.45" stopColor="#e4ded2" />
-              <stop offset="1" stopColor="#b3ab9c" />
+              <stop offset="0" stopColor="#0d0f11" />
+              <stop offset="0.18" stopColor="#2b2f34" />
+              <stop offset="0.36" stopColor="#4a4f56" />
+              <stop offset="0.52" stopColor="#2a2e33" />
+              <stop offset="0.85" stopColor="#16181b" />
+              <stop offset="1" stopColor="#08090a" />
             </linearGradient>
-            <radialGradient id={`${id}-top`} cx="0.4" cy="0.3" r="0.8">
-              <stop offset="0" stopColor="#f6f2ea" />
-              <stop offset="1" stopColor="#ddd6c8" />
+            <linearGradient id={`${id}-shade`} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stopColor="#000" stopOpacity="0" />
+              <stop offset="1" stopColor="#000" stopOpacity="0.45" />
+            </linearGradient>
+            {/* champagne bevel where the top meets the side */}
+            <linearGradient id={`${id}-bevel`} x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stopColor="#f3e4c4" />
+              <stop offset="0.45" stopColor="#b89c6a" />
+              <stop offset="1" stopColor="#5e4d33" />
+            </linearGradient>
+            <radialGradient id={`${id}-top`} cx="0.36" cy="0.25" r="0.9">
+              <stop offset="0" stopColor="#3d4248" />
+              <stop offset="0.55" stopColor="#25282c" />
+              <stop offset="1" stopColor="#141619" />
             </radialGradient>
-            <radialGradient id={`${id}-dish`} cx="0.5" cy="0.6" r="0.6">
-              <stop offset="0" stopColor="#e9e3d7" />
-              <stop offset="1" stopColor="#d6cfc1" />
+            <linearGradient id={`${id}-sheen`} x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stopColor="#fff" stopOpacity="0.22" />
+              <stop offset="0.4" stopColor="#fff" stopOpacity="0.04" />
+              <stop offset="1" stopColor="#fff" stopOpacity="0" />
+            </linearGradient>
+            {/* the glass dish you press */}
+            <radialGradient id={`${id}-dish`} cx="0.45" cy="0.7" r="0.75">
+              <stop offset="0" stopColor="#2f3338" />
+              <stop offset="1" stopColor="#0f1113" />
             </radialGradient>
             <filter id={`${id}-blur`} x="-30%" y="-60%" width="160%" height="220%">
               <feGaussianBlur stdDeviation="5" />
             </filter>
+            <filter id={`${id}-soft`} x="-30%" y="-60%" width="160%" height="220%">
+              <feGaussianBlur stdDeviation="2.2" />
+            </filter>
+            <clipPath id={`${id}-topclip`}>
+              <ellipse cx="100" cy="48" rx="84.5" ry="29" />
+            </clipPath>
           </defs>
-          {/* light pooling on the counter, and the shadow */}
-          <ellipse cx="100" cy="88" rx="98" ry="22" className="sb-pool" filter={`url(#${id}-blur)`} />
-          <ellipse cx="100" cy="84" rx="80" ry="13" fill="#000" opacity="0.16" filter={`url(#${id}-blur)`} />
-          {/* side band */}
-          <path d="M14 48 V68 A86 30 0 0 0 186 68 V48 Z" fill={`url(#${id}-side)`} />
-          <rect x="150" y="66" width="16" height="4" rx="2" transform="rotate(-8 158 68)" fill="#9d9586" />
-          {/* top and the pressable dish */}
-          <ellipse cx="100" cy="48" rx="86" ry="30" fill={`url(#${id}-top)`} />
+          {/* light pooling on the counter, the wide soft shadow and the tight contact shadow */}
+          <ellipse cx="100" cy="90" rx="98" ry="22" className="sb-pool" filter={`url(#${id}-blur)`} />
+          <ellipse cx="100" cy="86" rx="88" ry="15" fill="#000" opacity="0.22" filter={`url(#${id}-blur)`} />
+          <ellipse cx="100" cy="76" rx="80" ry="10" fill="#000" opacity="0.35" filter={`url(#${id}-soft)`} />
+          {/* side band, shaded towards the counter, with a thin lit lip at the bottom */}
+          <path d="M14 48 V70 A86 30 0 0 0 186 70 V48 Z" fill={`url(#${id}-side)`} />
+          <path d="M14 48 V70 A86 30 0 0 0 186 70 V48 Z" fill={`url(#${id}-shade)`} />
+          <path d="M16 70 A84 29 0 0 0 184 70" fill="none" stroke="#fff" strokeOpacity="0.1" strokeWidth="0.8" />
+          {/* push-to-talk key on the side */}
+          <rect x="150" y="67" width="16" height="4" rx="2" transform="rotate(-8 158 69)" fill="#050607" />
+          <rect x="150.5" y="67" width="15" height="1.2" rx="0.6" transform="rotate(-8 158 69)" fill="#fff" opacity="0.18" />
+          {/* bevel, top and the sheen across it */}
+          <ellipse cx="100" cy="48" rx="86" ry="30" fill={`url(#${id}-bevel)`} />
+          <ellipse cx="100" cy="48" rx="84.5" ry="29" fill={`url(#${id}-top)`} />
+          <g clipPath={`url(#${id}-topclip)`}>
+            <ellipse cx="72" cy="30" rx="70" ry="22" fill={`url(#${id}-sheen)`} />
+          </g>
+          {/* the groove the light ring sits in */}
+          <ellipse cx="100" cy="48.6" rx="58" ry="20.5" fill="none" stroke="#050607" strokeWidth="4.4" />
+          <ellipse cx="100" cy="47.4" rx="58" ry="20.5" fill="none" stroke="#fff" strokeOpacity="0.07" strokeWidth="1" />
+          {/* the glass dish, with its reflection and the etched mark */}
           <g className="sb-dish">
             <ellipse cx="100" cy="48" rx="52" ry="18" fill={`url(#${id}-dish)`} />
-            <text x="100" y="52" textAnchor="middle" fontSize="15" fontWeight="600" fill="#cbc4b6" transform="translate(0 20.8) scale(1 0.6)" letterSpacing="3">
+            <path d="M58 44 A48 15 0 0 1 128 33.5" fill="none" stroke="#fff" strokeOpacity="0.28" strokeWidth="1.4" strokeLinecap="round" />
+            <ellipse cx="88" cy="40" rx="26" ry="6" fill="#fff" opacity="0.05" />
+            <text x="100" y="52" textAnchor="middle" fontSize="13" fontWeight="500" fill="#8b9097" transform="translate(0 20.8) scale(1 0.6)" letterSpacing="5" style={{ fontFamily: "var(--font-site), system-ui, sans-serif" }}>
               zest
             </text>
           </g>
-          {/* the light ring in its groove */}
-          <ellipse cx="100" cy="48" rx="58" ry="20.5" fill="none" stroke="#a69e8f" strokeWidth="3.2" />
+          {/* the light ring: a faint warm line at rest, glowing in the state's colour */}
+          <ellipse cx="100" cy="48" rx="58" ry="20.5" fill="none" stroke="#6b5532" strokeOpacity="0.55" strokeWidth="1.6" />
           <ellipse cx="100" cy="48" rx="58" ry="20.5" className="sb-glow" filter={`url(#${id}-blur)`} />
           <ellipse cx="100" cy="48" rx="58" ry="20.5" className="sb-ring" />
         </svg>

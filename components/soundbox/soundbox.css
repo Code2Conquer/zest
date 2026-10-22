@@ -1,4 +1,4 @@
-/* Zest Soundbox "Halo". Chalk body, a light ring in the top. The ring's colour is the state: amber for a
+/* Zest Soundbox "Halo". Graphite body, champagne bevel, a light ring in the top. The ring's colour is the state: amber for a
    new order, warm yellow while speaking, green when accepted, red when an order waits too long, off
    when resting. Every move here stops under prefers-reduced-motion. */
 
@@ -45,7 +45,7 @@
 .sb[data-state="accepted"] .sb-dish { animation: sb-press 420ms ease-out 1; }
 .sb-talk {
   background: transparent;
-  color: #6f685c;
+  color: #9aa0a6;
 }
 .sb-talk:not(:disabled) { cursor: pointer; }
 .sb-button:focus-visible,
@@ -54,17 +54,16 @@
   outline-offset: 3px;
 }
 
-/* The ticket printer (add-on): a small chalk block with a paper slot and a light */
+/* The ticket printer (add-on): a small graphite block to match, with a paper slot and a light */
 .sb-printer {
   border-radius: 10px 10px 6px 6px;
-  background: linear-gradient(#ece6da, #d3ccbe);
-  box-shadow: inset 0 -3px 0 #b9b1a2;
+  background: #26292e;
 }
 .sb-slot {
-  background: var(--sb-ink);
+  background: #050607;
 }
 .sb-led {
-  background: #a69e8f;
+  background: #4a4f56;
   transition: background-color 300ms ease;
 }
 .sb[data-state="printing"] .sb-led,

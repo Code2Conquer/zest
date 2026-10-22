@@ -7,6 +7,7 @@ import { AudienceSwitch } from "@/components/landing/audience-switch";
 import { DeliveryMap } from "@/components/landing/delivery";
 import { HeroSequence } from "@/components/landing/hero-sequence";
 import { SiteFooter } from "@/components/landing/site-footer";
+import { siteFonts } from "@/components/landing/site-fonts";
 import { SiteHeader } from "@/components/landing/site-header";
 import { StickyStart } from "@/components/landing/sticky-start";
 import { Waitlist } from "@/components/landing/waitlist";
@@ -51,7 +52,7 @@ export default function Home() {
   const [joining, setJoining] = useState(false);
 
   return (
-    <div className="lp min-h-dvh overflow-x-clip">
+    <div className={`lp min-h-dvh overflow-x-clip ${siteFonts}`}>
       <SiteHeader start={{ href: START, label: { en: "Start free", hi: "मुफ़्त शुरू करें" } }} />
 
       {/* Hero: who it's for, the one promise, one action, and the order travelling from menu to Soundbox */}
@@ -129,9 +130,6 @@ export default function Home() {
           <div className="mt-8">
             <DeliveryMap />
           </div>
-          <p className="mt-6 text-[15px] text-[var(--lp-muted)]">
-            {pick({ en: "Delivery is priced by distance. You choose who pays: the customer, you, or free above an order amount.", hi: "डिलीवरी का दाम दूरी से तय होता है। कौन देगा, आप चुनिए: ग्राहक, आप, या एक रक़म से ऊपर के ऑर्डर पर मुफ़्त।" })}
-          </p>
         </div>
       </section>
 
@@ -161,14 +159,13 @@ export default function Home() {
       <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 bg-[#15181b] py-12 text-[#f1f1ec] lg:py-16">
         <div className="lp-wrap grid items-center gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
           <div>
-            <p className="text-[15px] font-semibold text-[var(--z-turmeric)]">Zest Soundbox</p>
-            <h2 id="soundbox-h" className={`mt-2 ${H2}`}>
+            <h2 id="soundbox-h" className={H2}>
               {pick({ en: "Hear every order, without touching your phone.", hi: "हर ऑर्डर सुनिए, फ़ोन छुए बिना।" })}
             </h2>
             <p className="mt-4 max-w-[34em] text-[17px] leading-relaxed text-[#b4b9be] sm:text-[18px]">
               {pick({
-                en: "A small box on your counter that speaks each order in Hindi or English. Press the top to accept, even with floury hands.",
-                hi: "काउंटर पर रखा एक छोटा डिब्बा, जो हर ऑर्डर हिंदी या अंग्रेज़ी में बोलकर बताता है। मंज़ूर करने के लिए ऊपर दबाइए, आटे वाले हाथों से भी।",
+                en: "The Zest Soundbox sits on your counter and speaks each order in Hindi or English. Press the top to accept, even with floury hands.",
+                hi: "Zest Soundbox आपके काउंटर पर रहता है और हर ऑर्डर हिंदी या अंग्रेज़ी में बोलकर बताता है। मंज़ूर करने के लिए ऊपर दबाइए, आटे वाले हाथों से भी।",
               })}
             </p>
             <div className="mt-7">

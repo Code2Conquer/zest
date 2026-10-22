@@ -32,6 +32,8 @@
   color-scheme: light;
   background: var(--lp-ground);
   color: var(--lp-ink);
+  font-family: var(--font-site), var(--font-site-deva), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Dark: Ink becomes the page, Turmeric stays as it is. */
@@ -251,12 +253,10 @@
   }
 }
 
-/* Display type for this page: Anek at its natural width, heavy and tight. Calmer than the wide sign
-   face the app uses for its own headings, and it lets a headline sit on two lines. */
+/* Display type for the website: Inter, bold and tightly set. */
 .lp-display {
-  font-variation-settings: "wdth" 82; /* Anek's condensed width for big headlines */
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.035em;
 }
 
 /* The seller's handwritten menu note: ballpoint on a torn notebook page. */
@@ -278,6 +278,6 @@
   line-height: 1.6;
 }
 .lp:lang(hi) .lp-display {
-  line-height: 1.25;
+  line-height: 1.3;
   letter-spacing: 0;
 }
