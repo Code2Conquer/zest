@@ -121,7 +121,7 @@ export function MailboxCard({ returnTo }: { returnTo: string }) {
           {outlet?.isDemo ? (
             <p className="mt-3 flex flex-wrap items-center gap-3 text-sm text-turmeric">
               {pick(NOTICE.demo)}
-              <a href="/?start=1" className="rounded-full bg-turmeric-soft px-3.5 py-1.5 font-medium text-ink shadow-[inset_0_0_0_1px_var(--turmeric)]">
+              <a href="/join" className="rounded-full bg-turmeric-soft px-3.5 py-1.5 font-medium text-ink shadow-[inset_0_0_0_1px_var(--turmeric)]">
                 {hi ? "अपना रेस्टोरेंट शुरू करें" : "Start your own restaurant"}
               </a>
             </p>

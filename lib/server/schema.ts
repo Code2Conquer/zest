@@ -427,3 +427,17 @@ export type DiningTable = typeof diningTables.$inferSelect;
 export type DineTab = typeof dineTabs.$inferSelect;
 export type Reservation = typeof reservations.$inferSelect;
 export type Campaign = typeof campaigns.$inferSelect;
+
+/** Kitchens waiting for the Zest Soundbox. Table created in db.ts; see docs/migrations/0001-soundbox-waitlist.sql. */
+export const WAITLIST_TYPES = ["home_kitchen", "tiffin", "cloud_kitchen", "shop", "restaurant"] as const;
+export const soundboxWaitlist = sqliteTable("soundbox_waitlist", {
+  id: text("id").primaryKey().$defaultFn(id),
+  name: text("name").notNull(),
+  business: text("business").notNull(),
+  phone: text("phone").notNull().unique(),
+  city: text("city").notNull(),
+  type: text("type", { enum: WAITLIST_TYPES }).notNull(),
+  page: text("page").notNull(),
+  section: text("section").notNull(),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+});

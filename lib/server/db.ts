@@ -142,6 +142,12 @@ CREATE TABLE IF NOT EXISTS order_lines (
   unit_price INTEGER NOT NULL, options TEXT NOT NULL DEFAULT '[]', line_total INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS order_lines_order ON order_lines (order_id);
+-- Soundbox waitlist (docs/migrations/0001-soundbox-waitlist.sql)
+CREATE TABLE IF NOT EXISTS soundbox_waitlist (
+  id TEXT PRIMARY KEY, name TEXT NOT NULL, business TEXT NOT NULL, phone TEXT NOT NULL, city TEXT NOT NULL,
+  type TEXT NOT NULL, page TEXT NOT NULL, section TEXT NOT NULL, created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX IF NOT EXISTS soundbox_waitlist_phone ON soundbox_waitlist (phone);
 `;
 
 // Columns added after the first release. Each runs once; "duplicate column" means it's already there.

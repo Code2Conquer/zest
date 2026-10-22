@@ -300,7 +300,7 @@ export default function Join() {
   return (
     <div className="min-h-dvh">
       <header className="mx-auto flex max-w-4xl items-center justify-between px-4 py-5 sm:px-8">
-        <Link href="/?start=1" aria-label="Back to start" className="inline-flex items-center gap-1 text-ink-2 hover:text-ink">
+        <Link href="/" aria-label="Back to start" className="inline-flex items-center gap-1 text-ink-2 hover:text-ink">
           <ChevronLeft aria-hidden className="size-5" />
           <Wordmark />
         </Link>
