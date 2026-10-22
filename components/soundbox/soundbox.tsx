@@ -103,12 +103,18 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
 
       {/* The KOT, printing downward out of the slot */}
       {printed && ticket && (
-        <div className="relative z-0 overflow-hidden" style={{ width: box * 0.7, marginTop: -box * 0.05 }}>
+        <div className="relative z-0 overflow-hidden" style={{ width: box * 0.86, marginTop: -box * 0.05 }}>
           <div className={`sb-ticket font-kot ${state === "printing" ? "is-printing" : ""}`}>
             <p className="font-semibold">{ticket.title}</p>
-            {ticket.lines.map((l) => (
-              <p key={l}>{l}</p>
-            ))}
+            {ticket.lines.map((l) => {
+              const [name, price] = l.split("|");
+              return (
+                <p key={l} className="flex justify-between gap-3">
+                  <span>{name}</span>
+                  {price && <span className="tabular-nums">{price}</span>}
+                </p>
+              );
+            })}
             {ticket.foot && <p className="mt-1.5">{ticket.foot}</p>}
           </div>
         </div>

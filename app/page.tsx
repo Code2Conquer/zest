@@ -2,10 +2,14 @@
 
 import "./landing.css";
 import { useEffect, useRef, useState } from "react";
+import type { Bi } from "@/lib/i18n";
+import { useApp } from "@/lib/state";
 import { ArrowRight, BellRing, Bike, Check, Hand, Languages, MessageCircle, Mic, PhoneOff, Plus, Printer, Search, Tablet } from "lucide-react";
 import { LangToggle, ThemeToggle, Wordmark } from "@/components/bits";
 import { RouterDialog } from "@/components/landing/router";
-import { DemoPlayer } from "@/components/landing/demo";
+import { OneDay } from "@/components/landing/day";
+import { HeroSequence } from "@/components/landing/hero-sequence";
+import { SiteHeader } from "@/components/landing/site-header";
 import { AgentFlow } from "@/components/landing/flow";
 import { PhonePage } from "@/components/landing/mocks";
 import { SyncDemo, SoundboxDevice, SoundboxStage } from "@/components/landing/soundbox-stage";
@@ -44,7 +48,13 @@ function joinUrl(raw: string) {
   return `/join?${q}`;
 }
 
-const WORDS = ["regulars", "Instagram", "Google", "WhatsApp", "own website"];
+const AGENT_LIST: { name: Bi; does: Bi }[] = [
+  { name: { en: "Storefront", hi: "स्टोरफ़्रंट" }, does: { en: "Your website from a menu photo, set up for Google search, WhatsApp ordering, UPI payments, your Google listing, the counter QR", hi: "मेन्यू की फ़ोटो से आपकी वेबसाइट, Google सर्च के लिए तैयार, WhatsApp ऑर्डर, UPI पेमेंट, आपकी Google लिस्टिंग, काउंटर QR" } },
+  { name: { en: "Orders and delivery", hi: "ऑर्डर और डिलीवरी" }, does: { en: "Accepts, prints the KOT, picks pickup, your own helper or a Zomato rider, tracks to the door", hi: "ऑर्डर मंज़ूर करता है, KOT छापता है, पिकअप, आपका अपना हेल्पर या Zomato राइडर चुनता है, दरवाज़े तक ट्रैक करता है" } },
+  { name: { en: "Regulars", hi: "पुराने ग्राहक" }, does: { en: "Remembers every guest and their usual, welcome offers for new guests, reminders that bring regulars back", hi: "हर ग्राहक और उनकी पसंद याद रखता है, नए ग्राहकों के लिए स्वागत ऑफ़र, पुराने ग्राहकों को वापस लाने वाले रिमाइंडर" } },
+  { name: { en: "Reviews", hi: "रिव्यू" }, does: { en: "Asks every guest how it was, answers complaints in your voice, spots repeat problems", hi: "हर ग्राहक से पूछता है कैसा लगा, आपकी भाषा में शिकायतों का जवाब देता है, बार-बार की परेशानी पकड़ता है" } },
+  { name: { en: "Growth", hi: "ग्रोथ" }, does: { en: "Shows up in AI answers, Instagram posts and ads on Instagram and Facebook within your budget, spots what people nearby search for, suggests new combos, lunch boxes and festive hampers", hi: "AI जवाबों में दिखता है, Instagram पोस्ट और आपके बजट में Instagram व Facebook विज्ञापन, आस-पास लोग क्या खोजते हैं यह देखता है, नए कॉम्बो, लंच बॉक्स और त्योहार के डिब्बे सुझाता है" } },
+];
 
 const SOUNDBOX_FEATURES: { icon: typeof Check; title: string; text: string }[] = [
   { icon: Languages, title: "Speaks every order", text: "Out loud, in Hindi or English, from every channel." },
@@ -65,16 +75,13 @@ const FAQ: { q: string; a: string }[] = [
 ];
 
 export default function Landing() {
+  const { pick } = useApp();
   const root = useReveal();
   const [routerOpen, setRouterOpen] = useState(false);
   const [link, setLink] = useState("");
-  const [word, setWord] = useState(0);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("start") === "1") setRouterOpen(true);
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const t = setInterval(() => setWord((w) => (w + 1) % WORDS.length), 2600);
-    return () => clearInterval(t);
   }, []);
 
   async function openDemo() {
@@ -116,109 +123,77 @@ export default function Landing() {
         <style>{`.lp-in,.lp-bar{opacity:1!important;transform:none!important}`}</style>
       </noscript>
 
-      {/* Hero, on the dark kitchen band */}
-      <div className="bg-[var(--lp-band)] text-[#eaf0eb]">
-        <header className="lp-wrap flex h-[76px] items-center justify-between gap-6">
-          <a href="/" aria-label="Zest home">
-            <Wordmark className="text-[30px]" />
-          </a>
-          <nav aria-label="Sections" className="hidden items-center gap-8 text-[16px] font-medium lg:flex">
-            {[
-              ["#how", "How it works"],
-              ["#soundbox", "Zest Soundbox"],
-              ["#agents", "Agents"],
-              ["#faq", "Questions"],
-            ].map(([href, label]) => (
-              <a key={href} href={href} className="text-[#cdd8d0] hover:text-white">
-                {label}
-              </a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-2 text-[16px] font-medium sm:gap-4">
-            <LangToggle className="hidden sm:inline-flex" />
-            <ThemeToggle />
-            <a href="/login" className="hidden px-2 text-[#cdd8d0] hover:text-white sm:inline">
-              Log in
-            </a>
-            <button type="button" onClick={() => setRouterOpen(true)} className="lp-btn haldi min-h-11 px-5 text-[15px]">
-              Get started
-            </button>
-          </div>
-        </header>
+      <SiteHeader start={{ href: "/join?journey=new", label: { en: "Start free", hi: "मुफ़्त शुरू करें" } }} />
 
-        <section data-reveal aria-labelledby="hero-h" className="lp-wrap grid grid-cols-[minmax(0,1fr)] items-center gap-12 pb-20 pt-10 lg:grid-cols-[minmax(0,11fr)_minmax(0,12fr)] lg:gap-14 lg:pb-28 lg:pt-14">
-          <div>
-            <h1 id="hero-h" className="lp-in lp-display text-[36px] leading-[1.04] sm:text-[54px] lg:text-[clamp(46px,4.2vw,62px)]" style={i(0)}>
-              Every order, not just the app orders.
-            </h1>
-            <p className="lp-in lp-display mt-4 text-[24px] leading-tight text-[#cdd8d0] sm:text-[32px]" style={i(1)}>
-              Orders from your{" "}
-              <span className="relative inline-block min-w-[6.5em] text-[var(--lp-accent)]">
-                <span key={word} className="lp-word" aria-hidden>
-                  {WORDS[word]}.
-                </span>
-                <span className="sr-only">regulars, Instagram, Google, WhatsApp and your own website.</span>
-              </span>
-            </p>
-            <p className="lp-in mt-6 max-w-[33em] text-[18px] leading-relaxed text-[#b9c7bd]" style={i(2)}>
-              Zest turns the people who already know your restaurant into orders: your own website, WhatsApp and Google ordering, delivered by Zomato riders and announced in your kitchen by the Zest Soundbox. AI agents run the rest, around the clock.
-            </p>
-            <div className="lp-in mt-9" style={i(3)}>
-              {linkForm("hero-link")}
-              <p className="mt-4 px-2 text-[15px] text-[#a9b8ae]">
-                Your ordering website is ready in minutes.{" "}
-                <button type="button" onClick={openDemo} className="lp-link font-medium text-white">
-                  Or try a sample restaurant
-                </button>
-              </p>
-            </div>
-          </div>
-          <div className="lp-in" style={i(2)}>
-            <SoundboxStage />
-          </div>
-        </section>
-      </div>
-
-      {/* The problem */}
-      <section data-reveal aria-labelledby="problem-h" className="py-24 lg:py-32">
-        <div className="lp-wrap">
-          <h2 id="problem-h" className={`lp-in max-w-[22ch] ${H2}`} style={i(0)}>
-            Your best customers can't order from you.
-          </h2>
-          <ul className="mt-12 grid gap-x-16 gap-y-8 md:grid-cols-2">
-            {(
-              [
-                [PhoneOff, "A regular calls at 9 pm. The line is busy."],
-                [MessageCircle, "Someone DMs on Instagram asking for the menu. Nobody replies until morning."],
-                [Search, "Google shows your restaurant with no way to order."],
-                [Tablet, "Three tablets beep in the kitchen. One order gets missed."],
-              ] as const
-            ).map(([Icon, text], k) => (
-              <li key={text} className="lp-in flex gap-4 text-[22px] leading-snug" style={i(k + 1)}>
-                <Icon aria-hidden size={22} className="mt-1 shrink-0 text-[var(--lp-muted)]" />
-                {text}
-              </li>
-            ))}
-          </ul>
-          <p className="lp-in lp-display mt-14 text-[clamp(24px,2.4vw,32px)] leading-tight [text-wrap:balance]" style={i(5)}>
-            The demand is already there. <span className="text-[var(--lp-muted)]">It just has nowhere to go.</span>
+      {/* Hero */}
+      <section aria-labelledby="hero-h" className="lp-wrap grid grid-cols-[minmax(0,1fr)] items-start gap-12 pb-20 pt-6 lg:pb-28 lg:pt-12 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] xl:gap-12">
+        <div className="xl:pt-6">
+          <h1 id="hero-h" className="lp-display text-[40px] leading-[1.02] sm:text-[60px] xl:text-[clamp(56px,5vw,76px)]">
+            {pick({ en: "Your kitchen, online in a minute. Zest does the rest.", hi: "आपकी रसोई, एक मिनट में ऑनलाइन। बाक़ी सब Zest करेगा।" })}
+          </h1>
+          <p className="mt-6 max-w-[36em] text-[18px] leading-relaxed text-[var(--lp-muted)]">
+            {pick({
+              en: "Send a photo of your menu and your own ordering page is live, with WhatsApp orders, UPI payments and delivery by Zomato riders. Zest's AI agents take orders, bring back your regulars and find new customers. The Zest Soundbox tells you every order out loud.",
+              hi: "अपने मेन्यू की फ़ोटो भेजिए और आपका अपना ऑर्डर पेज तैयार, WhatsApp ऑर्डर, UPI पेमेंट और Zomato राइडर से डिलीवरी के साथ। Zest के AI एजेंट ऑर्डर लेते हैं, पुराने ग्राहकों को वापस लाते हैं और नए ग्राहक ढूँढते हैं। Zest Soundbox हर ऑर्डर बोलकर बताता है।",
+            })}
           </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a href="/join?journey=new&from=menu-photo" className="lp-btn haldi">
+              {pick({ en: "Upload menu photo", hi: "मेन्यू की फ़ोटो भेजें" })}
+            </a>
+            <a href="#waitlist" className="lp-ghost">
+              {pick({ en: "Start on WhatsApp", hi: "WhatsApp पर शुरू करें" })}
+            </a>
+          </div>
+          <p className="mt-4 text-[16px] font-medium">{pick({ en: "Free to start. No app to learn.", hi: "शुरुआत मुफ़्त। कोई ऐप सीखने की ज़रूरत नहीं।" })}</p>
+          <p className="mt-6 text-[16px] text-[var(--lp-muted)]">
+            {pick({ en: "Already on Zomato or Swiggy?", hi: "पहले से Zomato या Swiggy पर हैं?" })}{" "}
+            <a href="/restaurants" className="lp-link font-medium text-[var(--lp-ink)]">
+              {pick({ en: "See Zest for restaurants", hi: "रेस्टोरेंट के लिए Zest देखें" })}
+            </a>
+          </p>
+        </div>
+        <HeroSequence />
+      </section>
+
+      {/* One day at Meena's Kitchen */}
+      <section id="day" aria-labelledby="day-h" className="scroll-mt-4 py-20 lg:py-28">
+        <div className="lp-wrap">
+          <h2 id="day-h" className={H2}>
+            {pick({ en: "One day at Meena's Kitchen.", hi: "मीना की रसोई में एक दिन।" })}
+          </h2>
+          <p className={`mt-4 ${LEAD}`}>{pick({ en: "Meena cooks. Zest's agents do everything else.", hi: "मीना खाना बनाती हैं। बाक़ी सब Zest के एजेंट करते हैं।" })}</p>
+          <div className="mt-12">
+            <OneDay />
+          </div>
+          <p className="mt-10 text-[18px] font-semibold">{pick({ en: "Anything that costs money or goes public waits for your OK.", hi: "जिसमें पैसा लगे या जो सबको दिखे, वह आपकी हाँ के बिना नहीं होता।" })}</p>
         </div>
       </section>
 
-      {/* How it works: one order, start to finish */}
-      <section id="how" data-reveal aria-labelledby="how-h" className="scroll-mt-6 bg-[var(--lp-paper)] py-24 lg:py-32">
+      {/* The agents */}
+      <section id="agents" aria-labelledby="agents-h" className="scroll-mt-4 py-20 lg:py-28">
         <div className="lp-wrap">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
-            <h2 id="how-h" className={`lp-in ${H2}`} style={i(0)}>
-              Found. Ordered. Delivered. Done right.
+          <div className="grid gap-6 lg:grid-cols-2 lg:items-end lg:gap-16">
+            <h2 id="agents-h" className={H2}>
+              {pick({ en: "Your online team. It never sleeps. You make the calls.", hi: "आपकी ऑनलाइन टीम। कभी नहीं सोती। फ़ैसला आपका।" })}
             </h2>
-            <p className={`lp-in ${LEAD}`} style={i(1)}>
-              Guests find you on Google, Instagram and in AI answers, then order on your website, WhatsApp or the phone. Here is one of those orders at the sample restaurant, from first message to review.
+            <p className={LEAD}>
+              {pick({
+                en: "Five agents pass each job between them until it's done. They learn from every edit you make: the more you approve, the less you need to.",
+                hi: "पाँच एजेंट हर काम आपस में आगे बढ़ाते हैं, जब तक वह पूरा न हो जाए। आप जो भी बदलाव करते हैं, उससे वे सीखते हैं: जितना आप मंज़ूर करेंगे, उतना कम पूछना पड़ेगा।",
+              })}
             </p>
           </div>
-          <div className="lp-in mt-12" style={i(2)}>
-            <DemoPlayer />
+          <dl className="mt-12 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-5">
+            {AGENT_LIST.map((x) => (
+              <div key={x.name.en}>
+                <dt className="text-[17px] font-semibold">{pick(x.name)}</dt>
+                <dd className="mt-1 text-[15px] leading-relaxed text-[var(--lp-muted)]">{pick(x.does)}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="mt-12">
+            <AgentFlow />
           </div>
         </div>
       </section>
@@ -256,23 +231,6 @@ export default function Landing() {
             <button type="button" onClick={() => setRouterOpen(true)} className="lp-btn haldi">
               Join the Soundbox waitlist <ArrowRight aria-hidden size={18} />
             </button>
-          </div>
-        </div>
-      </section>
-
-      {/* Agents */}
-      <section id="agents" data-reveal aria-labelledby="agents-h" className="scroll-mt-6 py-24 lg:py-32">
-        <div className="lp-wrap">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end lg:gap-16">
-            <h2 id="agents-h" className={`lp-in ${H2}`} style={i(0)}>
-              A team that never sleeps. You make the calls.
-            </h2>
-            <p className={`lp-in ${LEAD}`} style={i(1)}>
-              Six agents, Storefront, Discovery, Menu, Offers, Dispatch and Reviews, pass each job between them until it's done. They learn from every edit you make: the more you approve, the less you need to.
-            </p>
-          </div>
-          <div className="lp-in mt-12" style={i(2)}>
-            <AgentFlow />
           </div>
         </div>
       </section>

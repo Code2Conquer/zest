@@ -6,7 +6,7 @@ import { Soundbox, type SoundboxState } from "@/components/soundbox/soundbox";
 
 // Development only: every Soundbox state side by side, for screenshots. Deleted before merge.
 
-const ticket = { title: "MEENA'S KITCHEN · KOT 118", lines: ["2 x Aloo paratha", "1 x Rajma chawal", "Flat 302, Green Park"], foot: "Paid ₹270 · UPI" };
+const ticket = { title: "MEENA'S KITCHEN", lines: ["KOT 118", "2 Aloo paratha|120", "1 Rajma chawal|90", "Zomato rider|60", "Flat 302, Green Park"], foot: "Paid ₹270 UPI" };
 const STATES: { state: SoundboxState; caption: { en: string; hi: string }; clip?: string; ticket?: boolean }[] = [
   { state: "idle", caption: { en: "Waiting for the next order.", hi: "अगले ऑर्डर का इंतज़ार है।" } },
   { state: "ringing", caption: { en: "New order!", hi: "नया ऑर्डर!" } },

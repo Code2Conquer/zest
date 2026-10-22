@@ -319,6 +319,94 @@
   to { transform: scaleX(0.85); }
 }
 
+
+/* Hero sequence: chalk lettering on the menu board, the scan, dishes lifting onto the page, the
+   WhatsApp order and UPI chip, the order travelling to the Soundbox and the pointer pressing it. */
+.hs-chalk {
+  font-variation-settings: "wdth" 88;
+  letter-spacing: 0.01em;
+  transform: rotate(-1deg);
+}
+.hs-scan {
+  animation: hs-scan 1100ms ease-in-out both;
+}
+@keyframes hs-scan {
+  from { transform: translateY(0); }
+  to { transform: translateY(150px); }
+}
+.hs-lift {
+  animation: hs-lift 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes hs-lift {
+  from { opacity: 0; transform: translate(-46px, -16px) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+.hs-bubble {
+  animation: hs-pop 450ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+.hs-chip {
+  animation: hs-pop 400ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+}
+@keyframes hs-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.hs-token {
+  animation: hs-token 600ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes hs-token {
+  from { opacity: 0; transform: translateX(0); }
+  20% { opacity: 1; }
+  to { opacity: 0; transform: translateX(150px); }
+}
+.hs-cursor {
+  animation: hs-cursor 1300ms cubic-bezier(0.3, 0.7, 0.3, 1) both;
+}
+@keyframes hs-cursor {
+  0% { opacity: 0; transform: translate(40px, 60px); }
+  45% { opacity: 1; transform: translate(4px, 14px); }
+  60% { transform: translate(4px, 14px) scale(0.85); }
+  75% { transform: translate(4px, 14px) scale(1); }
+  100% { opacity: 0; transform: translate(4px, 14px); }
+}
+
+
+/* One day at Meena's Kitchen: each moment's picture plays when it becomes current (.dy-play) and
+   otherwise rests in its finished state. */
+.dy-play .dy-a { animation: dy-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.dy-play .dy-b { animation: dy-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) 250ms both; }
+.dy-play .dy-c { animation: dy-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) 700ms both; }
+.dy-play .dy-drop { animation: dy-in 380ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
+.dy-play .dy-tap { animation: dy-tap 600ms ease-out 1600ms both; }
+@keyframes dy-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes dy-tap {
+  0% { opacity: 0; transform: scale(0.9); }
+  60% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.dy-rider {
+  transform: translate(310px, 75px);
+}
+.dy-play .dy-rider {
+  animation: dy-ride 3400ms linear both;
+}
+@keyframes dy-ride {
+  0% { transform: translate(10px, 75px); }
+  24% { transform: translate(110px, 75px); }
+  38% { transform: translate(110px, 140px); }
+  62% { transform: translate(210px, 140px); }
+  76% { transform: translate(210px, 75px); }
+  100% { transform: translate(310px, 75px); }
+}
+.dy-play .dy-door { animation: dy-door 300ms ease-out both; }
+@keyframes dy-door {
+  from { opacity: 0.15; transform: scale(0.5); transform-box: fill-box; transform-origin: center; }
+  to { opacity: 1; transform: scale(1); transform-box: fill-box; transform-origin: center; }
+}
+
 .lp details > summary {
   list-style: none;
   cursor: pointer;
@@ -336,6 +424,19 @@
   }
   .lp-arrive,
   .lp-swap,
+  .dy-a,
+  .dy-b,
+  .dy-c,
+  .dy-drop,
+  .dy-tap,
+  .dy-rider,
+  .dy-door,
+  .hs-scan,
+  .hs-lift,
+  .hs-bubble,
+  .hs-chip,
+  .hs-token,
+  .hs-cursor,
   .lp-flow,
   .lp-arc,
   .lp-bar-go,
