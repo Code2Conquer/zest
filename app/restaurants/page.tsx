@@ -359,7 +359,7 @@ export default function Restaurants() {
         </div>
       </section>
 
-      <SiteFooter credits={false} />
+      <SiteFooter />
 
       <StickyStart
         href={START}

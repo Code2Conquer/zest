@@ -128,7 +128,7 @@ Do I need to be on Zomato or Swiggy? · Who delivers? · Who pays for delivery? 
 After the hero's buttons scroll away: "Online orders, delivered by you or Zomato." [Start free]. Hides at the closing call to action.
 
 ### Footer
-The wordmark, "Online orders, delivered by you or by Zomato." and © 2026 Zest. No link list. The homepage also carries the credit for Meena's CC BY-SA / CC BY photos; /restaurants uses Unsplash photos only and has no credit line.
+The wordmark, "Online orders, delivered by you or by Zomato." and © 2026 Zest. No link list. No credit line: the homepage hero phone shows Meena's menu as text (no Wikimedia photos) and /restaurants uses Unsplash photos only.
 
 ### Removed from the homepage (October 2026 refocus)
 "One day at Meena's Kitchen", the agents section and demo, "Be the first name people find nearby", the regulars section, the six-feature Soundbox list and the 3D Soundbox, and the old two-card audience split. The agents demo was later removed from `/restaurants` too; the agents now show up as the morning summary and drafted review replies.

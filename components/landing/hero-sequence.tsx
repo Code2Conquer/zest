@@ -191,8 +191,7 @@ function SellerPhone({ lifted, round, order, paid }: { lifted: boolean; round: n
         </div>
         <ul className="space-y-1 px-2.5 pt-2.5">
           {DISHES.map((d, k) => (
-            <li key={d.name} className={`flex items-center gap-2 rounded-xl bg-white p-1.5 sm:gap-2.5 ${lifted ? (round === 0 ? "hs-lift" : "") : "opacity-0"}`} style={{ animationDelay: `${k * 380}ms` }}>
-              <img src={d.thumb} alt="" width={44} height={44} className="size-9 shrink-0 rounded-lg object-cover sm:size-11" />
+            <li key={d.name} className={`flex items-center gap-2 rounded-xl bg-white px-2.5 py-2 sm:gap-2.5 sm:py-2.5 ${lifted ? (round === 0 ? "hs-lift" : "") : "opacity-0"}`} style={{ animationDelay: `${k * 380}ms` }}>
               <div className="min-w-0 flex-1">
                 <p className="flex items-start gap-1 text-[12.5px] font-semibold leading-tight">
                   <span className="mt-[1px]">
@@ -202,7 +201,7 @@ function SellerPhone({ lifted, round, order, paid }: { lifted: boolean; round: n
                 </p>
                 <p className="text-[12px]">₹{d.price}</p>
               </div>
-              <span className="rounded-md border border-[#2f7a4c] px-1.5 py-0.5 text-[10.5px] font-bold text-[#2f7a4c] max-sm:hidden">ADD</span>
+              <span className="rounded-md border border-[#2f7a4c] px-1.5 py-0.5 text-[10.5px] font-bold text-[#2f7a4c]">ADD</span>
             </li>
           ))}
         </ul>

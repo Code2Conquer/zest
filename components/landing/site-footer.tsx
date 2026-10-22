@@ -4,10 +4,10 @@ import { Wordmark } from "@/components/bits";
 import { useApp } from "@/lib/state";
 
 // The website's footer, shared by the homepage and /restaurants: the name, the line, nothing else.
-// The homepage shows Meena's dish photos, which are CC BY-SA and CC BY, so it carries their credit;
-// /restaurants uses Unsplash photos only and needs none.
+// Neither page shows a photo that needs a credit now; \`credits\` brings back the line for Meena's
+// Wikimedia photos if a page shows them again.
 
-export function SiteFooter({ credits = true }: { credits?: boolean }) {
+export function SiteFooter({ credits = false }: { credits?: boolean }) {
   const { pick } = useApp();
   return (
     <footer className="bg-[var(--lp-sunken)] py-12 lg:py-16">
