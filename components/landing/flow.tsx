@@ -26,14 +26,14 @@ const at = (a: AgentId) => {
   return { x: Math.round(CX + RX * Math.cos(t)), y: Math.round(CY + RY * Math.sin(t)) };
 };
 
-type InputId = "web" | "whatsapp" | "google" | "instagram" | "swiggy" | "zesty";
+type InputId = "web" | "whatsapp" | "google" | "instagram" | "swiggy" | "soundbox";
 const INPUTS: { id: InputId; icon: LucideIcon; name: string }[] = [
   { id: "web", icon: Globe, name: "Website" },
   { id: "whatsapp", icon: MessageCircle, name: "WhatsApp" },
   { id: "google", icon: Search, name: "Google" },
   { id: "instagram", icon: Camera, name: "Instagram" },
   { id: "swiggy", icon: Store, name: "Zomato and Swiggy" },
-  { id: "zesty", icon: Mic, name: "Zesty" },
+  { id: "soundbox", icon: Mic, name: "Zest Soundbox" },
 ];
 
 type Scenario = { id: string; tab: string; input: InputId; heard: string; steps: { agent: AgentId; text: string }[]; outcomes: { label: string; value: string }[] };
@@ -50,7 +50,7 @@ const SCENARIOS: Scenario[] = [
       { agent: "reviews", text: "Delivered. Asked Ananya how it was" },
     ],
     outcomes: [
-      { label: "Accepted on Zesty", value: "6 sec" },
+      { label: "Accepted on Zest Soundbox", value: "6 sec" },
       { label: "Rider at the door", value: "4 min" },
       { label: "Orders missed tonight", value: "0" },
     ],
@@ -58,7 +58,7 @@ const SCENARIOS: Scenario[] = [
   {
     id: "out",
     tab: "A dish runs out",
-    input: "zesty",
+    input: "soundbox",
     heard: "“Dal makhani khatam,” said at the pass",
     steps: [
       { agent: "menu", text: "Off your website, WhatsApp, Google, Zomato and Swiggy" },
@@ -300,7 +300,7 @@ export function AgentFlow() {
       {/* Captions */}
       <div className="hidden grid-cols-[16%_18%_minmax(0,1fr)_16%] gap-8 bg-[#0a130f] px-7 py-7 lg:grid">
         {[
-          ["Every channel", "Website, WhatsApp, Google, Instagram, the apps, and Zesty in your kitchen"],
+          ["Every channel", "Website, WhatsApp, Google, Instagram, the apps, and Zest Soundbox in your kitchen"],
           ["Understands it", "An order, a review, a slow hour, or what you said at the pass"],
           ["Agents hand off", "Each does its part, then passes it on, until it's done"],
           ["What changed", "Results you can see, the same night"],

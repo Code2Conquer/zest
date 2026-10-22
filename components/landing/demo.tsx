@@ -11,7 +11,7 @@ const SCENE_MS = 3800;
 
 const CHAPTERS = [
   { t: "8:02 pm", title: "Ananya orders on WhatsApp" },
-  { t: "8:02 pm", title: "Zesty speaks it in the kitchen" },
+  { t: "8:02 pm", title: "Zest Soundbox speaks it in the kitchen" },
   { t: "8:03 pm", title: "One press: accepted, ticket printed" },
   { t: "8:24 pm", title: "Food ready: a Zomato rider is on the way" },
   { t: "8:52 pm", title: "Delivered, and her review answered" },
@@ -119,7 +119,7 @@ function SceneSpeak() {
         </span>
       </div>
       <p className="max-w-[26ch] text-center text-[20px] font-medium leading-snug">
-        <span className="text-[var(--lp-accent)]">Zesty: </span>“New WhatsApp order! One dal makhani, two garlic naan. Less spicy.”
+        <span className="text-[var(--lp-accent)]">Zest: </span>“New WhatsApp order! One dal makhani, two garlic naan. Less spicy.”
       </p>
     </div>
   );

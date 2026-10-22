@@ -230,8 +230,9 @@ export function ready(): Promise<void> {
     globalForDb.zestReady = (async () => {
       await client().executeMultiple(TABLES);
       await migrate(client());
-      const { seedDemo } = await import("./seed");
+      const { seedDemo, seedMeena } = await import("./seed");
       await seedDemo();
+      await seedMeena();
       const { ensureBrands } = await import("./brands");
       await ensureBrands();
       const { ensureStaffCodes } = await import("./staff");

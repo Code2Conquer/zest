@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { Bike, Camera, Check, Globe, MessageCircle, Mic, Phone, Search, Store, Volume2 } from "lucide-react";
 import { MENU } from "@/lib/data";
 
-// Zesty, the order soundbox, and the pieces of the landing page that show orders moving: the hero
-// stage where every channel's orders arrive at Zesty, and the push-to-talk menu sync demo. Zesty is
+// Zest Soundbox, the order soundbox, and the pieces of the landing page that show orders moving: the hero
+// stage where every channel's orders arrive at Zest Soundbox, and the push-to-talk menu sync demo. Zest Soundbox is
 // drawn, not photographed: it is in pilot.
 
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
@@ -45,7 +45,7 @@ function speak(text: string, lang: "en-IN" | "hi-IN") {
 }
 
 /** The device itself. `n` changes with each new order, which restarts its announcement and print. */
-export function ZestyDevice({ order, n, accepted, onAccept, small = false }: { order: Order; n: number; accepted: boolean; onAccept?: () => void; small?: boolean }) {
+export function SoundboxDevice({ order, n, accepted, onAccept, small = false }: { order: Order; n: number; accepted: boolean; onAccept?: () => void; small?: boolean }) {
   const ch = CHANNEL[order.ch];
   return (
     <div className={`relative ${small ? "w-[230px]" : "w-[280px] sm:w-[300px]"}`}>
@@ -104,8 +104,8 @@ export function ZestyDevice({ order, n, accepted, onAccept, small = false }: { o
   );
 }
 
-/** The hero: orders from every channel arrive at Zesty, which announces each one and prints it. */
-export function ZestyStage() {
+/** The hero: orders from every channel arrive at Zest Soundbox, which announces each one and prints it. */
+export function SoundboxStage() {
   const [n, setN] = useState(0);
   const [accepted, setAccepted] = useState(false);
   const [lang, setLang] = useState<"en-IN" | "hi-IN">("en-IN");
@@ -149,16 +149,16 @@ export function ZestyStage() {
           })}
         </ol>
         <div className="order-1 flex justify-center md:order-2">
-          <ZestyDevice order={order} n={n} accepted={accepted} onAccept={() => setAccepted(true)} />
+          <SoundboxDevice order={order} n={n} accepted={accepted} onAccept={() => setAccepted(true)} />
         </div>
       </div>
-      {/* What Zesty just said */}
+      {/* What Zest Soundbox just said */}
       <div className="relative flex flex-col gap-3 bg-[#151b17] px-5 py-4 text-[#eaf0eb] sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <p key={`q${n}${lang}`} className="lp-arrive min-h-[3em] min-w-0 flex-1 text-[16px] font-medium" aria-live="off">
-          <span className="text-[var(--lp-accent)]">Zesty: </span>“{line}”
+          <span className="text-[var(--lp-accent)]">Zest: </span>“{line}”
         </p>
         <div className="flex items-center gap-2">
-          <div role="group" aria-label="Zesty's language" className="flex rounded-full bg-[#0b0f0d] p-1 text-[13px]">
+          <div role="group" aria-label="Zest's language" className="flex rounded-full bg-[#0b0f0d] p-1 text-[13px]">
             {(["en-IN", "hi-IN"] as const).map((l) => (
               <button key={l} type="button" aria-pressed={lang === l} onClick={() => setLang(l)} className={`min-h-8 rounded-full px-3 font-semibold ${lang === l ? "bg-[#2a312d]" : "text-[#a9b8ae]"}`}>
                 {l === "en-IN" ? "English" : "हिंदी"}
@@ -175,7 +175,7 @@ export function ZestyStage() {
               }}
               className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-[var(--lp-accent)] px-4 text-[14px] font-semibold text-[#121a16]"
             >
-              <Volume2 aria-hidden size={16} /> Hear Zesty
+              <Volume2 aria-hidden size={16} /> Hear it
             </button>
           )}
         </div>
@@ -193,7 +193,7 @@ const SYNC: { ch: ChannelId; where: string }[] = [
   { ch: "swiggy", where: "Swiggy" },
 ];
 
-/** Push to talk on Zesty: say the dish is finished and it goes off everywhere, one channel after another. */
+/** Push to talk on Zest Soundbox: say the dish is finished and it goes off everywhere, one channel after another. */
 export function SyncDemo() {
   const [off, setOff] = useState(false);
   const [talking, setTalking] = useState(false);

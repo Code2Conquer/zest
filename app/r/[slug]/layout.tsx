@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { storefrontJsonLd, storefrontMeta } from "@/lib/seo";
+import { ready } from "@/lib/server/db";
 import { siteUrl } from "@/lib/server/site";
 import { getStorefront } from "@/lib/server/storefront";
 
@@ -10,6 +11,7 @@ type Props = { params: Promise<{ slug: string }>; children: React.ReactNode };
 
 async function load(slug: string) {
   try {
+    await ready();
     return await getStorefront(slug);
   } catch {
     return null;

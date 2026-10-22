@@ -24,6 +24,27 @@ export function Wordmark({ className = "" }: { className?: string }) {
   );
 }
 
+/** English or हिंदी, remembered on this device. */
+export function LangToggle({ className = "" }: { className?: string }) {
+  const { lang, setLang } = useApp();
+  return (
+    <div role="group" aria-label="Language" className={`inline-flex rounded-full p-0.5 text-sm ${className}`}>
+      {(["en", "hi"] as const).map((l) => (
+        <button
+          key={l}
+          type="button"
+          lang={l}
+          aria-pressed={lang === l}
+          onClick={() => setLang(l)}
+          className={`min-h-9 rounded-full px-3 transition-colors ${lang === l ? "bg-[color-mix(in_srgb,currentColor_14%,transparent)] font-semibold" : "opacity-75 hover:opacity-100"}`}
+        >
+          {l === "en" ? "English" : "हिंदी"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** Light or dark, remembered on this device. The first visit follows the system setting. */
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const [dark, setDark] = useState<boolean | null>(null);

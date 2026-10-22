@@ -3,15 +3,15 @@
 import "./landing.css";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, BellRing, Bike, Check, Hand, Languages, MessageCircle, Mic, PhoneOff, Plus, Printer, Search, Tablet } from "lucide-react";
-import { ThemeToggle, Wordmark } from "@/components/bits";
+import { LangToggle, ThemeToggle, Wordmark } from "@/components/bits";
 import { RouterDialog } from "@/components/landing/router";
 import { DemoPlayer } from "@/components/landing/demo";
 import { AgentFlow } from "@/components/landing/flow";
 import { PhonePage } from "@/components/landing/mocks";
-import { SyncDemo, ZestyDevice, ZestyStage } from "@/components/landing/zesty";
+import { SyncDemo, SoundboxDevice, SoundboxStage } from "@/components/landing/soundbox-stage";
 
 // The pitch: Zest turns the people who already know a restaurant into orders, on its own website,
-// WhatsApp and Google, delivered by Zomato riders and announced in the kitchen by Zesty, the order
+// WhatsApp and Google, delivered by Zomato riders and announced in the kitchen by Zest Soundbox, the order
 // soundbox. Six agents run the rest and bring the owner in for decisions.
 
 /** Sections bring their parts in the first time they come near the screen. */
@@ -46,7 +46,7 @@ function joinUrl(raw: string) {
 
 const WORDS = ["regulars", "Instagram", "Google", "WhatsApp", "own website"];
 
-const ZESTY_FEATURES: { icon: typeof Check; title: string; text: string }[] = [
+const SOUNDBOX_FEATURES: { icon: typeof Check; title: string; text: string }[] = [
   { icon: Languages, title: "Speaks every order", text: "Out loud, in Hindi or English, from every channel." },
   { icon: Hand, title: "One big button to accept", text: "Accept with oily hands. No phone, no passcode." },
   { icon: Printer, title: "Prints the ticket", text: "A kitchen printer built in." },
@@ -58,9 +58,9 @@ const ZESTY_FEATURES: { icon: typeof Check; title: string; text: string }[] = [
 const FAQ: { q: string; a: string }[] = [
   { q: "Do I need to leave Zomato or Swiggy?", a: "No. Zest works alongside them. Your listings keep running as they do, and Zest keeps their menus in sync with everything else." },
   { q: "Who delivers my orders?", a: "Zomato riders, with live tracking for your guest. Zest books the rider when you press “Food ready”." },
-  { q: "What if I miss an order?", a: "Zesty won't let you. It announces every order, gets louder if nobody accepts, and then calls your phone." },
+  { q: "What if I miss an order?", a: "The Soundbox won't let you. It announces every order, gets louder if nobody accepts, and then calls your phone." },
   { q: "Who owns my customer data?", a: "You do. Orders on your website, WhatsApp and Google come with your guest's name, number and favourite dishes, and they stay yours." },
-  { q: "Which languages does Zesty speak?", a: "Hindi and English today, with more Indian languages on the way. Write to the agents in Hinglish and they'll answer in kind." },
+  { q: "Which languages does the Soundbox speak?", a: "Hindi and English today, with more Indian languages on the way. Write to the agents in Hinglish and they'll answer in kind." },
   { q: "Do I need a tech person?", a: "No. If you can use WhatsApp, you can use Zest. Paste your Zomato link and the rest is set up for you." },
 ];
 
@@ -125,7 +125,7 @@ export default function Landing() {
           <nav aria-label="Sections" className="hidden items-center gap-8 text-[16px] font-medium lg:flex">
             {[
               ["#how", "How it works"],
-              ["#zesty", "Zesty"],
+              ["#soundbox", "Zest Soundbox"],
               ["#agents", "Agents"],
               ["#faq", "Questions"],
             ].map(([href, label]) => (
@@ -135,6 +135,7 @@ export default function Landing() {
             ))}
           </nav>
           <div className="flex items-center gap-2 text-[16px] font-medium sm:gap-4">
+            <LangToggle className="hidden sm:inline-flex" />
             <ThemeToggle />
             <a href="/login" className="hidden px-2 text-[#cdd8d0] hover:text-white sm:inline">
               Log in
@@ -160,7 +161,7 @@ export default function Landing() {
               </span>
             </p>
             <p className="lp-in mt-6 max-w-[33em] text-[18px] leading-relaxed text-[#b9c7bd]" style={i(2)}>
-              Zest turns the people who already know your restaurant into orders: your own website, WhatsApp and Google ordering, delivered by Zomato riders and announced in your kitchen by Zesty. AI agents run the rest, around the clock.
+              Zest turns the people who already know your restaurant into orders: your own website, WhatsApp and Google ordering, delivered by Zomato riders and announced in your kitchen by the Zest Soundbox. AI agents run the rest, around the clock.
             </p>
             <div className="lp-in mt-9" style={i(3)}>
               {linkForm("hero-link")}
@@ -173,7 +174,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="lp-in" style={i(2)}>
-            <ZestyStage />
+            <SoundboxStage />
           </div>
         </section>
       </div>
@@ -222,12 +223,12 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Zesty */}
-      <section id="zesty" data-reveal aria-labelledby="zesty-h" className="scroll-mt-6 bg-[var(--lp-band)] py-24 text-[#eaf0eb] lg:py-32">
+      {/* Zest Soundbox */}
+      <section id="soundbox" data-reveal aria-labelledby="soundbox-h" className="scroll-mt-6 bg-[var(--lp-band)] py-24 text-[#eaf0eb] lg:py-32">
         <div className="lp-wrap">
           <div className="mx-auto max-w-[46rem] text-center">
-            <h2 id="zesty-h" className={`lp-in ${H2}`} style={i(0)}>
-              Meet Zesty. It hears every order so you don't have to.
+            <h2 id="soundbox-h" className={`lp-in ${H2}`} style={i(0)}>
+              Meet the Zest Soundbox.
             </h2>
             <p className="lp-in mt-5 text-[18px] leading-relaxed text-[#b9c7bd]" style={i(1)}>
               A small box on your counter that speaks every new order out loud, in your language, from every channel. Press the big button to accept and it prints the kitchen ticket. When the food is ready, press again and the rider is on the way.
@@ -235,25 +236,25 @@ export default function Landing() {
           </div>
           <div className="mt-12 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-14">
             <ul className="grid gap-8 sm:grid-cols-2 lg:order-1 lg:grid-cols-1 lg:text-right">
-              {ZESTY_FEATURES.slice(0, 3).map((f, k) => (
+              {SOUNDBOX_FEATURES.slice(0, 3).map((f, k) => (
                 <Feature key={f.title} f={f} i={k + 2} right />
               ))}
             </ul>
             <div className="lp-in order-first flex justify-center pt-[140px] lg:order-2" style={i(2)}>
-              <ZestyLoop />
+              <SoundboxLoop />
             </div>
             <ul className="grid gap-8 sm:grid-cols-2 lg:order-3 lg:grid-cols-1">
-              {ZESTY_FEATURES.slice(3).map((f, k) => (
+              {SOUNDBOX_FEATURES.slice(3).map((f, k) => (
                 <Feature key={f.title} f={f} i={k + 3} />
               ))}
             </ul>
           </div>
           <div className="lp-in mt-16 flex flex-col items-center gap-6 text-center" style={i(4)}>
             <p className="lp-display max-w-[24ch] text-[clamp(24px,2.6vw,36px)] leading-tight [text-wrap:balance]">
-              You've trusted a soundbox with your payments. <span className="text-[var(--lp-accent)]">Trust Zesty with your orders.</span>
+              You've trusted a soundbox with your payments. <span className="text-[var(--lp-accent)]">Now trust one with your orders.</span>
             </p>
             <button type="button" onClick={() => setRouterOpen(true)} className="lp-btn haldi">
-              Join the Zesty pilot <ArrowRight aria-hidden size={18} />
+              Join the Soundbox waitlist <ArrowRight aria-hidden size={18} />
             </button>
           </div>
         </div>
@@ -284,7 +285,7 @@ export default function Landing() {
               Change it once. It's right everywhere.
             </h2>
             <p className={`lp-in mt-5 ${LEAD}`} style={i(1)}>
-              Tell Zesty a dish is finished and it goes off your website, your WhatsApp menu, Google and every app you sell on, in seconds.
+              Tell Zest a dish is finished and it goes off your website, your WhatsApp menu, Google and every app you sell on, in seconds.
             </p>
           </div>
           <div className="lp-in mt-14" style={i(2)}>
@@ -304,7 +305,7 @@ export default function Landing() {
               {[
                 ["Paste your Zomato link.", "Zest reads your menu, photos, prices and ratings."],
                 ["Your website and menu are ready in minutes.", "Share it on Instagram, WhatsApp and Google."],
-                ["Zesty arrives at your kitchen.", "Plug it in, and every order speaks up."],
+                ["The Zest Soundbox arrives at your kitchen.", "Plug it in, and every order speaks up."],
               ].map(([t, d], k) => (
                 <li key={t} className="lp-in flex gap-4" style={i(k + 1)}>
                   <span aria-hidden className="mt-1 grid size-9 shrink-0 place-items-center rounded-full bg-[var(--lp-accent)] text-[#121a16]">
@@ -384,7 +385,7 @@ export default function Landing() {
   );
 }
 
-function Feature({ f, i, right = false }: { f: (typeof ZESTY_FEATURES)[number]; i: number; right?: boolean }) {
+function Feature({ f, i, right = false }: { f: (typeof SOUNDBOX_FEATURES)[number]; i: number; right?: boolean }) {
   return (
     <li className="lp-in" style={{ "--i": i } as React.CSSProperties}>
       <p className={`flex items-center gap-2 text-[18px] font-semibold ${right ? "lg:justify-end" : ""}`}>
@@ -395,8 +396,8 @@ function Feature({ f, i, right = false }: { f: (typeof ZESTY_FEATURES)[number]; 
   );
 }
 
-/** Zesty on its own in the product section: an order arrives, is accepted, the next one arrives. */
-function ZestyLoop() {
+/** Zest Soundbox on its own in the product section: an order arrives, is accepted, the next one arrives. */
+function SoundboxLoop() {
   const [k, setK] = useState(0);
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -409,5 +410,5 @@ function ZestyLoop() {
     { ch: "google" as const, guest: "Priya S.", items: "Paneer tikka, 2 garlic naan", total: 427, say: "", sayHi: "" },
   ];
   const n = Math.floor(k / 2);
-  return <ZestyDevice order={orders[n % orders.length]} n={n} accepted={k % 2 === 1} onAccept={() => setK((v) => (v % 2 ? v : v + 1))} />;
+  return <SoundboxDevice order={orders[n % orders.length]} n={n} accepted={k % 2 === 1} onAccept={() => setK((v) => (v % 2 ? v : v + 1))} />;
 }

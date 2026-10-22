@@ -1,6 +1,6 @@
 import "server-only";
 import { and, asc, eq, gte, isNull, lt } from "drizzle-orm";
-import { MENU, ORDERS, OUTLET, PAYOUTS, RATINGS, REVIEWS, SALES_YESTERDAY } from "../data";
+import { MEENA, MEENA_MENU, MENU, ORDERS, OUTLET, PAYOUTS, RATINGS, REVIEWS, SALES_YESTERDAY } from "../data";
 import { fromLegacyStatus } from "../orders";
 import { createApproval } from "./approvals";
 import { db } from "./db";
@@ -9,9 +9,52 @@ import { dayBounds } from "./queries";
 import { campaigns, connections, diningTables, dineTabs, menuItems, orders, outlets, payouts, reservations, reviews, brands, outletHours, type TabLine } from "./schema";
 
 export const DEMO_OUTLET_ID = "demo";
+export const MEENA_OUTLET_ID = "demo-meena";
 export const DEMO_BRAND_ID = "demo-brand";
 // The sample restaurant opens 11 am to 11:30 pm every day.
 const DEFAULT_HOURS = (outletId: string) => [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ outletId, weekday, opens: "11:00", closes: "23:30" }));
+
+/**
+ * The homepage's sample seller: Meena's Kitchen, a home kitchen that sells only on its own page.
+ * Kept out of search like the sample restaurant; its page is /r/meenas-kitchen.
+ */
+export async function seedMeena() {
+  const [existing] = await db.select({ id: outlets.id }).from(outlets).where(eq(outlets.id, MEENA_OUTLET_ID));
+  if (existing) return;
+  await db.insert(brands).values({ id: `${MEENA_OUTLET_ID}-brand`, name: MEENA.name }).onConflictDoNothing();
+  await db.insert(outlets).values({
+    id: MEENA_OUTLET_ID,
+    brandId: `${MEENA_OUTLET_ID}-brand`,
+    slug: "meenas-kitchen",
+    ordering: true,
+    name: MEENA.name,
+    area: "Green Park",
+    city: MEENA.city,
+    cuisines: "Home-style North Indian, Pure veg",
+    ownerName: MEENA.ownerFirstName,
+    journey: "new",
+    isDemo: true,
+  });
+  await db.insert(outletHours).values([0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ outletId: MEENA_OUTLET_ID, weekday, opens: "08:00", closes: "21:30" }))).onConflictDoNothing();
+  await db.insert(menuItems).values(
+    MEENA_MENU.map((m, i) => ({
+      outletId: MEENA_OUTLET_ID,
+      name: m.name,
+      category: m.category,
+      kind: m.kind,
+      veg: true,
+      bestseller: !!m.bestseller,
+      description: m.description,
+      photoUrl: m.photo,
+      rating: 0,
+      votes: 0,
+      price: { zomato: m.price, swiggy: m.price },
+      available: { zomato: true, swiggy: true },
+      ordersLast7: 0,
+      sort: i,
+    })),
+  );
+}
 
 /** A sample restaurant so the app has something to show before anything is connected. */
 export async function seedDemo() {
