@@ -20,7 +20,7 @@ export function SiteHeader({ current, start }: { current: "home" | "restaurants"
       <div className="lp-wrap flex h-[68px] items-center justify-between gap-3 sm:h-[76px]">
         <div className="flex min-w-0 items-center gap-4 sm:gap-8">
           <a href="/" aria-label={pick({ en: "Zest home", hi: "Zest होम" })} className="shrink-0">
-            <Wordmark className="text-[28px]" />
+            <Wordmark className="text-[32px] sm:text-[38px]" />
           </a>
           <nav aria-label={pick({ en: "Which Zest", hi: "कौन-सा Zest" })} className="flex items-center gap-1 text-[14px] font-medium sm:text-[16px]">
             {PAGES.map((p) => {
