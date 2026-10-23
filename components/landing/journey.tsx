@@ -17,7 +17,7 @@ const STEP_MS = 3800;
 const STEPS: { icon: typeof Check; title: Bi; text: Bi }[] = [
   { icon: ShoppingBag, title: { en: "They order on your page", hi: "वे आपके पेज पर ऑर्डर करते हैं" }, text: { en: "A regular taps your link, picks the usual and checks out.", hi: "पुराना ग्राहक आपका लिंक खोलता है, अपनी पसंद चुनता है और ऑर्डर करता है।" } },
   { icon: IndianRupee, title: { en: "Paid by UPI, straight to you", hi: "UPI से भुगतान, सीधे आपको" }, text: { en: "The money is in your bank before the food is on the stove.", hi: "खाना चूल्हे पर चढ़ने से पहले पैसा आपके बैंक में।" } },
-  { icon: Printer, title: { en: "The Soundbox calls it, the KOT prints", hi: "Soundbox बोलता है, KOT छपता है" }, text: { en: "Your kitchen hears it just like an app order.", hi: "रसोई इसे ऐप के ऑर्डर की तरह ही सुनती है।" } },
+  { icon: Printer, title: { en: "The Soundbox calls it, the KOT prints", hi: "Soundbox बोलता है, KOT छपता है" }, text: { en: "Your kitchen hears it just like a Zomato or Swiggy order.", hi: "रसोई इसे Zomato या Swiggy के ऑर्डर की तरह ही सुनती है।" } },
   { icon: Bike, title: { en: "A Zomato rider picks it up", hi: "Zomato राइडर उठाता है" }, text: { en: "Booked as the food gets ready. Or send your own staff, or keep it for pickup.", hi: "खाना तैयार होते ही बुक। या अपना स्टाफ़ भेजिए, या पिकअप रखिए।" } },
   { icon: MapPin, title: { en: "Tracked to the door", hi: "दरवाज़े तक ट्रैक" }, text: { en: "The customer follows it live and gets a WhatsApp when it arrives.", hi: "ग्राहक लाइव देखता है और पहुँचने पर WhatsApp पाता है।" } },
 ];

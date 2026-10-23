@@ -2,6 +2,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { and, asc, count, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
+import { DEFAULT_DELIVERY, quoteDelivery } from "../delivery";
 import { isOpenAt } from "../hours";
 import { normalizePhone } from "../phone";
 import { audit, HttpError } from "./approvals";
@@ -12,8 +13,9 @@ import { orderLineRows, summariseLines } from "./order-lines";
 import { checkRate } from "./rate-limit";
 import { customers, menuItems, orderLines, orders, outlets, type Outlet } from "./schema";
 
-// The restaurant's own ordering site at /r/{slug}: pickup or table orders, paid by UPI to the
-// restaurant's own UPI ID or at the counter. Staff confirm payment; nothing moves money through Zest.
+// The restaurant's own ordering site at /r/{slug}: delivery (by a Zomato rider or the restaurant's own
+// staff, priced by distance), pickup or table orders, paid by UPI to the restaurant's own UPI ID or at
+// the counter. Staff confirm payment; nothing moves money through Zest.
 
 /** "Dosa & Chai Point!" → "dosa-chai-point". Names with no Latin letters fall back to "restaurant". */
 export function slugify(name: string): string {
@@ -107,6 +109,8 @@ export async function getStorefront(slug: string) {
     fssai: o.fssai,
     open: await openNow(o.id),
     upi: !!o.upiId,
+    // How this page delivers; the kitchen's location stays on the server, which prices every trip.
+    delivery: { ...(o.delivery ?? DEFAULT_DELIVERY), priced: o.lat != null && o.lng != null },
     menu: menu.map((m) => ({ id: m.id, name: m.name, category: m.category, description: m.description, veg: m.veg, bestseller: m.bestseller, photo: m.photoUrl, price: dinePrice(m), rating: m.votes ? m.rating : null, votes: m.votes })),
   };
 }
@@ -114,8 +118,11 @@ export async function getStorefront(slug: string) {
 export const OrderInput = z.object({
   name: z.string().trim().min(1, "Enter your name").max(60),
   phone: z.string().trim().min(10).max(20),
-  fulfilment: z.enum(["pickup", "table"]),
+  fulfilment: z.enum(["delivery", "pickup", "table"]),
   table: z.string().trim().max(20).optional(),
+  address: z.string().trim().max(300).optional(),
+  // The customer's location, if they shared it, to price delivery by distance.
+  location: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).optional(),
   pay: z.enum(["upi", "counter"]),
   note: z.string().trim().max(200).optional(),
   lines: z.array(z.object({ itemId: z.string(), qty: z.number().int().min(1).max(20) })).min(1, "Add a dish").max(30),
@@ -128,6 +135,9 @@ export async function placeOrder(slug: string, raw: unknown, ip?: string) {
   const o = await shopBySlug(slug);
   if (!(await openNow(o.id))) throw new HttpError(409, "The restaurant is closed right now.");
   if (input.fulfilment === "table" && !input.table) throw new HttpError(400, "Which table are you at?");
+  const delivery = o.delivery ?? DEFAULT_DELIVERY;
+  if (input.fulfilment === "pickup" && !delivery.pickup) throw new HttpError(400, "This restaurant only delivers.");
+  if (input.fulfilment === "delivery" && (!input.address || input.address.length < 8)) throw new HttpError(400, "Enter your delivery address.");
   if (input.pay === "upi" && !o.upiId) throw new HttpError(400, "This restaurant takes payment at the counter.");
   let phone: string;
   try {
@@ -143,7 +153,11 @@ export async function placeOrder(slug: string, raw: unknown, ip?: string) {
     return { itemId: m.id, name: m.name, qty: l.qty, unitPrice: dinePrice(m) };
   });
   const rows = orderLineRows("pending", lines);
-  const total = rows.reduce((s, r) => s + r.lineTotal, 0);
+  const subtotal = rows.reduce((s, r) => s + r.lineTotal, 0);
+  const quote = input.fulfilment === "delivery" ? quoteDelivery(delivery, o.lat != null && o.lng != null ? { lat: o.lat, lng: o.lng } : null, input.location ?? null, subtotal) : null;
+  if (quote && !quote.ok) throw new HttpError(400, quote.reason === "too_far" ? `That's farther than ${delivery.maxKm} km. Choose pickup, or a closer address.` : "This restaurant isn't delivering right now. Choose pickup.");
+  const deliveryFee = quote?.ok ? quote.customerFee : 0;
+  const total = subtotal + deliveryFee;
 
   const [{ n }] = await db.select({ n: count() }).from(orders).where(and(eq(orders.outletId, o.id), eq(orders.channel, "web")));
   const number = `W-${String(n + 1).padStart(4, "0")}`;
@@ -172,12 +186,25 @@ export async function placeOrder(slug: string, raw: unknown, ip?: string) {
       paymentStatus: "unpaid",
       paymentMethod: input.pay,
       note: input.note || null,
+      ...(quote?.ok ? { deliveryAddress: input.address!, deliveryBy: quote.by, deliveryFee, deliveryKm: quote.km } : {}),
       publicToken: token,
     }),
     db.insert(orderLines).values(rows.map((r) => ({ ...r, orderId }))),
   ]);
-  await audit(o.id, "customer", "web.order", { orderId, number, total });
-  return { orderId, number, total, token, upiLink: input.pay === "upi" && o.upiId ? upiLink(o.upiId, o.name, total, number) : null };
+  await audit(o.id, "customer", "web.order", { orderId, number, total, ...(quote?.ok ? { deliveryBy: quote.by, deliveryFee } : {}) });
+  return { orderId, number, total, deliveryFee, deliveryBy: quote?.ok ? quote.by : null, token, upiLink: input.pay === "upi" && o.upiId ? upiLink(o.upiId, o.name, total, number) : null };
+}
+
+const QuoteInput = z.object({
+  subtotal: z.number().int().min(0).max(1_000_000),
+  location: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).nullable(),
+});
+
+/** The delivery quote the ordering page shows; placeOrder works it out again from the same inputs. */
+export async function deliveryQuote(slug: string, raw: unknown) {
+  const { subtotal, location } = QuoteInput.parse(raw);
+  const o = await shopBySlug(slug);
+  return quoteDelivery(o.delivery ?? DEFAULT_DELIVERY, o.lat != null && o.lng != null ? { lat: o.lat, lng: o.lng } : null, location, subtotal);
 }
 
 /** One order's progress for the customer who placed it, by its private token. */
@@ -193,6 +220,9 @@ export async function orderStatus(slug: string, orderId: string, token: string) 
     paymentStatus: row.paymentStatus,
     fulfilment: row.fulfilment,
     table: row.tableLabel,
+    deliveryBy: row.deliveryBy,
+    deliveryFee: row.deliveryFee,
+    address: row.deliveryAddress,
     upiLink: row.paymentMethod === "upi" && row.paymentStatus === "unpaid" && o.upiId ? upiLink(o.upiId, o.name, row.amount, row.externalId) : null,
   };
 }

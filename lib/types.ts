@@ -4,6 +4,7 @@ import type { DishKind } from "@/components/dishes";
 import type { Lang } from "./i18n";
 import type { OrderStatus } from "./orders";
 import type { Channel, ConnectMethod, Platform } from "./platforms";
+import type { DeliverySettings } from "./delivery";
 
 export type ConnectionDTO = {
   platform: Platform;
@@ -20,6 +21,8 @@ export type OutletDTO = {
   slug: string | null;
   upiId: string | null;
   ordering: boolean;
+  delivery: DeliverySettings;
+  location: { lat: number; lng: number } | null;
   name: string;
   area: string;
   city: string;
@@ -86,6 +89,7 @@ export type OrderDTO = {
   paymentStatus?: "unpaid" | "paid" | null;
   paymentMethod?: "upi" | "counter" | null;
   note?: string | null;
+  delivery?: { by: "zomato_rider" | "own_staff" | null; address: string | null; fee: number | null; km: number | null } | null;
   customer?: { name: string; phone: string } | null;
 };
 

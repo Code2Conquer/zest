@@ -9,7 +9,7 @@ import { signOutHere, useMe } from "@/lib/auth-client";
 import { NAV_GROUPS, navItem, type NavItem } from "@/lib/nav";
 import { useApp, useOutlet } from "@/lib/state";
 import { Copilot } from "./copilot";
-import { LangToggle, ThemeToggle, Wordmark } from "./bits";
+import { LangToggle, Wordmark } from "./bits";
 
 const MOBILE_TABS = ["/app", "/app/orders", "copilot", "/app/money", "more"] as const;
 
@@ -100,7 +100,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </div>
           )}
           <LangToggle />
-          <ThemeToggle />
         </div>
       </nav>
 
@@ -140,7 +139,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </Link>
           <div className="flex items-center gap-1">
             <LangToggle />
-            <ThemeToggle />
           </div>
         </header>
         <main className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 pb-28 pt-6 sm:px-8 lg:pb-10">{children}</main>

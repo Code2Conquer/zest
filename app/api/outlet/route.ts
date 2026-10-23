@@ -6,6 +6,7 @@ import { db } from "@/lib/server/db";
 import { applyListing, fetchListing } from "@/lib/server/listing-sync";
 import { handler, OWNER } from "@/lib/server/http";
 import { outletDTO } from "@/lib/server/queries";
+import { ensureSlugs } from "@/lib/server/storefront";
 import { brands, outlets } from "@/lib/server/schema";
 import { addOwner, currentUser, startSession } from "@/lib/server/auth";
 
@@ -63,6 +64,9 @@ export const POST = handler(async (req, outlet, _params, session) => {
     const [brand] = await db.insert(brands).values({ name }).returning();
     [row] = await db.insert(outlets).values({ ...fields, name, brandId: brand.id }).returning();
     await startSession(user, await addOwner(user.id, brand.id), row.id);
+    // The ordering page's address, so onboarding can show it straight away.
+    await ensureSlugs();
+    [row] = await db.select().from(outlets).where(eq(outlets.id, row.id));
     await audit(row.id, `user:${user.id}`, "outlet.created", { journey, live, documents: { fssai: !!profile.fssai, gstin: !!profile.gstin } });
   }
   // Read each listing page whose link is new. A failure here never blocks sign-up.
@@ -93,11 +97,25 @@ const Update = Profile.extend({
   ordering: z.boolean(),
   // A UPI ID such as rasoi27@okhdfc; payments from the ordering site go straight to it.
   upiId: z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{2,}@[a-z]{2,}$/, "That doesn't look like a UPI ID (like name@okhdfc)").nullable(),
+  delivery: z.object({
+    zomatoRider: z.boolean(),
+    ownStaff: z.boolean(),
+    pickup: z.boolean(),
+    feePaidBy: z.enum(["customer", "restaurant"]),
+    freeAbove: z.number().int().min(0).max(100000).nullable(),
+    maxKm: z.number().min(1).max(20),
+  }),
+  // Where the kitchen is, from the owner's phone; prices delivery by distance.
+  location: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).nullable(),
 }).partial();
 
 export const PATCH = handler({ roles: OWNER }, async (req, outlet) => {
-  const { live, listings, ...rest } = Update.parse(await req.json());
-  const [row] = await db.update(outlets).set({ ...rest, ...(live ? { livePlatforms: live } : {}), ...(listings ? { listings: cleanListings(listings) } : {}) }).where(eq(outlets.id, outlet.id)).returning();
+  const { live, listings, location, ...rest } = Update.parse(await req.json());
+  const [row] = await db
+    .update(outlets)
+    .set({ ...rest, ...(live ? { livePlatforms: live } : {}), ...(listings ? { listings: cleanListings(listings) } : {}), ...(location !== undefined ? { lat: location?.lat ?? null, lng: location?.lng ?? null } : {}) })
+    .where(eq(outlets.id, outlet.id))
+    .returning();
   await audit(outlet.id, "owner", "outlet.updated", { fields: Object.keys({ ...rest, ...(live ? { live } : {}), ...(listings ? { listings } : {}) }) });
   return outletDTO(row);
 });

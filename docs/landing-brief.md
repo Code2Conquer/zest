@@ -41,7 +41,7 @@ A busy Indian kitchen run by something calm and smart: steel counters, thermal K
 | Chilli | `#C23A22` | Only for "missed / not accepted / sold out" |
 | Leaf | `#2F7A4C` | Only for "accepted / paid / delivered" and the veg mark |
 
-Replace the current theme colour (`#111613`) with Paper. Dark mode uses Ink as background, Turmeric unchanged. Buttons are Ink text on Turmeric for contrast.
+**Zest is always dark** (website, ordering pages and the owner app; there is no light mode or theme switch): Ink is the page, Turmeric unchanged. Buttons are Ink text on Turmeric for contrast.
 
 ### Type
 - **Website (homepage and /restaurants): Inter**, with Noto Sans Devanagari for Hindi, loaded only on those pages (`components/landing/site-fonts.ts`). Headlines bold, tracking -0.035em. The owner app keeps Anek.
@@ -86,7 +86,7 @@ Fields: Name · Business name · Phone (WhatsApp) · City · Type (Home kitchen 
 One message, top to bottom: **get online orders, and deliver them yourself or with Zomato.** Everything on the page supports that line; anything that doesn't (the agents, search and AI answers, Instagram, regulars) stays out of the homepage until it is live and proven. Target: under 600 words, about six phone screens.
 
 ### Header (both pages)
-Zest · English/हिंदी · Log in · **Start free** (desktop only; phones use the hero button and the sticky bar). No section links, no theme switch, no menu button: the audience switch under the header moves between the two pages.
+Zest · English/हिंदी · **Start free** (desktop only; phones use the hero button and the sticky bar). No Log in. No section links, no theme switch, no menu button: the audience switch under the header moves between the two pages.
 
 ### Audience switch (above the headline, on both pages)
 A two-part switch: **Home kitchen, tiffin or stall** | **Restaurant on Zomato or Swiggy** (phone: *Home chef or stall* | *Restaurant*). The current page is filled in Ink. This replaces the old two-card split under the hero.
@@ -138,7 +138,7 @@ The wordmark, "Online orders, delivered by you or by Zomato." and © 2026 Zest. 
 
 For restaurants already selling on Zomato or Swiggy. One message: **keep every app order, and add the ones the apps never see.** Calls, WhatsApp, office and party orders, dine-in guests ordering again from home, people searching the restaurant's name. Today these land on paper slips and get lost in the rush; Zest puts them on the restaurant's own page, paid by UPI and delivered by Zomato riders.
 
-Rules: never ask a restaurant to leave or reduce the apps; no margin or commission talk; Zomato and Swiggy are partners in every line. Delivery cost is priced by distance, so never quote a fixed number. Uses the sample restaurant Rasoi 27.
+Rules: never call Zomato and Swiggy "apps" (name them, or say "channels"); never ask a restaurant to leave or reduce them; no margin or commission talk; Zomato and Swiggy are partners in every line. Delivery cost is priced by distance, so never quote a fixed number. Uses the sample restaurant Rasoi 27.
 
 ### Hero
 - Audience switch above the headline (Restaurant selected).
@@ -206,3 +206,16 @@ Do I need to leave Zomato or Swiggy? · Will it change anything on the apps? · 
 - [ ] Only food, kitchens, phones and the Soundbox as imagery; no stock people at laptops
 - [ ] Every homepage headline reads naturally to a home-kitchen owner, in Hindi too
 - [ ] Every button says exactly what happens
+
+
+---
+
+## 9. Onboarding (`/join`) and the ordering page
+
+**Home chefs and new kitchens** (`/join?journey=new`), five steps: your kitchen (name, phone, area, city, address, kitchen location) → your menu (photos read by Claude vision into an editable dish list; typing works too) → FSSAI and GSTIN (read from a photo or typed) → delivery and payment → your page is live (link, QR, WhatsApp share).
+
+**Restaurants on Zomato or Swiggy** (`/join?journey=live`), three steps: the basics and the listing link (name, address, menu and photos come from it) → delivery and payment → your page is live (plus "connect email for the morning summary").
+
+**Delivery and payment** (both): Zomato riders (default), own staff, pickup; who pays the delivery fee; free above an amount; maximum distance; UPI ID. Delivery is priced by distance from the kitchen's location (`lib/delivery.ts`; the rider fee estimate stands in until the Zomato rider booking returns a live quote).
+
+**Ordering page** (`/r/{slug}`): Delivery | Pickup at checkout, address and "use my location", the fee and distance shown before ordering, "Delivered by a Zomato rider, with live tracking", and the rider on the order status. The kitchen's order card shows Delivery · Zomato rider, the distance and the address.

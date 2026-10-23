@@ -203,4 +203,29 @@ describe("restaurant page details", () => {
     expect(s.open).toBe(true);
     expect(s.hoursToday).toBe("12:00 am – 11:59 pm");
   });
+
+  it("takes delivery orders, priced by distance and carried by a Zomato rider", async () => {
+    const { outlet, naan } = await shop({ lat: 12.9719, lng: 77.6412 });
+    const s = await getStorefront(outlet.slug!);
+    expect(s.delivery).toMatchObject({ zomatoRider: true, pickup: true, priced: true });
+    const placed = await placeOrder(outlet.slug!, order([{ itemId: naan.id, qty: 2 }], { fulfilment: "delivery", address: "Flat 302, 12th Main, Indiranagar", location: { lat: 12.9784, lng: 77.6408 } }));
+    expect(placed.deliveryBy).toBe("zomato_rider");
+    expect(placed.deliveryFee).toBeGreaterThan(0);
+    expect(placed.total).toBe(2 * 55 + placed.deliveryFee);
+    const [row] = await db.select().from(orders).where(eq(orders.id, placed.orderId));
+    expect(row).toMatchObject({ fulfilment: "delivery", deliveryBy: "zomato_rider", deliveryAddress: "Flat 302, 12th Main, Indiranagar", deliveryFee: placed.deliveryFee });
+    const st = await orderStatus(outlet.slug!, placed.orderId, placed.token);
+    expect(st).toMatchObject({ fulfilment: "delivery", deliveryBy: "zomato_rider", address: "Flat 302, 12th Main, Indiranagar" });
+  });
+
+  it("needs an address for delivery, and refuses trips past the limit", async () => {
+    const { outlet, naan } = await shop({ lat: 12.9719, lng: 77.6412, delivery: { zomatoRider: true, ownStaff: false, pickup: true, feePaidBy: "customer", freeAbove: null, maxKm: 3 } });
+    expect(await statusOf(placeOrder(outlet.slug!, order([{ itemId: naan.id, qty: 1 }], { fulfilment: "delivery" })))).toBe(400);
+    expect(await statusOf(placeOrder(outlet.slug!, order([{ itemId: naan.id, qty: 1 }], { fulfilment: "delivery", address: "Koramangala 5th Block", location: { lat: 12.9352, lng: 77.6245 } })))).toBe(400);
+  });
+
+  it("refuses pickup when the restaurant only delivers", async () => {
+    const { outlet, naan } = await shop({ delivery: { zomatoRider: true, ownStaff: false, pickup: false, feePaidBy: "restaurant", freeAbove: null, maxKm: 7 } });
+    expect(await statusOf(placeOrder(outlet.slug!, order([{ itemId: naan.id, qty: 1 }])))).toBe(400);
+  });
 });

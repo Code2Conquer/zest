@@ -228,11 +228,21 @@ function DirectOrder({ order: o, onChange }: { order: OrderDTO; onChange: (o: Or
             {o.customer.name}
           </a>
         )}
-        <span>{o.fulfilment === "table" ? (hi ? `टेबल ${o.tableLabel}` : `Table ${o.tableLabel}`) : hi ? "पिकअप" : "Pickup"}</span>
+        <span>
+          {o.fulfilment === "table"
+            ? hi ? `टेबल ${o.tableLabel}` : `Table ${o.tableLabel}`
+            : o.fulfilment === "delivery"
+              ? o.delivery?.by === "zomato_rider"
+                ? hi ? "डिलीवरी · Zomato राइडर" : "Delivery · Zomato rider"
+                : hi ? "डिलीवरी · आपका स्टाफ़" : "Delivery · your staff"
+              : hi ? "पिकअप" : "Pickup"}
+          {o.delivery?.km != null && ` · ${o.delivery.km} km`}
+        </span>
         <span className={o.paymentStatus === "paid" ? "text-leaf" : "text-chilli"}>
           {o.paymentStatus === "paid" ? (hi ? "भुगतान हो गया" : "Paid") : o.paymentMethod === "upi" ? (hi ? "UPI बाक़ी" : "UPI not confirmed") : hi ? "भुगतान बाक़ी" : "To pay at counter"}
         </span>
       </p>
+      {o.delivery?.address && <p className="mt-1 text-ink-2">{o.delivery.address}</p>}
       {o.note && <p className="mt-1 italic text-ink-2">“{o.note}”</p>}
       <div className="mt-2 flex flex-wrap gap-2">
         {next && (

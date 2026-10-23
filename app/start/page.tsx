@@ -5,7 +5,7 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AlertCircle, Camera, Check, ChevronLeft, Loader2 } from "lucide-react";
 import { ApprovalTicket } from "@/components/approval-ticket";
-import { ChannelTag, ThemeToggle, Wordmark } from "@/components/bits";
+import { ChannelTag, Wordmark } from "@/components/bits";
 import { api, ApiError, refreshAll } from "@/lib/api";
 import type { Bi } from "@/lib/i18n";
 import { PLATFORMS, type Platform } from "@/lib/platforms";
@@ -94,7 +94,6 @@ function StartInner() {
           <ChevronLeft aria-hidden className="size-5" />
           <Wordmark />
         </Link>
-        <ThemeToggle />
       </header>
 
       <main className="mx-auto max-w-4xl px-4 pb-24 pt-6 sm:px-8">

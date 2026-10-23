@@ -3,13 +3,13 @@
 import { Suspense, use, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
-import { Check, Clock, IndianRupee, Loader2, Minus, Plus, Search, ShoppingBag, Star, Utensils, X } from "lucide-react";
-import { ThemeToggle } from "@/components/bits";
+import { Bike, Check, Clock, IndianRupee, Loader2, LocateFixed, Minus, Plus, Search, ShoppingBag, Star, Utensils, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/lib/state";
 
-// The restaurant's own ordering site. Phone first: browse, add dishes, give a name and number,
-// pick up or eat at the table, and pay by UPI to the restaurant or at the counter.
+// The restaurant's own ordering site. Phone first: browse, add dishes, give a name and number, then
+// have it delivered (by a Zomato rider or the restaurant's own staff, priced by distance), pick it up
+// or eat at the table, and pay by UPI to the restaurant or on collection.
 
 type Dish = { id: string; name: string; category: string; description: string; veg: boolean; bestseller: boolean; photo: string | null; price: number; rating: number | null; votes: number };
 type Shop = {
@@ -27,10 +27,12 @@ type Shop = {
   fssai: string | null;
   open: boolean;
   upi: boolean;
+  delivery: { zomatoRider: boolean; ownStaff: boolean; pickup: boolean; feePaidBy: "customer" | "restaurant"; freeAbove: number | null; maxKm: number; priced: boolean };
   menu: Dish[];
 };
-type Placed = { orderId: string; number: string; total: number; token: string; upiLink: string | null };
-type Status = { number: string; status: string; total: number; items: string; paymentStatus: "unpaid" | "paid" | null; fulfilment: string | null; table: string | null; upiLink: string | null };
+type Placed = { orderId: string; number: string; total: number; token: string; upiLink: string | null; deliveryFee?: number; deliveryBy?: "zomato_rider" | "own_staff" | null };
+type Status = { number: string; status: string; total: number; items: string; paymentStatus: "unpaid" | "paid" | null; fulfilment: string | null; table: string | null; upiLink: string | null; deliveryBy: "zomato_rider" | "own_staff" | null; deliveryFee: number | null; address: string | null };
+type Quote = { ok: true; by: "zomato_rider" | "own_staff"; km: number | null; fee: number | null; customerFee: number } | { ok: false; reason: "off" | "too_far" };
 
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 const PLATFORM = { zomato: "Zomato", swiggy: "Swiggy" } as const;
@@ -40,6 +42,7 @@ const STEP: Record<string, { en: string; hi: string }> = {
   accepted: { en: "Accepted by the restaurant", hi: "रेस्टोरेंट ने स्वीकार किया" },
   preparing: { en: "Being prepared", hi: "बन रहा है" },
   ready: { en: "Ready", hi: "तैयार है" },
+  out_for_delivery: { en: "On the way with your rider", hi: "राइडर के साथ रास्ते में" },
   completed: { en: "Collected. Enjoy your meal!", hi: "ले लिया गया। खाने का मज़ा लें!" },
   served: { en: "Served. Enjoy your meal!", hi: "परोसा गया। खाने का मज़ा लें!" },
   rejected: { en: "The restaurant couldn't take this order", hi: "रेस्टोरेंट यह ऑर्डर नहीं ले पाया" },
@@ -101,7 +104,10 @@ function Storefront({ slug }: { slug: string }) {
     );
 
   const [cover, ...more] = shop.photos;
-  const mode = table ? (hi ? `टेबल ${table}` : `Table ${table}`) : hi ? "पिकअप" : "Pickup";
+  const delivers = shop.delivery.zomatoRider || shop.delivery.ownStaff;
+  const mode = table
+    ? hi ? `टेबल ${table}` : `Table ${table}`
+    : [delivers && (shop.delivery.zomatoRider ? (hi ? "Zomato राइडर से डिलीवरी" : "Delivery by Zomato riders") : hi ? "डिलीवरी" : "Delivery"), shop.delivery.pickup && (hi ? "पिकअप" : "Pickup")].filter(Boolean).join(" · ");
 
   return (
     <div className="min-h-dvh bg-paper pb-28 text-ink lg:pb-16">
@@ -122,7 +128,6 @@ function Storefront({ slug }: { slug: string }) {
           )}
         </div>
         <div className="absolute right-4 top-4 sm:right-8 sm:top-8">
-          <ThemeToggle className="bg-surface text-ink hover:bg-surface" />
         </div>
       </div>
 
@@ -173,8 +178,8 @@ function Storefront({ slug }: { slug: string }) {
               </li>
             )}
             <li className="inline-flex items-center gap-1.5 rounded-full bg-turmeric-soft px-3 py-1.5 font-medium">
-              {table ? <Utensils aria-hidden className="size-3.5" /> : <ShoppingBag aria-hidden className="size-3.5" />}
-              {table ? (hi ? `टेबल ${table} से ऑर्डर` : `Ordering for table ${table}`) : hi ? "पिकअप के लिए ऑर्डर" : "Order for pickup"}
+              {table ? <Utensils aria-hidden className="size-3.5" /> : delivers ? <Bike aria-hidden className="size-3.5" /> : <ShoppingBag aria-hidden className="size-3.5" />}
+              {table ? (hi ? `टेबल ${table} से ऑर्डर` : `Ordering for table ${table}`) : mode}
             </li>
             {shop.highlights.slice(0, 3).map((h) => (
               <li key={h} className="rounded-full px-3 py-1.5 text-ink-2 shadow-[inset_0_0_0_1px_var(--line)]">
@@ -344,12 +349,49 @@ function Storefront({ slug }: { slug: string }) {
 
 function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number>; total: number; table: string | null; onClose: () => void; onPlaced: (p: Placed) => void; pick: <T>(b: { en: T; hi: T }) => T; hi: boolean }) {
   const { slug, shop, cart, total, table, onClose, onPlaced, hi } = props;
+  const d = shop.delivery;
+  const delivers = !table && (d.zomatoRider || d.ownStaff);
+  const [fulfilment, setFulfilment] = useState<"delivery" | "pickup" | "table">(table ? "table" : delivers ? "delivery" : "pickup");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [quote, setQuote] = useState<Quote | null>(null);
   const [note, setNote] = useState("");
   const [pay, setPay] = useState<"upi" | "counter">(shop.upi ? "upi" : "counter");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // The fee, worked out on the server from the customer's location and the order so far.
+  useEffect(() => {
+    if (fulfilment !== "delivery") return setQuote(null);
+    let live = true;
+    api<Quote>(`/api/storefront/${slug}/quote`, { method: "POST", json: { subtotal: total, location } }).then((q) => live && setQuote(q), () => {});
+    return () => {
+      live = false;
+    };
+  }, [fulfilment, location, total, slug]);
+
+  function locate() {
+    if (!navigator.geolocation) return setError(hi ? "यह फ़ोन लोकेशन नहीं दे सकता। पता लिख दीजिए।" : "This phone can't share its location. Type your address instead.");
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        setLocation({ lat: p.coords.latitude, lng: p.coords.longitude });
+        setLocating(false);
+      },
+      () => {
+        setLocating(false);
+        setError(hi ? "लोकेशन नहीं मिली। पता लिख दीजिए, फ़ीस WhatsApp पर पक्की होगी।" : "Couldn't get your location. Type your address; the fee is confirmed on WhatsApp.");
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  }
+
+  const fee = fulfilment === "delivery" && quote?.ok ? quote.customerFee : 0;
+  const grand = total + fee;
+  const blocked = fulfilment === "delivery" && quote && !quote.ok;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -361,7 +403,7 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
         .map(([itemId, qty]) => ({ itemId, qty }));
       const placed = await api<Placed>(`/api/storefront/${slug}/orders`, {
         method: "POST",
-        json: { name, phone, fulfilment: table ? "table" : "pickup", table: table ?? undefined, pay, note: note || undefined, lines },
+        json: { name, phone, fulfilment, table: table ?? undefined, address: fulfilment === "delivery" ? address : undefined, location: fulfilment === "delivery" && location ? location : undefined, pay, note: note || undefined, lines },
       });
       try {
         localStorage.setItem(`zest:order:${slug}`, JSON.stringify(placed));
@@ -374,6 +416,8 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
   }
 
   const field = "mt-1 w-full rounded-xl bg-surface px-4 py-3 shadow-[0_0_0_1px_var(--line)] outline-none focus:shadow-[0_0_0_2px_var(--ink)]";
+  const seg = (on: boolean) => `flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 font-medium ${on ? "bg-ink text-paper" : "text-ink-2"}`;
+  const byRider = quote?.ok ? quote.by === "zomato_rider" : d.zomatoRider;
   return (
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-ink/40" onClick={onClose}>
       <form onSubmit={submit} onClick={(e) => e.stopPropagation()} className="max-h-[92dvh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-paper p-5">
@@ -383,6 +427,19 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
             <X aria-hidden className="size-5" />
           </button>
         </div>
+
+        {/* How it reaches you */}
+        {!table && delivers && d.pickup && (
+          <div role="radiogroup" aria-label={hi ? "डिलीवरी या पिकअप" : "Delivery or pickup"} className="mt-3 grid grid-cols-2 gap-1 rounded-2xl bg-surface p-1 shadow-[0_0_0_1px_var(--line)]">
+            <button type="button" role="radio" aria-checked={fulfilment === "delivery"} onClick={() => setFulfilment("delivery")} className={seg(fulfilment === "delivery")}>
+              <Bike aria-hidden className="size-4" /> {hi ? "डिलीवरी" : "Delivery"}
+            </button>
+            <button type="button" role="radio" aria-checked={fulfilment === "pickup"} onClick={() => setFulfilment("pickup")} className={seg(fulfilment === "pickup")}>
+              <ShoppingBag aria-hidden className="size-4" /> {hi ? "पिकअप" : "Pickup"}
+            </button>
+          </div>
+        )}
+
         <ul className="mt-3 divide-y divide-line text-[0.95rem]">
           {Object.entries(cart)
             .filter(([, n]) => n > 0)
@@ -397,12 +454,39 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
                 </li>
               );
             })}
+          {fulfilment === "delivery" && (
+            <li className="flex justify-between py-2">
+              <span>
+                {hi ? "डिलीवरी" : "Delivery"}
+                {quote?.ok && quote.km != null && <span className="text-muted"> · {quote.km} km</span>}
+              </span>
+              <span>{quote?.ok ? (quote.customerFee === 0 && quote.fee != null ? (hi ? "मुफ़्त" : "Free") : quote.fee == null ? (d.feePaidBy === "restaurant" ? (hi ? "मुफ़्त" : "Free") : hi ? "दूरी से तय" : "By distance") : inr(quote.customerFee)) : "…"}</span>
+            </li>
+          )}
           <li className="flex justify-between py-2 font-semibold">
             <span>{hi ? "कुल" : "Total"}</span>
-            <span>{inr(total)}</span>
+            <span>{inr(grand)}</span>
           </li>
         </ul>
-        <p className="mt-2 text-sm text-muted">{table ? (hi ? `टेबल ${table} पर परोसा जाएगा` : `Served at table ${table}`) : hi ? "काउंटर से पिकअप" : "Pick up at the counter"}</p>
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-muted">
+          {fulfilment === "delivery" ? (
+            <>
+              <Bike aria-hidden className="size-4 shrink-0" />
+              {byRider ? (hi ? "Zomato राइडर पहुँचाएगा, लाइव ट्रैकिंग के साथ" : "Delivered by a Zomato rider, with live tracking") : hi ? "रेस्टोरेंट का स्टाफ़ पहुँचाएगा" : "Delivered by the restaurant's own staff"}
+            </>
+          ) : table ? (
+            hi ? `टेबल ${table} पर परोसा जाएगा` : `Served at table ${table}`
+          ) : hi ? (
+            "काउंटर से पिकअप"
+          ) : (
+            "Pick up at the counter"
+          )}
+        </p>
+        {blocked && (
+          <p className="mt-2 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">
+            {quote && !quote.ok && quote.reason === "too_far" ? (hi ? `यह ${d.maxKm} किमी से दूर है। पिकअप चुनें या पास का पता दें।` : `That's farther than ${d.maxKm} km. Choose pickup, or a closer address.`) : hi ? "अभी डिलीवरी बंद है। पिकअप चुनें।" : "Delivery is off right now. Choose pickup."}
+          </p>
+        )}
 
         <label className="mt-5 block text-sm text-ink-2">
           {hi ? "नाम" : "Name"}
@@ -412,6 +496,19 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
           {hi ? "मोबाइल नंबर" : "Mobile number"}
           <input value={phone} onChange={(e) => setPhone(e.target.value)} required inputMode="tel" autoComplete="tel" placeholder="98xxxxxx21" className={field} />
         </label>
+        {fulfilment === "delivery" && (
+          <div className="mt-3">
+            <label className="block text-sm text-ink-2">
+              {hi ? "डिलीवरी का पता" : "Delivery address"}
+              <textarea value={address} onChange={(e) => setAddress(e.target.value)} required minLength={8} rows={2} autoComplete="street-address" placeholder={hi ? "फ़्लैट, बिल्डिंग, गली, लैंडमार्क" : "Flat, building, street, landmark"} className={`${field} resize-none`} />
+            </label>
+            <button type="button" onClick={locate} disabled={locating} className="mt-2 inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium shadow-[inset_0_0_0_1.5px_var(--line)]">
+              {locating ? <Loader2 aria-hidden className="size-4 animate-spin" /> : location ? <Check aria-hidden className="size-4 text-leaf" /> : <LocateFixed aria-hidden className="size-4" />}
+              {location ? (hi ? "लोकेशन मिल गई" : "Location shared") : hi ? "मेरी लोकेशन इस्तेमाल करें" : "Use my location"}
+            </button>
+            {!location && d.priced && d.feePaidBy === "customer" && <p className="mt-1 text-sm text-muted">{hi ? "लोकेशन से डिलीवरी फ़ीस तुरंत दिखेगी।" : "Share your location to see the delivery fee now."}</p>}
+          </div>
+        )}
         <label className="mt-3 block text-sm text-ink-2">
           {hi ? "कुछ कहना है? (ज़रूरी नहीं)" : "Anything to tell the kitchen? (optional)"}
           <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} className={field} />
@@ -427,16 +524,16 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
               </button>
             )}
             <button type="button" aria-pressed={pay === "counter"} onClick={() => setPay("counter")} className={`rounded-xl px-4 py-3 text-left ${pay === "counter" ? "bg-ink text-paper" : "bg-surface shadow-[0_0_0_1px_var(--line)]"}`}>
-              {table ? (hi ? "टेबल पर" : "At the table") : hi ? "काउंटर पर" : "At the counter"}
+              {table ? (hi ? "टेबल पर" : "At the table") : fulfilment === "delivery" ? (hi ? "डिलीवरी पर" : "On delivery") : hi ? "काउंटर पर" : "At the counter"}
               <span className="block text-sm opacity-70">{hi ? "कैश, कार्ड या UPI" : "Cash, card or UPI"}</span>
             </button>
           </div>
         </fieldset>
 
         {error && <p className="mt-3 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}
-        <button type="submit" disabled={busy} className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-ink py-4 font-medium text-paper disabled:opacity-60">
+        <button type="submit" disabled={busy || !!blocked} className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-ink py-4 font-medium text-paper disabled:opacity-60">
           {busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
-          {hi ? `ऑर्डर करें · ${inr(total)}` : `Place order · ${inr(total)}`}
+          {hi ? `ऑर्डर करें · ${inr(grand)}` : `Place order · ${inr(grand)}`}
         </button>
       </form>
     </div>
@@ -474,8 +571,17 @@ function OrderPlaced({ slug, shopName, placed, onNew }: { slug: string; shopName
           {hi ? "ऑर्डर नंबर" : "Order"} <span className="font-semibold">{placed.number}</span> · {inr(placed.total)}
         </p>
         <p className="mt-4 rounded-xl bg-surface px-4 py-3 font-medium shadow-[0_0_0_1px_var(--line)]" aria-live="polite">
-          {status ? pick(STEP[status.status] ?? STEP.new) : pick(STEP.new)}
+          {status?.fulfilment === "delivery" && status.status === "completed" ? (hi ? "पहुँच गया। खाने का मज़ा लें!" : "Delivered. Enjoy your meal!") : status ? pick(STEP[status.status] ?? STEP.new) : pick(STEP.new)}
         </p>
+        {status?.fulfilment === "delivery" && (
+          <p className="mt-2 flex items-start justify-center gap-1.5 text-sm text-ink-2">
+            <Bike aria-hidden className="mt-0.5 size-4 shrink-0" />
+            <span>
+              {status.deliveryBy === "zomato_rider" ? (hi ? "Zomato राइडर पहुँचाएगा" : "A Zomato rider is delivering this") : hi ? "रेस्टोरेंट का स्टाफ़ पहुँचाएगा" : "The restaurant's staff are delivering this"}
+              {status.address && <span className="block text-muted">{status.address}</span>}
+            </span>
+          </p>
+        )}
         {status?.paymentStatus === "paid" && <p className="mt-2 text-sm text-leaf">{hi ? "भुगतान मिल गया" : "Payment received"}</p>}
 
         {upi && status?.paymentStatus !== "paid" && (
@@ -485,7 +591,9 @@ function OrderPlaced({ slug, shopName, placed, onNew }: { slug: string; shopName
               {hi ? "UPI ऐप खोलें" : "Open UPI app"}
             </a>
             {qr && <img src={qr} alt={hi ? "भुगतान के लिए QR कोड" : "QR code to pay"} width={180} height={180} className="mx-auto mt-4" />}
-            <p className="mt-2 text-sm text-muted">{hi ? "भुगतान के बाद काउंटर पर ऑर्डर नंबर बताएँ।" : "After paying, show your order number at the counter."}</p>
+            <p className="mt-2 text-sm text-muted">
+              {status?.fulfilment === "delivery" ? (hi ? "भुगतान होते ही रेस्टोरेंट को पता चल जाएगा।" : "The restaurant sees it as soon as you've paid.") : hi ? "भुगतान के बाद काउंटर पर ऑर्डर नंबर बताएँ।" : "After paying, show your order number at the counter."}
+            </p>
           </div>
         )}
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Delete, Loader2 } from "lucide-react";
-import { ThemeToggle, Wordmark } from "@/components/bits";
+import { Wordmark } from "@/components/bits";
 import { api, refreshAll } from "@/lib/api";
 import { useApp } from "@/lib/state";
 
@@ -46,7 +46,6 @@ export default function StaffLogin() {
           <ChevronLeft aria-hidden className="size-5" />
           <Wordmark />
         </Link>
-        <ThemeToggle />
       </header>
       <main className="mx-auto max-w-md px-4 pb-16 pt-4">
         <h1 className="text-2xl font-semibold">{hi ? "स्टाफ़ साइन-इन" : "Staff sign-in"}</h1>

@@ -1,4 +1,5 @@
 import { integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import type { DeliverySettings } from "../delivery";
 import type { OrderStatus } from "../orders";
 import type { Channel, ConnectMethod, Platform } from "../platforms";
 import type { ListingSummary } from "../types";
@@ -121,6 +122,10 @@ export const outlets = sqliteTable("outlets", {
   slug: text("slug").unique(),
   upiId: text("upi_id"),
   ordering: integer("ordering", { mode: "boolean" }).notNull().default(false),
+  // How the ordering site delivers (lib/delivery.ts), and where the kitchen is, for pricing by distance.
+  delivery: text("delivery", { mode: "json" }).$type<DeliverySettings | null>(),
+  lat: real("lat"),
+  lng: real("lng"),
   name: text("name").notNull(),
   area: text("area").notNull().default(""),
   city: text("city").notNull().default(""),
@@ -204,6 +209,11 @@ export const orders = sqliteTable(
     paymentStatus: text("payment_status").$type<"unpaid" | "paid">(),
     paymentMethod: text("payment_method").$type<"upi" | "counter">(),
     note: text("note"),
+    // Delivery orders from the ordering site: where to, who carries it, and what the customer paid for it.
+    deliveryAddress: text("delivery_address"),
+    deliveryBy: text("delivery_by").$type<"zomato_rider" | "own_staff">(),
+    deliveryFee: integer("delivery_fee"),
+    deliveryKm: real("delivery_km"),
     // Lets the customer's browser follow this one order without an account.
     publicToken: text("public_token"),
     prepMins: integer("prep_mins").notNull().default(0),

@@ -9,6 +9,7 @@ import { linesFor } from "./order-lines";
 import { hasClaude } from "./claude";
 import { db } from "./db";
 import { customers, connections, menuItems, orders, payouts, reviews, type ApprovalRow, type Connection, type MenuItemRow, type OrderRow, type Outlet, type PayoutRow, type ReviewRow } from "./schema";
+import { DEFAULT_DELIVERY } from "../delivery";
 
 export function connectionDTO(c: Connection) {
   return { platform: c.platform, method: c.method, status: c.status, statusDetail: c.statusDetail, lastSyncAt: c.lastSyncAt, info: c.publicInfo };
@@ -22,6 +23,8 @@ export async function outletDTO(o: Outlet): Promise<OutletDTO> {
     slug: o.slug,
     upiId: o.upiId,
     ordering: o.ordering,
+    delivery: o.delivery ?? DEFAULT_DELIVERY,
+    location: o.lat != null && o.lng != null ? { lat: o.lat, lng: o.lng } : null,
     name: o.name,
     area: o.area,
     city: o.city,
@@ -73,6 +76,7 @@ export const orderDTO = (o: OrderRow): OrderDTO => ({
   promisedAt: o.promisedAt,
   prepMins: o.prepMins,
   ...(o.fulfilment ? { fulfilment: o.fulfilment, tableLabel: o.tableLabel, paymentStatus: o.paymentStatus, paymentMethod: o.paymentMethod, note: o.note } : {}),
+  ...(o.fulfilment === "delivery" ? { delivery: { by: o.deliveryBy, address: o.deliveryAddress, fee: o.deliveryFee, km: o.deliveryKm } } : {}),
 });
 
 /** Adds the customer's name and phone to direct orders, in one query. */
