@@ -1,6 +1,7 @@
 "use client";
 
 import "../landing.css";
+import Image from "next/image";
 import { useState } from "react";
 import { BellRing, Check, Hand, Mail, PhoneCall, Plus, Printer, X } from "lucide-react";
 import { HeroPhone } from "@/components/landing/hero-phone";
@@ -35,16 +36,6 @@ const PAINS: { icon: typeof Plus; pain: Bi; fix: Bi }[] = [
   { icon: Hand, pain: { en: "Slow accepts turn into cancellations", hi: "देर से मंज़ूरी, फिर कैंसिलेशन" }, fix: { en: "One press on the top accepts it", hi: "ऊपर एक बार दबाइए, मंज़ूर" } },
   { icon: Printer, pain: { en: "KOTs written by hand", hi: "हाथ से लिखे KOT" }, fix: { en: "The ticket printer prints each one", hi: "टिकट प्रिंटर हर KOT छापता है" } },
   { icon: PhoneCall, pain: { en: "Nobody hears it in the rush", hi: "भीड़ में कोई सुनता नहीं" }, fix: { en: "It gets louder, then calls you", hi: "आवाज़ तेज़ होती है, फिर आपको फ़ोन" } },
-];
-
-const FAQ: { q: Bi; a: Bi }[] = [
-  { q: { en: "Do I need to leave Zomato or Swiggy?", hi: "क्या मुझे Zomato या Swiggy छोड़ना होगा?" }, a: { en: "No. Zest works alongside them. Your listings, ratings and orders there stay exactly as they are.", hi: "नहीं। Zest उनके साथ-साथ काम करता है। वहाँ आपकी लिस्टिंग, रेटिंग और ऑर्डर वैसे ही रहते हैं।" } },
-  { q: { en: "Will it change anything on Zomato or Swiggy?", hi: "क्या Zomato या Swiggy पर कुछ बदलेगा?" }, a: { en: "No. Your page only adds the orders that come to you directly: calls, WhatsApp, parties and guests who already know you.", hi: "नहीं। आपका पेज सिर्फ़ वे ऑर्डर जोड़ता है जो सीधे आपके पास आते हैं: कॉल, WhatsApp, पार्टी और वे ग्राहक जो आपको पहले से जानते हैं।" } },
-  { q: { en: "Who delivers orders from my page?", hi: "मेरे पेज के ऑर्डर कौन पहुँचाता है?" }, a: { en: "You choose for each order: a Zomato rider, your own staff, or pickup at your counter. The customer gets a tracking link.", hi: "हर ऑर्डर के लिए आप चुनिए: Zomato राइडर, आपका अपना स्टाफ़, या काउंटर से पिकअप। ग्राहक को ट्रैकिंग लिंक मिलता है।" } },
-  { q: { en: "What does delivery cost?", hi: "डिलीवरी का ख़र्च कितना है?" }, a: { en: "It depends on the distance. You decide whether the customer pays, you cover it, or it's free above an order amount.", hi: "यह दूरी पर निर्भर है। आप तय कीजिए: ग्राहक दे, आप दें, या एक रक़म से ऊपर के ऑर्डर पर मुफ़्त।" } },
-  { q: { en: "Does the Soundbox work with my Zomato and Swiggy orders?", hi: "क्या Soundbox मेरे Zomato और Swiggy ऑर्डर के साथ काम करता है?" }, a: { en: "Yes. It connects to Zomato, Swiggy and your POS, and calls out every order from them and from your page.", hi: "हाँ। यह Zomato, Swiggy और आपके POS से जुड़ता है, और उनका और आपके पेज का हर ऑर्डर बोलकर बताता है।" } },
-  { q: { en: "What does Zest read in my email?", hi: "Zest मेरे ईमेल में क्या पढ़ता है?" }, a: { en: "Only order, payout and rating emails from Zomato and Swiggy. It never sends email and never shares it.", hi: "सिर्फ़ Zomato और Swiggy के ऑर्डर, पेआउट और रेटिंग वाले ईमेल। यह कभी ईमेल नहीं भेजता और कभी साझा नहीं करता।" } },
-  { q: { en: "What does it cost?", hi: "इसका ख़र्च कितना है?" }, a: { en: "Your page is free to start.", hi: "आपका पेज शुरू करना मुफ़्त है।" } },
 ];
 
 const H2 = "lp-display text-[clamp(30px,3.6vw,52px)] leading-[1.04] [text-wrap:balance]";
@@ -141,7 +132,7 @@ export default function Restaurants() {
       </section>
 
       {/* Why: the orders a restaurant already gets outside Zomato and Swiggy, and loses */}
-      <section id="orders" aria-labelledby="orders-h" className="scroll-mt-4 py-16 lg:py-24">
+      <section id="orders" aria-labelledby="orders-h" className="scroll-mt-4 py-16 lg:py-20">
         <div className="lp-wrap">
           <div className="grid gap-3 lg:grid-cols-2 lg:items-end lg:gap-12">
             <h2 id="orders-h" className={`rv max-w-[20ch] ${H2}`}>
@@ -158,7 +149,7 @@ export default function Restaurants() {
       </section>
 
       {/* How a direct order is delivered, played step by step */}
-      <section id="delivery" aria-labelledby="delivery-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-24">
+      <section id="delivery" aria-labelledby="delivery-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-20">
         <div className="lp-wrap">
           <h2 id="delivery-h" className={`rv max-w-[22ch] ${H2}`}>
             {pick({ en: "How a direct order reaches your customer.", hi: "सीधा ऑर्डर आपके ग्राहक तक कैसे पहुँचता है।" })}
@@ -169,26 +160,33 @@ export default function Restaurants() {
         </div>
       </section>
 
-      {/* Alongside Zomato and Swiggy, never instead */}
-      <section aria-labelledby="alongside-h" className="bg-[#15181b] py-12 text-[#f1f1ec] lg:py-16">
-        <div className="lp-wrap">
-          <h2 id="alongside-h" className={`rv max-w-[20ch] ${H2}`}>
-            {pick({ en: "Built to sit alongside Zomato and Swiggy.", hi: "Zomato और Swiggy के साथ-साथ चलने के लिए बना।" })}
-          </h2>
-          <ul className="mt-8 grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
-            {ALONGSIDE.map((a) => (
-              <li key={a.title.en}>
-                <Check aria-hidden size={22} strokeWidth={3} className="text-[var(--z-turmeric)]" />
-                <h3 className="mt-3 text-[18px] font-semibold leading-snug">{pick(a.title)}</h3>
-                <p className="mt-1.5 text-[16px] leading-relaxed text-[#b4b9be]">{pick(a.text)}</p>
-              </li>
-            ))}
-          </ul>
+      {/* Alongside Zomato and Swiggy, never instead: a kitchen at the pass, and four promises */}
+      <section aria-labelledby="alongside-h" className="bg-[#15181b] py-16 text-[#f1f1ec] lg:py-20">
+        <div className="lp-wrap grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+          <div className="rv relative aspect-[4/3] overflow-hidden rounded-[28px]">
+            <Image src="/photos/team-pass.webp" alt={pick({ en: "Plates going out from a restaurant kitchen", hi: "रेस्टोरेंट की रसोई से निकलती प्लेटें" })} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+          </div>
+          <div>
+            <h2 id="alongside-h" className={`rv ${H2}`}>
+              {pick({ en: "Built to sit alongside Zomato and Swiggy.", hi: "Zomato और Swiggy के साथ-साथ चलने के लिए बना।" })}
+            </h2>
+            <ul className="rv d1 mt-8 space-y-6">
+              {ALONGSIDE.map((a) => (
+                <li key={a.title.en} className="flex gap-4">
+                  <Check aria-hidden size={22} strokeWidth={3} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
+                  <div>
+                    <h3 className="text-[18px] font-semibold leading-snug">{pick(a.title)}</h3>
+                    <p className="mt-1 text-[16px] leading-relaxed text-[#b4b9be]">{pick(a.text)}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 
       {/* The Soundbox: the problem in a busy kitchen, and the one box that solves it */}
-      <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-16 lg:py-24">
+      <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-16 lg:py-20">
         <div className="lp-wrap grid items-start gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
           <div>
             <h2 id="soundbox-h" className={`rv ${H2}`}>
@@ -232,7 +230,7 @@ export default function Restaurants() {
       </section>
 
       {/* Morning summary, played on the owner's phone */}
-      <section id="summary" aria-labelledby="summary-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-24">
+      <section id="summary" aria-labelledby="summary-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-20">
         <div className="lp-wrap">
           <MorningSummary
             intro={
@@ -250,26 +248,6 @@ export default function Restaurants() {
               </a>
             }
           />
-        </div>
-      </section>
-
-      {/* Questions */}
-      <section id="faq" aria-labelledby="faq-h" className="scroll-mt-4 py-16 lg:py-24">
-        <div className="lp-wrap grid gap-8 lg:grid-cols-12 lg:gap-10">
-          <h2 id="faq-h" className={`rv lg:col-span-4 ${H2}`}>
-            {pick({ en: "Questions restaurants ask", hi: "रेस्टोरेंट क्या पूछते हैं" })}
-          </h2>
-          <div className="grid gap-3 lg:col-span-8">
-            {FAQ.map((f) => (
-              <details key={f.q.en} className="group rounded-2xl bg-[var(--lp-paper)] px-5 sm:px-6">
-                <summary className="flex min-h-[60px] items-center justify-between gap-4 py-4 text-[17px] font-semibold sm:text-[18px]">
-                  <span>{pick(f.q)}</span>
-                  <Plus aria-hidden size={22} className="shrink-0 transition-transform group-open:rotate-45" />
-                </summary>
-                <p className="max-w-[60ch] pb-5 text-[16px] leading-relaxed text-[var(--lp-muted)] sm:text-[17px]">{pick(f.a)}</p>
-              </details>
-            ))}
-          </div>
         </div>
       </section>
 

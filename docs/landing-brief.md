@@ -120,7 +120,7 @@ Your customers stay yours · Money straight to you · No app to learn · Hindi o
 - **Body:** A small box on your counter that speaks each order in Hindi or English. Press the top to accept, even with floury hands.
 - [Ask for a Soundbox] opens the request form in place. Static Soundbox drawing (no 3D on the homepage).
 
-### Questions sellers ask (six)
+### (FAQ removed, October 2026)
 Do I need to be on Zomato or Swiggy? · Who delivers? · Who pays for delivery? · How do I get paid? · What does it cost? · Does it work for a thela or a small stall?
 
 ### Closing call to action (Turmeric band)
@@ -222,3 +222,20 @@ Do I need to leave Zomato or Swiggy? · Will it change anything on the apps? · 
 **Delivery and payment** (both): Zomato riders (default), own staff, pickup; who pays the delivery fee; free above an amount; maximum distance; UPI ID. Delivery is priced by distance from the kitchen's location (`lib/delivery.ts`; the rider fee estimate stands in until the Zomato rider booking returns a live quote).
 
 **Ordering page** (`/r/{slug}`): Delivery | Pickup at checkout, address and "use my location", the fee and distance shown before ordering, "Delivered by a Zomato rider, with live tracking", and the rider on the order status. The kitchen's order card shows Delivery · Zomato rider, the distance and the address.
+
+
+## 10. The business case on the homepage
+
+Right after the first screen: **"Cook for more than your WhatsApp group."** One cited figure, then five reasons, each shown as it goes today and with Zest (tap a reason; it also plays by itself):
+
+- **More people find you** (a society WhatsApp group → a Google result with Order online)
+- **Deliver farther** (walking distance, 500 m → Zomato riders, up to 7 km)
+- **Get paid upfront** (an udhaar list → UPI payments)
+- **Cook to the count** (calls all morning → orders close at a time you set, so you cook to the count)
+- **Regulars on weekly plans** (notes on a slip → a weekly tiffin plan, paid for the week)
+
+The figure: **+97.6%** sales for the smallest restaurants after going online (Kim & Lee, *Hitotsubashi Journal of Economics*, 2024; 2020 card data for every restaurant in South Korea). Shown with its source. No figure is quoted for larger restaurants: the credible studies show much smaller gains there.
+
+Then **"From a home kitchen to a thela."**: four photo tiles (home kitchens, tiffin services, stalls and thelas, small cloud kitchens), each with its own reason. No FAQ on either page.
+
+**Features this commits the product to build:** order cut-off times per kitchen, and weekly or monthly tiffin plans (subscription orders paid in advance).
