@@ -99,10 +99,8 @@ export default function Restaurants() {
                   { id: "cloud", label: { en: "Cloud kitchen", hi: "क्लाउड किचन" }, orders: 15, avg: 400 },
                 ]}
                 orders={[1, 60]}
-                avg={[100, 2000, 50]}
                 per={{ en: "more a month, from your own page", hi: "हर महीने और, आपके अपने पेज से" }}
                 ordersLabel={{ en: "Direct orders a day", hi: "रोज़ के सीधे ऑर्डर" }}
-                avgLabel={{ en: "Average order", hi: "औसत ऑर्डर" }}
               />
             </div>
             <div id="hero-start" className="hero-in d2 mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">

@@ -8,6 +8,8 @@ import { ChannelTag, Wordmark } from "@/components/bits";
 import { ListingPreview } from "@/components/listing-preview";
 import { MailboxCard } from "@/components/mailbox-card";
 import { SignInCard } from "@/components/sign-in";
+import { FoodWall } from "@/components/food-wall";
+import { siteFonts } from "@/components/landing/site-fonts";
 import { api, ApiError, refreshAll } from "@/lib/api";
 import { useMe } from "@/lib/auth-client";
 import { cityName, parseListing } from "@/lib/listing";
@@ -25,7 +27,8 @@ import type { OutletDTO, PlatformListing } from "@/lib/types";
 // Delivery starts on the defaults (Zomato riders and pickup); it can be changed later.
 
 type Journey = "new" | "live";
-type StepId = "details" | "menu" | "email" | "live";
+type StepId = "kind" | "details" | "menu" | "email" | "live";
+type Kind = "home" | "tiffin" | "stall";
 
 type Details = { ownerName: string; ownerPhone: string; name: string; area: string; city: string; address: string; fssai: string; gstin: string; pan: string; upi: string; listings: Partial<Record<Platform, string>> };
 type ListingRead = { url: string; state: "loading" } | { url: string; state: "ok"; listing: PlatformListing } | { url: string; state: "error"; message: string };
@@ -45,17 +48,21 @@ function useHi() {
 
 export default function Join() {
   return (
-    <div className="min-h-dvh">
-      <header className="mx-auto flex max-w-3xl items-center justify-between px-4 py-5 sm:px-8">
-        <Link href="/" aria-label="Back to start" className="inline-flex items-center gap-1 text-ink-2 hover:text-ink">
+    <div className={`relative min-h-dvh overflow-x-clip ${siteFonts}`} style={{ fontFamily: "var(--font-site), var(--font-site-deva), system-ui, sans-serif" }}>
+      <FoodWall />
+      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-8">
+        <Link href="/" aria-label="Back to start" className="inline-flex items-center gap-1 text-[#f1f1ec]/80 hover:text-[#f1f1ec]">
           <ChevronLeft aria-hidden className="size-5" />
-          <Wordmark />
+          <Wordmark className="text-[30px] text-[#f1f1ec]" />
         </Link>
       </header>
-      <main className="mx-auto max-w-3xl px-4 pb-24 sm:px-8">
-        <Suspense>
-          <JoinInner />
-        </Suspense>
+      {/* The card, in front of the wall */}
+      <main className="relative z-10 mx-auto flex min-h-[calc(100dvh-84px)] max-w-[680px] items-start justify-center px-3 pb-10 sm:items-center sm:px-6">
+        <div className="w-full rounded-[32px] bg-[#16191c] p-6 shadow-[0_40px_120px_-30px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.07)] sm:p-10">
+          <Suspense>
+            <JoinInner />
+          </Suspense>
+        </div>
       </main>
     </div>
   );
@@ -75,13 +82,13 @@ function JoinInner() {
         <Title
           sub={
             journey === "new"
-              ? hi ? "साइन इन कीजिए, फिर रसोई का नाम और मेन्यू की फ़ोटो। कुछ ही मिनट में आपका पेज लाइव।" : "Sign in, then add your kitchen's name and a photo of your menu. Your page is live in a few minutes."
+              ? hi ? "फिर बताइए आप क्या बेचते हैं, और मेन्यू की फ़ोटो भेजिए। कुछ ही मिनट में आपका पेज लाइव।" : "Then tell us what you sell and send a photo of your menu. Your page is live in a few minutes."
               : hi ? "साइन इन कीजिए, फिर अपना Zomato या Swiggy लिंक डालिए। कुछ ही मिनट में आपका ऑर्डर पेज लाइव।" : "Sign in, then paste your Zomato or Swiggy link. Your ordering page is live in a few minutes."
           }
         >
-          {journey === "new" ? (hi ? "अपनी रसोई ऑनलाइन लाइए" : "Get your kitchen online") : hi ? "अपना ऑर्डर पेज बनाइए" : "Create your ordering page"}
+          {hi ? "लॉग इन या साइन अप" : "Log in or sign up"}
         </Title>
-        <div className="mt-8 max-w-xl">
+        <div className="mt-7">
           <SignInCard returnTo={here} staff={false} />
         </div>
       </div>
@@ -114,7 +121,7 @@ function JoinInner() {
     if (link && !initial.listings[p]) initial.listings[p] = link;
   }
   // Keyed by journey only: creating the restaurant changes the outlet, and the steps must carry on.
-  const resume = params.get("step") === "email" && journey === "live" ? "email" : "details";
+  const resume: StepId = params.get("step") === "email" && journey === "live" ? "email" : journey === "new" ? "kind" : "details";
   return <Wizard key={journey} journey={journey} initial={initial} start={resume} />;
 }
 
@@ -122,7 +129,9 @@ function Wizard({ journey, initial, start }: { journey: Journey; initial: Detail
   const hi = useHi();
   // Home kitchens always add their menu; restaurants only when their listing brought no dishes.
   const [needsMenu, setNeedsMenu] = useState(journey === "new");
-  const steps: StepId[] = journey === "new" ? ["details", "menu", "live"] : needsMenu ? ["details", "menu", "email", "live"] : ["details", "email", "live"];
+  const [kind, setKind] = useState<Kind>("home");
+  const NEW: StepId[] = ["kind", "details", "menu", "live"];
+  const steps: StepId[] = journey === "new" ? NEW : needsMenu ? ["details", "menu", "email", "live"] : ["details", "email", "live"];
   const [step, setStep] = useState<StepId>(start);
   const at = Math.max(0, steps.indexOf(step));
   const go = (s: StepId) => {
@@ -134,10 +143,11 @@ function Wizard({ journey, initial, start }: { journey: Journey; initial: Detail
   const afterDetails = (menu: boolean) => {
     const need = journey === "new" || menu;
     setNeedsMenu(need);
-    next(journey === "new" ? ["details", "menu", "live"] : need ? ["details", "menu", "email", "live"] : ["details", "email", "live"]);
+    next(journey === "new" ? NEW : need ? ["details", "menu", "email", "live"] : ["details", "email", "live"]);
   };
 
   const LABEL: Record<StepId, string> = {
+    kind: hi ? "आप क्या बेचते हैं" : "What you sell",
     details: journey === "new" ? (hi ? "आपकी रसोई" : "Your kitchen") : hi ? "आपका रेस्टोरेंट" : "Your restaurant",
     menu: hi ? "मेन्यू" : "Menu",
     email: hi ? "ईमेल" : "Email",
@@ -159,10 +169,13 @@ function Wizard({ journey, initial, start }: { journey: Journey; initial: Detail
         {hi ? `क़दम ${at + 1} / ${steps.length}` : `Step ${at + 1} of ${steps.length}`}
       </p>
 
-      {step === "details" && <DetailsStep journey={journey} initial={initial} onDone={afterDetails} />}
+      <div key={step} className="ob-in">
+      {step === "kind" && <KindStep value={kind} onPick={setKind} onDone={() => next()} />}
+      {step === "details" && <DetailsStep journey={journey} kind={kind} initial={initial} onDone={afterDetails} />}
       {step === "menu" && <MenuStep onDone={() => next()} onBack={back} />}
       {step === "email" && <EmailStep onDone={() => next()} />}
       {step === "live" && <LiveStep journey={journey} />}
+      </div>
     </div>
   );
 }
@@ -216,9 +229,63 @@ function useLocate() {
   return { where, setWhere, state, locate };
 }
 
+/* ---------------- home sellers: what do you sell from? ---------------- */
+
+const KIND_LABEL: Record<Kind, { en: string; hi: string }> = {
+  home: { en: "Home kitchen", hi: "घर की रसोई" },
+  tiffin: { en: "Tiffin service", hi: "टिफ़िन सर्विस" },
+  stall: { en: "Street stall", hi: "ठेला या स्टॉल" },
+};
+const KINDS: { id: Kind; emoji: string; line: { en: string; hi: string } }[] = [
+  { id: "home", emoji: "🍲", line: { en: "Cooking from home for your area", hi: "घर से, अपने इलाक़े के लिए" } },
+  { id: "tiffin", emoji: "🍱", line: { en: "Daily or weekly meals for regulars", hi: "पुराने ग्राहकों के लिए रोज़ या हफ़्ते का खाना" } },
+  { id: "stall", emoji: "🛺", line: { en: "A thela, cart or stall", hi: "ठेला, गाड़ी या स्टॉल" } },
+];
+
+function KindStep({ value, onPick, onDone }: { value: Kind; onPick: (k: Kind) => void; onDone: () => void }) {
+  const hi = useHi();
+  const [picked, setPicked] = useState<Kind | null>(null);
+  return (
+    <div>
+      <h1 className="mt-1 text-[clamp(1.8rem,4.5vw,2.6rem)] font-semibold leading-tight tracking-[-0.03em]">{hi ? "आप क्या बेचते हैं?" : "What do you sell from?"}</h1>
+      <div role="radiogroup" aria-label={hi ? "आप क्या बेचते हैं" : "What you sell from"} className="mt-8 grid gap-3 sm:grid-cols-3">
+        {KINDS.map((k) => {
+          const on = (picked ?? value) === k.id && picked !== null;
+          return (
+            <button
+              key={k.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              onClick={() => {
+                setPicked(k.id);
+                onPick(k.id);
+              }}
+              className={`group flex items-center gap-4 rounded-[24px] p-5 text-left transition-[box-shadow,transform] sm:flex-col sm:justify-center sm:gap-3 sm:py-9 sm:text-center ${on ? "bg-[#22262b] shadow-[inset_0_0_0_2px_#e9a31a]" : "bg-[#1c1f23] shadow-[inset_0_0_0_1px_rgb(255_255_255/0.1)] hover:-translate-y-0.5 hover:shadow-[inset_0_0_0_1px_rgb(255_255_255/0.3)]"}`}
+            >
+              <span aria-hidden className="text-[44px] leading-none transition-transform group-hover:scale-110 sm:text-[64px]">
+                {k.emoji}
+              </span>
+              <span>
+                <span className="block text-[18px] font-semibold">{hi ? KIND_LABEL[k.id].hi : KIND_LABEL[k.id].en}</span>
+                <span className="mt-0.5 block text-[14px] text-[#9aa0a6]">{hi ? k.line.hi : k.line.en}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-8 flex justify-end border-t border-white/10 pt-6">{/* taste-skill-ignore */}
+        <button type="button" disabled={!picked} onClick={onDone} className={primary}>
+          {hi ? "आगे" : "Next"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- step 1: who and where ---------------- */
 
-function DetailsStep({ journey, initial, onDone }: { journey: Journey; initial: Details; onDone: (needsMenu: boolean) => void }) {
+function DetailsStep({ journey, kind = "home", initial, onDone }: { journey: Journey; kind?: Kind; initial: Details; onDone: (needsMenu: boolean) => void }) {
   const hi = useHi();
   const { lang, outlet } = useApp();
   const [f, setF] = useState<Details>(initial);
@@ -278,7 +345,7 @@ function DetailsStep({ journey, initial, onDone }: { journey: Journey; initial: 
         },
       });
       // The page goes live straight away, on the default delivery (Zomato riders and pickup).
-      await api("/api/outlet", { method: "PATCH", json: { ordering: true, upiId: f.upi.trim() || null, ...(loc.where ? { location: loc.where } : {}) } });
+      await api("/api/outlet", { method: "PATCH", json: { ordering: true, upiId: f.upi.trim() || null, ...(live ? {} : { cuisines: KIND_LABEL[kind].en }), ...(loc.where ? { location: loc.where } : {}) } });
       refreshAll();
       const dishes = Object.values(made.read ?? {}).reduce((n, r) => n + (r && "imported" in r ? r.imported + r.matched : 0), 0);
       onDone(dishes === 0);
@@ -355,7 +422,7 @@ function DetailsStep({ journey, initial, onDone }: { journey: Journey; initial: 
 
       <fieldset className="mt-8 grid gap-4 sm:grid-cols-2">
         <legend className="mb-3 text-lg font-medium">{live ? (hi ? "आपका रेस्टोरेंट" : "Your restaurant") : hi ? "आपकी रसोई" : "Your kitchen"}</legend>
-        <Field className="sm:col-span-2" label={live ? (hi ? "रेस्टोरेंट का नाम" : "Restaurant name") : hi ? "रसोई का नाम" : "Kitchen name"} value={f.name} onChange={set("name")} autoComplete="organization" placeholder={live ? "" : hi ? "जैसे मीना की रसोई" : "e.g. Meena's Kitchen"} required />
+        <Field className="sm:col-span-2" label={live ? (hi ? "रेस्टोरेंट का नाम" : "Restaurant name") : kind === "stall" ? (hi ? "ठेले या स्टॉल का नाम" : "Stall name") : kind === "tiffin" ? (hi ? "टिफ़िन सर्विस का नाम" : "Tiffin service name") : hi ? "रसोई का नाम" : "Kitchen name"} value={f.name} onChange={set("name")} autoComplete="organization" placeholder={live ? "" : kind === "stall" ? (hi ? "जैसे राजू पाव भाजी" : "e.g. Raju Pav Bhaji") : kind === "tiffin" ? (hi ? "जैसे अन्नपूर्णा टिफ़िन" : "e.g. Annapurna Tiffins") : hi ? "जैसे मीना की रसोई" : "e.g. Meena's Kitchen"} required />
         <Field label={hi ? "इलाक़ा" : "Area or locality"} value={f.area} onChange={set("area")} placeholder={hi ? "जैसे ग्रीन पार्क" : "e.g. Green Park"} required />
         <Field label={hi ? "शहर" : "City"} value={f.city} onChange={set("city")} autoComplete="address-level2" required />
       </fieldset>

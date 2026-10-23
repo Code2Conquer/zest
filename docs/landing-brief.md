@@ -268,3 +268,8 @@ The +97.6% figure is shown without its source line on the page (source: Kim & Le
 - **Logo:** the wordmark only: "zest" in lowercase, extra-bold, tight, with one turmeric fleck after the "t". Zest the assistant is one question in an ink pill with a turmeric edge and a shimmering dot grid, ending in a turmeric button that plays a Lottie (public/lottie/zest-sparkle.json, a pulsing cross of dots); the question changes every few seconds and tapping it asks it. Inside, suggested questions are raised, turmeric-edged chips with a light sweeping across. On a phone the pill appears after the hero; it steps aside for the closing call to action.
 - **Type:** headlines in Bricolage Grotesque (800), body in Inter, Hindi in Noto Sans Devanagari. One text scale on the website: 14 · 16 · 18 · 22 · 28, plus the display sizes.
 - **Photography:** Indian people and places only (public/photos/in, Unsplash License, sources in credits.json): a home kitchen tawa (home hero), a cook at a flaming wok (restaurant hero), a Zomato rider in Indian traffic ("you're covered"), a thali for pure-veg ordering pages. No European streets or kitchens.
+
+## 13. Home-kitchen-only homepage and an immersive start (October 2026)
+
+- The homepage estimator is for home kitchens only: one slider (orders a day) at a fixed ₹150 average order × 26 days. /restaurants keeps its kinds, each with a fixed average order.
+- "Get started" opens /join on a wall of food photos drifting in columns behind a centered card (after Airbnb's sign-up): "Log in or sign up", then "What do you sell from?" (🍲 Home kitchen · 🍱 Tiffin service · 🛺 Street stall), then the kitchen's details (labels follow the choice; it's saved as the page's cuisine line), menu, and the live page.

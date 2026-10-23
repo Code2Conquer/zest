@@ -52,16 +52,10 @@ export default function Home() {
             </h1>
             <div className="mt-3">
               <Estimator
-                presets={[
-                  { id: "home", label: { en: "Home kitchen", hi: "घर की रसोई" }, orders: 15, avg: 150 },
-                  { id: "tiffin", label: { en: "Tiffin service", hi: "टिफ़िन सर्विस" }, orders: 30, avg: 110 },
-                  { id: "stall", label: { en: "Stall or thela", hi: "स्टॉल या ठेला" }, orders: 60, avg: 60 },
-                ]}
-                orders={[5, 120]}
-                avg={[40, 600, 10]}
+                presets={[{ id: "home", label: { en: "Home kitchen", hi: "घर की रसोई" }, orders: 15, avg: 150 }]}
+                orders={[5, 100]}
                 per={{ en: "a month on Zest", hi: "हर महीने, Zest पर" }}
                 ordersLabel={{ en: "Orders a day", hi: "रोज़ के ऑर्डर" }}
-                avgLabel={{ en: "Average order", hi: "औसत ऑर्डर" }}
               />
             </div>
             <div id="hero-start" className="hero-in d2 mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">

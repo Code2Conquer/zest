@@ -4,37 +4,23 @@ import { useState } from "react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
-// The first screen's live thing, after Airbnb's earnings estimate: pick the kind of kitchen, set orders
-// a day and the average order, and see what that comes to in a month. It is plain arithmetic on the
-// numbers the visitor sets (orders × average × 26 working days), and the page says so.
+// The first screen's live thing, after Airbnb's earnings estimate: set orders a day and see what that
+// comes to in a month at a typical order value for this kind of kitchen (fixed; shown, not adjustable).
+// Plain arithmetic (orders × average × 26 working days), and the page says so. Kind chips show only when
+// a page offers more than one kind.
 
 export type Preset = { id: string; label: Bi; orders: number; avg: number };
 const DAYS = 26;
 const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 
-export function Estimator({
-  presets,
-  orders: [oMin, oMax],
-  avg: [aMin, aMax, aStep],
-  per,
-  ordersLabel,
-  avgLabel,
-}: {
-  presets: Preset[];
-  orders: [number, number];
-  avg: [number, number, number];
-  per: Bi;
-  ordersLabel: Bi;
-  avgLabel: Bi;
-}) {
+export function Estimator({ presets, orders: [oMin, oMax], per, ordersLabel }: { presets: Preset[]; orders: [number, number]; per: Bi; ordersLabel: Bi }) {
   const { pick } = useApp();
   const [kind, setKind] = useState(presets[0].id);
   const [orders, setOrders] = useState(presets[0].orders);
-  const [avg, setAvg] = useState(presets[0].avg);
+  const avg = presets.find((p) => p.id === kind)?.avg ?? presets[0].avg;
   const choose = (p: Preset) => {
     setKind(p.id);
     setOrders(p.orders);
-    setAvg(p.avg);
   };
 
   return (
@@ -47,7 +33,7 @@ export function Estimator({
       </p>
 
       <div className="hero-in d2 mt-7 max-w-[560px]">
-        <div role="radiogroup" aria-label={pick({ en: "Your kind of kitchen", hi: "आपकी रसोई किस तरह की है" })} className="flex flex-wrap gap-2">
+        {presets.length > 1 && <div role="radiogroup" aria-label={pick({ en: "Your kind of kitchen", hi: "आपकी रसोई किस तरह की है" })} className="flex flex-wrap gap-2">
           {presets.map((p) => (
             <button
               key={p.id}
@@ -60,13 +46,12 @@ export function Estimator({
               {pick(p.label)}
             </button>
           ))}
-        </div>
-        <Slider label={pick(ordersLabel)} value={orders} display={String(orders)} min={oMin} max={oMax} step={1} onChange={(v) => { setOrders(v); setKind(""); }} />
-        <Slider label={pick(avgLabel)} value={avg} display={inr(avg)} min={aMin} max={aMax} step={aStep} onChange={(v) => { setAvg(v); setKind(""); }} />
+        </div>}
+        <Slider label={pick(ordersLabel)} value={orders} display={String(orders)} min={oMin} max={oMax} step={1} onChange={setOrders} />
         <p className="mt-4 text-[14px] leading-snug text-[var(--lp-muted)]">
           {pick({
-            en: `${orders} orders × ${inr(avg)} × ${DAYS} days. An estimate from the numbers you set; what you earn depends on your food, prices and area.`,
-            hi: `${orders} ऑर्डर × ${inr(avg)} × ${DAYS} दिन। आपके चुने आँकड़ों से अंदाज़ा; असली कमाई आपके खाने, दाम और इलाक़े पर निर्भर है।`,
+            en: `${orders} orders a day × ${inr(avg)} average order × ${DAYS} days. An estimate; what you earn depends on your food, prices and area.`,
+            hi: `रोज़ ${orders} ऑर्डर × ${inr(avg)} औसत ऑर्डर × ${DAYS} दिन। एक अंदाज़ा; असली कमाई आपके खाने, दाम और इलाक़े पर निर्भर है।`,
           })}
         </p>
       </div>
