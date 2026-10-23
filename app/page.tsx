@@ -103,11 +103,15 @@ export default function Home() {
                 {pick({ en: "What changes when your kitchen takes orders online. Tap a reason to see it.", hi: "रसोई ऑनलाइन ऑर्डर लेने लगे तो क्या बदलता है। देखने के लिए कोई वजह चुनिए।" })}
               </p>
             </div>
-            <figure className="rv d2 rounded-[24px] bg-[var(--lp-paper)] p-6">
-              <p className="lp-display text-[56px] leading-none text-[var(--z-turmeric)] sm:text-[64px]">+97.6%</p>
-              <figcaption>
-                <p className="mt-3 text-[18px] font-semibold leading-snug">{pick({ en: "Sales growth for the smallest restaurants after they went online.", hi: "ऑनलाइन आने के बाद सबसे छोटे रेस्टोरेंट की बिक्री में बढ़त।" })}</p>
-              </figcaption>
+            {/* The one figure, drawn as what it means: sales nearly double. Two bars, no card. */}
+            <figure className="rv d2">
+              <figcaption className="text-[18px] font-semibold leading-snug">{pick({ en: "Small food sellers who went online nearly doubled their sales.", hi: "ऑनलाइन आए छोटे खाना बेचने वालों की बिक्री लगभग दोगुनी हो गई।" })}</figcaption>
+              <div className="mt-5 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-3 text-[14px] text-[var(--lp-muted)]">
+                <span>{pick({ en: "Before", hi: "पहले" })}</span>
+                <span className="h-9 w-[50.6%] rounded-full bg-[var(--lp-sunken)]" />
+                <span>{pick({ en: "Online", hi: "ऑनलाइन" })}</span>
+                <span className="flex h-9 w-full items-center justify-end rounded-full bg-[var(--z-turmeric)] px-4 text-[16px] font-bold text-[#1c1f23]">+97.6%</span>
+              </div>
             </figure>
           </div>
           <div className="rv mt-10">
