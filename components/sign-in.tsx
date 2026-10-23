@@ -40,6 +40,11 @@ export function SignInCard({ returnTo, error }: { returnTo: string; error?: stri
       <h2 className="text-xl font-semibold">{hi ? "साइन इन करें" : "Sign in"}</h2>
       <p className="mt-1 text-ink-2">{hi ? "मालिक और मैनेजर अपने Google खाते से साइन इन करते हैं।" : "Owners and managers sign in with their Google account."}</p>
       {error && ERRORS[error] && <p className="mt-3 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{hi ? ERRORS[error].hi : ERRORS[error].en}</p>}
+      {me && !me.methods.google && !me.methods.dev && (
+        <p className="mt-4 rounded-lg bg-sunken px-3 py-2 text-sm text-ink-2">
+          {hi ? "इस सर्वर पर अभी साइन-इन चालू नहीं है। zest-dusky.vercel.app पर साइन इन करें।" : "Sign-in isn't set up on this server. Sign in on zest-dusky.vercel.app instead."}
+        </p>
+      )}
       {(!me || me.methods.google) && (
         <a
           href={`/api/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`}

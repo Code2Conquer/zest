@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Check, IndianRupee, Languages, MessageCircle, Plus, Share2, ShoppingBag, UserRound, UtensilsCrossed } from "lucide-react";
 import { AudienceSwitch } from "@/components/landing/audience-switch";
 import { DeliveryMap } from "@/components/landing/delivery";
-import { HeroSequence } from "@/components/landing/hero-sequence";
+import { HomeStage } from "@/components/landing/home-stage";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { siteFonts } from "@/components/landing/site-fonts";
 import { SiteHeader } from "@/components/landing/site-header";
@@ -57,11 +57,11 @@ export default function Home() {
 
       {/* Hero: who it's for, the one promise, one action, and the order travelling from menu to Soundbox */}
       <section aria-labelledby="hero-h" className="lp-wrap pb-4 pt-2 sm:pb-12 lg:pb-16 lg:pt-4">
-        <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-10 xl:grid-cols-[minmax(0,1fr)_auto] xl:gap-12">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
           <div>
             <AudienceSwitch current="home" />
-            <h1 id="hero-h" className="lp-display mt-6 max-w-[15ch] text-[40px] leading-[1.02] [text-wrap:balance] sm:mt-8 sm:text-[60px] xl:max-w-[17ch] xl:text-[60px]">
-              {pick({ en: "Get online orders. Deliver them yourself, or with Zomato.", hi: "ऑनलाइन ऑर्डर पाइए। ख़ुद पहुँचाइए, या Zomato से।" })}
+            <h1 id="hero-h" className="lp-display mt-6 text-[40px] leading-[1.02] [text-wrap:balance] sm:mt-8 sm:text-[60px] xl:text-[72px]">
+              {pick({ en: "Online orders, delivered by you or Zomato.", hi: "ऑनलाइन ऑर्डर, आप पहुँचाएँ या Zomato।" })}
             </h1>
             <p className={`mt-5 ${LEAD}`}>
               {pick({
@@ -69,11 +69,11 @@ export default function Home() {
                 hi: "आपकी घर की रसोई, टिफ़िन सर्विस या ठेले का अपना ऑर्डर पेज। ग्राहक WhatsApp पर ऑर्डर करते हैं और UPI से पैसा देते हैं।",
               })}
             </p>
-            <div id="hero-start" className="mt-7 flex flex-wrap gap-3">
+            <div id="hero-start" className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
               <a href={START} className="lp-btn haldi max-sm:w-full">
                 {pick({ en: "Get started free", hi: "मुफ़्त शुरू करें" })}
               </a>
-              <a href="/r/meenas-kitchen" className="lp-ghost max-sm:w-full max-sm:justify-center">
+              <a href="/r/meenas-kitchen" className="lp-link text-[16px] font-medium">
                 {pick({ en: "See a sample page", hi: "सैंपल पेज देखें" })}
               </a>
             </div>
@@ -90,7 +90,7 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <HeroSequence />
+          <HomeStage />
         </div>
       </section>
 

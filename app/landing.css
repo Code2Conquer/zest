@@ -179,49 +179,13 @@
   to { opacity: 1; }
 }
 
-/* Hero sequence: lettering on the note, the scan, dishes lifting onto the page, the
-   WhatsApp order and UPI chip, the order travelling to the Soundbox and the pointer pressing it. */
-.hs-scan {
-  animation: hs-scan 1100ms ease-in-out both;
-}
-@keyframes hs-scan {
-  from { transform: translateY(0); }
-  to { transform: translateY(150px); }
-}
-.hs-lift {
-  animation: hs-lift 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-@keyframes hs-lift {
-  from { opacity: 0; transform: translate(-46px, -16px) scale(0.92); }
-  to { opacity: 1; transform: none; }
-}
-.hs-bubble {
-  animation: hs-pop 450ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
-}
+/* An order chip or bubble arriving. */
 .hs-chip {
   animation: hs-pop 400ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
 }
 @keyframes hs-pop {
   from { opacity: 0; transform: translateY(10px) scale(0.96); }
   to { opacity: 1; transform: none; }
-}
-.hs-token {
-  animation: hs-token 600ms cubic-bezier(0.4, 0, 0.2, 1) both;
-}
-@keyframes hs-token {
-  from { opacity: 0; transform: translateX(0); }
-  20% { opacity: 1; }
-  to { opacity: 0; transform: translateX(150px); }
-}
-.hs-cursor {
-  animation: hs-cursor 1300ms cubic-bezier(0.3, 0.7, 0.3, 1) both;
-}
-@keyframes hs-cursor {
-  0% { opacity: 0; transform: translate(40px, 60px); }
-  45% { opacity: 1; transform: translate(4px, 14px); }
-  60% { transform: translate(4px, 14px) scale(0.85); }
-  75% { transform: translate(4px, 14px) scale(1); }
-  100% { opacity: 0; transform: translate(4px, 14px); }
 }
 
 
@@ -252,12 +216,7 @@
   .lp-ring,
   .lp-flow,
   .lp-arc,
-  .hs-scan,
-  .hs-lift,
-  .hs-bubble,
   .hs-chip,
-  .hs-token,
-  .hs-cursor,
   .jr-in,
   .jr-pop,
   .jr-press {

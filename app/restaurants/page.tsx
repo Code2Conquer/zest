@@ -2,7 +2,7 @@
 
 import "../landing.css";
 import { useState } from "react";
-import { BellRing, Check, Hand, Mail, MessageSquareReply, PhoneCall, Plus, Printer, Sigma, Wallet, X } from "lucide-react";
+import { BellRing, Check, Hand, Mail, PhoneCall, Plus, Printer, X } from "lucide-react";
 import { AudienceSwitch } from "@/components/landing/audience-switch";
 import { DirectOrderJourney } from "@/components/landing/journey";
 import { LostOrders } from "@/components/landing/lost-orders";
@@ -35,12 +35,6 @@ const PAINS: { icon: typeof Plus; pain: Bi; fix: Bi }[] = [
   { icon: Hand, pain: { en: "Slow accepts turn into cancellations", hi: "देर से मंज़ूरी, फिर कैंसिलेशन" }, fix: { en: "One press on the top accepts it", hi: "ऊपर एक बार दबाइए, मंज़ूर" } },
   { icon: Printer, pain: { en: "KOTs written by hand", hi: "हाथ से लिखे KOT" }, fix: { en: "The ticket printer prints each one", hi: "टिकट प्रिंटर हर KOT छापता है" } },
   { icon: PhoneCall, pain: { en: "Nobody hears it in the rush", hi: "भीड़ में कोई सुनता नहीं" }, fix: { en: "It gets louder, then calls you", hi: "आवाज़ तेज़ होती है, फिर आपको फ़ोन" } },
-];
-
-const SUMMARY: { icon: typeof Plus; title: Bi; text: Bi }[] = [
-  { icon: Sigma, title: { en: "Every channel, one total", hi: "हर चैनल, एक जोड़" }, text: { en: "No more opening three dashboards.", hi: "तीन डैशबोर्ड खोलने की ज़रूरत नहीं।" } },
-  { icon: Wallet, title: { en: "Payouts, before they land", hi: "पेआउट, आने से पहले" }, text: { en: "How much from Zomato and Swiggy, and when.", hi: "Zomato और Swiggy से कितना, और कब।" } },
-  { icon: MessageSquareReply, title: { en: "Bad reviews, handled", hi: "ख़राब रिव्यू, संभले हुए" }, text: { en: "A reply in your voice. One tap to post.", hi: "आपकी भाषा में जवाब। एक टैप में पोस्ट।" } },
 ];
 
 const FAQ: { q: Bi; a: Bi }[] = [
@@ -223,34 +217,25 @@ export default function Restaurants() {
         </div>
       </section>
 
-      {/* Morning summary */}
+      {/* Morning summary, played on the owner's phone */}
       <section id="summary" aria-labelledby="summary-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-12 lg:py-14">
-        <div className="lp-wrap grid items-center gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
-          <div>
-            <h2 id="summary-h" className={H2}>
-              {pick({ en: "Know your numbers before you open the shutter.", hi: "शटर खुलने से पहले अपना हिसाब जानिए।" })}
-            </h2>
-            <p className={`mt-4 ${LEAD}`}>
-              {pick({
-                en: "One WhatsApp at 7:30 every morning: yesterday's sales from Zomato, Swiggy and your page, the payouts on their way, and the reviews that need you.",
-                hi: "हर सुबह 7:30 बजे एक WhatsApp: Zomato, Swiggy और आपके पेज से कल की बिक्री, आने वाले पेआउट, और वे रिव्यू जिन्हें आपकी ज़रूरत है।",
-              })}
-            </p>
-            <ul className="mt-7 grid gap-5 sm:grid-cols-3 sm:gap-6">
-              {SUMMARY.map((x) => (
-                <li key={x.title.en}>
-                  <x.icon aria-hidden size={22} className="text-[var(--z-turmeric)]" />
-                  <h3 className="mt-2 text-[17px] font-semibold leading-snug">{pick(x.title)}</h3>
-                  <p className="mt-1 text-[15px] leading-snug text-[var(--lp-muted)]">{pick(x.text)}</p>
-                </li>
-              ))}
-            </ul>
-            <a href={START} className="lp-btn haldi mt-8">
-              <Mail aria-hidden size={18} />
-              {pick({ en: "Connect your email", hi: "अपना ईमेल जोड़िए" })}
-            </a>
-          </div>
-          <MorningSummary />
+        <div className="lp-wrap">
+          <MorningSummary
+            intro={
+              <>
+                <h2 id="summary-h" className={H2}>
+                  {pick({ en: "Know your numbers before you open the shutter.", hi: "शटर खुलने से पहले अपना हिसाब जानिए।" })}
+                </h2>
+                <p className={`mt-4 ${LEAD}`}>{pick({ en: "One WhatsApp at 7:30 every morning, built from your Zomato and Swiggy emails.", hi: "हर सुबह 7:30 बजे एक WhatsApp, आपके Zomato और Swiggy ईमेल से बना।" })}</p>
+              </>
+            }
+            cta={
+              <a href={START} className="lp-btn haldi">
+                <Mail aria-hidden size={18} />
+                {pick({ en: "Connect your email", hi: "अपना ईमेल जोड़िए" })}
+              </a>
+            }
+          />
         </div>
       </section>
 

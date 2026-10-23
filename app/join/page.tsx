@@ -69,10 +69,26 @@ function JoinInner() {
   const { data: me } = useMe();
   const params = useSearchParams();
   const journey: Journey = params.get("journey") === "new" ? "new" : "live";
+  const hi = useHi();
 
   if (me && !me.user) {
     const here = `/join${params.toString() ? `?${params}` : ""}`;
-    return <SignInCard returnTo={here} />;
+    return (
+      <div className="pt-2">
+        <Title
+          sub={
+            journey === "new"
+              ? hi ? "साइन इन कीजिए, फिर रसोई, मेन्यू और डिलीवरी सेट कीजिए। कुछ ही मिनट में आपका पेज लाइव।" : "Sign in, then set up your kitchen, menu and delivery. Your page is live in a few minutes."
+              : hi ? "साइन इन कीजिए, फिर अपना Zomato या Swiggy लिंक डालिए। कुछ ही मिनट में आपका ऑर्डर पेज लाइव।" : "Sign in, then paste your Zomato or Swiggy link. Your ordering page is live in a few minutes."
+          }
+        >
+          {journey === "new" ? (hi ? "अपनी रसोई ऑनलाइन लाइए" : "Get your kitchen online") : hi ? "अपना ऑर्डर पेज बनाइए" : "Create your ordering page"}
+        </Title>
+        <div className="mt-8 max-w-xl">
+          <SignInCard returnTo={here} />
+        </div>
+      </div>
+    );
   }
   if (!me || (!outlet && !outletError)) {
     return (

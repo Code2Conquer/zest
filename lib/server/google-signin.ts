@@ -11,7 +11,9 @@ const envValue = (name: string) => process.env[name]?.trim().replace(/^["']|["']
 export const googleSigninConfigured = () => !!(envValue("GOOGLE_CLIENT_ID") && envValue("GOOGLE_CLIENT_SECRET"));
 
 /** Test sign-in by email, for local development before Google sign-in is set up. Never in production. */
-export const devSigninAllowed = () => process.env.NODE_ENV !== "production";
+// Test sign-in by email: always in development, and in a local production build started with
+// ZEST_DEV_SIGNIN=1 (to try onboarding without Google). Never on the live Vercel deployment.
+export const devSigninAllowed = () => process.env.VERCEL_ENV !== "production" && (process.env.NODE_ENV !== "production" || process.env.ZEST_DEV_SIGNIN === "1");
 
 export function signinAuthorizeUrl(redirectUri: string, state: string) {
   const u = new URL(AUTH_URL);
