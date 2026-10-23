@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mic, Volume2 } from "lucide-react";
+import { Mic, Volume2, Pointer } from "lucide-react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 import "./soundbox.css";
@@ -9,7 +9,7 @@ import "./soundbox.css";
 // The Zest Soundbox "Halo": a soft ceramic puck with a black glass top and a light ring set into it, shown as
 // 3D renders (scripts/soundbox/render.html, ray-marched offline; the page never runs WebGL). The ring glows when an
 // order comes in, moves while Zest speaks, turns green when accepted and red when an order waits too
-// long. Press the top to accept (and again when the food is ready); hold the side button to talk.
+// long. Tap the top to accept (and again when the food is ready); hold the side button to talk.
 // The KOT comes out of a separate ticket printer, an add-on that sits next to it (CSS);
 // the states are props so a page can play a scene through it. Audio only ever plays on a tap.
 
@@ -82,7 +82,15 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
           aria-label={state === "accepted" ? pick({ en: "Food ready", hi: "खाना तैयार" }) : pick({ en: "Accept the order", hi: "ऑर्डर मंज़ूर करें" })}
           className="sb-button absolute rounded-[50%]"
           style={{ left: "14%", top: "2%", width: "72%", height: "56%" }}
-        />
+        >
+          {/* The gesture, not words: a ripple and a pointing hand while an order waits to be accepted. */}
+          {onPress && (state === "ringing" || state === "speaking" || state === "escalating") && (
+            <span aria-hidden className="sb-tap pointer-events-none absolute left-1/2 top-1/2">
+              <span className="sb-tap-ring absolute rounded-full" />
+              <Pointer className="sb-tap-hand absolute" size={Math.max(22, Math.round(box * 0.11))} strokeWidth={2} />
+            </span>
+          )}
+        </button>
         {/* Hold to talk, on the side */}
         <button type="button" onClick={onTalk} disabled={!onTalk} aria-label={pick({ en: "Push to talk", hi: "बोलने के लिए दबाएँ" })} className="sb-talk absolute grid place-items-center rounded-full" style={{ left: "52%", top: "66%", width: Math.max(24, box * 0.13), height: Math.max(24, box * 0.13) }}>
           {onTalk && <Mic aria-hidden size={Math.round(box * 0.05)} />}
@@ -155,10 +163,13 @@ export function HearIt({ clip, dark = false }: { clip?: string; dark?: boolean }
       disabled={!clip}
       aria-hidden={!clip || undefined}
       tabIndex={clip ? undefined : -1}
-      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-[15px] font-semibold transition-colors ${dark ? "bg-[#2a2723] text-[#efe9df] hover:bg-[#3a3631]" : "bg-[var(--lp-sunken)] hover:bg-[var(--lp-line)]"} ${clip ? "" : "invisible"}`}
+      aria-label={pick({ en: "Hear it", hi: "सुनिए" })}
+      title={pick({ en: "Hear it", hi: "सुनिए" })}
+      className={`relative grid size-12 shrink-0 place-items-center rounded-full transition-colors ${playing ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : dark ? "bg-[#2a2723] text-[#efe9df] hover:bg-[#3a3631]" : "bg-[var(--lp-paper)] hover:bg-[var(--lp-line)]"} ${clip ? "" : "invisible"}`}
     >
-      <Volume2 aria-hidden size={17} className={playing ? "text-[var(--z-turmeric)]" : ""} />
-      {pick({ en: "Hear it", hi: "सुनिए" })}
+      {/* A speaker that pulses until it's played: the gesture says "listen", no label needed. */}
+      {!playing && clip && <span aria-hidden className="sb-hear-ring pointer-events-none absolute inset-0 rounded-full" />}
+      <Volume2 aria-hidden size={20} />
     </button>
   );
 }

@@ -107,3 +107,19 @@
   .sb-body,
   .sb-led { transition: none; }
 }
+
+/* Tap to accept, shown as a gesture: a ring that ripples out from the top and a hand that taps. */
+.sb-tap { width: 0; height: 0; }
+.sb-tap-ring { left: -26px; top: -26px; width: 52px; height: 52px; border: 2px solid rgb(255 255 255 / 0.85); animation: sb-ripple 1.6s ease-out infinite; }
+.sb-tap-hand { left: -2px; top: 2px; color: #fff; fill: rgb(28 31 35 / 0.55); filter: drop-shadow(0 2px 4px rgb(0 0 0 / 0.5)); animation: sb-tap 1.6s ease-in-out infinite; transform-origin: 30% 10%; }
+@keyframes sb-ripple { 0% { transform: scale(0.4); opacity: 0; } 25% { opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+@keyframes sb-tap { 0%, 100% { transform: translate(6px, 8px); } 22% { transform: translate(0, 0) scale(0.92); } 40% { transform: translate(6px, 8px); } }
+
+/* Hear it: a soft ring breathing out of the speaker button until it's played. */
+.sb-hear-ring { box-shadow: 0 0 0 0 rgb(233 163 26 / 0.55); animation: sb-hear 1.8s ease-out infinite; }
+@keyframes sb-hear { 0% { box-shadow: 0 0 0 0 rgb(233 163 26 / 0.55); } 100% { box-shadow: 0 0 0 14px rgb(233 163 26 / 0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-tap-ring, .sb-tap-hand, .sb-hear-ring { animation: none; }
+  .sb-tap-ring { opacity: 0.8; }
+}

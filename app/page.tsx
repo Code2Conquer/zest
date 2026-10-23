@@ -185,7 +185,7 @@ export default function Home() {
             <Showcase
               className="rv d2"
               title={{ en: "Orders you can hear", hi: "ऑर्डर जो सुनाई दें" }}
-              text={{ en: "The Zest Soundbox speaks each order on your counter. Press the top to accept.", hi: "Zest Soundbox हर ऑर्डर काउंटर पर बोलकर बताता है। मंज़ूर करने के लिए ऊपर दबाइए।" }}
+              text={{ en: "The Zest Soundbox speaks each order out loud on your counter.", hi: "Zest Soundbox हर ऑर्डर काउंटर पर बोलकर बताता है।" }}
               dark
             >
               <Soundbox size="md" state="speaking" bare />

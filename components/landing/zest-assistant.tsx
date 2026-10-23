@@ -184,15 +184,15 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-end sm:justify-end sm:bg-transparent sm:p-6" onClick={() => setOpen(false)}>
+        <div className="za-scrim fixed inset-0 z-50 flex items-end justify-center bg-[#0b0d10]/60 backdrop-blur-[3px] sm:items-end sm:justify-end sm:p-6" onClick={() => setOpen(false)}>
           <div
             role="dialog"
             aria-modal="true"
             aria-label={pick({ en: "Talk to Zest", hi: "Zest से बात कीजिए" })}
             onClick={(e) => e.stopPropagation()}
-            className={/* taste-skill-ignore: floating overlay */ "za-in flex h-[86dvh] w-full flex-col overflow-hidden rounded-t-[28px] bg-[var(--lp-paper)] text-[var(--lp-ink)] shadow-[0_30px_80px_-20px_rgb(0_0_0/0.7)] sm:mb-20 sm:h-[620px] sm:max-h-[calc(100dvh-120px)] sm:w-[400px] sm:rounded-[28px]"}
+            className={/* taste-skill-ignore: floating overlay */ "za-in flex h-[86dvh] w-full flex-col overflow-hidden rounded-t-[28px] bg-[#16191c] text-[var(--lp-ink)] shadow-[0_40px_120px_-20px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.08)] sm:h-[640px] sm:max-h-[calc(100dvh-120px)] sm:w-[400px] sm:rounded-[28px]"}
           >
-            <div className="flex items-center gap-3 px-5 pb-3 pt-5">
+            <div className="flex items-center gap-3 border-b border-white/[0.07] px-5 pb-4 pt-5">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--z-turmeric)]">
                 <LottieIcon src="/lottie/zest-sparkle.json" className="size-7" />
               </span>
@@ -208,8 +208,8 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
               </button>
             </div>
 
-            <div ref={list} className="flex-1 space-y-3 overflow-y-auto px-5 pb-4" aria-live="polite">
-              <p className="w-fit max-w-[88%] rounded-2xl rounded-tl-md bg-[var(--lp-sunken)] px-4 py-3 text-[15.5px] leading-relaxed">
+            <div ref={list} className="flex-1 space-y-3 overflow-y-auto px-5 py-5" aria-live="polite">
+              <p className="w-fit max-w-[88%] rounded-2xl rounded-tl-md bg-[#23272c] px-4 py-3 text-[15px] leading-relaxed">
                 {audience === "home"
                   ? pick({ en: "Hi! I'm Zest. I can tell you how your kitchen can take online orders, get paid by UPI and deliver with Zomato riders. What would you like to know?", hi: "नमस्ते! मैं Zest हूँ। आपकी रसोई ऑनलाइन ऑर्डर कैसे ले, UPI से पैसा कैसे पाए और Zomato राइडर से कैसे पहुँचाए, यह बता सकता हूँ। क्या जानना चाहेंगे?" })
                   : pick({ en: "Hi! I'm Zest. I can tell you how your own page brings in the orders Zomato and Swiggy never see, and how they're delivered. What would you like to know?", hi: "नमस्ते! मैं Zest हूँ। आपका अपना पेज वे ऑर्डर कैसे लाता है जो Zomato और Swiggy तक नहीं पहुँचते, और वे कैसे पहुँचते हैं, यह बता सकता हूँ। क्या जानना चाहेंगे?" })}
@@ -225,17 +225,17 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
               )}
               {turns.map((t, i) =>
                 t.role === "user" ? (
-                  <p key={i} className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-tr-md bg-[var(--z-turmeric)] px-4 py-2.5 text-[15.5px] leading-relaxed text-[#1c1f23]">
+                  <p key={i} className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-tr-md bg-[var(--z-turmeric)] px-4 py-2.5 text-[15px] leading-relaxed text-[#1c1f23]">
                     {t.text}
                   </p>
                 ) : (
-                  <p key={i} className="hs-chip w-fit max-w-[88%] rounded-2xl rounded-tl-md bg-[var(--lp-sunken)] px-4 py-3 text-[15.5px] leading-relaxed">
+                  <p key={i} className="hs-chip w-fit max-w-[88%] rounded-2xl rounded-tl-md bg-[#23272c] px-4 py-3 text-[15px] leading-relaxed">
                     {t.text}
                   </p>
                 ),
               )}
               {busy && (
-                <p className="lp-typing flex w-fit gap-1.5 rounded-2xl rounded-tl-md bg-[var(--lp-sunken)] px-4 py-4">
+                <p className="lp-typing flex w-fit gap-1.5 rounded-2xl rounded-tl-md bg-[#23272c] px-4 py-4">
                   <span className="sr-only">{pick({ en: "Zest is typing", hi: "Zest लिख रहा है" })}</span>
                   <i aria-hidden className="size-2 rounded-full bg-[var(--lp-muted)]" />
                   <i aria-hidden className="size-2 rounded-full bg-[var(--lp-muted)]" />
@@ -250,8 +250,10 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
                 e.preventDefault();
                 void send(draft);
               }}
-              className="flex items-end gap-2 px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-2"
+              className="border-t border-white/[0.07] px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3"
             >
+              {/* One composer, after Airbnb's fields: a quiet edge that turns white while typing, no second ring. */}
+              <div className="flex items-end gap-1.5 rounded-[26px] bg-[#0f1114] p-1.5 pl-4 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.14)] transition-shadow focus-within:shadow-[inset_0_0_0_1.5px_#f1f1ec]">
               <label htmlFor="za-input" className="sr-only">
                 {pick({ en: "Your question", hi: "आपका सवाल" })}
               </label>
@@ -268,17 +270,18 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
                   }
                 }}
                 placeholder={listening ? pick({ en: "Listening…", hi: "सुन रहा है…" }) : pick({ en: "Type or tap the mic", hi: "लिखिए या माइक दबाइए" })}
-                className={/* taste-skill-ignore: floating overlay */ "max-h-32 min-h-12 flex-1 resize-none rounded-[22px] bg-[var(--lp-sunken)] px-4 py-3 text-[16px] leading-snug outline-none placeholder:text-[var(--lp-faint)] focus:shadow-[inset_0_0_0_2px_var(--z-turmeric)]"}
+                className={/* taste-skill-ignore: floating overlay */ "max-h-32 min-h-11 flex-1 resize-none bg-transparent py-2.5 text-[16px] leading-snug outline-none placeholder:text-[var(--lp-faint)] focus-visible:!outline-none"}
               />
               {canListen && (
-                <button type="button" onClick={listen} aria-pressed={listening} aria-label={listening ? pick({ en: "Stop listening", hi: "सुनना बंद करें" }) : pick({ en: "Speak your question", hi: "बोलकर पूछिए" })} className={`relative grid size-12 shrink-0 place-items-center rounded-full transition-colors ${listening ? "bg-[var(--lp-bad)] text-white" : "bg-[var(--lp-sunken)] hover:bg-[var(--lp-line)]"}`}>
+                <button type="button" onClick={listen} aria-pressed={listening} aria-label={listening ? pick({ en: "Stop listening", hi: "सुनना बंद करें" }) : pick({ en: "Speak your question", hi: "बोलकर पूछिए" })} className={`relative grid size-11 shrink-0 place-items-center rounded-full text-[var(--lp-muted)] transition-colors ${listening ? "bg-[var(--lp-bad)] text-white" : "hover:bg-white/[0.07] hover:text-[var(--lp-ink)]"}`}>
                   {listening && <span aria-hidden className="za-pulse absolute inset-0 rounded-full" />}
                   {listening ? <Square aria-hidden size={16} className="fill-current" /> : <Mic aria-hidden size={20} />}
                 </button>
               )}
-              <button type="submit" disabled={busy || !draft.trim()} aria-label={pick({ en: "Send", hi: "भेजें" })} className="grid size-12 shrink-0 place-items-center rounded-full bg-[var(--z-turmeric)] text-[#1c1f23] disabled:opacity-40">
+              <button type="submit" disabled={busy || !draft.trim()} aria-label={pick({ en: "Send", hi: "भेजें" })} className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--z-turmeric)] text-[#1c1f23] transition-colors disabled:cursor-not-allowed disabled:bg-[#2a2e33] disabled:text-[#7c828a]">
                 {busy ? <Loader2 aria-hidden size={18} className="animate-spin" /> : <ArrowUp aria-hidden size={20} strokeWidth={2.5} />}
               </button>
+              </div>
             </form>
           </div>
         </div>
