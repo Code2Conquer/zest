@@ -11,7 +11,7 @@ import { SiteFooter } from "@/components/landing/site-footer";
 import { siteFonts } from "@/components/landing/site-fonts";
 import { SiteHeader } from "@/components/landing/site-header";
 import { StickyStart } from "@/components/landing/sticky-start";
-import { TalkBand } from "@/components/landing/talk-band";
+import { ZestAssistant } from "@/components/landing/zest-assistant";
 import { ReachZest, WhyOnline } from "@/components/landing/why-online";
 import { Soundbox } from "@/components/soundbox/soundbox";
 import type { Bi } from "@/lib/i18n";
@@ -21,7 +21,7 @@ import { useApp } from "@/lib/state";
 // stalls and small cloud kitchens. Source of truth: docs/landing-brief.md. Laid out after Airbnb's
 // hosting page, which solved the same problem for homes: what your kitchen could earn (a live estimate),
 // three plain promises, why going online pays, how you're covered, how your kitchen looks on Zest,
-// and a person to talk to. Every string is in English and Hindi, addressed to "you".
+// and Zest, the assistant, to ask anything. Every string is in English and Hindi, addressed to "you".
 
 const START = "/join?journey=new";
 
@@ -55,7 +55,6 @@ export default function Home() {
                   { id: "home", label: { en: "Home kitchen", hi: "घर की रसोई" }, orders: 15, avg: 150 },
                   { id: "tiffin", label: { en: "Tiffin service", hi: "टिफ़िन सर्विस" }, orders: 30, avg: 110 },
                   { id: "stall", label: { en: "Stall or thela", hi: "स्टॉल या ठेला" }, orders: 60, avg: 60 },
-                  { id: "cloud", label: { en: "Cloud kitchen", hi: "क्लाउड किचन" }, orders: 25, avg: 250 },
                 ]}
                 orders={[5, 120]}
                 avg={[40, 600, 10]}
@@ -74,7 +73,8 @@ export default function Home() {
             </div>
           </div>
           <HeroPhoto
-            photo="/photos/dish-thali.webp"
+            photo="/photos/team-menu.webp"
+            ratio="4 / 3"
             alt={pick({ en: "A home-cooked thali on a banana leaf", hi: "केले के पत्ते पर घर की थाली" })}
             order={{
               from: { en: "New order · Flat 302", hi: "नया ऑर्डर · फ़्लैट 302" },
@@ -90,9 +90,9 @@ export default function Home() {
       <Promises
         title={{ en: "Selling online, without the hard parts.", hi: "ऑनलाइन बेचना, बिना झंझट।" }}
         items={[
-          { title: { en: "It's easy", hi: "आसान है" }, text: { en: "Send a photo of your menu and your page is ready in minutes. Help is a WhatsApp away.", hi: "मेन्यू की फ़ोटो भेजिए, कुछ ही मिनट में पेज तैयार। मदद बस एक WhatsApp दूर।" } },
-          { title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. You set your prices, and customers pay you by UPI, straight to your bank.", hi: "शुरुआत मुफ़्त। दाम आप तय करें, ग्राहक UPI से सीधे आपके बैंक में भुगतान करें।" } },
-          { title: { en: "Delivery is handled", hi: "डिलीवरी की चिंता नहीं" }, text: { en: "Zomato riders pick up from your door and deliver up to 7 km. Or send your own helper.", hi: "Zomato राइडर आपके दरवाज़े से उठाकर 7 किमी तक पहुँचाते हैं। या अपना हेल्पर भेजिए।" } },
+          { photo: "/photos/stage-new.webp", title: { en: "It's easy", hi: "आसान है" }, text: { en: "Send a photo of your menu and your page is ready in minutes. Help is a WhatsApp away.", hi: "मेन्यू की फ़ोटो भेजिए, कुछ ही मिनट में पेज तैयार। मदद बस एक WhatsApp दूर।" } },
+          { photo: "/photos/team-money.webp", title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. You set your prices, and customers pay you by UPI, straight to your bank.", hi: "शुरुआत मुफ़्त। दाम आप तय करें, ग्राहक UPI से सीधे आपके बैंक में भुगतान करें।" } },
+          { photo: "/photos/team-rider.webp", title: { en: "Delivery is handled", hi: "डिलीवरी की चिंता नहीं" }, text: { en: "Zomato riders pick up from your door and deliver up to 7 km. Or send your own helper.", hi: "Zomato राइडर आपके दरवाज़े से उठाकर 7 किमी तक पहुँचाते हैं। या अपना हेल्पर भेजिए।" } },
         ]}
       />
 
@@ -112,7 +112,6 @@ export default function Home() {
               <p className="lp-display text-[56px] leading-none text-[var(--z-turmeric)] sm:text-[64px]">+97.6%</p>
               <figcaption>
                 <p className="mt-3 text-[17px] font-semibold leading-snug">{pick({ en: "Sales growth for the smallest restaurants after they went online.", hi: "ऑनलाइन आने के बाद सबसे छोटे रेस्टोरेंट की बिक्री में बढ़त।" })}</p>
-                <p className="mt-2 text-[13px] leading-snug text-[var(--lp-muted)]">{pick({ en: "Every restaurant in South Korea, 2020 card data. Kim & Lee, Hitotsubashi Journal of Economics, 2024.", hi: "दक्षिण कोरिया के सभी रेस्टोरेंट, 2020 का कार्ड डेटा। Kim और Lee, Hitotsubashi Journal of Economics, 2024।" })}</p>
               </figcaption>
             </figure>
           </div>
@@ -188,15 +187,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* A person to talk to */}
-      <TalkBand
-        page="/"
-        defaultType="home_kitchen"
-        photo="/photos/team-chef.webp"
-        title={{ en: "Curious about selling online?", hi: "ऑनलाइन बेचने के बारे में सोच रहे हैं?" }}
-        text={{ en: "Talk to someone at Zest, free. We'll help you set up your page and menu, and answer anything you're unsure about.", hi: "Zest से किसी से मुफ़्त बात कीजिए। हम आपका पेज और मेन्यू बनाने में मदद करेंगे, और हर सवाल का जवाब देंगे।" }}
-      />
-
       {/* Closing call to action */}
       <section id="final-start" aria-labelledby="start-h" className="bg-[var(--z-turmeric)] py-16 text-[#1c1f23] lg:py-20">
         <div className="lp-wrap flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -221,6 +211,7 @@ export default function Home() {
         watch="hero-start"
         hideAt="final-start"
       />
+      <ZestAssistant audience="home" />
     </div>
   );
 }

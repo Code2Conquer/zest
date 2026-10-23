@@ -14,6 +14,7 @@ import { useApp } from "@/lib/state";
 type Dish = { id: string; name: string; category: string; description: string; veg: boolean; bestseller: boolean; photo: string | null; price: number; rating: number | null; votes: number };
 type Shop = {
   name: string;
+  hero: string;
   area: string;
   locality: string;
   address: string;
@@ -103,7 +104,6 @@ function Storefront({ slug }: { slug: string }) {
       />
     );
 
-  const [cover, ...more] = shop.photos;
   const delivers = shop.delivery.zomatoRider || shop.delivery.ownStaff;
   const mode = table
     ? hi ? `टेबल ${table}` : `Table ${table}`
@@ -111,23 +111,13 @@ function Storefront({ slug }: { slug: string }) {
 
   return (
     <div className="min-h-dvh bg-paper pb-28 text-ink lg:pb-16">
-      {/* Cover photos, as listing pages open */}
-      <div className="relative">
-        <div className="mx-auto grid h-[220px] max-w-6xl gap-1.5 overflow-hidden sm:h-[300px] sm:grid-cols-[2fr_1fr] sm:px-6 sm:pt-6 lg:rounded-b-none">
-          {cover ? (
-            <img src={cover} alt="" className="size-full object-cover sm:rounded-l-2xl max-sm:rounded-none" />
-          ) : (
-            <div className="size-full bg-[radial-gradient(70%_80%_at_30%_30%,#1c3628,#12261b)]" />
-          )}
-          {more.length > 0 && (
-            <div className="hidden grid-rows-2 gap-1.5 sm:grid">
-              {more.slice(0, 2).map((p, i) => (
-                <img key={p} src={p} alt="" className={`size-full object-cover ${i === 0 ? "rounded-tr-2xl" : "rounded-br-2xl"}`} />
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="absolute right-4 top-4 sm:right-8 sm:top-8">
+      {/* The hero: one large photo, the name over it */}
+      <div className="relative h-[260px] overflow-hidden sm:h-[380px] lg:h-[440px]">
+        <img src={shop.hero} alt="" className="size-full object-cover" />
+        <div aria-hidden className="absolute inset-0 bg-[linear-gradient(to_top,rgb(10_12_11/0.92),rgb(10_12_11/0.35)_55%,rgb(10_12_11/0.15))]" />
+        <div className="absolute inset-x-0 bottom-0 mx-auto max-w-6xl px-5 pb-14 sm:px-8 sm:pb-20">
+          <h1 className="text-[clamp(2rem,5vw,3.5rem)] font-semibold leading-[1.05] tracking-[-0.03em] text-white">{shop.name}</h1>
+          {shop.cuisines.length > 0 && <p className="mt-1.5 text-[1.05rem] text-white/85">{shop.cuisines.join(" · ")}</p>}
         </div>
       </div>
 
@@ -136,15 +126,13 @@ function Storefront({ slug }: { slug: string }) {
         <section className="rounded-3xl bg-surface p-5 shadow-[0_0_0_1px_var(--line),0_18px_40px_-24px_rgb(0_0_0/0.35)] sm:p-7">
           <div className="flex flex-wrap items-start justify-between gap-5">
             <div className="min-w-0">
-              <h1 className="text-[clamp(1.8rem,4vw,2.5rem)] font-semibold leading-tight tracking-[-0.03em]">{shop.name}</h1>
-              {shop.cuisines.length > 0 && <p className="mt-1 text-ink-2">{shop.cuisines.join(" · ")}</p>}
-              <p className="mt-0.5 text-sm text-muted">{[shop.address, shop.locality && !shop.address.includes(shop.locality) ? shop.locality : null].filter(Boolean).join(", ") || shop.area}</p>
+              <p className="text-ink-2">{[shop.address, shop.locality && !shop.address.includes(shop.locality) ? shop.locality : null].filter(Boolean).join(", ") || shop.area}</p>
             </div>
             {shop.ratings.length > 0 && (
               <div className="flex gap-3">
                 {shop.ratings.map((r) => (
                   <div key={r.platform} className="min-w-[84px] rounded-xl text-center shadow-[0_0_0_1px_var(--line)]">
-                    <p className="inline-flex w-full items-center justify-center gap-1 rounded-t-xl bg-veg py-1 text-[1.05rem] font-semibold text-white">
+                    <p className="inline-flex w-full items-center justify-center gap-1 rounded-t-xl bg-[#1f6b3a] py-1 text-[1.05rem] font-semibold text-white">
                       {r.value.toFixed(1)}
                       <Star aria-hidden className="size-3.5 fill-current" />
                     </p>
@@ -249,7 +237,7 @@ function Storefront({ slug }: { slug: string }) {
                     <li key={m.id} className="flex gap-5 py-6">
                       <div className="min-w-0 flex-1">
                         <p className="flex items-center gap-2">
-                          <span className={`food-mark ${m.veg ? "text-veg" : "nonveg text-nonveg"}`} aria-label={m.veg ? "Veg" : "Non-veg"} />
+                          <span className={`food-mark ${m.veg ? "text-veg" : "nonveg text-nonveg"}`} role="img" aria-label={m.veg ? "Veg" : "Non-veg"} />
                           {m.bestseller && <span className="rounded bg-turmeric-soft px-1.5 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-ink">{hi ? "बेस्टसेलर" : "Bestseller"}</span>}
                         </p>
                         <h3 className="mt-1.5 text-[1.05rem] font-semibold">{m.name}</h3>

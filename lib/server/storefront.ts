@@ -85,6 +85,14 @@ function costForTwo(listing: number | null | undefined, prices: number[]): { amo
   return { amount: Math.round((mid * 2.5) / 50) * 50, estimated: true };
 }
 
+/** A large stock photo for a page with none of its own, chosen from what the kitchen cooks. */
+function heroFor(cuisines: string[], pureVeg: boolean): string {
+  const c = cuisines.join(" ").toLowerCase();
+  if (pureVeg || /thali|home|south indian|gujarati/.test(c)) return "/photos/team-menu.webp";
+  if (/biryani|mughlai|hyderabadi/.test(c)) return "/photos/hero-biryani.webp";
+  return "/photos/cta-curries.webp";
+}
+
 export async function getStorefront(slug: string) {
   const o = await shopBySlug(slug);
   const all = await db.select().from(menuItems).where(eq(menuItems.outletId, o.id)).orderBy(asc(menuItems.sort));
@@ -93,9 +101,13 @@ export async function getStorefront(slug: string) {
   const pick = <T>(f: (l: (typeof listings)[number]) => T | null | undefined) => listings.map(f).find((v) => v != null && v !== "" && !(Array.isArray(v) && !v.length)) ?? null;
   const cuisines = (o.cuisines ? o.cuisines.split(",") : (pick((l) => l.cuisines) ?? [])).map((c) => c.trim()).filter(Boolean);
   const photos = [...(pick((l) => l.photos) ?? []), ...menu.filter((m) => m.photoUrl && m.bestseller).map((m) => m.photoUrl!), ...menu.filter((m) => m.photoUrl && !m.bestseller).map((m) => m.photoUrl!)];
+  const pureVeg = menu.length > 0 && menu.every((m) => m.veg);
   return {
     name: o.name,
     isDemo: o.isDemo,
+    // The big picture at the top: the restaurant's own (from its listing), or a large food photo that
+    // suits its menu, so no page opens on a blur of thumbnails.
+    hero: pick((l) => l.photos)?.[0] ?? heroFor(cuisines, pureVeg),
     area: [o.area, o.city].filter(Boolean).join(", "),
     locality: o.area || pick((l) => l.locality) || "",
     address: o.address || pick((l) => l.address) || "",
@@ -104,7 +116,7 @@ export async function getStorefront(slug: string) {
     costForTwo: costForTwo(pick((l) => l.costForTwo), menu.map(dinePrice)),
     highlights: pick((l) => l.highlights) ?? [],
     photos: [...new Set(photos)].slice(0, 5),
-    pureVeg: menu.length > 0 && menu.every((m) => m.veg),
+    pureVeg,
     hoursToday: await hoursToday(o.id),
     fssai: o.fssai,
     open: await openNow(o.id),

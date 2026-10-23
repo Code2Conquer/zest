@@ -6,7 +6,7 @@ import { BellRing, Check, Hand, Mail, PhoneCall, Plus, Printer, X } from "lucide
 import { Estimator } from "@/components/landing/estimator";
 import { HeroPhoto } from "@/components/landing/hero-photo";
 import { Promises } from "@/components/landing/promises";
-import { TalkBand } from "@/components/landing/talk-band";
+import { ZestAssistant } from "@/components/landing/zest-assistant";
 import { DirectOrderJourney } from "@/components/landing/journey";
 import { LostOrders } from "@/components/landing/lost-orders";
 import { MorningSummary, RestaurantVoice } from "@/components/landing/restaurants";
@@ -115,7 +115,8 @@ export default function Restaurants() {
             </div>
           </div>
           <HeroPhoto
-            photo="/photos/dish-biryani.webp"
+            photo="/photos/hero-biryani.webp"
+            ratio="4 / 5"
             alt={pick({ en: "A bowl of chicken biryani", hi: "चिकन बिरयानी का कटोरा" })}
             order={{
               from: { en: "New order · your page", hi: "नया ऑर्डर · आपका पेज" },
@@ -131,9 +132,9 @@ export default function Restaurants() {
       <Promises
         title={{ en: "Your own orders, without the hard parts.", hi: "अपने ऑर्डर, बिना झंझट।" }}
         items={[
-          { title: { en: "It's easy", hi: "आसान है" }, text: { en: "Paste your Zomato or Swiggy link. Your page, menu and photos are ready in a minute.", hi: "अपना Zomato या Swiggy लिंक डालिए। पेज, मेन्यू और फ़ोटो एक मिनट में तैयार।" } },
-          { title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. Customers pay you by UPI, and they stay your customers.", hi: "शुरुआत मुफ़्त। ग्राहक UPI से आपको भुगतान करते हैं, और आपके ग्राहक बने रहते हैं।" } },
-          { title: { en: "It sits alongside", hi: "साथ-साथ चलता है" }, text: { en: "Nothing changes on Zomato or Swiggy. Zomato riders deliver your own orders too.", hi: "Zomato या Swiggy पर कुछ नहीं बदलता। आपके अपने ऑर्डर भी Zomato राइडर पहुँचाते हैं।" } },
+          { photo: "/photos/stage-scale.webp", title: { en: "It's easy", hi: "आसान है" }, text: { en: "Paste your Zomato or Swiggy link. Your page, menu and photos are ready in a minute.", hi: "अपना Zomato या Swiggy लिंक डालिए। पेज, मेन्यू और फ़ोटो एक मिनट में तैयार।" } },
+          { photo: "/photos/team-money.webp", title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. Customers pay you by UPI, and they stay your customers.", hi: "शुरुआत मुफ़्त। ग्राहक UPI से आपको भुगतान करते हैं, और आपके ग्राहक बने रहते हैं।" } },
+          { photo: "/photos/team-rider.webp", title: { en: "It sits alongside", hi: "साथ-साथ चलता है" }, text: { en: "Nothing changes on Zomato or Swiggy. Zomato riders deliver your own orders too.", hi: "Zomato या Swiggy पर कुछ नहीं बदलता। आपके अपने ऑर्डर भी Zomato राइडर पहुँचाते हैं।" } },
         ]}
       />
 
@@ -232,15 +233,6 @@ export default function Restaurants() {
         </div>
       </section>
 
-      {/* A person to talk to */}
-      <TalkBand
-        page="/restaurants"
-        defaultType="restaurant"
-        photo="/photos/team-pass.webp"
-        title={{ en: "Curious about your own page?", hi: "अपने पेज के बारे में सोच रहे हैं?" }}
-        text={{ en: "Talk to someone at Zest, free. We'll set up your page from your listing and show you how direct orders reach your kitchen.", hi: "Zest से किसी से मुफ़्त बात कीजिए। हम आपकी लिस्टिंग से पेज बनाएँगे और दिखाएँगे कि सीधे ऑर्डर आपकी रसोई तक कैसे पहुँचते हैं।" }}
-      />
-
       {/* Closing call to action */}
       <section id="final-start" aria-labelledby="start-h" className="bg-[var(--z-turmeric)] py-14 text-[#1c1f23] lg:py-20">
         <div className="lp-wrap grid items-center gap-7 lg:grid-cols-2 lg:gap-12">
@@ -260,6 +252,7 @@ export default function Restaurants() {
         watch="hero-start"
         hideAt="final-start"
       />
+      <ZestAssistant audience="restaurants" />
     </div>
   );
 }

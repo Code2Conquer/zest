@@ -253,6 +253,16 @@
   box-shadow: 0 0 0 4px var(--z-turmeric); /* taste-skill-ignore */
 }
 
+/* Zest's mark: a slow breathing ring at rest, a quicker one while it listens or thinks. */
+.zm-ring { box-shadow: 0 0 0 0 rgb(233 163 26 / 0.55); animation: zm-breathe 2.8s ease-out infinite; } /* taste-skill-ignore */
+.zm.is-speaking .zm-ring { animation-duration: 1s; }
+.zm.is-speaking svg { animation: zm-nod 1s ease-in-out infinite; }
+@keyframes zm-breathe { 0% { box-shadow: 0 0 0 0 rgb(233 163 26 / 0.55); } 70%, 100% { box-shadow: 0 0 0 14px rgb(233 163 26 / 0); } } /* taste-skill-ignore */
+@keyframes zm-nod { 0%, 100% { transform: none; } 50% { transform: scale(0.9); } }
+.za-in { animation: za-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+@keyframes za-in { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: none; } }
+.za-pulse { animation: zm-breathe 1.2s ease-out infinite; }
+
 .lp details > summary {
   list-style: none;
   cursor: pointer;
@@ -275,6 +285,10 @@
   .hero-rise,
   .hero-note,
   .hero-ping,
+  .zm-ring,
+  .zm svg,
+  .za-in,
+  .za-pulse,
   .rv {
     animation: none !important;
   }
