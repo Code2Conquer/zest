@@ -1,40 +1,43 @@
-/* Zest Soundbox "Halo". Graphite body, champagne bevel, a light ring in the top. The ring's colour is the state: amber for a
-   new order, warm yellow while speaking, green when accepted, red when an order waits too long, off
-   when resting. Every move here stops under prefers-reduced-motion. */
+/* Zest Soundbox "Halo": a ceramic puck with a black glass top and a light ring, shown as 3D renders.
+   The resting render is always there; the lit render for the state (amber for a new order, speaking or
+   printing, green when accepted, red when an order waits too long) fades in on top of it, and its
+   opacity carries the motion: it breathes for a new order, flickers like a voice while speaking and
+   breathes faster when missed. Every move here stops under prefers-reduced-motion. */
 
 .sb {
   --sb-ink: #1c1f23;
-  --sb-tone: #ff9f1c;
-  --sb-on: 0;
 }
-.sb[data-state="ringing"] { --sb-tone: #ff9f1c; --sb-on: 1; }
-.sb[data-state="speaking"] { --sb-tone: #ffb52e; --sb-on: 1; }
-.sb[data-state="printing"] { --sb-tone: #ffb52e; --sb-on: 0.85; }
-.sb[data-state="accepted"] { --sb-tone: #2fbf6a; --sb-on: 1; }
-.sb[data-state="escalating"] { --sb-tone: #ff4d3a; --sb-on: 1; }
 
-.sb-ring {
-  fill: none;
-  stroke: var(--sb-tone);
-  stroke-width: 3.2;
-  opacity: var(--sb-on);
-  transition: stroke 300ms ease, opacity 300ms ease;
+.sb-light {
+  opacity: 0;
+  transition: opacity 300ms ease;
 }
-.sb-glow {
-  fill: none;
-  stroke: var(--sb-tone);
-  stroke-width: 9;
-  opacity: calc(var(--sb-on) * 0.75);
-  transition: stroke 300ms ease, opacity 300ms ease;
+.sb-light.is-on { opacity: 1; }
+.sb[data-state="printing"] .sb-light.is-on { opacity: 0.85; }
+
+.sb[data-state="ringing"] .sb-light.is-on { animation: sb-breathe 1.4s ease-in-out infinite; }
+.sb[data-state="speaking"] .sb-light.is-on { animation: sb-voice 0.9s steps(6, end) infinite; }
+.sb[data-state="escalating"] .sb-light.is-on { animation: sb-breathe 0.6s ease-in-out infinite; }
+
+@keyframes sb-breathe {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
 }
-.sb-pool {
-  fill: var(--sb-tone);
-  opacity: calc(var(--sb-on) * 0.28);
-  transition: fill 300ms ease, opacity 300ms ease;
+@keyframes sb-voice {
+  0% { opacity: 1; }
+  20% { opacity: 0.6; }
+  40% { opacity: 0.95; }
+  60% { opacity: 0.5; }
+  80% { opacity: 0.9; }
+  100% { opacity: 1; }
 }
-.sb-dish {
-  transform-box: view-box;
-  transition: transform 140ms ease;
+
+/* Press the top: the whole box dips a little */
+.sb-body { transition: transform 140ms ease; }
+.sb[data-state="accepted"] .sb-body { animation: sb-press 420ms ease-out 1; }
+@keyframes sb-press {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(2px) scale(0.995); }
 }
 
 /* Press the top; hold the side button to talk */
@@ -42,10 +45,9 @@
   background: transparent;
 }
 .sb-button:not(:disabled) { cursor: pointer; }
-.sb[data-state="accepted"] .sb-dish { animation: sb-press 420ms ease-out 1; }
 .sb-talk {
   background: transparent;
-  color: #9aa0a6;
+  color: #6f757c;
 }
 .sb-talk:not(:disabled) { cursor: pointer; }
 .sb-button:focus-visible,
@@ -54,16 +56,16 @@
   outline-offset: 3px;
 }
 
-/* The ticket printer (add-on): a small graphite block to match, with a paper slot and a light */
+/* The ticket printer (add-on): a small ceramic block to match, with a paper slot and a light */
 .sb-printer {
-  border-radius: 10px 10px 6px 6px;
-  background: #26292e;
+  border-radius: 12px 12px 8px 8px;
+  background: #e6e2da;
 }
 .sb-slot {
-  background: #050607;
+  background: var(--sb-ink);
 }
 .sb-led {
-  background: #4a4f56;
+  background: #b9b3a8;
   transition: background-color 300ms ease;
 }
 .sb[data-state="printing"] .sb-led,
@@ -76,7 +78,6 @@
   font-size: 12px;
   line-height: 1.45;
   padding: 14px 12px 18px;
-  box-shadow: inset 0 6px 6px -6px rgb(0 0 0 / 0.25);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), 95% 100%, 90% calc(100% - 6px), 85% 100%, 80% calc(100% - 6px), 75% 100%, 70% calc(100% - 6px), 65% 100%, 60% calc(100% - 6px), 55% 100%, 50% calc(100% - 6px), 45% 100%, 40% calc(100% - 6px), 35% 100%, 30% calc(100% - 6px), 25% 100%, 20% calc(100% - 6px), 15% 100%, 10% calc(100% - 6px), 5% 100%, 0 calc(100% - 6px));
 }
 .sb-ticket.is-printing {
@@ -85,31 +86,6 @@
 @keyframes sb-print {
   from { transform: translateY(-100%); }
   to { transform: translateY(0); }
-}
-
-/* New order: the ring breathes. Speaking: it flickers like a voice. Waiting too long: red, faster. */
-.sb[data-state="ringing"] .sb-glow,
-.sb[data-state="ringing"] .sb-pool { animation: sb-breathe 1.4s ease-in-out infinite; }
-.sb[data-state="speaking"] .sb-glow,
-.sb[data-state="speaking"] .sb-ring { animation: sb-voice 0.9s steps(6, end) infinite; }
-.sb[data-state="escalating"] .sb-glow,
-.sb[data-state="escalating"] .sb-pool { animation: sb-breathe 0.6s ease-in-out infinite; }
-
-@keyframes sb-breathe {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 0.9; }
-}
-@keyframes sb-voice {
-  0% { opacity: 1; }
-  20% { opacity: 0.55; }
-  40% { opacity: 0.95; }
-  60% { opacity: 0.4; }
-  80% { opacity: 0.85; }
-  100% { opacity: 1; }
-}
-@keyframes sb-press {
-  0%, 100% { transform: translateY(0); }
-  40% { transform: translateY(1.5px); }
 }
 
 .sb-caption {
@@ -121,16 +97,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sb-ring,
-  .sb-glow,
-  .sb-pool,
-  .sb-dish,
+  .sb-light,
+  .sb-body,
   .sb-ticket.is-printing,
   .sb-caption {
     animation: none !important;
   }
-  .sb-ring,
-  .sb-glow,
-  .sb-pool,
+  .sb-light,
+  .sb-body,
   .sb-led { transition: none; }
 }

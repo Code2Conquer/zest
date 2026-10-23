@@ -179,7 +179,7 @@ export default function Home() {
             </div>
           </div>
           <div className="order-first flex justify-center lg:order-none">
-            <Soundbox size="sm" state="idle" bare />
+            <Soundbox size="lg" state="idle" bare className="max-sm:scale-90" />
           </div>
         </div>
       </section>

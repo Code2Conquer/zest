@@ -1,72 +1,32 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
-import { LangToggle, ThemeToggle, Wordmark } from "@/components/bits";
+import { LangToggle, Wordmark } from "@/components/bits";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
-// The website's header, shared by the homepage and /restaurants. On a phone the section links and the
-// start button fold away (the page carries its own start button); the language and theme switches stay.
+// The website's header, shared by the homepage and /restaurants: the name, the language, log in and one
+// start button. Nothing else: the audience switch under it moves between the two pages, and each page
+// is short enough to read without section links. On a phone the start button folds away (the page
+// carries its own, and a sticky one).
 
-export type NavLink = { href: string; label: Bi };
-
-export const HOME_NAV: NavLink[] = [
-  { href: "/#how", label: { en: "How it works", hi: "कैसे काम करता है" } },
-  { href: "/#delivery", label: { en: "Delivery", hi: "डिलीवरी" } },
-  { href: "/#soundbox", label: { en: "Soundbox", hi: "Soundbox" } },
-  { href: "/#faq", label: { en: "Questions", hi: "सवाल" } },
-  { href: "/restaurants", label: { en: "For restaurants", hi: "रेस्टोरेंट के लिए" } },
-];
-
-export function SiteHeader({ nav = HOME_NAV, start }: { nav?: NavLink[]; start: { href: string; label: Bi } }) {
+export function SiteHeader({ start }: { start: { href: string; label: Bi } }) {
   const { pick } = useApp();
-  const [open, setOpen] = useState(false);
   return (
     <header className="relative z-30">
       <div className="lp-wrap flex h-[72px] items-center justify-between gap-4">
         <a href="/" aria-label={pick({ en: "Zest home", hi: "Zest होम" })} className="shrink-0">
           <Wordmark className="text-[28px]" />
         </a>
-        <nav aria-label={pick({ en: "Sections", hi: "हिस्से" })} className="hidden items-center gap-7 text-[15px] font-medium xl:flex">
-          {nav.map((n) => (
-            <a key={n.href} href={n.href} className="hover:underline hover:underline-offset-4">
-              {pick(n.label)}
-            </a>
-          ))}
-        </nav>
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-3">
           <LangToggle />
-          <ThemeToggle />
-          <a href="/login" className="hidden px-2 text-[15px] font-medium hover:underline hover:underline-offset-4 lg:inline">
+          <a href="/login" className="px-2 text-[15px] font-medium hover:underline hover:underline-offset-4">
             {pick({ en: "Log in", hi: "लॉग इन" })}
           </a>
-          <a href={start.href} className="lp-btn min-h-11 whitespace-nowrap px-4 text-[15px] max-sm:!hidden sm:px-5">
+          <a href={start.href} className="lp-btn min-h-11 whitespace-nowrap px-5 text-[15px] max-sm:!hidden">
             {pick(start.label)}
           </a>
-          <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-controls="site-menu" aria-label={pick({ en: "Menu", hi: "मेन्यू" })} className="grid size-11 place-items-center rounded-full xl:hidden">
-            {open ? <X aria-hidden size={20} /> : <Menu aria-hidden size={20} />}
-          </button>
         </div>
       </div>
-      {open && (
-        <nav id="site-menu" aria-label={pick({ en: "Sections", hi: "हिस्से" })} className="lp-wrap pb-5 xl:hidden">
-          <ul className="grid gap-1 rounded-2xl bg-[var(--lp-paper)] p-3 text-[17px] font-medium">
-            {nav.map((n) => (
-              <li key={n.href}>
-                <a href={n.href} onClick={() => setOpen(false)} className="block rounded-xl px-3 py-3 hover:bg-[var(--lp-sunken)]">
-                  {pick(n.label)}
-                </a>
-              </li>
-            ))}
-            <li>
-              <a href="/login" className="block rounded-xl px-3 py-3 hover:bg-[var(--lp-sunken)]">
-                {pick({ en: "Log in", hi: "लॉग इन" })}
-              </a>
-            </li>
-          </ul>
-        </nav>
-      )}
     </header>
   );
 }

@@ -8,7 +8,7 @@ import { AudienceSwitch } from "@/components/landing/audience-switch";
 import { MorningSummary, RestaurantStage, RestaurantVoice } from "@/components/landing/restaurants";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { siteFonts } from "@/components/landing/site-fonts";
-import { SiteHeader, type NavLink } from "@/components/landing/site-header";
+import { SiteHeader } from "@/components/landing/site-header";
 import { StickyStart } from "@/components/landing/sticky-start";
 import { Waitlist } from "@/components/landing/waitlist";
 import type { Bi } from "@/lib/i18n";
@@ -19,15 +19,6 @@ import { useApp } from "@/lib/state";
 // never see (calls, WhatsApp, parties, dine-in guests at home, people searching your name), taken on
 // your own page and delivered by Zomato riders. Zest sits alongside the apps; it never asks a
 // restaurant to leave them. Uses the sample restaurant Rasoi 27.
-
-const NAV: NavLink[] = [
-  { href: "#orders", label: { en: "Extra orders", hi: "ज़्यादा ऑर्डर" } },
-  { href: "#delivery", label: { en: "Delivery", hi: "डिलीवरी" } },
-  { href: "#soundbox", label: { en: "Soundbox", hi: "Soundbox" } },
-  { href: "#summary", label: { en: "Morning summary", hi: "सुबह की रिपोर्ट" } },
-  { href: "#faq", label: { en: "Questions", hi: "सवाल" } },
-  { href: "/", label: { en: "For home kitchens", hi: "घर की रसोई के लिए" } },
-];
 
 const START = "/join?journey=live";
 
@@ -147,7 +138,7 @@ export default function Restaurants() {
 
   return (
     <div className={`lp min-h-dvh overflow-x-clip ${siteFonts}`}>
-      <SiteHeader nav={NAV} start={{ href: START, label: { en: "Get started free", hi: "मुफ़्त शुरू करें" } }} />
+      <SiteHeader start={{ href: START, label: { en: "Get started free", hi: "मुफ़्त शुरू करें" } }} />
 
       {/* Hero: keep the apps, add the orders they never see */}
       <section aria-labelledby="hero-h" className="lp-wrap pb-6 pt-2 sm:pb-12 lg:pb-16 lg:pt-4">

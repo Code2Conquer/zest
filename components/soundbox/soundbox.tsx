@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mic, Volume2 } from "lucide-react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 import "./soundbox.css";
 
-// The Zest Soundbox "Halo": a round graphite puck with a champagne bevel, a glass top and a light ring set into it. The ring glows when an
+// The Zest Soundbox "Halo": a soft ceramic puck with a black glass top and a light ring set into it, shown as
+// 3D renders (scripts/soundbox/render.html, ray-marched offline; the page never runs WebGL). The ring glows when an
 // order comes in, moves while Zest speaks, turns green when accepted and red when an order waits too
 // long. Press the top to accept (and again when the food is ready); hold the side button to talk.
-// The KOT comes out of a separate ticket printer, an add-on that sits next to it. Drawn in SVG and CSS;
+// The KOT comes out of a separate ticket printer, an add-on that sits next to it (CSS);
 // the states are props so a page can play a scene through it. Audio only ever plays on a tap.
 
 export type SoundboxState = "idle" | "ringing" | "speaking" | "printing" | "accepted" | "escalating";
@@ -27,7 +28,7 @@ export type SoundboxProps = {
   onPress?: () => void;
   onTalk?: () => void;
   /** Smaller box for tight places (the sticky column, the restaurants hero on phones). */
-  size?: "md" | "sm" | "xs";
+  size?: "lg" | "md" | "sm" | "xs";
   /** Keep the ticket, caption and "Hear it" spaces reserved, so a state change never moves the page. */
   stable?: boolean;
   /** No caption or "Hear it" under the box: the page shows them elsewhere. */
@@ -35,13 +36,20 @@ export type SoundboxProps = {
   className?: string;
 };
 
+// Which lit render each state shows (public/soundbox/*.webp, made by scripts/soundbox/render.mjs).
+const LIGHT: Record<SoundboxState, "amber" | "green" | "red" | null> = { idle: null, ringing: "amber", speaking: "amber", printing: "amber", accepted: "green", escalating: "red" };
+
 export function Soundbox({ state, caption, ticket, showTicket = false, clip, onPress, onTalk, size = "md", stable = false, bare = false, className = "" }: SoundboxProps) {
   const { pick, lang } = useApp();
   const printed = !!ticket && (state === "printing" || showTicket);
-  // Gradient ids per instance: a page has several boxes, some inside display:none.
-  const id = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const light = LIGHT[state];
+  // Lit renders are fetched the first time their state comes up, then kept for the fade.
+  const [seen, setSeen] = useState<Set<string>>(() => new Set(light ? [light] : []));
+  useEffect(() => {
+    if (light && !seen.has(light)) setSeen(new Set([...seen, light]));
+  }, [light, seen]);
 
-  const box = size === "xs" ? 150 : size === "sm" ? 210 : 260;
+  const box = size === "xs" ? 150 : size === "sm" ? 210 : size === "lg" ? 340 : 260;
   const paper = size === "xs" ? box : Math.max(box * 0.86, 176);
   const label = pick(
     {
@@ -56,87 +64,15 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
 
   return (
     <figure className={`sb flex flex-col items-center ${className}`} data-state={state}>
-      <div className="relative" style={{ width: box, height: box * 0.56 }}>
-        <svg viewBox="0 0 200 112" className="absolute inset-0 size-full overflow-visible" role="img" aria-label={label}>
-          <defs>
-            {/* graphite side: lit from the front-left, falling off to the edges and the bottom */}
-            <linearGradient id={`${id}-side`} x1="0" x2="1">
-              <stop offset="0" stopColor="#0d0f11" />
-              <stop offset="0.18" stopColor="#2b2f34" />
-              <stop offset="0.36" stopColor="#4a4f56" />
-              <stop offset="0.52" stopColor="#2a2e33" />
-              <stop offset="0.85" stopColor="#16181b" />
-              <stop offset="1" stopColor="#08090a" />
-            </linearGradient>
-            <linearGradient id={`${id}-shade`} x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0" stopColor="#000" stopOpacity="0" />
-              <stop offset="1" stopColor="#000" stopOpacity="0.45" />
-            </linearGradient>
-            {/* champagne bevel where the top meets the side */}
-            <linearGradient id={`${id}-bevel`} x1="0" x2="1" y1="0" y2="1">
-              <stop offset="0" stopColor="#f3e4c4" />
-              <stop offset="0.45" stopColor="#b89c6a" />
-              <stop offset="1" stopColor="#5e4d33" />
-            </linearGradient>
-            <radialGradient id={`${id}-top`} cx="0.36" cy="0.25" r="0.9">
-              <stop offset="0" stopColor="#3d4248" />
-              <stop offset="0.55" stopColor="#25282c" />
-              <stop offset="1" stopColor="#141619" />
-            </radialGradient>
-            <linearGradient id={`${id}-sheen`} x1="0" x2="1" y1="0" y2="1">
-              <stop offset="0" stopColor="#fff" stopOpacity="0.22" />
-              <stop offset="0.4" stopColor="#fff" stopOpacity="0.04" />
-              <stop offset="1" stopColor="#fff" stopOpacity="0" />
-            </linearGradient>
-            {/* the glass dish you press */}
-            <radialGradient id={`${id}-dish`} cx="0.45" cy="0.7" r="0.75">
-              <stop offset="0" stopColor="#2f3338" />
-              <stop offset="1" stopColor="#0f1113" />
-            </radialGradient>
-            <filter id={`${id}-blur`} x="-30%" y="-60%" width="160%" height="220%">
-              <feGaussianBlur stdDeviation="5" />
-            </filter>
-            <filter id={`${id}-soft`} x="-30%" y="-60%" width="160%" height="220%">
-              <feGaussianBlur stdDeviation="2.2" />
-            </filter>
-            <clipPath id={`${id}-topclip`}>
-              <ellipse cx="100" cy="48" rx="84.5" ry="29" />
-            </clipPath>
-          </defs>
-          {/* light pooling on the counter, the wide soft shadow and the tight contact shadow */}
-          <ellipse cx="100" cy="90" rx="98" ry="22" className="sb-pool" filter={`url(#${id}-blur)`} />
-          <ellipse cx="100" cy="86" rx="88" ry="15" fill="#000" opacity="0.22" filter={`url(#${id}-blur)`} />
-          <ellipse cx="100" cy="76" rx="80" ry="10" fill="#000" opacity="0.35" filter={`url(#${id}-soft)`} />
-          {/* side band, shaded towards the counter, with a thin lit lip at the bottom */}
-          <path d="M14 48 V70 A86 30 0 0 0 186 70 V48 Z" fill={`url(#${id}-side)`} />
-          <path d="M14 48 V70 A86 30 0 0 0 186 70 V48 Z" fill={`url(#${id}-shade)`} />
-          <path d="M16 70 A84 29 0 0 0 184 70" fill="none" stroke="#fff" strokeOpacity="0.1" strokeWidth="0.8" />
-          {/* push-to-talk key on the side */}
-          <rect x="150" y="67" width="16" height="4" rx="2" transform="rotate(-8 158 69)" fill="#050607" />
-          <rect x="150.5" y="67" width="15" height="1.2" rx="0.6" transform="rotate(-8 158 69)" fill="#fff" opacity="0.18" />
-          {/* bevel, top and the sheen across it */}
-          <ellipse cx="100" cy="48" rx="86" ry="30" fill={`url(#${id}-bevel)`} />
-          <ellipse cx="100" cy="48" rx="84.5" ry="29" fill={`url(#${id}-top)`} />
-          <g clipPath={`url(#${id}-topclip)`}>
-            <ellipse cx="72" cy="30" rx="70" ry="22" fill={`url(#${id}-sheen)`} />
-          </g>
-          {/* the groove the light ring sits in */}
-          <ellipse cx="100" cy="48.6" rx="58" ry="20.5" fill="none" stroke="#050607" strokeWidth="4.4" />
-          <ellipse cx="100" cy="47.4" rx="58" ry="20.5" fill="none" stroke="#fff" strokeOpacity="0.07" strokeWidth="1" />
-          {/* the glass dish, with its reflection and the etched mark */}
-          <g className="sb-dish">
-            <ellipse cx="100" cy="48" rx="52" ry="18" fill={`url(#${id}-dish)`} />
-            <path d="M58 44 A48 15 0 0 1 128 33.5" fill="none" stroke="#fff" strokeOpacity="0.28" strokeWidth="1.4" strokeLinecap="round" />
-            <ellipse cx="88" cy="40" rx="26" ry="6" fill="#fff" opacity="0.05" />
-            <text x="100" y="52" textAnchor="middle" fontSize="13" fontWeight="500" fill="#8b9097" transform="translate(0 20.8) scale(1 0.6)" letterSpacing="5" style={{ fontFamily: "var(--font-site), system-ui, sans-serif" }}>
-              zest
-            </text>
-          </g>
-          {/* the light ring: a faint warm line at rest, glowing in the state's colour */}
-          <ellipse cx="100" cy="48" rx="58" ry="20.5" fill="none" stroke="#6b5532" strokeOpacity="0.55" strokeWidth="1.6" />
-          <ellipse cx="100" cy="48" rx="58" ry="20.5" className="sb-glow" filter={`url(#${id}-blur)`} />
-          <ellipse cx="100" cy="48" rx="58" ry="20.5" className="sb-ring" />
-        </svg>
+      <div className="relative" style={{ width: box, height: box * 0.62 }}>
+        {/* The rendered box, wider than its slot so the shadow and the ring's glow can spill out. The lit
+            renders sit on top of the resting one and fade in for the state. */}
+        <div role="img" aria-label={label} className="sb-body absolute" style={{ left: "-15%", top: "-8%", width: "130%", aspectRatio: "16 / 10" }}>
+          <img src="/soundbox/idle.webp" alt="" width={640} height={400} draggable={false} className="absolute inset-0 size-full select-none" />
+          {(["amber", "green", "red"] as const).filter((c) => seen.has(c)).map((c) => (
+            <img key={c} src={`/soundbox/${c}.webp`} alt="" width={640} height={400} draggable={false} className={`sb-light absolute inset-0 size-full select-none ${light === c ? "is-on" : ""}`} />
+          ))}
+        </div>
 
         {/* Press the top */}
         <button
@@ -145,10 +81,10 @@ export function Soundbox({ state, caption, ticket, showTicket = false, clip, onP
           disabled={!onPress}
           aria-label={state === "accepted" ? pick({ en: "Food ready", hi: "खाना तैयार" }) : pick({ en: "Accept the order", hi: "ऑर्डर मंज़ूर करें" })}
           className="sb-button absolute rounded-[50%]"
-          style={{ left: "16%", top: "13%", width: "68%", height: "60%" }}
+          style={{ left: "14%", top: "2%", width: "72%", height: "56%" }}
         />
         {/* Hold to talk, on the side */}
-        <button type="button" onClick={onTalk} disabled={!onTalk} aria-label={pick({ en: "Push to talk", hi: "बोलने के लिए दबाएँ" })} className="sb-talk absolute grid place-items-center rounded-full" style={{ left: "71%", top: "52%", width: Math.max(24, box * 0.13), height: Math.max(24, box * 0.13) }}>
+        <button type="button" onClick={onTalk} disabled={!onTalk} aria-label={pick({ en: "Push to talk", hi: "बोलने के लिए दबाएँ" })} className="sb-talk absolute grid place-items-center rounded-full" style={{ left: "52%", top: "66%", width: Math.max(24, box * 0.13), height: Math.max(24, box * 0.13) }}>
           {onTalk && <Mic aria-hidden size={Math.round(box * 0.05)} />}
         </button>
       </div>

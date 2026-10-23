@@ -66,7 +66,7 @@ Replace the current theme colour (`#111613`) with Paper. Dark mode uses Ink as b
 ## 3. Shared components
 
 ### Zest Soundbox (signature object)
-SVG/CSS, used on both pages. Graphite body with a champagne bevel, a glass top dish and a light ring in a groove, with soft contact shadows; the ticket printer matches in flat graphite.
+3D renders, used on both pages: a soft ceramic puck with a black glass top etched "zest" and a recessed light ring. `scripts/soundbox/render.html` ray-marches it offline and `scripts/soundbox/render.mjs` writes four transparent stills (idle, amber, green, red) to `public/soundbox/`; the site layers the lit still over the resting one and animates only its opacity. No WebGL on the page. The ticket printer matches in flat ceramic.
 - Rounded-square steel box, Ink face, circular Turmeric ring that pulses as a voice waveform when Zest speaks.
 - One big round button on top (accept / food ready), a ticket slot that prints a KOT downward, a small push-to-talk button on the side.
 - States: idle, ringing, speaking, printing, accepted (Leaf flash), escalating (ring turns Chilli, pulses faster).
@@ -85,9 +85,8 @@ Fields: Name · Business name · Phone (WhatsApp) · City · Type (Home kitchen 
 
 One message, top to bottom: **get online orders, and deliver them yourself or with Zomato.** Everything on the page supports that line; anything that doesn't (the agents, search and AI answers, Instagram, regulars) stays out of the homepage until it is live and proven. Target: under 600 words, about six phone screens.
 
-### Nav
-Zest · How it works · Delivery · Soundbox · Questions · For restaurants · English/हिंदी · Log in · **Start free**
-On a phone the section links and the start button fold away (the hero and a sticky bar carry the action); the language switch stays visible.
+### Header (both pages)
+Zest · English/हिंदी · Log in · **Start free** (desktop only; phones use the hero button and the sticky bar). No section links, no theme switch, no menu button: the audience switch under the header moves between the two pages.
 
 ### Audience switch (above the headline, on both pages)
 A two-part switch: **Home kitchen, tiffin or stall** | **Restaurant on Zomato or Swiggy** (phone: *Home chef or stall* | *Restaurant*). The current page is filled in Ink. This replaces the old two-card split under the hero.

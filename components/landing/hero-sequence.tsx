@@ -191,7 +191,7 @@ function SellerPhone({ lifted, round, order, paid }: { lifted: boolean; round: n
         </div>
         <ul className="space-y-1 px-2.5 pt-2.5">
           {DISHES.map((d, k) => (
-            <li key={d.name} className={`flex items-center gap-2 rounded-xl bg-white px-2.5 py-2 sm:gap-2.5 sm:py-2.5 ${lifted ? (round === 0 ? "hs-lift" : "") : "opacity-0"}`} style={{ animationDelay: `${k * 380}ms` }}>
+            <li key={d.name} className={`flex items-center gap-2 rounded-xl bg-white px-2.5 py-2 sm:gap-2.5 sm:py-2.5 ${lifted ? (round === 0 ? "hs-lift" : "") : "invisible opacity-0"}`} style={{ animationDelay: `${k * 380}ms` }}>
               <div className="min-w-0 flex-1">
                 <p className="flex items-start gap-1 text-[12.5px] font-semibold leading-tight">
                   <span className="mt-[1px]">
