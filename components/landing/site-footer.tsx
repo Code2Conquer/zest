@@ -14,7 +14,7 @@ export function SiteFooter({ credits = false }: { credits?: boolean }) {
       <div className="lp-wrap">
         <Wordmark className="text-[40px] sm:text-[56px]" />
         <div className="mt-4 flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
-          <p className="text-[17px]">{pick({ en: "Online orders, delivered by you or by Zomato.", hi: "ऑनलाइन ऑर्डर, आप पहुँचाएँ या Zomato।" })}</p>
+          <p className="text-[18px]">{pick({ en: "Online orders, delivered by you or by Zomato.", hi: "ऑनलाइन ऑर्डर, आप पहुँचाएँ या Zomato।" })}</p>
           <p className="text-[14px] text-[var(--lp-muted)]">© 2026 Zest</p>
         </div>
         {credits && (

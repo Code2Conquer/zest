@@ -43,7 +43,7 @@ export function Estimator({
         <span className="lp-display text-[56px] leading-none tabular-nums text-[var(--z-turmeric)] sm:text-[80px] xl:text-[96px]" aria-live="polite">
           {inr(orders * avg * DAYS)}
         </span>
-        <span className="text-[20px] font-medium text-[var(--lp-muted)] sm:text-[24px]">{pick(per)}</span>
+        <span className="text-[22px] font-medium text-[var(--lp-muted)] sm:text-[28px]">{pick(per)}</span>
       </p>
 
       <div className="hero-in d2 mt-7 max-w-[560px]">
@@ -55,7 +55,7 @@ export function Estimator({
               role="radio"
               aria-checked={kind === p.id}
               onClick={() => choose(p)}
-              className={`min-h-10 rounded-full px-4 text-[14.5px] font-semibold transition-colors ${kind === p.id ? "bg-[var(--lp-ink)] text-[var(--lp-on-ink)]" : "bg-[var(--lp-sunken)] text-[var(--lp-muted)] hover:text-[var(--lp-ink)]"}`}
+              className={`min-h-10 rounded-full px-4 text-[14px] font-semibold transition-colors ${kind === p.id ? "bg-[var(--lp-ink)] text-[var(--lp-on-ink)]" : "bg-[var(--lp-sunken)] text-[var(--lp-muted)] hover:text-[var(--lp-ink)]"}`}
             >
               {pick(p.label)}
             </button>
@@ -63,7 +63,7 @@ export function Estimator({
         </div>
         <Slider label={pick(ordersLabel)} value={orders} display={String(orders)} min={oMin} max={oMax} step={1} onChange={(v) => { setOrders(v); setKind(""); }} />
         <Slider label={pick(avgLabel)} value={avg} display={inr(avg)} min={aMin} max={aMax} step={aStep} onChange={(v) => { setAvg(v); setKind(""); }} />
-        <p className="mt-4 text-[13.5px] leading-snug text-[var(--lp-muted)]">
+        <p className="mt-4 text-[14px] leading-snug text-[var(--lp-muted)]">
           {pick({
             en: `${orders} orders × ${inr(avg)} × ${DAYS} days. An estimate from the numbers you set; what you earn depends on your food, prices and area.`,
             hi: `${orders} ऑर्डर × ${inr(avg)} × ${DAYS} दिन। आपके चुने आँकड़ों से अंदाज़ा; असली कमाई आपके खाने, दाम और इलाक़े पर निर्भर है।`,
@@ -78,7 +78,7 @@ function Slider({ label, value, display, min, max, step, onChange }: { label: st
   const fill = ((value - min) / (max - min)) * 100;
   return (
     <label className="mt-6 block">
-      <span className="flex items-baseline justify-between text-[15px]">
+      <span className="flex items-baseline justify-between text-[16px]">
         <span className="text-[var(--lp-muted)]">{label}</span>
         <span className="font-semibold tabular-nums">{display}</span>
       </span>

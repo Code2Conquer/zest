@@ -256,7 +256,7 @@
 /* Zest's mark: a slow breathing ring at rest, a quicker one while it listens or thinks. */
 .zm-ring { box-shadow: 0 0 0 0 rgb(233 163 26 / 0.55); animation: zm-breathe 2.8s ease-out infinite; } /* taste-skill-ignore */
 .zm.is-speaking .zm-ring { animation-duration: 1s; }
-.zm.is-speaking svg { animation: zm-nod 1s ease-in-out infinite; }
+.zm.is-speaking svg { animation: zm-nod 1s ease-in-out infinite; transform-origin: center; }
 @keyframes zm-breathe { 0% { box-shadow: 0 0 0 0 rgb(233 163 26 / 0.55); } 70%, 100% { box-shadow: 0 0 0 14px rgb(233 163 26 / 0); } } /* taste-skill-ignore */
 @keyframes zm-nod { 0%, 100% { transform: none; } 50% { transform: scale(0.9); } }
 .za-in { animation: za-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
@@ -306,8 +306,9 @@
 
 /* Display type for the website: Inter, bold and tightly set. */
 .lp-display {
-  font-weight: 700;
-  letter-spacing: -0.035em;
+  font-family: var(--font-site-display), var(--font-site), var(--font-site-deva), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 /* The seller's handwritten menu note: ballpoint on a torn notebook page. */

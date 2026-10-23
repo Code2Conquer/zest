@@ -261,3 +261,10 @@ Tone: "you" and "your", one or two sentences per block, plain words. Every headl
 
 
 The +97.6% figure is shown without its source line on the page (source: Kim & Lee, Hitotsubashi Journal of Economics, 2024). Promises carry a photo each. Ordering pages (/r/{slug}) open on one large hero photo with the name over it: the listing's own photo, or a large food photo chosen from the menu.
+
+
+## 12. Brand and imagery (October 2026)
+
+- **Logo:** a turmeric fruit with a green leaf and a bold ink "z" (`ZestLogo` in components/bits.tsx, also app/icon.svg), followed by "zest" in lowercase, extra-bold, tight. Zest the assistant uses the same mark with a breathing ring.
+- **Type:** headlines in Bricolage Grotesque (800), body in Inter, Hindi in Noto Sans Devanagari. One text scale on the website: 14 · 16 · 18 · 22 · 28, plus the display sizes.
+- **Photography:** Indian people and places only (public/photos/in, Unsplash License, sources in credits.json): a home kitchen tawa (home hero), a cook at a flaming wok (restaurant hero), a Zomato rider in Indian traffic ("you're covered"), a thali for pure-veg ordering pages. No European streets or kitchens.

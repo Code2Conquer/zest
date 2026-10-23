@@ -20,9 +20,9 @@ export function SiteHeader({ current, start }: { current: "home" | "restaurants"
       <div className="lp-wrap flex h-[68px] items-center justify-between gap-3 sm:h-[76px]">
         <div className="flex min-w-0 items-center gap-4 sm:gap-8">
           <a href="/" aria-label={pick({ en: "Zest home", hi: "Zest होम" })} className="shrink-0">
-            <Wordmark className="text-[26px] sm:text-[28px]" />
+            <Wordmark className="text-[28px]" />
           </a>
-          <nav aria-label={pick({ en: "Which Zest", hi: "कौन-सा Zest" })} className="flex items-center gap-1 text-[14.5px] font-medium sm:text-[15px]">
+          <nav aria-label={pick({ en: "Which Zest", hi: "कौन-सा Zest" })} className="flex items-center gap-1 text-[14px] font-medium sm:text-[16px]">
             {PAGES.map((p) => {
               const here = p.id === current;
               return (
@@ -36,10 +36,10 @@ export function SiteHeader({ current, start }: { current: "home" | "restaurants"
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-4">
           {/* The other language, named in itself; Devanagari is drawn in the phone's own font until Hindi is chosen. */}
-          <button type="button" onClick={() => setLang(lang === "hi" ? "en" : "hi")} lang={lang === "hi" ? "en" : "hi"} className={`px-1.5 py-1.5 text-[15px] font-medium text-[var(--lp-muted)] hover:text-[var(--lp-ink)] ${lang === "hi" ? "" : "font-[system-ui,sans-serif]"}`}>
+          <button type="button" onClick={() => setLang(lang === "hi" ? "en" : "hi")} lang={lang === "hi" ? "en" : "hi"} className={`px-1.5 py-1.5 text-[16px] font-medium text-[var(--lp-muted)] hover:text-[var(--lp-ink)] ${lang === "hi" ? "" : "font-[system-ui,sans-serif]"}`}>
             {lang === "hi" ? "English" : "हिंदी"}
           </button>
-          <a href={start.href} className="lp-btn haldi min-h-11 whitespace-nowrap px-5 text-[15px] max-sm:!hidden">
+          <a href={start.href} className="lp-btn haldi min-h-11 whitespace-nowrap px-5 text-[16px] max-sm:!hidden">
             {pick(start.label)}
           </a>
         </div>

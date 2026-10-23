@@ -32,7 +32,7 @@ export function StickyStart({ href, label, note, watch, hideAt }: { href: string
       // A real overlay: it floats over the page, so it carries a shadow.
       className={/* taste-skill-ignore */ `fixed inset-x-0 bottom-0 z-40 bg-[var(--lp-ground)] shadow-[0_-10px_30px_-12px_rgb(0_0_0/0.25)] px-4 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 transition-transform duration-300 motion-reduce:transition-none sm:hidden ${show ? "translate-y-0" : "pointer-events-none translate-y-full"}`}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 pr-[58px]">{/* room for Zest's mark at the right */}
         <p className="min-w-0 flex-1 text-[14px] leading-snug text-[var(--lp-muted)]">{pick(note)}</p>
         <a href={href} tabIndex={show ? 0 : -1} className="lp-btn haldi min-h-12 shrink-0 px-5 text-[16px]">
           {pick(label)}

@@ -34,7 +34,7 @@ const PAINS: { icon: typeof Plus; pain: Bi; fix: Bi }[] = [
 ];
 
 const H2 = "lp-display text-[clamp(30px,3.6vw,52px)] leading-[1.04] [text-wrap:balance]";
-const LEAD = "max-w-[36em] text-[17px] leading-relaxed text-[var(--lp-muted)] sm:text-[18px]";
+const LEAD = "max-w-[36em] text-[18px] leading-relaxed text-[var(--lp-muted)] sm:text-[18px]";
 
 /** A Zomato or Swiggy link goes to sign-up with the listing filled in. */
 function joinUrl(raw: string) {
@@ -67,7 +67,7 @@ function LinkStart({ id, tone = "light" }: { id?: string; tone?: "light" | "turm
         onChange={(e) => setLink(e.target.value)}
         inputMode="url"
         placeholder={pick({ en: "Paste your Zomato or Swiggy link", hi: "अपना Zomato या Swiggy लिंक डालिए" })}
-        className="min-h-12 min-w-0 flex-1 rounded-full bg-transparent px-4 text-[17px] outline-none placeholder:text-[#6f757c]"
+        className="min-h-12 min-w-0 flex-1 rounded-full bg-transparent px-4 text-[18px] outline-none placeholder:text-[#6f757c]"
       />
       <button type="submit" className={`lp-btn shrink-0 ${tone === "light" ? "haldi" : "!bg-[#1c1f23] !text-[#fafaf6]"}`}>
         {pick({ en: "Get your page free", hi: "अपना पेज मुफ़्त पाइए" })}
@@ -115,9 +115,9 @@ export default function Restaurants() {
             </div>
           </div>
           <HeroPhoto
-            photo="/photos/hero-biryani.webp"
+            photo="/photos/in/restaurant-wok.webp"
             ratio="4 / 5"
-            alt={pick({ en: "A bowl of chicken biryani", hi: "चिकन बिरयानी का कटोरा" })}
+            alt={pick({ en: "A cook tossing a flaming wok in a restaurant kitchen", hi: "रेस्टोरेंट की रसोई में जलती कड़ाही चलाता रसोइया" })}
             order={{
               from: { en: "New order · your page", hi: "नया ऑर्डर · आपका पेज" },
               items: { en: "Office party: 12 chicken biryani", hi: "ऑफ़िस पार्टी: 12 चिकन बिरयानी" },

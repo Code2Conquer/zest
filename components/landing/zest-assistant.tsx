@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Loader2, Mic, Square, Volume2, VolumeX, X } from "lucide-react";
+import { ZestLogo } from "@/components/bits";
 import { api } from "@/lib/api";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
@@ -23,15 +24,12 @@ type Recognition = {
   onerror: (() => void) | null;
 };
 
-/** The Zest mark: a turmeric disc with a white "z" and a dot, the dot that sits after the wordmark. */
+/** Zest's mark, with a breathing ring: slow at rest, quicker while it listens or thinks. */
 export function ZestMark({ size = 56, speaking = false }: { size?: number; speaking?: boolean }) {
   return (
-    <span className={`zm relative inline-grid shrink-0 place-items-center rounded-full bg-[var(--z-turmeric)] ${speaking ? "is-speaking" : ""}`} style={{ width: size, height: size }} aria-hidden>
+    <span className={`zm relative inline-grid shrink-0 place-items-center rounded-full ${speaking ? "is-speaking" : ""}`} style={{ width: size, height: size }} aria-hidden>
       <span className="zm-ring absolute inset-0 rounded-full" />
-      <svg viewBox="0 0 32 32" style={{ width: size * 0.5, height: size * 0.5 }}>
-        <path d="M8 9.5h14.5L9.5 22.5H24" fill="none" stroke="#1c1f23" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="26.5" cy="7.5" r="2.6" fill="#fafaf6" />
-      </svg>
+      <ZestLogo className="relative size-full" />
     </span>
   );
 }
@@ -149,15 +147,16 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
 
   return (
     <>
-      {/* The mark, bottom right; above the sticky start bar on a phone */}
-      <div className="fixed bottom-[92px] right-4 z-40 flex items-end gap-3 sm:bottom-6 sm:right-6">
+      {/* The mark, bottom right; on a phone it sits at the end of the sticky start bar */}
+      <div className="fixed bottom-[max(14px,env(safe-area-inset-bottom))] right-3 z-50 flex items-end gap-3 sm:bottom-6 sm:right-6">
         {hello && !open && (
-          <button type="button" onClick={() => setOpen(true)} className={/* taste-skill-ignore: floating overlay */ "hs-chip mb-1 max-w-[240px] rounded-2xl rounded-br-md bg-[var(--lp-paper)] px-4 py-3 text-left text-[14.5px] leading-snug text-[var(--lp-ink)] shadow-[0_18px_40px_-16px_rgb(0_0_0/0.6)]"}>
+          <button type="button" onClick={() => setOpen(true)} className={/* taste-skill-ignore: floating overlay */ "hs-chip mb-1 hidden max-w-[240px] sm:block rounded-2xl rounded-br-md bg-[var(--lp-paper)] px-4 py-3 text-left text-[14.5px] leading-snug text-[var(--lp-ink)] shadow-[0_18px_40px_-16px_rgb(0_0_0/0.6)]"}>
             {pick({ en: "Hi, I'm Zest. Ask me anything about selling online.", hi: "नमस्ते, मैं Zest हूँ। ऑनलाइन बेचने के बारे में कुछ भी पूछिए।" })}
           </button>
         )}
         <button type="button" onClick={() => setOpen((v) => !v)} aria-label={open ? pick({ en: "Close Zest", hi: "Zest बंद करें" }) : pick({ en: "Ask Zest", hi: "Zest से पूछिए" })} aria-expanded={open} className="rounded-full transition-transform hover:scale-105 active:scale-95">
-          <ZestMark size={60} speaking={busy || listening} />
+          <span className="sm:hidden"><ZestMark size={50} speaking={busy || listening} /></span>
+          <span className="hidden sm:inline"><ZestMark size={60} speaking={busy || listening} /></span>
         </button>
       </div>
 

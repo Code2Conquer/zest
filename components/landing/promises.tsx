@@ -19,8 +19,8 @@ export function Promises({ title, items }: { title: Bi; items: { title: Bi; text
           {items.map((x, k) => (
             <li key={x.title.en} className={`rv ${k === 1 ? "d1" : k === 2 ? "d2" : ""}`}>
               <x.icon aria-hidden size={44} strokeWidth={1.5} className="text-[var(--z-turmeric)]" />
-              <h3 className="mt-5 text-[26px] font-semibold leading-tight tracking-[-0.02em] sm:text-[28px]">{pick(x.title)}</h3>
-              <p className="mt-2.5 text-[17px] leading-relaxed text-[var(--lp-muted)]">{pick(x.text)}</p>
+              <h3 className="mt-5 text-[28px] font-semibold leading-tight tracking-[-0.02em] sm:text-[28px]">{pick(x.title)}</h3>
+              <p className="mt-2.5 text-[18px] leading-relaxed text-[var(--lp-muted)]">{pick(x.text)}</p>
             </li>
           ))}
         </ul>

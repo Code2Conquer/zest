@@ -88,7 +88,7 @@ function costForTwo(listing: number | null | undefined, prices: number[]): { amo
 /** A large stock photo for a page with none of its own, chosen from what the kitchen cooks. */
 function heroFor(cuisines: string[], pureVeg: boolean): string {
   const c = cuisines.join(" ").toLowerCase();
-  if (pureVeg || /thali|home|south indian|gujarati/.test(c)) return "/photos/team-menu.webp";
+  if (pureVeg || /thali|home|south indian|gujarati/.test(c)) return "/photos/in/thali.webp";
   if (/biryani|mughlai|hyderabadi/.test(c)) return "/photos/hero-biryani.webp";
   return "/photos/cta-curries.webp";
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import "./landing.css";
+import Image from "next/image";
 import { Bike, Camera, Check, IndianRupee } from "lucide-react";
 import { DeliveryMap } from "@/components/landing/delivery";
 import { Estimator } from "@/components/landing/estimator";
@@ -33,7 +34,7 @@ const COVERED: { title: Bi; text: Bi }[] = [
 ];
 
 const H2 = "lp-display text-[clamp(30px,3.6vw,52px)] leading-[1.04] [text-wrap:balance]";
-const LEAD = "max-w-[36em] text-[17px] leading-relaxed text-[var(--lp-muted)] sm:text-[18px]";
+const LEAD = "max-w-[36em] text-[18px] leading-relaxed text-[var(--lp-muted)] sm:text-[18px]";
 
 export default function Home() {
   const { pick } = useApp();
@@ -73,9 +74,9 @@ export default function Home() {
             </div>
           </div>
           <HeroPhoto
-            photo="/photos/team-menu.webp"
-            ratio="4 / 3"
-            alt={pick({ en: "A home-cooked thali on a banana leaf", hi: "केले के पत्ते पर घर की थाली" })}
+            photo="/photos/in/home-cooking.webp"
+            ratio="4 / 5"
+            alt={pick({ en: "Hands pressing a roti on a tawa in a home kitchen", hi: "घर की रसोई में तवे पर रोटी सेंकते हाथ" })}
             order={{
               from: { en: "New order · Flat 302", hi: "नया ऑर्डर · फ़्लैट 302" },
               items: { en: "2 veg thali, 1 pav bhaji", hi: "2 वेज थाली, 1 पाव भाजी" },
@@ -111,7 +112,7 @@ export default function Home() {
             <figure className="rv d2 rounded-[24px] bg-[var(--lp-paper)] p-6">
               <p className="lp-display text-[56px] leading-none text-[var(--z-turmeric)] sm:text-[64px]">+97.6%</p>
               <figcaption>
-                <p className="mt-3 text-[17px] font-semibold leading-snug">{pick({ en: "Sales growth for the smallest restaurants after they went online.", hi: "ऑनलाइन आने के बाद सबसे छोटे रेस्टोरेंट की बिक्री में बढ़त।" })}</p>
+                <p className="mt-3 text-[18px] font-semibold leading-snug">{pick({ en: "Sales growth for the smallest restaurants after they went online.", hi: "ऑनलाइन आने के बाद सबसे छोटे रेस्टोरेंट की बिक्री में बढ़त।" })}</p>
               </figcaption>
             </figure>
           </div>
@@ -122,23 +123,30 @@ export default function Home() {
       </section>
 
       {/* You're covered: delivery and money, the parts sellers worry about */}
-      <section id="covered" aria-labelledby="covered-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-20">
+      <section id="covered" aria-labelledby="covered-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-24">
         <div className="lp-wrap">
-          <h2 id="covered-h" className={`rv max-w-[20ch] ${H2}`}>
-            {pick({ en: "When you sell on Zest, you're covered.", hi: "Zest पर बेचें, तो आप सुरक्षित हैं।" })}
-          </h2>
-          <ul className="rv d1 mt-10 grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
-            {COVERED.map((c) => (
-              <li key={c.title.en} className="flex gap-3">
-                <Check aria-hidden size={22} strokeWidth={3} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
-                <div>
-                  <h3 className="text-[18px] font-semibold leading-snug">{pick(c.title)}</h3>
-                  <p className="mt-1 text-[16px] leading-relaxed text-[var(--lp-muted)]">{pick(c.text)}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <div className="rv d2 mt-12">
+          <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
+            <div className="rv relative aspect-[4/5] overflow-hidden rounded-[28px]">
+              <Image src="/photos/in/rider-zomato.webp" alt={pick({ en: "A Zomato rider on a motorbike in city traffic", hi: "शहर के ट्रैफ़िक में बाइक पर Zomato राइडर" })} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
+            </div>
+            <div>
+              <h2 id="covered-h" className={`rv max-w-[18ch] ${H2}`}>
+                {pick({ en: "When you sell on Zest, you're covered.", hi: "Zest पर बेचें, तो आप सुरक्षित हैं।" })}
+              </h2>
+              <ul className="rv d1 mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2">
+                {COVERED.map((c) => (
+                  <li key={c.title.en} className="flex gap-3">
+                    <Check aria-hidden size={22} strokeWidth={3} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
+                    <div>
+                      <h3 className="text-[18px] font-semibold leading-snug">{pick(c.title)}</h3>
+                      <p className="mt-1 text-[16px] leading-relaxed text-[var(--lp-muted)]">{pick(c.text)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="rv d2 mt-16">
             <DeliveryMap />
           </div>
         </div>
@@ -158,7 +166,7 @@ export default function Home() {
             >
               <div className="h-[300px] origin-top scale-[0.62]">
                 <HeroPhone
-                  cover="/photos/team-menu.webp"
+                  cover="/photos/in/thali.webp"
                   name={{ en: "Meena's Kitchen", hi: "मीना की रसोई" }}
                   meta={{ en: "Home kitchen · Green Park · Pure veg", hi: "घर की रसोई · ग्रीन पार्क · शुद्ध शाकाहारी" }}
                   dishes={[
@@ -195,7 +203,7 @@ export default function Home() {
             <h2 id="start-h" className={H2}>
               {pick({ en: "Start taking online orders today.", hi: "आज से ऑनलाइन ऑर्डर लेना शुरू कीजिए।" })}
             </h2>
-            <p className="mt-3 text-[17px] sm:text-[18px]">{pick({ en: "Free to start. Set up in a few minutes.", hi: "शुरुआत मुफ़्त। कुछ ही मिनट में तैयार।" })}</p>
+            <p className="mt-3 text-[18px]">{pick({ en: "Free to start. Set up in a few minutes.", hi: "शुरुआत मुफ़्त। कुछ ही मिनट में तैयार।" })}</p>
           </div>
           <a href={START} className="lp-btn shrink-0 !bg-[#1c1f23] !text-[#fafaf6] max-sm:w-full">
             {pick({ en: "Get started free", hi: "मुफ़्त शुरू करें" })}
@@ -224,7 +232,7 @@ function Showcase({ title, text, dark, className = "", children }: { title: Bi; 
     <li className={`flex flex-col overflow-hidden rounded-[28px] bg-[var(--lp-paper)] ${className}`}>
       <div className={`grid h-[340px] place-items-center overflow-hidden px-6 pt-8 ${dark ? "bg-[#15181b]" : "bg-[var(--lp-sunken)]"}`}>{children}</div>
       <div className="px-6 pb-7 pt-6">
-        <h3 className="text-[21px] font-semibold leading-snug">{pick(title)}</h3>
+        <h3 className="text-[22px] font-semibold leading-snug">{pick(title)}</h3>
         <p className="mt-1.5 text-[16px] leading-relaxed text-[var(--lp-muted)]">{pick(text)}</p>
       </div>
     </li>

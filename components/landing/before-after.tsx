@@ -72,8 +72,8 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
                 <x.icon aria-hidden size={18} />
               </span>
               <span className="min-w-0">
-                <span className={`block text-[15px] font-semibold leading-snug sm:text-[16px] ${on ? "" : "text-[var(--lp-muted)]"}`}>{pick(x.title)}</span>
-                <span className="hidden text-[14.5px] leading-snug text-[var(--lp-muted)] lg:block">{pick(x.line)}</span>
+                <span className={`block text-[16px] font-semibold leading-snug sm:text-[16px] ${on ? "" : "text-[var(--lp-muted)]"}`}>{pick(x.title)}</span>
+                <span className="hidden text-[14px] leading-snug text-[var(--lp-muted)] lg:block">{pick(x.line)}</span>
               </span>
             </button>
           );
@@ -118,7 +118,7 @@ export const card = "w-[280px] rounded-2xl bg-white p-3.5 text-[#1c1f23] shadow-
 export function Slip({ lines, note }: { lines: string[]; note?: string }) {
   return (
     <div data-ui className="note-paper w-[240px] rotate-[-3deg] px-4 pb-4 pt-6 text-[#24348a]">
-      <div className="font-hand text-[17px] leading-[24px]">
+      <div className="font-hand text-[18px] leading-[24px]">
         {lines.map((l) => (
           <p key={l}>{l}</p>
         ))}
