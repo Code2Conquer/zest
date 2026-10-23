@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* Tokens. Steel-white base (stainless kitchen counters), deep leaf ink,
-   turmeric reserved for anything the agent drafts or does. */
+/* Tokens. Zest is dark everywhere: the website's charcoal, warm off-white ink, and
+   turmeric reserved for anything the agent drafts or does. The light set is kept for print. */
 :root {
   --paper: #eef0ed;
   --surface: #ffffff;
@@ -25,8 +25,9 @@
   /* Landing palette: haldi (turmeric) yellow, curry-leaf green, chilli, masala brown */
   --haldi: #f2b035;
   --haldi-deep: #de9614;
-  --curry: #12261b;
-  --curry-2: #1c3628;
+  /* The owner app's side rail: the website's deepest charcoal, not green. */
+  --curry: #16191c;
+  --curry-2: #23272c;
   --masala: #6b3a1e;
   --veg: #2b8a3e;
   --nonveg: #b8321f;
@@ -35,19 +36,19 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #111613;
-    --surface: #19201c;
-    --sunken: #0c100e;
-    --ink: #e7ece8;
-    --ink-2: #c3ccc6;
-    --muted: #8f9b94;
-    --line: #2b3530;
-    --turmeric: #e3a93a;
-    --turmeric-soft: #2e2615;
-    --leaf: #6cc196;
-    --leaf-soft: #17291f;
-    --chilli: #ef7a68;
-    --chilli-soft: #331b17;
+    --paper: #1c1f23;
+    --surface: #262a2f;
+    --sunken: #16191c;
+    --ink: #f1f1ec;
+    --ink-2: #d2d5d8;
+    --muted: #9ea4aa;
+    --line: #3a3f45;
+    --turmeric: #e9a31a;
+    --turmeric-soft: #3b3018;
+    --leaf: #5fb07e;
+    --leaf-soft: #1f2e25;
+    --chilli: #e2735f;
+    --chilli-soft: #3a231f;
     --ch-zomato: #e04a63;
     --ch-swiggy: #b87a12;
     --ch-dine: #3f8fcb;
@@ -58,19 +59,19 @@
 }
 
 :root[data-theme="dark"] {
-  --paper: #111613;
-  --surface: #19201c;
-  --sunken: #0c100e;
-  --ink: #e7ece8;
-  --ink-2: #c3ccc6;
-  --muted: #8f9b94;
-  --line: #2b3530;
-  --turmeric: #e3a93a;
-  --turmeric-soft: #2e2615;
-  --leaf: #6cc196;
-  --leaf-soft: #17291f;
-  --chilli: #ef7a68;
-  --chilli-soft: #331b17;
+  --paper: #1c1f23;
+  --surface: #262a2f;
+  --sunken: #16191c;
+  --ink: #f1f1ec;
+  --ink-2: #d2d5d8;
+  --muted: #9ea4aa;
+  --line: #3a3f45;
+  --turmeric: #e9a31a;
+  --turmeric-soft: #3b3018;
+  --leaf: #5fb07e;
+  --leaf-soft: #1f2e25;
+  --chilli: #e2735f;
+  --chilli-soft: #3a231f;
   --ch-zomato: #e04a63;
   --ch-swiggy: #b87a12;
   --ch-dine: #3f8fcb;
@@ -100,7 +101,8 @@
   --color-masala: var(--masala);
   --color-veg: var(--veg);
   --color-nonveg: var(--nonveg);
-  --font-sans: var(--font-anek-latin), var(--font-anek-deva), system-ui, sans-serif;
+  /* One family across the website, ordering pages and owner app. */
+  --font-sans: var(--font-site), var(--font-site-deva), system-ui, sans-serif;
 }
 
 html,
@@ -174,9 +176,8 @@ body {
   scrollbar-color: var(--line) transparent;
 }
 
-/* Display type: Anek stretched wide and heavy, like a painted shop-front sign. */
+/* Display type: the website's headline style, Plus Jakarta Sans at 800, set tight. */
 .font-sign {
-  font-variation-settings: "wdth" 125;
   font-weight: 800;
   letter-spacing: -0.035em;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { Page } from "@/components/page";
-import { NAV_GROUPS, navItem } from "@/lib/nav";
+import { isHomeKitchen, NAV_GROUPS, navItem } from "@/lib/nav";
 import { useState } from "react";
 import { motion } from "motion/react";
 import { ChannelTag } from "@/components/bits";
@@ -63,7 +63,9 @@ export default function Orders() {
   const [syncNote, setSyncNote] = useState<string | null>(null);
   const channels: Channel[] = [...live, "dine", ...DIRECT_CHANNELS];
   const hasDirect = (data ?? []).some((o) => isDirect(o.channel));
-  const filters: Filter[] = ["all", ...live, "dine", ...(hasDirect ? (["direct"] as const) : [])];
+  // A home kitchen sells only on its own page, WhatsApp and phone: filter by those, no platforms or dine-in.
+  const home = isHomeKitchen(outlet);
+  const filters: Filter[] = home ? ["all", ...DIRECT_CHANNELS] : ["all", ...live, "dine", ...(hasDirect ? (["direct"] as const) : [])];
   const [filter, setFilter] = useState<Filter>("all");
   const hi = state.lang === "hi";
   const matches = (o: OrderDTO) => filter === "all" || (filter === "direct" ? isDirect(o.channel) : o.channel === filter);
@@ -97,10 +99,10 @@ export default function Orders() {
   return (
     <Page
       eyebrow={pick(NAV_GROUPS[1].label!)}
-      title={pick(navItem("/app/orders").label)}
-      subtitle={hi ? "सभी प्लेटफ़ॉर्म और डाइन-इन, एक जगह" : "Every platform and dine-in, in one list"}
+      title={home ? (hi ? "ऑर्डर" : "Orders") : pick(navItem("/app/orders").label)}
+      subtitle={home ? (hi ? "आपके पेज, WhatsApp और फ़ोन से, एक जगह" : "From your page, WhatsApp and phone, in one list") : hi ? "सभी प्लेटफ़ॉर्म और डाइन-इन, एक जगह" : "Every platform and dine-in, in one list"}
       actions={
-        <button type="button" onClick={sync} disabled={syncing} className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm shadow-[inset_0_0_0_1px_var(--line)] hover:bg-sunken disabled:opacity-60">
+        !home && <button type="button" onClick={sync} disabled={syncing} className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm shadow-[inset_0_0_0_1px_var(--line)] hover:bg-sunken disabled:opacity-60">
           {syncing ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <RefreshCw aria-hidden className="size-4" />}
           {hi ? "अभी सिंक करें" : "Sync now"}
         </button>

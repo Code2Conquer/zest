@@ -3,7 +3,7 @@ import { and, asc, desc, eq, gt, gte, inArray, lt, or } from "drizzle-orm";
 import type { DishKind } from "@/components/dishes";
 import type { ApprovalDTO, ApprovalStep, MenuItemDTO, OrderDTO, OutletDTO, PayoutDTO, ReviewDTO, TodayDTO } from "../types";
 import { VOID_STATUSES } from "../orders";
-import { CHANNELS, type Channel } from "../platforms";
+import { CHANNELS, DIRECT_CHANNELS, type Channel } from "../platforms";
 import { listApprovals } from "./approvals";
 import { linesFor } from "./order-lines";
 import { hasClaude } from "./claude";
@@ -176,7 +176,8 @@ export async function salesForDay(outletId: string, offsetDays: number) {
 export async function getToday(outlet: Outlet): Promise<TodayDTO> {
   const { sales } = await salesForDay(outlet.id, -1);
   const lastWeek = await salesForDay(outlet.id, -8);
-  const channels: Channel[] = [...outlet.livePlatforms, "dine"];
+  // Every channel that brings money in: the platforms it's live on, dine-in, and its own page, WhatsApp and phone.
+  const channels: Channel[] = [...outlet.livePlatforms, "dine", ...DIRECT_CHANNELS];
   const total = channels.reduce((s, c) => s + sales[c].amount, 0);
   const prevTotal = channels.reduce((s, c) => s + lastWeek.sales[c].amount, 0);
   const allPayouts = await getPayouts(outlet.id);

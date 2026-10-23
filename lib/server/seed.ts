@@ -1,12 +1,12 @@
 import "server-only";
 import { and, asc, eq, gte, isNull, lt } from "drizzle-orm";
 import { MEENA, MEENA_MENU, MENU, ORDERS, OUTLET, PAYOUTS, RATINGS, REVIEWS, SALES_YESTERDAY } from "../data";
-import { fromLegacyStatus } from "../orders";
+import { fromLegacyStatus, type OrderStatus } from "../orders";
 import { createApproval } from "./approvals";
 import { db } from "./db";
 import { dinePrice, ensureTables } from "./dining";
 import { dayBounds } from "./queries";
-import { campaigns, connections, diningTables, dineTabs, menuItems, orders, outlets, payouts, reservations, reviews, brands, outletHours, type TabLine } from "./schema";
+import { campaigns, connections, customers, diningTables, dineTabs, menuItems, orders, outlets, payouts, reservations, reviews, brands, outletHours, type TabLine } from "./schema";
 
 export const DEMO_OUTLET_ID = "demo";
 export const MEENA_OUTLET_ID = "demo-meena";
@@ -292,4 +292,80 @@ export async function refreshDemoGrowth(outletId: string) {
     { outletId, platform: "zomato", kind: "promo", goal: "slow_hours", title: "15% off up to ₹75, 3 to 6 pm", window: "3 to 6 pm, Mon to Thu", spendCap: 2000, spent: 620, orders: 9, revenue: 1550, expectedOrders: 22, status: "paused", statusDetail: "Paused automatically: returning 2.5× against a 3× floor", startsAt: at(-6), endsAt: at(8) },
     { outletId, platform: "zomato", kind: "promo", goal: "bigger_orders", title: "Flat ₹60 off on orders above ₹499", window: "Fri to Sun, 7 to 11 pm", spendCap: 2500, spent: 2500, orders: 52, revenue: 27100, expectedOrders: 45, status: "ended", statusDetail: "Spend cap reached", startsAt: at(-12), endsAt: at(-5) },
   ]);
+}
+
+/**
+ * Meena's Kitchen as a busy day looks: yesterday's orders, today's so far (two waiting for her OK, one
+ * cooking, one with a Zomato rider), and the regulars behind them. All on her own page, WhatsApp and
+ * phone. Rebuilt the first time her dashboard is opened each day so the sample always looks current.
+ */
+export async function refreshMeenaDay() {
+  const [from, to] = dayBounds(0);
+  const [today] = await db.select({ id: orders.id }).from(orders).where(and(eq(orders.outletId, MEENA_OUTLET_ID), gte(orders.placedAt, from), lt(orders.placedAt, to))).limit(1);
+  if (today) return;
+  const brandId = `${MEENA_OUTLET_ID}-brand`;
+  await db.delete(orders).where(eq(orders.outletId, MEENA_OUTLET_ID));
+  await db.delete(customers).where(eq(customers.brandId, brandId));
+
+  // Her regulars: neighbours, an office, a hostel, a family two buildings away.
+  const REGULARS = [
+    ["Sharma ji · B-14", 31, 4120], ["Priya · Flat 302", 24, 3360], ["Rohan (PG, Hauz Khas)", 19, 1890], ["Kapoor family · C-7", 17, 3980],
+    ["Ananya · Green Park Ext", 14, 1640], ["Office lunch · Yusuf Sarai", 12, 5760], ["Neha · D-21", 9, 1080], ["Vikram · Flat 108", 8, 960],
+    ["Mrs. Iyer · A-3", 6, 1170], ["Kabir (hostel)", 5, 450], ["Aditi · Safdarjung", 3, 390], ["Fatima · E-2", 2, 240],
+  ] as const;
+  const day = 86_400_000;
+  const people = await db
+    .insert(customers)
+    .values(REGULARS.map(([name, n, spent], i) => ({ brandId, phone: `+91${["98", "99", "97", "88", "70", "81", "96", "90", "78", "93", "85", "62"][i]}${String(10234567 + i * 7130291).slice(-8)}`, name, orders: n, spent, firstOrderAt: new Date(Date.now() - (60 + i * 9) * day).toISOString(), lastOrderAt: new Date(Date.now() - (i < 6 ? 0 : i - 4) * day).toISOString() })))
+    .returning({ id: customers.id });
+
+  const DISHES = ["Rajma chawal|90", "Kadhi chawal|90", "Thali|120", "Aloo paratha|60"];
+  const basket = (i: number) => {
+    const a = DISHES[i % DISHES.length].split("|"), b = DISHES[(i * 3 + 1) % DISHES.length].split("|");
+    const qa = 1 + (i % 3), qb = i % 2;
+    return { items: [`${qa} ${a[0]}`, qb ? `${qb} ${b[0]}` : ""].filter(Boolean).join(", "), amount: qa * Number(a[1]) + qb * Number(b[1]) };
+  };
+  const CH = ["web", "whatsapp", "web", "phone", "whatsapp", "web"] as const;
+  const row = (i: number, at: number, status: OrderStatus, ext: string) => {
+    const { items, amount } = basket(i);
+    const delivery = i % 3 !== 2;
+    return {
+      outletId: MEENA_OUTLET_ID, channel: CH[i % CH.length], externalId: ext, items, amount: amount + (delivery ? 35 : 0), placedAt: new Date(at).toISOString(), status, prepMins: 15 + (i % 4) * 5,
+      customerId: people[i % people.length].id, fulfilment: delivery ? ("delivery" as const) : ("pickup" as const), paymentStatus: "paid" as const, paymentMethod: "upi" as const,
+      deliveryBy: delivery ? ("zomato_rider" as const) : null, deliveryFee: delivery ? 35 : null, deliveryKm: delivery ? 1.2 + (i % 5) * 0.9 : null,
+    };
+  };
+
+  // Yesterday: 16 orders from breakfast to dinner.
+  const y0 = new Date(from).getTime() - day;
+  const rows = Array.from({ length: 16 }, (_, i) => row(i + 3, y0 + (8 * 60 + i * 47) * 60_000, "completed", `My${i + 1}`));
+  // Today: done earlier, then what's on the stove and what's waiting. Kept inside today however early it is.
+  const now = Date.now(), start = new Date(from).getTime() + 5 * 60_000;
+  const ago = (m: number) => Math.max(start, now - m * 60_000);
+  const TODAY: [number, OrderStatus][] = [[290, "completed"], [250, "completed"], [210, "completed"], [170, "completed"], [140, "completed"], [100, "completed"], [55, "out_for_delivery"], [32, "preparing"], [18, "accepted"], [6, "new"], [2, "new"]];
+  TODAY.forEach(([m, s], i) => rows.push(row(i, ago(m), s, `Mt${i + 1}`)));
+  await db.insert(orders).values(rows);
+
+  // A week of dish counts for "best sellers".
+  for (const [name, n] of [["Thali", 52], ["Rajma chawal", 38], ["Aloo paratha", 31], ["Kadhi chawal", 24], ["Diwali sweets box", 6]] as const) {
+    await db.update(menuItems).set({ ordersLast7: n }).where(and(eq(menuItems.outletId, MEENA_OUTLET_ID), eq(menuItems.name, name)));
+  }
+}
+
+/** The sample restaurant's orders, moved to yesterday and today the first time it's opened each day. */
+export async function refreshRestaurantDay() {
+  const [from, to] = dayBounds(-1);
+  const [yesterday] = await db.select({ id: orders.id }).from(orders).where(and(eq(orders.outletId, DEMO_OUTLET_ID), gte(orders.placedAt, from), lt(orders.placedAt, to))).limit(1);
+  if (yesterday) return;
+  const today = new Date();
+  const at = (time: string) => {
+    const [hm, ampm] = time.split(" ");
+    const [h, m] = hm.split(":").map(Number);
+    const d = new Date(today);
+    d.setHours((h % 12) + (ampm === "pm" ? 12 : 0), m, 0, 0);
+    return d.toISOString();
+  };
+  await db.delete(orders).where(eq(orders.outletId, DEMO_OUTLET_ID));
+  await db.insert(orders).values(yesterdaysOrders(DEMO_OUTLET_ID));
+  await db.insert(orders).values(ORDERS.map((o) => ({ outletId: DEMO_OUTLET_ID, channel: o.channel, externalId: o.id, items: o.items, amount: o.amount, placedAt: at(o.placedAt), ...fromLegacyStatus(o.status), prepMins: o.prepMins })));
 }

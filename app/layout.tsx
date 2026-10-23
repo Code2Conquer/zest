@@ -1,16 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Anek_Devanagari, Anek_Latin, IBM_Plex_Mono, Kalam } from "next/font/google";
+import { IBM_Plex_Mono, Kalam } from "next/font/google";
 import { AppStateProvider } from "@/lib/state";
-import { siteDisplay } from "@/components/landing/site-fonts";
+import { siteFonts } from "@/components/landing/site-fonts";
 import "./globals.css";
 
-// One family, two scripts: Anek (Ek Type) draws Latin and Devanagari to the same
-// proportions, so Hindi and English sit together without a font switch.
-const latin = Anek_Latin({ subsets: ["latin", "latin-ext"], variable: "--font-anek-latin", display: "swap", axes: ["wdth"], preload: false });
-// Devanagari is large (~700 KB with the width axis), so it isn't preloaded: English readers never
-// download it, and Hindi readers get it as soon as the page shows Devanagari.
-const deva = Anek_Devanagari({ subsets: ["devanagari"], variable: "--font-anek-deva", display: "swap", axes: ["wdth"], preload: false });
-// The public website's fonts live in components/landing/site-fonts.ts.
+// Plus Jakarta Sans and Noto Sans Devanagari (components/landing/site-fonts.ts) everywhere: website, ordering pages and owner app.
 // Thermal-printer type, used only inside KOT tickets and receipts.
 // Handwriting (Indian Type Foundry, Latin and Devanagari), only for the seller's handwritten menu note.
 const hand = Kalam({ subsets: ["latin", "devanagari"], weight: ["400", "700"], variable: "--font-hand", display: "swap", preload: false });
@@ -31,7 +25,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" className={`${latin.variable} ${deva.variable} ${kot.variable} ${hand.variable} ${siteDisplay.variable}`} suppressHydrationWarning>
+    <html lang="en" data-theme="dark" className={`${siteFonts} ${kot.variable} ${hand.variable}`} suppressHydrationWarning>
       <body>
         <AppStateProvider>{children}</AppStateProvider>
       </body>

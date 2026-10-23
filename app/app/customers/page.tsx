@@ -3,7 +3,7 @@
 import { Page } from "@/components/page";
 import { rupees } from "@/components/cards";
 import { useApi } from "@/lib/api";
-import { NAV_GROUPS, navItem } from "@/lib/nav";
+import { isHomeKitchen, NAV_GROUPS, navItem } from "@/lib/nav";
 import { useApp } from "@/lib/state";
 
 type Customer = { id: string; name: string; phone: string; orders: number; spent: number; firstOrderAt: string; lastOrderAt: string };
@@ -20,7 +20,11 @@ export default function Customers() {
     <Page
       eyebrow={pick(NAV_GROUPS[2].label!)}
       title={pick(navItem("/app/customers").label)}
-      subtitle={hi ? "जिन्होंने आपकी साइट से सीधे ऑर्डर किया। Zomato और Swiggy ग्राहकों के नंबर नहीं दिखाते।" : "People who ordered straight from your site. Zomato and Swiggy don't share their customers' numbers."}
+      subtitle={
+        isHomeKitchen(outlet)
+          ? hi ? "आपके पेज, WhatsApp और फ़ोन से ऑर्डर करने वाले लोग, सबसे हाल के पहले।" : "Everyone who's ordered from your page, WhatsApp or phone, most recent first."
+          : hi ? "जिन्होंने आपकी साइट से सीधे ऑर्डर किया। Zomato और Swiggy ग्राहकों के नंबर नहीं दिखाते।" : "People who ordered straight from your site. Zomato and Swiggy don't share their customers' numbers."
+      }
     >
       {error && <p className="rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{error}</p>}
       {data && (
