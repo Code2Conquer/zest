@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { BatteryFull, Camera, CheckCheck, ChevronLeft, Globe, Mic, Phone, Plus, Signal, Star, Store, Video, Wifi } from "lucide-react";
+import { BatteryFull, Camera, CheckCheck, ChevronLeft, Globe, Mic, Phone, Plus, Signal, Star, Video, Wifi } from "lucide-react";
 import { HearIt, Soundbox, type SoundboxState } from "@/components/soundbox/soundbox";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
@@ -13,10 +13,13 @@ import { useApp } from "@/lib/state";
 // Unsplash (public/photos/dish-*.webp).
 
 type Channel = "page" | "zomato" | "swiggy";
-const CH: Record<Channel, { name: Bi; icon: typeof Globe }> = {
-  page: { name: { en: "Your page", hi: "आपका पेज" }, icon: Globe },
-  zomato: { name: { en: "Zomato", hi: "Zomato" }, icon: Store },
-  swiggy: { name: { en: "Swiggy", hi: "Swiggy" }, icon: Store },
+// Each channel with its own colour (Zomato red, Swiggy orange, Zest turmeric for the restaurant's own
+// page) as a dot and, when an order arrives from it, as the chip's ring and tint. The names stay in ink
+// for contrast; Zomato keeps its lowercase italic wordmark.
+const BRAND: Record<Channel, { color: string; label: Bi; mark: string }> = {
+  page: { color: "#e9a31a", label: { en: "Your page", hi: "आपका पेज" }, mark: "font-semibold" },
+  zomato: { color: "#e23744", label: { en: "zomato", hi: "zomato" }, mark: "font-extrabold italic lowercase tracking-[-0.03em]" },
+  swiggy: { color: "#fc8019", label: { en: "Swiggy", hi: "Swiggy" }, mark: "font-extrabold tracking-[-0.02em]" },
 };
 const ARRIVALS: { ch: Channel; items: Bi; say: Bi; clip?: string }[] = [
   { ch: "page", items: { en: "Party order: 12 chicken biryani", hi: "पार्टी ऑर्डर: 12 चिकन बिरयानी" }, say: { en: "New order on your page. A party order, twelve chicken biryani.", hi: "आपके पेज पर नया ऑर्डर. पार्टी ऑर्डर, बारह चिकन बिरयानी." } },
@@ -72,11 +75,11 @@ export function RestaurantStage() {
           <ul className="grid w-full gap-1.5">
             {(["page", "zomato", "swiggy"] as Channel[]).map((c) => {
               const on = live && now.ch === c;
-              const Icon = CH[c].icon;
+              const br = BRAND[c];
               return (
-                <li key={c} className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-[13px] font-semibold transition-colors duration-500 sm:text-[14px] ${on ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : "bg-[var(--lp-paper)] text-[var(--lp-muted)] outline outline-1 -outline-offset-1 outline-[var(--lp-line)]"}`}>
-                  <Icon aria-hidden size={14} className="shrink-0" />
-                  {pick(CH[c].name)}
+                <li key={c} className="flex min-h-9 items-center gap-2 rounded-full px-3.5 text-[14px] text-[var(--lp-ink)] transition-colors duration-500 sm:text-[15px]" style={{ background: on ? `color-mix(in srgb, ${br.color} 22%, var(--lp-paper))` : "var(--lp-paper)", boxShadow: on ? `inset 0 0 0 2px ${br.color}` : undefined }}>
+                  <span aria-hidden className="size-2.5 shrink-0 rounded-full" style={{ background: br.color }} />
+                  <span className={br.mark}>{pick(br.label)}</span>
                 </li>
               );
             })}
@@ -173,8 +176,8 @@ export function RestaurantVoice() {
 export function MorningSummary() {
   const { pick } = useApp();
   return (
-    <div data-ui className="mx-auto w-[300px] shrink-0 rounded-[44px] bg-[#1c1f23] p-[9px] shadow-[0_40px_80px_-40px_rgb(0_0_0/0.6)] sm:w-[320px]">
-      <div className="relative flex h-[620px] flex-col overflow-hidden rounded-[36px] bg-[#efeae2] text-[#111b21]">
+    <div data-ui className="mx-auto w-[290px] shrink-0 rounded-[44px] bg-[#1c1f23] p-[9px] shadow-[0_40px_80px_-40px_rgb(0_0_0/0.6)] sm:w-[310px]">
+      <div className="relative flex h-[540px] flex-col overflow-hidden rounded-[36px] bg-[#efeae2] text-[#111b21]">
         {/* status bar and the island */}
         <div className="flex items-center justify-between bg-[#f6f6f6] px-6 pb-1 pt-3 text-[12px] font-semibold">
           <span>7:30</span>

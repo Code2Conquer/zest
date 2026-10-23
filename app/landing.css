@@ -225,6 +225,19 @@
 }
 
 
+/* The direct-order journey: the bar under the current step, each scene arriving, its parts popping in,
+   the route drawing itself, the tracking bars filling. */
+.jr-fill { width: 0; animation: jr-fill linear forwards; }
+@keyframes jr-fill { to { width: 100%; } }
+.jr-in { animation: jr-in 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes jr-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+.jr-pop { animation: hs-pop 420ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both; }
+.jr-press { animation: jr-press 1600ms ease-in-out 900ms both; }
+@keyframes jr-press { 0%, 100% { transform: none; } 40% { transform: scale(0.95); background: #2f7a4c; } 70% { background: #2f7a4c; } }
+.jr-route { stroke-dasharray: 1; stroke-dashoffset: 1; animation: jr-route 2.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards; }
+@keyframes jr-route { to { stroke-dashoffset: 0; } }
+.jr-stage { width: 0; animation: jr-fill 500ms ease-out forwards; }
+
 .lp details > summary {
   list-style: none;
   cursor: pointer;
@@ -244,8 +257,17 @@
   .hs-bubble,
   .hs-chip,
   .hs-token,
-  .hs-cursor {
+  .hs-cursor,
+  .jr-in,
+  .jr-pop,
+  .jr-press {
     animation: none !important;
+  }
+  .jr-route,
+  .jr-stage {
+    animation: none !important;
+    stroke-dashoffset: 0;
+    width: 100%;
   }
   .lp-btn,
   .lp-ghost {

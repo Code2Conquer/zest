@@ -201,7 +201,7 @@ function SellerPhone({ lifted, round, order, paid }: { lifted: boolean; round: n
                 </p>
                 <p className="text-[12px]">₹{d.price}</p>
               </div>
-              <span className="rounded-md border border-[#2f7a4c] px-1.5 py-0.5 text-[10.5px] font-bold text-[#2f7a4c]">ADD</span>
+              <span className="rounded-md border border-[#1f6b3a] px-1.5 py-0.5 text-[10.5px] font-bold text-[#1f6b3a]">ADD</span>
             </li>
           ))}
         </ul>
