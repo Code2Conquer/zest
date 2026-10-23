@@ -5,7 +5,7 @@ import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
 // The website's header, shared by the homepage and /restaurants: the name, which Zest you're looking at
-// (home kitchens or restaurants, as icon tabs), one language switch and one start button. On a phone the start
+// (home kitchens or restaurants, as icon tabs), and one start button. The language switch lives in the footer. On a phone the start
 // button folds away; the page carries its own, and a sticky one.
 
 // The two Zests as tabs, after Airbnb's Homes / Experiences: a 3D icon (Microsoft Fluent emoji, MIT)
@@ -34,7 +34,7 @@ function Tabs({ current }: { current: "home" | "restaurants" }) {
 }
 
 export function SiteHeader({ current, start }: { current: "home" | "restaurants"; start: { href: string; label: Bi } }) {
-  const { pick, lang, setLang } = useApp();
+  const { pick } = useApp();
   return (
     <header className="relative z-30 max-lg:mb-5 lg:border-b lg:border-[var(--lp-line)]">
       <div className="lp-wrap relative flex h-[68px] items-center justify-between gap-3 sm:h-[84px]">
@@ -46,10 +46,6 @@ export function SiteHeader({ current, start }: { current: "home" | "restaurants"
           <Tabs current={current} />
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-          {/* The other language, named in itself; Devanagari is drawn in the phone's own font until Hindi is chosen. */}
-          <button type="button" onClick={() => setLang(lang === "hi" ? "en" : "hi")} lang={lang === "hi" ? "en" : "hi"} className={`px-1.5 py-1.5 text-[16px] font-medium text-[var(--lp-muted)] hover:text-[var(--lp-ink)] ${lang === "hi" ? "" : "font-[system-ui,sans-serif]"}`}>
-            {lang === "hi" ? "English" : "हिंदी"}
-          </button>
           <a href={start.href} className="lp-btn haldi min-h-11 whitespace-nowrap px-5 text-[16px] max-sm:!hidden">
             {pick(start.label)}
           </a>

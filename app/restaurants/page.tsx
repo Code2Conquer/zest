@@ -106,9 +106,9 @@ export default function Restaurants() {
             </div>
           </div>
           <HeroPhoto
-            photo="/photos/in/restaurant-cook.webp"
+            photo="/photos/in/restaurant-owner.webp"
             ratio="4 / 5"
-            alt={pick({ en: "A cook at the kadhai over a live flame in a restaurant kitchen", hi: "रेस्टोरेंट की रसोई में तेज़ आँच पर कड़ाही चलाता रसोइया" })}
+            alt={pick({ en: "A restaurant owner smiling at a table in her restaurant, her team at work behind her", hi: "अपने रेस्टोरेंट में मुस्कुराती मालकिन, पीछे काम करती उनकी टीम" })}
             order={{
               from: { en: "New order · your page", hi: "नया ऑर्डर · आपका पेज" },
               items: { en: "Office party: 12 chicken biryani", hi: "ऑफ़िस पार्टी: 12 चिकन बिरयानी" },

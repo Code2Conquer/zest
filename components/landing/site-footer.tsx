@@ -1,7 +1,7 @@
 "use client";
 
 import { Wordmark } from "@/components/bits";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Globe } from "lucide-react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
@@ -16,7 +16,7 @@ const SAMPLES: { name: string; kind: Bi; dashboard: string; page: string }[] = [
 // Wikimedia photos if a page shows them again.
 
 export function SiteFooter({ credits = false }: { credits?: boolean }) {
-  const { pick } = useApp();
+  const { pick, lang, setLang } = useApp();
   return (
     <footer className="bg-[var(--lp-sunken)] py-12 lg:py-16">
       <div className="lp-wrap">
@@ -41,9 +41,28 @@ export function SiteFooter({ credits = false }: { credits?: boolean }) {
           ))}
         </ul>
         <Wordmark className="mt-12 text-[64px] sm:text-[112px]" />
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-x-8 gap-y-2">
-          <p className="text-[18px]">{pick({ en: "Online orders, delivered by you or by Zomato.", hi: "ऑनलाइन ऑर्डर, आप पहुँचाएँ या Zomato।" })}</p>
-          <p className="text-[14px] text-[var(--lp-muted)]">© 2026 Zest</p>
+        <p className="mt-4 text-[18px]">{pick({ en: "Online orders, delivered by you or by Zomato.", hi: "ऑनलाइन ऑर्डर, आप पहुँचाएँ या Zomato।" })}</p>
+        {/* The bottom bar, after Airbnb's: the small print on the left, the language on the right. */}
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-t border-[var(--lp-line)] pt-6 text-[14px]">
+          <p className="flex flex-wrap items-center gap-x-2 text-[var(--lp-muted)]">
+            <span>© 2026 Zest</span>
+            <span aria-hidden>·</span>
+            <a href="/" className="hover:text-[var(--lp-ink)] hover:underline">{pick({ en: "Home kitchens", hi: "घर की रसोई" })}</a>
+            <span aria-hidden>·</span>
+            <a href="/restaurants" className="hover:text-[var(--lp-ink)] hover:underline">{pick({ en: "Restaurants", hi: "रेस्टोरेंट" })}</a>
+          </p>
+          {/* Language: both named in themselves, the current one in bold. */}
+          <p className="flex items-center gap-1">
+            <Globe aria-hidden size={18} className="mr-1" />
+            {(["en", "hi"] as const).map((l, i) => (
+              <span key={l} className="flex items-center gap-1">
+                {i > 0 && <span aria-hidden className="text-[var(--lp-muted)]">·</span>}
+                <button type="button" onClick={() => setLang(l)} lang={l} aria-pressed={lang === l} className={`min-h-11 px-1.5 ${lang === l ? "font-semibold text-[var(--lp-ink)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-ink)] hover:underline"}`}>
+                  {l === "en" ? "English (IN)" : "हिंदी"}
+                </button>
+              </span>
+            ))}
+          </p>
         </div>
         {credits && (
           <p className="mt-6 max-w-[60em] text-[12.5px] leading-relaxed text-[var(--lp-muted)]">

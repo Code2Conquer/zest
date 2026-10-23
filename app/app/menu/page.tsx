@@ -1,7 +1,7 @@
 "use client";
 
 import { Page } from "@/components/page";
-import { NAV_GROUPS, navItem } from "@/lib/nav";
+import { isHomeKitchen, NAV_GROUPS, navItem } from "@/lib/nav";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Camera, Check, Search, Sparkles, X } from "lucide-react";
@@ -171,7 +171,11 @@ export default function MenuPage() {
     <Page
       eyebrow={pick(NAV_GROUPS[1].label!)}
       title={pick(navItem("/app/menu").label)}
-      subtitle={hi ? "एक मास्टर मेन्यू, हर प्लेटफ़ॉर्म पर। ग्राहक इसे ऐसे देखते हैं।" : "One master menu for every platform, shown the way customers see it."}
+      subtitle={
+        isHomeKitchen(outlet)
+          ? hi ? "आपके पेज का मेन्यू। जो बन रहा है उसे चालू रखिए, जो ख़त्म हो गया उसे बंद कीजिए।" : "The menu on your page. Keep on what's cooking, switch off what's finished."
+          : hi ? "एक मास्टर मेन्यू, हर प्लेटफ़ॉर्म पर। ग्राहक इसे ऐसे देखते हैं।" : "One master menu for every platform, shown the way customers see it."
+      }
     >
       {/* Restaurant header, as customers see it */}
       <header className="flex flex-wrap items-end justify-between gap-6 rounded-2xl bg-surface p-5 shadow-[0_0_0_1px_var(--line)]">
@@ -472,8 +476,11 @@ function DishRow({
 }) {
   const { state } = useApp();
   const hi = state.lang === "hi";
-  const onAll = live.every((p) => item.available[p]);
-  const offAll = live.every((p) => !item.available[p]);
+  // A seller on no platform (a home kitchen) sells on its own page only: in stock means available at all.
+  // (Without this, "off on every platform" is true for an empty list and every dish looked sold out.)
+  const any = Object.values(item.available).some(Boolean);
+  const onAll = live.length ? live.every((p) => item.available[p]) : any;
+  const offAll = live.length ? live.every((p) => !item.available[p]) : !any;
   const offOn = live.filter((p) => !item.available[p]);
   const preview = mode === "preview";
   const unavailable = preview ? !item.available[platform] : offAll;
