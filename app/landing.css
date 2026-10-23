@@ -259,6 +259,10 @@
 .zm.is-speaking svg { animation: zm-nod 1s ease-in-out infinite; transform-origin: center; }
 @keyframes zm-breathe { 0% { box-shadow: 0 0 0 0 rgb(233 163 26 / 0.55); } 70%, 100% { box-shadow: 0 0 0 14px rgb(233 163 26 / 0); } } /* taste-skill-ignore */
 @keyframes zm-nod { 0%, 100% { transform: none; } 50% { transform: scale(0.9); } }
+/* Zest's question chips: each pops in with a little overshoot, then bobs gently, out of step with the others. */
+.zc { animation: zc-in 560ms cubic-bezier(0.2, 0.9, 0.3, 1.35) both, zc-bob 3.6s ease-in-out 700ms infinite; transform-origin: right center; }
+@keyframes zc-in { from { opacity: 0; transform: translateX(18px) scale(0.85); } to { opacity: 1; transform: none; } }
+@keyframes zc-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -4px; } }
 .za-in { animation: za-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
 @keyframes za-in { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: none; } }
 .za-pulse { animation: zm-breathe 1.2s ease-out infinite; }
@@ -289,6 +293,7 @@
   .zm svg,
   .za-in,
   .za-pulse,
+  .zc,
   .rv {
     animation: none !important;
   }

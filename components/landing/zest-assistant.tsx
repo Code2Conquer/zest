@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Loader2, Mic, Square, Volume2, VolumeX, X } from "lucide-react";
-import { ZestLogo } from "@/components/bits";
 import { api } from "@/lib/api";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
@@ -24,12 +23,15 @@ type Recognition = {
   onerror: (() => void) | null;
 };
 
-/** Zest's mark, with a breathing ring: slow at rest, quicker while it listens or thinks. */
+/** Zest's button: a turmeric disc with the wordmark's "z" and fleck, and a breathing ring. */
 export function ZestMark({ size = 56, speaking = false }: { size?: number; speaking?: boolean }) {
   return (
-    <span className={`zm relative inline-grid shrink-0 place-items-center rounded-full ${speaking ? "is-speaking" : ""}`} style={{ width: size, height: size }} aria-hidden>
+    <span className={`zm relative inline-grid shrink-0 place-items-center rounded-full bg-[var(--z-turmeric)] ${speaking ? "is-speaking" : ""}`} style={{ width: size, height: size }} aria-hidden>
       <span className="zm-ring absolute inset-0 rounded-full" />
-      <ZestLogo className="relative size-full" />
+      <svg viewBox="0 0 40 40" className="relative" style={{ width: size * 0.62, height: size * 0.62 }}>
+        <path d="M10.5 12.5H25.5L10.9 27.5H26.3" fill="none" stroke="#1C1F23" strokeWidth="4.8" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="31.5" cy="26" r="3.6" fill="#fafaf6" />
+      </svg>
     </span>
   );
 }
@@ -50,15 +52,18 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
 
   const canListen = typeof window !== "undefined" && !!((window as unknown as { SpeechRecognition?: unknown }).SpeechRecognition || (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition);
 
-  // Say hello once, a few seconds in, unless the visitor has already opened it.
+  // A few seconds in, questions float in beside the button, one after another, and keep rotating
+  // slowly until the visitor opens Zest or closes them.
+  const [chipAt, setChipAt] = useState(0);
   useEffect(() => {
-    const t = setTimeout(() => setHello(true), 4500);
-    const off = setTimeout(() => setHello(false), 14000);
-    return () => {
-      clearTimeout(t);
-      clearTimeout(off);
-    };
+    const t = setTimeout(() => setHello(true), 2500);
+    return () => clearTimeout(t);
   }, []);
+  useEffect(() => {
+    if (!hello || open || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => setChipAt((k) => k + 1), 4200);
+    return () => clearInterval(t);
+  }, [hello, open]);
 
   useEffect(() => {
     list.current?.scrollTo({ top: list.current.scrollHeight, behavior: "smooth" });
@@ -138,21 +143,44 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
           { en: "How does delivery work?", hi: "डिलीवरी कैसे होती है?" },
           { en: "What does it cost?", hi: "इसका ख़र्च कितना है?" },
           { en: "Do I need FSSAI?", hi: "क्या FSSAI ज़रूरी है?" },
+          { en: "How do I get paid?", hi: "मुझे पैसा कैसे मिलेगा?" },
+          { en: "Can I set a lunch cut-off?", hi: "क्या लंच के ऑर्डर का समय तय कर सकते हैं?" },
         ]
       : [
           { en: "Do I have to leave Zomato or Swiggy?", hi: "क्या Zomato या Swiggy छोड़ना होगा?" },
           { en: "Who delivers orders from my page?", hi: "मेरे पेज के ऑर्डर कौन पहुँचाता है?" },
           { en: "What does the Soundbox do?", hi: "Soundbox क्या करता है?" },
+          { en: "What's in the morning summary?", hi: "सुबह की रिपोर्ट में क्या आता है?" },
         ];
+  // Three chips on a wide screen, one on a phone, taken in turn from the list.
+  const shown = [0, 1, 2].map((k) => ({ q: SUGGEST[(chipAt + k) % SUGGEST.length], key: chipAt + k }));
+  const ask = (q: Bi) => {
+    setOpen(true);
+    void send(pick(q));
+  };
 
   return (
     <>
-      {/* The mark, bottom right; on a phone it sits at the end of the sticky start bar */}
-      <div className="fixed bottom-[max(14px,env(safe-area-inset-bottom))] right-3 z-50 flex items-end gap-3 sm:bottom-6 sm:right-6">
+      {/* The button, bottom right, with questions floating in to its left; on a phone it sits at the end of the sticky start bar */}
+      <div className="fixed bottom-[max(14px,env(safe-area-inset-bottom))] right-3 z-50 flex items-end gap-2.5 max-sm:flex-col max-sm:items-end sm:bottom-6 sm:right-6 sm:gap-3">
         {hello && !open && (
-          <button type="button" onClick={() => setOpen(true)} className={/* taste-skill-ignore: floating overlay */ "hs-chip mb-1 hidden max-w-[240px] sm:block rounded-2xl rounded-br-md bg-[var(--lp-paper)] px-4 py-3 text-left text-[14.5px] leading-snug text-[var(--lp-ink)] shadow-[0_18px_40px_-16px_rgb(0_0_0/0.6)]"}>
-            {pick({ en: "Hi, I'm Zest. Ask me anything about selling online.", hi: "नमस्ते, मैं Zest हूँ। ऑनलाइन बेचने के बारे में कुछ भी पूछिए।" })}
-          </button>
+          <div className="mb-1.5 flex flex-col items-end gap-2" aria-label={pick({ en: "Questions you can ask Zest", hi: "Zest से पूछे जा सकने वाले सवाल" })}>
+            {shown.map(({ q, key }, k) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => ask(q)}
+                className={/* taste-skill-ignore: floating overlay */ `zc ${k > 0 ? "hidden sm:inline-flex" : "inline-flex"} items-center gap-2 whitespace-nowrap rounded-full rounded-br-md bg-[var(--lp-paper)] py-2 pl-3 pr-4 text-[14px] font-medium text-[var(--lp-ink)] shadow-[0_14px_34px_-14px_rgb(0_0_0/0.7)] hover:bg-[var(--lp-sunken)]`}
+                style={{ animationDelay: `${k * 140}ms, ${k * 700}ms` }}
+              >
+                <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-[var(--z-turmeric)]" />
+                {pick(q)}
+              </button>
+            ))}
+            <button type="button" onClick={() => setHello(false)} className="hidden px-2 text-[13px] text-[var(--lp-muted)] hover:text-[var(--lp-ink)] sm:block">
+              {pick({ en: "Hide", hi: "छिपाएँ" })}
+            </button>
+          </div>
         )}
         <button type="button" onClick={() => setOpen((v) => !v)} aria-label={open ? pick({ en: "Close Zest", hi: "Zest बंद करें" }) : pick({ en: "Ask Zest", hi: "Zest से पूछिए" })} aria-expanded={open} className="rounded-full transition-transform hover:scale-105 active:scale-95">
           <span className="sm:hidden"><ZestMark size={50} speaking={busy || listening} /></span>

@@ -12,23 +12,12 @@ export function ChannelTag({ channel, className = "" }: { channel: Channel; clas
   );
 }
 
-/** The Zest mark: a turmeric fruit with its leaf, and a bold "z". Used alone (favicon, assistant) and in the wordmark. */
-export function ZestLogo({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 40 40" aria-hidden className={className}>
-      <circle cx="20" cy="20" r="20" fill="#E9A31A" />
-      <path d="M12.6 13.4H26.6L13 26.6H27.4" fill="none" stroke="#1C1F23" strokeWidth="4.6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M26.4 9.8c.6-3.5 3.6-5.6 7.3-5.3.4 3.6-2.2 6.6-5.9 6.9-.5-.4-1-.9-1.4-1.6z" fill="#2F7A4C" />
-    </svg>
-  );
-}
-
 export function Wordmark({ className = "" }: { className?: string }) {
-  // The mark, then "zest" set tight and heavy, lowercase. Sized by font-size, like text.
+  // "zest" in lowercase, heavy and tight, with a single turmeric fleck after the "t". Sized by font-size.
   return (
-    <span role="img" aria-label="Zest" className={`inline-flex items-center gap-[0.24em] text-[1.65rem] font-extrabold leading-none tracking-[-0.05em] ${className}`}>
-      <ZestLogo className="size-[1.05em] shrink-0" />
+    <span role="img" aria-label="Zest" className={`relative inline-flex items-start text-[1.65rem] font-extrabold leading-none tracking-[-0.05em] ${className}`}>
       <span aria-hidden>zest</span>
+      <span aria-hidden className="ml-[0.07em] mt-[0.02em] size-[0.22em] shrink-0 rounded-full bg-turmeric" />
     </span>
   );
 }

@@ -265,6 +265,6 @@ The +97.6% figure is shown without its source line on the page (source: Kim & Le
 
 ## 12. Brand and imagery (October 2026)
 
-- **Logo:** a turmeric fruit with a green leaf and a bold ink "z" (`ZestLogo` in components/bits.tsx, also app/icon.svg), followed by "zest" in lowercase, extra-bold, tight. Zest the assistant uses the same mark with a breathing ring.
+- **Logo:** the wordmark only: "zest" in lowercase, extra-bold, tight, with one turmeric fleck after the "t". The assistant button is a turmeric disc with an ink "z" and a fleck; questions float in to its left (three on wide screens, one on a phone), pop in, bob gently and rotate every few seconds; tapping one asks it.
 - **Type:** headlines in Bricolage Grotesque (800), body in Inter, Hindi in Noto Sans Devanagari. One text scale on the website: 14 · 16 · 18 · 22 · 28, plus the display sizes.
 - **Photography:** Indian people and places only (public/photos/in, Unsplash License, sources in credits.json): a home kitchen tawa (home hero), a cook at a flaming wok (restaurant hero), a Zomato rider in Indian traffic ("you're covered"), a thali for pure-veg ordering pages. No European streets or kitchens.
