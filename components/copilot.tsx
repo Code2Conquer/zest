@@ -18,7 +18,8 @@ type SpeechRecognitionLike = {
   start: () => void;
 };
 
-export function Copilot({ onClose }: { onClose?: () => void }) {
+/** The assistant panel. `ask` sends one question as soon as it opens (from the dock's pill). */
+export function Copilot({ onClose, ask }: { onClose?: () => void; ask?: string }) {
   const { t, pick, lang, outlet } = useApp();
   const { data: history, setData: setHistory } = useApi<ChatEntry[]>(outlet ? `/api/copilot?o=${outlet.id}` : null);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
@@ -33,6 +34,16 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
   }, [messages.length, busy]);
+
+  const asked = useRef(false);
+  useEffect(() => {
+    if (ask && history && !asked.current) {
+      asked.current = true;
+      void send(ask);
+    }
+    // Only once, when the conversation has loaded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ask, history]);
 
   async function send(text: string) {
     const message = text.trim();
@@ -144,7 +155,7 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
             e.preventDefault();
             send(input);
           }}
-          className="flex items-end gap-2 rounded-2xl bg-surface p-1.5 shadow-[0_0_0_1px_var(--line)] focus-within:shadow-[0_0_0_2px_var(--turmeric)]"
+          className="flex items-end gap-2 rounded-2xl bg-surface p-1.5 shadow-[0_0_0_1px_var(--line)] focus-within:shadow-[0_0_0_1.5px_var(--ink)]"
         >
           <label htmlFor={inputId} className="sr-only">
             {t("copilot.placeholder")}
@@ -161,7 +172,7 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
               }
             }}
             placeholder={t("copilot.placeholder")}
-            className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 text-[0.98rem] outline-none focus-visible:outline-none placeholder:text-muted"
+            className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 text-[0.98rem] outline-none focus-visible:!outline-none placeholder:text-muted"
           />
           <button
             type="button"

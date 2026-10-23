@@ -103,9 +103,6 @@ export default function Restaurants() {
               <a href={START} className="lp-btn haldi min-h-14 px-8 text-[18px] max-sm:w-full">
                 {pick({ en: "Get your page free", hi: "अपना पेज मुफ़्त पाइए" })}
               </a>
-              <a href="/r/rasoi-27" className="lp-link text-[16px] font-medium text-[var(--lp-muted)] hover:text-[var(--lp-ink)]">
-                {pick({ en: "See a sample page", hi: "सैंपल पेज देखें" })}
-              </a>
             </div>
           </div>
           <HeroPhoto

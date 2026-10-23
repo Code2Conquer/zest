@@ -53,8 +53,14 @@ export function handler<P = Record<string, string>>(a: Fn<P> | Opts, b?: Fn<P>) 
   };
 }
 
-/** In production the demo is shared by every visitor, so changes to it are refused unless ZEST_DEMO_WRITABLE=1. */
-export function assertWritable(outlet: Outlet) {
+/**
+ * In production the samples are shared by every visitor, so changes to them are refused unless
+ * ZEST_DEMO_WRITABLE=1. `sample: true` lets through actions that carry no free text (moving an order
+ * along, a test order, a reset), so visitors can try the whole order flow without being able to
+ * write anything onto a public page.
+ */
+export function assertWritable(outlet: Outlet, opts: { sample?: boolean } = {}) {
+  if (opts.sample) return;
   if (outlet.isDemo && process.env.NODE_ENV === "production" && process.env.ZEST_DEMO_WRITABLE !== "1") {
     throw new HttpError(403, "This is the sample restaurant. Start your own to make changes.");
   }

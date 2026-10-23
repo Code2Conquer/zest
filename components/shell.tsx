@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu as MenuIcon, MessageSquareText, Sparkles, X } from "lucide-react";
-import { useApi } from "@/lib/api";
+import { BellRing, Loader2, Menu as MenuIcon, MessageSquareText, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { api, refreshAll, useApi } from "@/lib/api";
 import { signOutHere, useMe } from "@/lib/auth-client";
 import { isHomeKitchen, navGroupsFor, navItem, type NavItem } from "@/lib/nav";
 import { useApp, useOutlet } from "@/lib/state";
-import { Copilot } from "./copilot";
+import { AssistantDock } from "./assistant-dock";
 import { LangToggle, Wordmark } from "./bits";
 
 const MOBILE_TABS = ["/app", "/app/orders", "copilot", "/app/money", "more"] as const;
@@ -29,6 +29,32 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const [copilotOpen, setCopilotOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  // The left rail folds to icons; remembered on this browser.
+  const [wide, setWide] = useState(true);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("zest-rail") === "narrow") setWide(false);
+    } catch {}
+  }, []);
+  const toggleRail = () =>
+    setWide((w) => {
+      try {
+        localStorage.setItem("zest-rail", w ? "narrow" : "wide");
+      } catch {}
+      return !w;
+    });
+  // A test order on a sample, so a visitor can run the whole flow.
+  const [testing, setTesting] = useState(false);
+  async function testOrder() {
+    setTesting(true);
+    try {
+      await api("/api/outlet/demo/order", { method: "POST" });
+      refreshAll();
+      if (path !== "/app/orders") router.push("/app/orders");
+    } finally {
+      setTesting(false);
+    }
+  }
 
   useEffect(() => {
     setMoreOpen(false);
@@ -52,32 +78,38 @@ export function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-dvh overflow-hidden">
       {/* Left rail, desktop */}
-      <nav aria-label="Main" className="hidden w-60 shrink-0 flex-col bg-curry px-3 py-5 text-[#eef2ec] lg:flex">
-        <Link href="/" className="px-3">
-          <Wordmark className="text-[30px]" />
-        </Link>
-        <div className="mt-6 px-3">
+      <nav aria-label="Main" className={`hidden shrink-0 flex-col bg-curry py-5 text-[#eef2ec] transition-[width] duration-200 lg:flex ${wide ? "w-60 px-3" : "w-[72px] px-2"}`}>
+        <div className={`flex items-center ${wide ? "justify-between pl-3" : "flex-col gap-3"}`}>
+          <Link href="/" aria-label="Zest">
+            {wide ? <Wordmark className="text-[30px]" /> : <Wordmark className="text-[26px]" />}
+          </Link>
+          <button type="button" onClick={toggleRail} aria-label={wide ? (hi ? "मेन्यू छोटा करें" : "Collapse menu") : hi ? "मेन्यू खोलें" : "Expand menu"} aria-expanded={wide} title={wide ? (hi ? "मेन्यू छोटा करें" : "Collapse menu") : hi ? "मेन्यू खोलें" : "Expand menu"} className="grid size-9 place-items-center rounded-lg text-[#eef2ec]/60 hover:bg-white/10 hover:text-[#eef2ec]">
+            {wide ? <PanelLeftClose aria-hidden className="size-[18px]" /> : <PanelLeftOpen aria-hidden className="size-[18px]" />}
+          </button>
+        </div>
+        <div className={`mt-6 px-3 ${wide ? "" : "hidden"}`}>
           <p className="font-medium">{outlet?.name ?? "\u00a0"}</p>
           <p className="text-sm text-[#eef2ec]/60">{[outlet?.area, outlet?.city].filter(Boolean).join(", ") || (outlet ? (state.lang === "hi" ? "सेटिंग्स में पता जोड़ें" : "Add your area in Settings") : "\u00a0")}</p>
         </div>
         <div className="scrollbar-thin mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto">
           {groups.map((g) => (
             <div key={g.id} className={g.id === "settings" ? "border-t border-white/10 pt-3" : ""}>
-              {g.label && <p className="px-3 pb-1 text-[0.72rem] font-medium uppercase tracking-[0.08em] text-[#eef2ec]/45">{pick(g.label)}</p>}
+              {g.label && wide && <p className="px-3 pb-1 text-[0.72rem] font-medium uppercase tracking-[0.08em] text-[#eef2ec]/45">{pick(g.label)}</p>}
               <ul className="space-y-0.5">
                 {g.items.map((n) => (
                   <li key={n.href}>
                     <Link
                       href={n.href}
-                      title={pick(n.hint)}
+                      title={wide ? pick(n.hint) : pick(n.label)}
                       aria-current={isActive(n.href) ? "page" : undefined}
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[0.95rem] ${
+                      className={`relative flex items-center gap-3 rounded-lg py-2 text-[0.95rem] ${wide ? "px-3" : "justify-center px-0"} ${
                         isActive(n.href) ? "bg-haldi font-medium text-ink" : "text-[#eef2ec]/80 hover:bg-white/10 hover:text-[#eef2ec]"
                       }`}
                     >
                       <n.icon aria-hidden className="size-[18px]" />
-                      <span className="flex-1">{pick(n.label)}</span>
-                      {n.href === "/app" && waiting > 0 && (
+                      <span className={wide ? "flex-1" : "sr-only"}>{pick(n.label)}</span>
+                      {n.href === "/app" && waiting > 0 && !wide && <span aria-hidden className="absolute right-2 top-1.5 size-2 rounded-full bg-haldi" />}
+                      {n.href === "/app" && waiting > 0 && wide && (
                         <span aria-label={hi ? `${waiting} मंज़ूरी बाक़ी` : `${waiting} waiting for your OK`} className={`rounded-full px-2 text-[0.75rem] font-semibold ${isActive(n.href) ? "bg-ink text-paper" : "bg-haldi text-ink"}`}>
                           {waiting}
                         </span>
@@ -89,7 +121,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </div>
           ))}
         </div>
-        <div className="mt-4 space-y-3 px-3">
+        <div className={`mt-4 space-y-3 px-3 ${wide ? "" : "hidden"}`}>
           {me?.user && (
             <div className="text-sm">
               <p className="truncate text-[#eef2ec]/80">
@@ -131,8 +163,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 })}
               </span>
             </span>
-            <span className="flex gap-4">
-              {!home && (
+            <span className="flex flex-wrap items-center gap-4">
+              <button type="button" onClick={testOrder} disabled={testing} className="inline-flex items-center gap-1.5 rounded-full bg-turmeric px-3.5 py-1.5 font-semibold text-ink disabled:opacity-60">
+                {testing ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <BellRing aria-hidden className="size-4" />}
+                {state.lang === "hi" ? "टेस्ट ऑर्डर भेजें" : "Send a test order"}
+              </button>
+              {(
               <button
                 type="button"
                 onClick={async () => {
@@ -161,28 +197,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <main className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-4 pb-28 pt-6 sm:px-8 lg:pb-10">{children}</main>
       </div>
 
-      {/* Copilot, always open on wide screens */}
-      <aside className="hidden w-[420px] shrink-0 border-l border-line xl:block">
-        <Copilot />
-      </aside>
-
-      {/* Copilot launcher between lg and xl */}
-      <button
-        type="button"
-        onClick={() => setCopilotOpen(true)}
-        className="fixed bottom-6 right-6 hidden items-center gap-2 rounded-full bg-ink px-5 py-3 text-paper shadow-lg lg:flex xl:hidden"
-      >
-        <Sparkles aria-hidden className="size-4 text-turmeric" />
-        {t("nav.copilot")}
-      </button>
-
-      {copilotOpen && (
-        <div className="fixed inset-0 z-40 flex justify-end bg-ink/30 xl:hidden" onClick={() => setCopilotOpen(false)}>
-          <div className="h-full w-full max-w-[440px] shadow-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-            <Copilot onClose={() => setCopilotOpen(false)} />
-          </div>
-        </div>
-      )}
+      {/* Zest, as on the website: a question pill bottom-right, a panel over the dimmed page */}
+      <AssistantDock open={copilotOpen} setOpen={setCopilotOpen} />
 
       {/* "More" sheet, mobile */}
       {moreOpen && (

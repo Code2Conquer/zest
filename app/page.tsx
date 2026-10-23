@@ -62,9 +62,6 @@ export default function Home() {
               <a href={START} className="lp-btn haldi min-h-14 px-8 text-[18px] max-sm:w-full">
                 {pick({ en: "Get started free", hi: "मुफ़्त शुरू करें" })}
               </a>
-              <a href="/r/meenas-kitchen" className="lp-link text-[16px] font-medium text-[var(--lp-muted)] hover:text-[var(--lp-ink)]">
-                {pick({ en: "See a sample page", hi: "सैंपल पेज देखें" })}
-              </a>
             </div>
           </div>
           <HeroPhoto
