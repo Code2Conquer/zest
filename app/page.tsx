@@ -94,7 +94,7 @@ export default function Home() {
       {/* Why go online: the business case, with the one figure we can stand behind */}
       <section id="why" aria-labelledby="why-h" className="scroll-mt-4 py-16 lg:py-20">
         <div className="lp-wrap">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end lg:gap-12">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-12">
             <div>
               <h2 id="why-h" className={`rv ${H2}`}>
                 {pick({ en: "From one building to the whole city.", hi: "एक बिल्डिंग से पूरे शहर तक।" })}
@@ -103,15 +103,10 @@ export default function Home() {
                 {pick({ en: "What changes when your kitchen takes orders online. Tap a reason to see it.", hi: "रसोई ऑनलाइन ऑर्डर लेने लगे तो क्या बदलता है। देखने के लिए कोई वजह चुनिए।" })}
               </p>
             </div>
-            {/* The one figure, drawn as what it means: sales nearly double. Two bars, no card. */}
-            <figure className="rv d2">
-              <figcaption className="text-[18px] font-semibold leading-snug">{pick({ en: "Small food sellers who went online nearly doubled their sales.", hi: "ऑनलाइन आए छोटे खाना बेचने वालों की बिक्री लगभग दोगुनी हो गई।" })}</figcaption>
-              <div className="mt-5 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-3 text-[14px] text-[var(--lp-muted)]">
-                <span>{pick({ en: "Before", hi: "पहले" })}</span>
-                <span className="h-9 w-[50.6%] rounded-full bg-[var(--lp-sunken)]" />
-                <span>{pick({ en: "Online", hi: "ऑनलाइन" })}</span>
-                <span className="flex h-9 w-full items-center justify-end rounded-full bg-[var(--z-turmeric)] px-4 text-[16px] font-bold text-[#1c1f23]">+97.6%</span>
-              </div>
+            {/* The one figure, in the section's own two type styles (headline and lead), set beside the headline. */}
+            <figure className="rv d2 border-white/10 lg:border-l lg:pl-12">
+              <p className={`${H2} text-[var(--z-turmeric)]`}>{pick({ en: "Nearly 2× sales", hi: "लगभग 2× बिक्री" })}</p>
+              <figcaption className={`mt-4 ${LEAD}`}>{pick({ en: "Small food sellers who went online almost doubled what they sell.", hi: "ऑनलाइन आए छोटे खाना बेचने वालों की बिक्री लगभग दोगुनी हो गई।" })}</figcaption>
             </figure>
           </div>
           <div className="rv mt-10">

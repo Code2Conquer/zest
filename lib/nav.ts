@@ -60,7 +60,7 @@ export const navGroupsFor = (homeKitchen: boolean): NavGroup[] =>
   homeKitchen ? NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => HOME_KITCHEN.has(i.href)).map((i) => (i.href === "/app/orders" ? { ...i, label: { en: "Orders", hi: "ऑर्डर" }, hint: { en: "Orders from your page and WhatsApp", hi: "आपके पेज और WhatsApp के ऑर्डर" } } : i.href === "/app/connections" ? { ...i, hint: { en: "Your kitchen, hours, delivery and UPI", hi: "आपकी रसोई, समय, डिलीवरी और UPI" } } : i)) })).filter((g) => g.items.length) : NAV_GROUPS;
 
 /** A home kitchen, tiffin or stall: started on Zest, not on Zomato or Swiggy. */
-export const isHomeKitchen = (o: { journey: string | null; live: string[]; isDemo: boolean } | null | undefined) => !!o && !o.isDemo && o.journey === "new" && o.live.length === 0;
+export const isHomeKitchen = (o: { journey: string | null; live: string[] } | null | undefined) => !!o && o.journey === "new" && o.live.length === 0;
 
 export const navItems = (): NavItem[] => NAV_GROUPS.flatMap((g) => g.items);
 export const navItem = (href: string) => navItems().find((i) => i.href === href)!;

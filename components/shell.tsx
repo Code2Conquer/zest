@@ -117,8 +117,22 @@ export function Shell({ children }: { children: React.ReactNode }) {
         )}
         {isDemo && (
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-turmeric-soft px-4 py-2 text-sm sm:px-8">
-            <span>{state.lang === "hi" ? "आप एक सैंपल रेस्टोरेंट देख रहे हैं।" : "You're looking at a sample restaurant."}</span>
+            {/* Switch between the two samples: a home kitchen and a restaurant on Zomato/Swiggy. */}
+            <span className="flex items-center gap-3">
+              <span>{state.lang === "hi" ? "सैंपल:" : "Sample:"}</span>
+              <span className="inline-flex rounded-full bg-paper/60 p-0.5">
+                {(["home", "restaurant"] as const).map((k) => {
+                  const here = (k === "home") === home;
+                  return (
+                    <a key={k} href={`/demo/${k}`} aria-current={here ? "page" : undefined} className={`rounded-full px-3 py-1 font-medium ${here ? "bg-ink text-paper" : "text-ink-2 hover:text-ink"}`}>
+                      {k === "home" ? (state.lang === "hi" ? "घर की रसोई" : "Home kitchen") : state.lang === "hi" ? "रेस्टोरेंट" : "Restaurant"}
+                    </a>
+                  );
+                })}
+              </span>
+            </span>
             <span className="flex gap-4">
+              {!home && (
               <button
                 type="button"
                 onClick={async () => {
@@ -129,8 +143,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
               >
                 {state.lang === "hi" ? "सैंपल डेटा रीसेट करें" : "Reset sample data"}
               </button>
-              <Link href="/" className="font-medium underline underline-offset-2">
-                {state.lang === "hi" ? "अपना रेस्टोरेंट जोड़ें" : "Connect yours"}
+              )}
+              <Link href={home ? "/join?journey=new" : "/join?journey=live"} className="font-medium underline underline-offset-2">
+                {state.lang === "hi" ? "अपना शुरू करें" : "Start yours"}
               </Link>
             </span>
           </div>
