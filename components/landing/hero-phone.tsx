@@ -14,13 +14,15 @@ export type HeroPhoneProps = {
   meta: Bi;
   cover?: string;
   dishes: { name: Bi; price: number; photo: string }[];
-  order: { from: Bi; items: Bi; paid: Bi; rider: Bi };
+  order?: OrderCard;
 };
+
+export type OrderCard = { from: Bi; items: Bi; paid: Bi; rider: Bi };
 
 export function HeroPhone({ name, meta, cover, dishes, order }: HeroPhoneProps) {
   const { pick } = useApp();
   return (
-    <div className="relative mx-auto w-fit pb-6 pl-10 sm:pl-16 lg:mr-0">
+    <div className={`relative mx-auto w-fit ${order ? "pb-6 pl-10 sm:pl-16 lg:mr-0" : ""}`}>
       <div data-ui className="hero-rise w-[262px] rounded-[46px] bg-[#0b0c0e] p-[9px] shadow-[0_50px_100px_-40px_rgb(0_0_0/0.8),inset_0_0_0_1px_rgb(255_255_255/0.08)] sm:w-[300px]">
         <div className="relative h-[540px] overflow-hidden rounded-[38px] bg-[#fafaf6] text-[#1c1f23] sm:h-[580px]">
           <span aria-hidden className="absolute left-1/2 top-2.5 z-10 h-[24px] w-[88px] -translate-x-1/2 rounded-full bg-[#0b0c0e]" />
@@ -54,8 +56,16 @@ export function HeroPhone({ name, meta, cover, dishes, order }: HeroPhoneProps) 
         </div>
       </div>
 
-      {/* The order that just came in */}
-      <div data-ui className="hero-note absolute bottom-0 left-0 w-[236px] rounded-[22px] bg-white p-4 text-[#1c1f23] shadow-[0_24px_60px_-20px_rgb(0_0_0/0.65)] sm:w-[260px]">
+      {order && <OrderNote order={order} />}
+    </div>
+  );
+}
+
+/** The order that just came in: slides in once over the foot of a phone or photo, its dot pings. */
+export function OrderNote({ order, className = "" }: { order: OrderCard; className?: string }) {
+  const { pick } = useApp();
+  return (
+      <div data-ui className={`hero-note absolute bottom-0 left-0 w-[236px] rounded-[22px] bg-white p-4 text-[#1c1f23] shadow-[0_24px_60px_-20px_rgb(0_0_0/0.65)] sm:w-[260px] ${className}`}>
         <p className="flex items-center gap-2 text-[12px] font-semibold text-[#1f6b3a]">
           <span className="relative flex size-2">
             <span className="hero-ping absolute inline-flex size-full rounded-full bg-[#2f7a4c]" />
@@ -73,6 +83,5 @@ export function HeroPhone({ name, meta, cover, dishes, order }: HeroPhoneProps) 
           </span>
         </div>
       </div>
-    </div>
   );
 }

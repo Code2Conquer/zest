@@ -1,34 +1,35 @@
 "use client";
 
 import "./landing.css";
-import Image from "next/image";
-import { useState } from "react";
-import { Check, MessageCircle, QrCode } from "lucide-react";
+import { Check } from "lucide-react";
 import { DeliveryMap } from "@/components/landing/delivery";
-import { WhyOnline } from "@/components/landing/why-online";
+import { Estimator } from "@/components/landing/estimator";
 import { HeroPhone } from "@/components/landing/hero-phone";
+import { HeroPhoto } from "@/components/landing/hero-photo";
+import { Promises } from "@/components/landing/promises";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { siteFonts } from "@/components/landing/site-fonts";
 import { SiteHeader } from "@/components/landing/site-header";
 import { StickyStart } from "@/components/landing/sticky-start";
-import { Waitlist } from "@/components/landing/waitlist";
+import { TalkBand } from "@/components/landing/talk-band";
+import { ReachZest, WhyOnline } from "@/components/landing/why-online";
 import { Soundbox } from "@/components/soundbox/soundbox";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
 // The homepage, for small food businesses not on Zomato or Swiggy: home kitchens, tiffin services,
-// small cloud kitchens, shops and stalls. Source of truth: docs/landing-brief.md. One pitch, top to
-// bottom: get online orders, and Zomato (or you) delivers them. The first screen is the headline, one
-// button and one phone; then why going online pays, who it's for, how it works, delivery and the
-// Soundbox. Every string is in English and Hindi.
+// stalls and small cloud kitchens. Source of truth: docs/landing-brief.md. Laid out after Airbnb's
+// hosting page, which solved the same problem for homes: what your kitchen could earn (a live estimate),
+// three plain promises, why going online pays, how you're covered, how your kitchen looks on Zest,
+// and a person to talk to. Every string is in English and Hindi, addressed to "you".
 
 const START = "/join?journey=new";
 
-const WHO: { photo: string; title: Bi; text: Bi }[] = [
-  { photo: "/photos/team-menu.webp", title: { en: "Home kitchens", hi: "घर की रसोई" }, text: { en: "Lunch for your society, festive boxes at Diwali.", hi: "सोसाइटी के लिए लंच, दिवाली पर त्योहार के डिब्बे।" } },
-  { photo: "/photos/dish-curry-naan.webp", title: { en: "Tiffin services", hi: "टिफ़िन सर्विस" }, text: { en: "Weekly plans for offices and students, paid in advance.", hi: "ऑफ़िस और छात्रों के लिए हफ़्ते के प्लान, पहले से पेड।" } },
-  { photo: "/photos/dish-pav-bhaji.webp", title: { en: "Stalls and thelas", hi: "स्टॉल और ठेले" }, text: { en: "Pre-orders so the queue stays short, paid by UPI.", hi: "पहले से ऑर्डर, ताकि लाइन छोटी रहे, UPI से भुगतान।" } },
-  { photo: "/photos/stage-operate.webp", title: { en: "Small cloud kitchens", hi: "छोटे क्लाउड किचन" }, text: { en: "Your own page, next to Zomato and Swiggy.", hi: "Zomato और Swiggy के साथ, आपका अपना पेज।" } },
+const COVERED: { title: Bi; text: Bi }[] = [
+  { title: { en: "Paid before you cook", hi: "पकाने से पहले भुगतान" }, text: { en: "Customers pay by UPI when they order, straight to your bank.", hi: "ग्राहक ऑर्डर करते ही UPI से भुगतान करते हैं, सीधे आपके बैंक में।" } },
+  { title: { en: "Tracked to the door", hi: "दरवाज़े तक ट्रैक" }, text: { en: "Zomato riders pick up from you, and you and the customer follow them live.", hi: "Zomato राइडर आपसे उठाते हैं, आप और ग्राहक दोनों लाइव देखते हैं।" } },
+  { title: { en: "Real people ordering", hi: "असली लोग ऑर्डर करते हैं" }, text: { en: "Every order comes with a name, a phone number and an address.", hi: "हर ऑर्डर के साथ नाम, फ़ोन नंबर और पता आता है।" } },
+  { title: { en: "Help on WhatsApp", hi: "WhatsApp पर मदद" }, text: { en: "A person to ask, every day, in Hindi or English.", hi: "हर दिन, हिंदी या अंग्रेज़ी में, पूछने के लिए एक इंसान।" } },
 ];
 
 const H2 = "lp-display text-[clamp(30px,3.6vw,52px)] leading-[1.04] [text-wrap:balance]";
@@ -36,27 +37,33 @@ const LEAD = "max-w-[36em] text-[17px] leading-relaxed text-[var(--lp-muted)] sm
 
 export default function Home() {
   const { pick } = useApp();
-  const [joining, setJoining] = useState(false);
 
   return (
     <div className={`lp min-h-dvh overflow-x-clip ${siteFonts}`}>
-      <SiteHeader current="home" start={{ href: START, label: { en: "Start free", hi: "मुफ़्त शुरू करें" } }} />
+      <SiteHeader current="home" start={{ href: START, label: { en: "Get started", hi: "शुरू करें" } }} />
 
-      {/* First screen: one pitch, one button, one phone */}
-      <section aria-labelledby="hero-h" className="lp-wrap flex items-center pb-14 pt-6 lg:min-h-[min(780px,calc(100svh-76px))] lg:pb-12 lg:pt-0">
+      {/* First screen: what your kitchen could earn */}
+      <section aria-labelledby="hero-h" className="lp-wrap flex items-center pb-14 pt-6 lg:min-h-[min(820px,calc(100svh-76px))] lg:pb-12 lg:pt-0">
         <div className="grid w-full grid-cols-[minmax(0,1fr)] items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
           <div>
-            <h1 id="hero-h" className="lp-display hero-in text-[38px] leading-[1.02] sm:text-[64px] xl:text-[80px]">
-              {pick({ en: "Online orders.", hi: "ऑनलाइन ऑर्डर।" })}
-              <br />
-              {pick({ en: "Zomato delivers.", hi: "Zomato पहुँचाए।" })}
+            <h1 id="hero-h" className="lp-display hero-in text-[36px] leading-[1.04] [text-wrap:balance] sm:text-[52px] xl:text-[60px]">
+              {pick({ en: "Your kitchen could earn", hi: "आपकी रसोई कमा सकती है" })}
             </h1>
-            <p className={`hero-in d1 mt-6 ${LEAD} sm:text-[19px]`}>
-              {pick({
-                en: "Your own ordering page for your home kitchen, tiffin or stall. Customers pay you by UPI, and a Zomato rider or your own helper delivers.",
-                hi: "आपकी घर की रसोई, टिफ़िन या ठेले का अपना ऑर्डर पेज। ग्राहक UPI से आपको पैसा देते हैं, और Zomato राइडर या आपका अपना हेल्पर पहुँचाता है।",
-              })}
-            </p>
+            <div className="mt-3">
+              <Estimator
+                presets={[
+                  { id: "home", label: { en: "Home kitchen", hi: "घर की रसोई" }, orders: 15, avg: 150 },
+                  { id: "tiffin", label: { en: "Tiffin service", hi: "टिफ़िन सर्विस" }, orders: 30, avg: 110 },
+                  { id: "stall", label: { en: "Stall or thela", hi: "स्टॉल या ठेला" }, orders: 60, avg: 60 },
+                  { id: "cloud", label: { en: "Cloud kitchen", hi: "क्लाउड किचन" }, orders: 25, avg: 250 },
+                ]}
+                orders={[5, 120]}
+                avg={[40, 600, 10]}
+                per={{ en: "a month on Zest", hi: "हर महीने, Zest पर" }}
+                ordersLabel={{ en: "Orders a day", hi: "रोज़ के ऑर्डर" }}
+                avgLabel={{ en: "Average order", hi: "औसत ऑर्डर" }}
+              />
+            </div>
             <div id="hero-start" className="hero-in d2 mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
               <a href={START} className="lp-btn haldi min-h-14 px-8 text-[18px] max-sm:w-full">
                 {pick({ en: "Get started free", hi: "मुफ़्त शुरू करें" })}
@@ -65,16 +72,10 @@ export default function Home() {
                 {pick({ en: "See a sample page", hi: "सैंपल पेज देखें" })}
               </a>
             </div>
-            <p className="hero-in d2 mt-7 text-[15px] text-[var(--lp-muted)]">{pick({ en: "Free to start · UPI straight to your bank · Zomato riders on tap", hi: "शुरुआत मुफ़्त · UPI सीधे बैंक में · Zomato राइडर हमेशा तैयार" })}</p>
           </div>
-          <HeroPhone
-            name={{ en: "Meena's Kitchen", hi: "मीना की रसोई" }}
-            meta={{ en: "Home kitchen · Green Park · Pure veg", hi: "घर की रसोई · ग्रीन पार्क · शुद्ध शाकाहारी" }}
-            dishes={[
-              { name: { en: "Veg thali", hi: "वेज थाली" }, price: 120, photo: "/photos/dish-thali.webp" },
-              { name: { en: "Pav bhaji", hi: "पाव भाजी" }, price: 90, photo: "/photos/dish-pav-bhaji.webp" },
-              { name: { en: "Samosa, two pieces", hi: "समोसा, दो पीस" }, price: 30, photo: "/photos/dish-samosa.webp" },
-            ]}
+          <HeroPhoto
+            photo="/photos/dish-thali.webp"
+            alt={pick({ en: "A home-cooked thali on a banana leaf", hi: "केले के पत्ते पर घर की थाली" })}
             order={{
               from: { en: "New order · Flat 302", hi: "नया ऑर्डर · फ़्लैट 302" },
               items: { en: "2 veg thali, 1 pav bhaji", hi: "2 वेज थाली, 1 पाव भाजी" },
@@ -85,8 +86,18 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Three plain promises */}
+      <Promises
+        title={{ en: "Selling online, without the hard parts.", hi: "ऑनलाइन बेचना, बिना झंझट।" }}
+        items={[
+          { title: { en: "It's easy", hi: "आसान है" }, text: { en: "Send a photo of your menu and your page is ready in minutes. Help is a WhatsApp away.", hi: "मेन्यू की फ़ोटो भेजिए, कुछ ही मिनट में पेज तैयार। मदद बस एक WhatsApp दूर।" } },
+          { title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. You set your prices, and customers pay you by UPI, straight to your bank.", hi: "शुरुआत मुफ़्त। दाम आप तय करें, ग्राहक UPI से सीधे आपके बैंक में भुगतान करें।" } },
+          { title: { en: "Delivery is handled", hi: "डिलीवरी की चिंता नहीं" }, text: { en: "Zomato riders pick up from your door and deliver up to 7 km. Or send your own helper.", hi: "Zomato राइडर आपके दरवाज़े से उठाकर 7 किमी तक पहुँचाते हैं। या अपना हेल्पर भेजिए।" } },
+        ]}
+      />
+
       {/* Why go online: the business case, with the one figure we can stand behind */}
-      <section id="why" aria-labelledby="why-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-20">
+      <section id="why" aria-labelledby="why-h" className="scroll-mt-4 py-16 lg:py-20">
         <div className="lp-wrap">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end lg:gap-12">
             <div>
@@ -111,127 +122,80 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Who it's for: four kinds of kitchen, each with its own reason */}
-      <section aria-labelledby="who-h" className="py-16 lg:py-20">
+      {/* You're covered: delivery and money, the parts sellers worry about */}
+      <section id="covered" aria-labelledby="covered-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-20">
         <div className="lp-wrap">
-          <h2 id="who-h" className={`rv ${H2}`}>
-            {pick({ en: "From a home kitchen to a thela.", hi: "घर की रसोई से ठेले तक।" })}
+          <h2 id="covered-h" className={`rv max-w-[20ch] ${H2}`}>
+            {pick({ en: "When you sell on Zest, you're covered.", hi: "Zest पर बेचें, तो आप सुरक्षित हैं।" })}
           </h2>
-          <ul className="mt-10 grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4 lg:gap-x-5">
-            {WHO.map((w, k) => (
-              <li key={w.title.en} className={`rv ${k % 2 ? "d1" : ""}`}>
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[22px]">
-                  <Image src={w.photo} alt="" fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover" />
+          <ul className="rv d1 mt-10 grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
+            {COVERED.map((c) => (
+              <li key={c.title.en} className="flex gap-3">
+                <Check aria-hidden size={22} strokeWidth={3} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
+                <div>
+                  <h3 className="text-[18px] font-semibold leading-snug">{pick(c.title)}</h3>
+                  <p className="mt-1 text-[16px] leading-relaxed text-[var(--lp-muted)]">{pick(c.text)}</p>
                 </div>
-                <h3 className="mt-4 text-[18px] font-semibold leading-snug sm:text-[20px]">{pick(w.title)}</h3>
-                <p className="mt-1 text-[15px] leading-snug text-[var(--lp-muted)] sm:text-[16px]">{pick(w.text)}</p>
               </li>
             ))}
           </ul>
-        </div>
-      </section>
-
-      {/* How it works: three steps, each shown */}
-      <section id="how" aria-labelledby="how-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-20">
-        <div className="lp-wrap">
-          <h2 id="how-h" className={`rv ${H2}`}>
-            {pick({ en: "Your first online order, in three steps.", hi: "तीन क़दम में आपका पहला ऑनलाइन ऑर्डर।" })}
-          </h2>
-          <ol className="mt-10 grid gap-4 md:grid-cols-3">
-            <Step
-              className="rv"
-              title={{ en: "Send a photo of your menu", hi: "मेन्यू की फ़ोटो भेजिए" }}
-              text={{ en: "Zest reads every dish and price. You check it.", hi: "Zest हर डिश और दाम पढ़ लेता है। आप जाँच लीजिए।" }}
-            >
-              <div data-ui className="note-paper w-[190px] rotate-[-4deg] px-4 pb-4 pt-5 text-[#24348a]">
-                <div className="font-hand text-[16px] leading-[23px]">
-                  <p className="font-bold">{pick({ en: "Meena's Kitchen", hi: "मीना की रसोई" })}</p>
-                  <p>{pick({ en: "Veg thali - 120", hi: "वेज थाली - 120" })}</p>
-                  <p>{pick({ en: "Pav bhaji - 90", hi: "पाव भाजी - 90" })}</p>
-                  <p>{pick({ en: "Samosa - 30", hi: "समोसा - 30" })}</p>
-                </div>
-              </div>
-            </Step>
-            <Step
-              className="rv d1"
-              title={{ en: "Share your link", hi: "अपना लिंक भेजिए" }}
-              text={{ en: "In your society and WhatsApp groups, and as a QR on your counter.", hi: "सोसाइटी और WhatsApp ग्रुप में, और काउंटर पर QR के रूप में।" }}
-            >
-              <div data-ui className="flex items-end gap-3">
-                <div className="w-[170px] rounded-xl rounded-tr-none bg-[#d9fdd3] p-2.5 text-[12.5px] leading-snug text-[#111b21]">
-                  <p className="text-[11px] font-semibold text-[#1f6b3a]">Green Park Residents</p>
-                  <p className="mt-0.5">{pick({ en: "Order today's lunch from Meena's Kitchen: zest.link/meena", hi: "मीना की रसोई से आज का खाना ऑर्डर कीजिए: zest.link/meena" })}</p>
-                </div>
-                <span className="grid size-16 place-items-center rounded-xl bg-white text-[#1c1f23]">
-                  <QrCode aria-hidden size={44} />
-                </span>
-              </div>
-            </Step>
-            <Step
-              className="rv d2"
-              title={{ en: "Get orders, get paid", hi: "ऑर्डर पाइए, पैसा पाइए" }}
-              text={{ en: "Orders arrive on WhatsApp. The money comes straight to your bank.", hi: "ऑर्डर WhatsApp पर आते हैं। पैसा सीधे आपके बैंक में।" }}
-            >
-              <div data-ui className="w-[210px] rounded-2xl bg-white p-3.5 text-[#1c1f23]">
-                <p className="flex items-center gap-1.5 text-[11.5px] font-semibold text-[#1f6b3a]">
-                  <MessageCircle aria-hidden size={13} /> {pick({ en: "New order · B-14", hi: "नया ऑर्डर · B-14" })}
-                </p>
-                <p className="mt-1 text-[14px] font-semibold">{pick({ en: "2 veg thali", hi: "2 वेज थाली" })}</p>
-                <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#2f7a4c] px-2.5 py-0.5 text-[12px] font-semibold text-white">
-                  <Check aria-hidden size={12} strokeWidth={3} /> {pick({ en: "₹240 in your bank", hi: "₹240 आपके बैंक में" })}
-                </p>
-              </div>
-            </Step>
-          </ol>
-        </div>
-      </section>
-
-      {/* Delivery, your way: the part only Zest can offer */}
-      <section id="delivery" aria-labelledby="delivery-h" className="scroll-mt-4 py-16 lg:py-20">
-        <div className="lp-wrap">
-          <h2 id="delivery-h" className={`rv max-w-[18ch] ${H2}`}>
-            {pick({ en: "Deliver it yourself, or let Zomato do it.", hi: "ख़ुद पहुँचाइए, या Zomato से पहुँचवाइए।" })}
-          </h2>
-          <p className={`rv d1 mt-4 ${LEAD}`}>
-            {pick({
-              en: "For every order, you choose. The customer picks it up, your own helper takes it, or a Zomato rider delivers it with live tracking.",
-              hi: "हर ऑर्डर पर आप चुनिए। ग्राहक ख़ुद ले जाए, आपका अपना हेल्पर ले जाए, या Zomato राइडर लाइव ट्रैकिंग के साथ पहुँचाए।",
-            })}
-          </p>
-          <div className="rv d2 mt-10">
+          <div className="rv d2 mt-12">
             <DeliveryMap />
           </div>
         </div>
       </section>
 
-      {/* The Soundbox: one band, the request form behind a button */}
-      <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 bg-[#15181b] py-16 text-[#f1f1ec] lg:py-20">
-        <div className="lp-wrap grid items-center gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
-          <div>
-            <h2 id="soundbox-h" className={`rv ${H2}`}>
-              {pick({ en: "Hear every order, without touching your phone.", hi: "हर ऑर्डर सुनिए, फ़ोन छुए बिना।" })}
-            </h2>
-            <p className="rv d1 mt-4 max-w-[34em] text-[17px] leading-relaxed text-[#b4b9be] sm:text-[18px]">
-              {pick({
-                en: "The Zest Soundbox sits on your counter and speaks each order in Hindi or English. Press the top to accept, even with floury hands.",
-                hi: "Zest Soundbox आपके काउंटर पर रहता है और हर ऑर्डर हिंदी या अंग्रेज़ी में बोलकर बताता है। मंज़ूर करने के लिए ऊपर दबाइए, आटे वाले हाथों से भी।",
-              })}
-            </p>
-            <div className="rv d2 mt-7">
-              {joining ? (
-                <Waitlist page="/" section="soundbox" tone="dark" />
-              ) : (
-                <button id="waitlist" type="button" onClick={() => setJoining(true)} className="lp-btn haldi scroll-mt-6">
-                  {pick({ en: "Ask for a Soundbox", hi: "Soundbox मँगवाइए" })}
-                </button>
-              )}
-            </div>
-          </div>
-          <div className="rv order-first flex justify-center lg:order-none">
-            <Soundbox size="lg" state="speaking" bare className="max-sm:scale-90" />
-          </div>
+      {/* How your kitchen looks on Zest: the page, search, and the Soundbox */}
+      <section id="looks" aria-labelledby="looks-h" className="scroll-mt-4 py-16 lg:py-20">
+        <div className="lp-wrap">
+          <h2 id="looks-h" className={`rv ${H2}`}>
+            {pick({ en: "Your kitchen looks great on Zest.", hi: "Zest पर आपकी रसोई शानदार दिखती है।" })}
+          </h2>
+          <ul className="mt-10 grid gap-5 lg:grid-cols-3">
+            <Showcase
+              className="rv"
+              title={{ en: "A beautiful page, from one photo", hi: "एक फ़ोटो से, एक सुंदर पेज" }}
+              text={{ en: "Your dishes, prices and photos, laid out the way customers like to order.", hi: "आपकी डिश, दाम और फ़ोटो, वैसे जैसे ग्राहक ऑर्डर करना पसंद करते हैं।" }}
+            >
+              <div className="h-[300px] origin-top scale-[0.62]">
+                <HeroPhone
+                  name={{ en: "Meena's Kitchen", hi: "मीना की रसोई" }}
+                  meta={{ en: "Home kitchen · Green Park · Pure veg", hi: "घर की रसोई · ग्रीन पार्क · शुद्ध शाकाहारी" }}
+                  dishes={[
+                    { name: { en: "Veg thali", hi: "वेज थाली" }, price: 120, photo: "/photos/dish-thali.webp" },
+                    { name: { en: "Pav bhaji", hi: "पाव भाजी" }, price: 90, photo: "/photos/dish-pav-bhaji.webp" },
+                    { name: { en: "Samosa, two pieces", hi: "समोसा, दो पीस" }, price: 30, photo: "/photos/dish-samosa.webp" },
+                  ]}
+                />
+              </div>
+            </Showcase>
+            <Showcase
+              className="rv d1"
+              title={{ en: "Show up where people look", hi: "वहाँ दिखिए जहाँ लोग ढूँढते हैं" }}
+              text={{ en: "On Google, in your society's WhatsApp groups, and as a QR on your counter.", hi: "Google पर, सोसाइटी के WhatsApp ग्रुप में, और काउंटर पर QR के रूप में।" }}
+            >
+              <ReachZest />
+            </Showcase>
+            <Showcase
+              className="rv d2"
+              title={{ en: "Hear every order", hi: "हर ऑर्डर सुनिए" }}
+              text={{ en: "The Zest Soundbox speaks each order on your counter. Press the top to accept.", hi: "Zest Soundbox हर ऑर्डर काउंटर पर बोलकर बताता है। मंज़ूर करने के लिए ऊपर दबाइए।" }}
+              dark
+            >
+              <Soundbox size="md" state="speaking" bare />
+            </Showcase>
+          </ul>
         </div>
       </section>
+
+      {/* A person to talk to */}
+      <TalkBand
+        page="/"
+        defaultType="home_kitchen"
+        photo="/photos/team-chef.webp"
+        title={{ en: "Curious about selling online?", hi: "ऑनलाइन बेचने के बारे में सोच रहे हैं?" }}
+        text={{ en: "Talk to someone at Zest, free. We'll help you set up your page and menu, and answer anything you're unsure about.", hi: "Zest से किसी से मुफ़्त बात कीजिए। हम आपका पेज और मेन्यू बनाने में मदद करेंगे, और हर सवाल का जवाब देंगे।" }}
+      />
 
       {/* Closing call to action */}
       <section id="final-start" aria-labelledby="start-h" className="bg-[var(--z-turmeric)] py-16 text-[#1c1f23] lg:py-20">
@@ -252,7 +216,7 @@ export default function Home() {
 
       <StickyStart
         href={START}
-        label={{ en: "Start free", hi: "मुफ़्त शुरू करें" }}
+        label={{ en: "Get started", hi: "शुरू करें" }}
         note={{ en: "Online orders, delivered by you or Zomato.", hi: "ऑनलाइन ऑर्डर, आप पहुँचाएँ या Zomato।" }}
         watch="hero-start"
         hideAt="final-start"
@@ -261,13 +225,13 @@ export default function Home() {
   );
 }
 
-/** One of the three steps: a small picture of the step, then what happens. */
-function Step({ title, text, className = "", children }: { title: Bi; text: Bi; className?: string; children: React.ReactNode }) {
+/** One of the three product pictures: a screen of it, then what it does for you. */
+function Showcase({ title, text, dark, className = "", children }: { title: Bi; text: Bi; dark?: boolean; className?: string; children: React.ReactNode }) {
   const { pick } = useApp();
   return (
     <li className={`flex flex-col overflow-hidden rounded-[28px] bg-[var(--lp-paper)] ${className}`}>
-      <div className="grid h-[200px] place-items-center px-6">{children}</div>
-      <div className="px-6 pb-7">
+      <div className={`grid h-[340px] place-items-center overflow-hidden px-6 pt-8 ${dark ? "bg-[#15181b]" : "bg-[var(--lp-sunken)]"}`}>{children}</div>
+      <div className="px-6 pb-7 pt-6">
         <h3 className="text-[21px] font-semibold leading-snug">{pick(title)}</h3>
         <p className="mt-1.5 text-[16px] leading-relaxed text-[var(--lp-muted)]">{pick(text)}</p>
       </div>

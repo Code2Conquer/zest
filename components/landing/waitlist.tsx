@@ -5,7 +5,8 @@ import { Check, Loader2 } from "lucide-react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
-// The "Ask for a Soundbox" form (stored in the soundbox_waitlist table). Each error sits under its field and says exactly what to fix; on
+// The request form behind "Ask for a Soundbox" and "Let's talk" (stored in the soundbox_waitlist table,
+// with the page and section it came from). Each error sits under its field and says exactly what to fix; on
 // success the form is replaced by the confirmation. `page` and `section` record where it was filled.
 
 type Field = "name" | "business" | "phone" | "city" | "type";
@@ -31,9 +32,10 @@ const validPhone = (v: string) => {
   return /^[6-9]\d{9}$/.test(d);
 };
 
+const SOUNDBOX_CTA: Bi = { en: "Ask for a Soundbox", hi: "Soundbox मँगवाइए" };
 const SOUNDBOX_DONE: Bi = { en: "Thanks. We'll WhatsApp you to set up your Soundbox.", hi: "धन्यवाद। आपका Soundbox लगाने के लिए हम आपको WhatsApp करेंगे।" };
 
-export function Waitlist({ page, section, defaultType = "", tone = "light", done = SOUNDBOX_DONE }: { page: "/" | "/restaurants"; section: string; defaultType?: string; tone?: "light" | "dark"; done?: Bi }) {
+export function Waitlist({ page, section, defaultType = "", tone = "light", done = SOUNDBOX_DONE, cta = SOUNDBOX_CTA }: { page: "/" | "/restaurants"; section: string; defaultType?: string; tone?: "light" | "dark"; done?: Bi; cta?: Bi }) {
   const { pick } = useApp();
   const uid = useId();
   const [v, setV] = useState({ name: "", business: "", phone: "", city: "", type: defaultType });
@@ -141,7 +143,7 @@ export function Waitlist({ page, section, defaultType = "", tone = "light", done
       )}
       <button type="submit" disabled={state === "sending"} className="lp-btn haldi mt-6 w-full sm:w-auto">
         {state === "sending" && <Loader2 aria-hidden size={18} className="animate-spin" />}
-        {pick({ en: "Ask for a Soundbox", hi: "Soundbox मँगवाइए" })}
+        {pick(cta)}
       </button>
     </form>
   );

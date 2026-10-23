@@ -226,6 +226,33 @@
   .rv.d2 { animation-range: entry 19% entry 59%; }
 }
 
+/* The estimator's sliders: a turmeric fill up to the thumb, a quiet track after it, a big thumb. */
+.lp-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--z-turmeric) var(--fill), var(--lp-line) var(--fill)); /* the slider's own fill, not decoration. taste-skill-ignore */
+  outline-offset: 6px;
+  cursor: pointer;
+}
+.lp-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fafaf6;
+  box-shadow: 0 0 0 4px var(--z-turmeric); /* taste-skill-ignore */
+}
+.lp-range::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 50%;
+  background: #fafaf6;
+  box-shadow: 0 0 0 4px var(--z-turmeric); /* taste-skill-ignore */
+}
+
 .lp details > summary {
   list-style: none;
   cursor: pointer;

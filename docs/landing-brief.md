@@ -239,3 +239,18 @@ The figure: **+97.6%** sales for the smallest restaurants after going online (Ki
 Then **"From a home kitchen to a thela."**: four photo tiles (home kitchens, tiffin services, stalls and thelas, small cloud kitchens), each with its own reason. No FAQ on either page.
 
 **Features this commits the product to build:** order cut-off times per kitchen, and weekly or monthly tiffin plans (subscription orders paid in advance).
+
+
+## 11. Page structure after Airbnb's hosting page (October 2026)
+
+Both pages follow the shape of Airbnb's "host your home" page, which solved the same problem for homes:
+
+1. **What you could earn**: "Your kitchen could earn ₹X a month on Zest" / "Your restaurant could earn ₹X more a month, from your own page". Kind-of-kitchen presets and two sliders (orders a day, average order); the sum is shown (orders × average × 26 days) and labelled an estimate. A photo of the food with the incoming order.
+2. **Three promises**: It's easy · It's worth it · Delivery is handled (restaurants: It sits alongside).
+3. **The case**: homepage "Cook for more than your WhatsApp group." (five reasons, today vs with Zest, one cited figure); restaurants "The orders you already get, and lose."
+4. **You're covered**: homepage "When you sell on Zest, you're covered." (paid before you cook, tracked to the door, real people ordering, help on WhatsApp) with the delivery map; restaurants: the direct-order journey.
+5. **How it looks / runs**: homepage "Your kitchen looks great on Zest." (your page, showing up on Google, the Soundbox); restaurants: the Soundbox and "Yesterday's sales, on WhatsApp by 7:30."
+6. **A person to talk to**: "Curious about selling online?" / "Curious about your own page?" with a call-me-back form (stored with section "talk").
+7. Closing call to action. No FAQ.
+
+Tone: "you" and "your", one or two sentences per block, plain words. Every headline must say something on its own (no clever lines that need the paragraph to make sense).

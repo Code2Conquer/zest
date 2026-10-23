@@ -1,10 +1,12 @@
 "use client";
 
 import "../landing.css";
-import Image from "next/image";
 import { useState } from "react";
 import { BellRing, Check, Hand, Mail, PhoneCall, Plus, Printer, X } from "lucide-react";
-import { HeroPhone } from "@/components/landing/hero-phone";
+import { Estimator } from "@/components/landing/estimator";
+import { HeroPhoto } from "@/components/landing/hero-photo";
+import { Promises } from "@/components/landing/promises";
+import { TalkBand } from "@/components/landing/talk-band";
 import { DirectOrderJourney } from "@/components/landing/journey";
 import { LostOrders } from "@/components/landing/lost-orders";
 import { MorningSummary, RestaurantVoice } from "@/components/landing/restaurants";
@@ -23,13 +25,6 @@ import { useApp } from "@/lib/state";
 // restaurant to leave them. Uses the sample restaurant Rasoi 27.
 
 const START = "/join?journey=live";
-
-const ALONGSIDE: { title: Bi; text: Bi }[] = [
-  { title: { en: "You stay on Zomato and Swiggy", hi: "आप Zomato और Swiggy पर बने रहते हैं" }, text: { en: "Nothing changes in your listings, ratings or orders there.", hi: "वहाँ आपकी लिस्टिंग, रेटिंग और ऑर्डर में कुछ नहीं बदलता।" } },
-  { title: { en: "Your menu comes from your listing", hi: "मेन्यू आपकी लिस्टिंग से आता है" }, text: { en: "Paste your link and your dishes, photos and prices come across.", hi: "लिंक डालिए, आपकी डिश, फ़ोटो और दाम अपने-आप आ जाते हैं।" } },
-  { title: { en: "The riders you already know", hi: "वही राइडर जिन्हें आप जानते हैं" }, text: { en: "Zomato riders pick up from the same counter they always do.", hi: "Zomato राइडर उसी काउंटर से उठाते हैं, जहाँ से हमेशा उठाते हैं।" } },
-  { title: { en: "One kitchen, one flow", hi: "एक रसोई, एक तरीक़ा" }, text: { en: "Orders from your page sound and print just like Zomato and Swiggy orders.", hi: "आपके पेज के ऑर्डर भी Zomato और Swiggy के ऑर्डर की तरह बोले और छपते हैं।" } },
-];
 
 const PAINS: { icon: typeof Plus; pain: Bi; fix: Bi }[] = [
   { icon: BellRing, pain: { en: "An order sits unseen on a tablet", hi: "टैबलेट पर ऑर्डर बिना देखे पड़ा रहता है" }, fix: { en: "It speaks every order out loud", hi: "यह हर ऑर्डर बोलकर बताता है" } },
@@ -89,38 +84,39 @@ export default function Restaurants() {
     <div className={`lp min-h-dvh overflow-x-clip ${siteFonts}`}>
       <SiteHeader current="restaurants" start={{ href: START, label: { en: "Get started free", hi: "मुफ़्त शुरू करें" } }} />
 
-      {/* First screen: one pitch, one action, one phone */}
-      <section aria-labelledby="hero-h" className="lp-wrap flex items-center pb-14 pt-6 lg:min-h-[calc(100svh-76px)] lg:pb-16 lg:pt-0">
+      {/* First screen: what your own page could add */}
+      <section aria-labelledby="hero-h" className="lp-wrap flex items-center pb-14 pt-6 lg:min-h-[min(820px,calc(100svh-76px))] lg:pb-12 lg:pt-0">
         <div className="grid w-full grid-cols-[minmax(0,1fr)] items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
           <div>
-            <h1 id="hero-h" className="lp-display hero-in text-[36px] leading-[1.03] [text-wrap:balance] sm:text-[60px] xl:text-[72px]">
-              {pick({ en: "Orders Zomato and Swiggy never see.", hi: "वे ऑर्डर जो Zomato और Swiggy तक नहीं पहुँचते।" })}
+            <h1 id="hero-h" className="lp-display hero-in text-[36px] leading-[1.04] [text-wrap:balance] sm:text-[52px] xl:text-[60px]">
+              {pick({ en: "Your restaurant could earn", hi: "आपका रेस्टोरेंट कमा सकता है" })}
             </h1>
-            <p className={`hero-in d1 mt-6 ${LEAD} sm:text-[19px]`}>
-              {pick({
-                en: "Phone, WhatsApp and party orders on your own page, paid by UPI and delivered by Zomato riders. Your listings stay just as they are.",
-                hi: "फ़ोन, WhatsApp और पार्टी के ऑर्डर आपके अपने पेज पर, UPI से भुगतान और Zomato राइडर से डिलीवरी। आपकी लिस्टिंग वैसी ही रहती है।",
-              })}
-            </p>
-            <div className="hero-in d2 mt-8">
-              <LinkStart id="hero-start" />
-              <p className="mt-4 px-2 text-[15px] text-[var(--lp-muted)]">
-                {pick({ en: "Ready in a minute, with your menu and photos.", hi: "एक मिनट में तैयार, आपके मेन्यू और फ़ोटो के साथ।" })}{" "}
-                <a href="/r/rasoi-27" className="lp-link font-medium text-[var(--lp-ink)]">
-                  {pick({ en: "See a sample", hi: "सैंपल देखिए" })}
-                </a>
-              </p>
+            <div className="mt-3">
+              <Estimator
+                presets={[
+                  { id: "qsr", label: { en: "Quick service", hi: "क्विक सर्विस" }, orders: 12, avg: 350 },
+                  { id: "family", label: { en: "Family restaurant", hi: "फ़ैमिली रेस्टोरेंट" }, orders: 8, avg: 900 },
+                  { id: "cloud", label: { en: "Cloud kitchen", hi: "क्लाउड किचन" }, orders: 15, avg: 400 },
+                ]}
+                orders={[1, 60]}
+                avg={[100, 2000, 50]}
+                per={{ en: "more a month, from your own page", hi: "हर महीने और, आपके अपने पेज से" }}
+                ordersLabel={{ en: "Direct orders a day", hi: "रोज़ के सीधे ऑर्डर" }}
+                avgLabel={{ en: "Average order", hi: "औसत ऑर्डर" }}
+              />
+            </div>
+            <div id="hero-start" className="hero-in d2 mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+              <a href={START} className="lp-btn haldi min-h-14 px-8 text-[18px] max-sm:w-full">
+                {pick({ en: "Get your page free", hi: "अपना पेज मुफ़्त पाइए" })}
+              </a>
+              <a href="/r/rasoi-27" className="lp-link text-[16px] font-medium text-[var(--lp-muted)] hover:text-[var(--lp-ink)]">
+                {pick({ en: "See a sample page", hi: "सैंपल पेज देखें" })}
+              </a>
             </div>
           </div>
-          <HeroPhone
-            name={{ en: "Rasoi 27", hi: "Rasoi 27" }}
-            meta={{ en: "North Indian · Biryani · Indiranagar", hi: "नॉर्थ इंडियन · बिरयानी · इंदिरानगर" }}
-            cover="/photos/hero-sizzler.webp"
-            dishes={[
-              { name: { en: "Chicken biryani", hi: "चिकन बिरयानी" }, price: 349, photo: "/photos/dish-biryani.webp" },
-              { name: { en: "Butter chicken", hi: "बटर चिकन" }, price: 329, photo: "/photos/dish-butter-chicken.webp" },
-              { name: { en: "Tandoori chicken", hi: "तंदूरी चिकन" }, price: 379, photo: "/photos/dish-tandoori.webp" },
-            ]}
+          <HeroPhoto
+            photo="/photos/dish-biryani.webp"
+            alt={pick({ en: "A bowl of chicken biryani", hi: "चिकन बिरयानी का कटोरा" })}
             order={{
               from: { en: "New order · your page", hi: "नया ऑर्डर · आपका पेज" },
               items: { en: "Office party: 12 chicken biryani", hi: "ऑफ़िस पार्टी: 12 चिकन बिरयानी" },
@@ -130,6 +126,16 @@ export default function Restaurants() {
           />
         </div>
       </section>
+
+      {/* Three plain promises */}
+      <Promises
+        title={{ en: "Your own orders, without the hard parts.", hi: "अपने ऑर्डर, बिना झंझट।" }}
+        items={[
+          { title: { en: "It's easy", hi: "आसान है" }, text: { en: "Paste your Zomato or Swiggy link. Your page, menu and photos are ready in a minute.", hi: "अपना Zomato या Swiggy लिंक डालिए। पेज, मेन्यू और फ़ोटो एक मिनट में तैयार।" } },
+          { title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. Customers pay you by UPI, and they stay your customers.", hi: "शुरुआत मुफ़्त। ग्राहक UPI से आपको भुगतान करते हैं, और आपके ग्राहक बने रहते हैं।" } },
+          { title: { en: "It sits alongside", hi: "साथ-साथ चलता है" }, text: { en: "Nothing changes on Zomato or Swiggy. Zomato riders deliver your own orders too.", hi: "Zomato या Swiggy पर कुछ नहीं बदलता। आपके अपने ऑर्डर भी Zomato राइडर पहुँचाते हैं।" } },
+        ]}
+      />
 
       {/* Why: the orders a restaurant already gets outside Zomato and Swiggy, and loses */}
       <section id="orders" aria-labelledby="orders-h" className="scroll-mt-4 py-16 lg:py-20">
@@ -156,31 +162,6 @@ export default function Restaurants() {
           </h2>
           <div className="rv d1 mt-10">
             <DirectOrderJourney />
-          </div>
-        </div>
-      </section>
-
-      {/* Alongside Zomato and Swiggy, never instead: a kitchen at the pass, and four promises */}
-      <section aria-labelledby="alongside-h" className="bg-[#15181b] py-16 text-[#f1f1ec] lg:py-20">
-        <div className="lp-wrap grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-          <div className="rv relative aspect-[4/3] overflow-hidden rounded-[28px]">
-            <Image src="/photos/team-pass.webp" alt={pick({ en: "Plates going out from a restaurant kitchen", hi: "रेस्टोरेंट की रसोई से निकलती प्लेटें" })} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
-          </div>
-          <div>
-            <h2 id="alongside-h" className={`rv ${H2}`}>
-              {pick({ en: "Built to sit alongside Zomato and Swiggy.", hi: "Zomato और Swiggy के साथ-साथ चलने के लिए बना।" })}
-            </h2>
-            <ul className="rv d1 mt-8 space-y-6">
-              {ALONGSIDE.map((a) => (
-                <li key={a.title.en} className="flex gap-4">
-                  <Check aria-hidden size={22} strokeWidth={3} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
-                  <div>
-                    <h3 className="text-[18px] font-semibold leading-snug">{pick(a.title)}</h3>
-                    <p className="mt-1 text-[16px] leading-relaxed text-[#b4b9be]">{pick(a.text)}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </section>
@@ -236,7 +217,7 @@ export default function Restaurants() {
             intro={
               <>
                 <h2 id="summary-h" className={H2}>
-                  {pick({ en: "Your numbers, before the shutter opens.", hi: "शटर खुलने से पहले, आपका हिसाब।" })}
+                  {pick({ en: "Yesterday's sales, on WhatsApp by 7:30.", hi: "कल की बिक्री, सुबह 7:30 तक WhatsApp पर।" })}
                 </h2>
                 <p className={`mt-4 ${LEAD}`}>{pick({ en: "One WhatsApp at 7:30 every morning, built from your Zomato and Swiggy emails.", hi: "हर सुबह 7:30 बजे एक WhatsApp, आपके Zomato और Swiggy ईमेल से बना।" })}</p>
               </>
@@ -250,6 +231,15 @@ export default function Restaurants() {
           />
         </div>
       </section>
+
+      {/* A person to talk to */}
+      <TalkBand
+        page="/restaurants"
+        defaultType="restaurant"
+        photo="/photos/team-pass.webp"
+        title={{ en: "Curious about your own page?", hi: "अपने पेज के बारे में सोच रहे हैं?" }}
+        text={{ en: "Talk to someone at Zest, free. We'll set up your page from your listing and show you how direct orders reach your kitchen.", hi: "Zest से किसी से मुफ़्त बात कीजिए। हम आपकी लिस्टिंग से पेज बनाएँगे और दिखाएँगे कि सीधे ऑर्डर आपकी रसोई तक कैसे पहुँचते हैं।" }}
+      />
 
       {/* Closing call to action */}
       <section id="final-start" aria-labelledby="start-h" className="bg-[var(--z-turmeric)] py-14 text-[#1c1f23] lg:py-20">
