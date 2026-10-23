@@ -14,7 +14,7 @@ const ERRORS: Record<string, { en: string; hi: string }> = {
 };
 
 /** "Continue with Google" for owners and managers, a test sign-in in development, and the way to staff sign-in. */
-export function SignInCard({ returnTo, error }: { returnTo: string; error?: string | null }) {
+export function SignInCard({ returnTo, error, staff = true }: { returnTo: string; error?: string | null; staff?: boolean }) {
   const { lang } = useApp();
   const hi = lang === "hi";
   const { data: me } = useMe();
@@ -38,7 +38,7 @@ export function SignInCard({ returnTo, error }: { returnTo: string; error?: stri
   return (
     <div className="rounded-2xl bg-surface p-6 shadow-[0_0_0_1px_var(--line)]">
       <h2 className="text-xl font-semibold">{hi ? "साइन इन करें" : "Sign in"}</h2>
-      <p className="mt-1 text-ink-2">{hi ? "मालिक और मैनेजर अपने Google खाते से साइन इन करते हैं।" : "Owners and managers sign in with their Google account."}</p>
+      <p className="mt-1 text-ink-2">{staff ? (hi ? "मालिक और मैनेजर अपने Google खाते से साइन इन करते हैं।" : "Owners and managers sign in with their Google account.") : hi ? "अपने Google खाते से साइन इन कीजिए, ताकि आपका पेज सेव रहे।" : "Sign in with your Google account so your page is saved to you."}</p>
       {error && ERRORS[error] && <p className="mt-3 rounded-lg bg-chilli-soft px-3 py-2 text-sm text-chilli">{hi ? ERRORS[error].hi : ERRORS[error].en}</p>}
       {me && !me.methods.google && !me.methods.dev && (
         <p className="mt-4 rounded-lg bg-sunken px-3 py-2 text-sm text-ink-2">
@@ -82,12 +82,12 @@ export function SignInCard({ returnTo, error }: { returnTo: string; error?: stri
           {devError && <p className="mt-2 text-sm text-chilli">{devError}</p>}
         </form>
       )}
-      <p className="mt-6 text-sm text-ink-2">
+      {staff && <p className="mt-6 text-sm text-ink-2">
         {hi ? "किचन या काउंटर स्टाफ़? " : "Kitchen or counter staff? "}
         <Link href="/login/staff" className="font-medium underline underline-offset-2">
           {hi ? "कोड और PIN से साइन इन करें" : "Sign in with the restaurant code and PIN"}
         </Link>
-      </p>
+      </p>}
     </div>
   );
 }

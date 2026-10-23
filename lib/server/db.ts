@@ -186,6 +186,7 @@ const COLUMNS = [
   "ALTER TABLE orders ADD COLUMN delivery_by TEXT",
   "ALTER TABLE orders ADD COLUMN delivery_fee INTEGER",
   "ALTER TABLE orders ADD COLUMN delivery_km REAL",
+  "ALTER TABLE outlets ADD COLUMN pan TEXT",
 ];
 
 // Data fixes that move stored rows to a newer model. Each is safe to run again.

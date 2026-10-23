@@ -3,36 +3,33 @@
 import Link from "next/link";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Bike, Camera, Check, ChevronLeft, Copy, ExternalLink, FileText, Leaf, Loader2, LocateFixed, MessageCircle, Plus, Store, Trash2, Upload } from "lucide-react";
+import { Bike, Camera, Check, ChevronLeft, Copy, ExternalLink, Loader2, LocateFixed, MessageCircle, Plus, Store, Trash2 } from "lucide-react";
 import { ChannelTag, Wordmark } from "@/components/bits";
 import { ListingPreview } from "@/components/listing-preview";
+import { MailboxCard } from "@/components/mailbox-card";
 import { SignInCard } from "@/components/sign-in";
 import { api, ApiError, refreshAll } from "@/lib/api";
 import { useMe } from "@/lib/auth-client";
-import { DEFAULT_DELIVERY, type DeliverySettings } from "@/lib/delivery";
 import { cityName, parseListing } from "@/lib/listing";
 import { CHANNEL_NAME, PLATFORMS, type Platform } from "@/lib/platforms";
 import { useApp } from "@/lib/state";
 import type { OutletDTO, PlatformListing } from "@/lib/types";
 
-// Onboarding, in steps, ending with the restaurant's own ordering page live.
+// Onboarding, kept short, ending with the seller's own ordering page live.
 //
-//   Home chefs and new kitchens (?journey=new): your kitchen → your menu, read from photos →
-//   FSSAI and GSTIN, read from photos → delivery and payment → your page.
-//   Restaurants already on Zomato or Swiggy (?journey=live): the basics and your listing link (the menu
-//   comes from the listing) → delivery and payment → your page.
+//   Home kitchens (?journey=new): your kitchen (name and a few details) → your menu, from a photo → live.
+//   Restaurants (?journey=live): your Zomato or Swiggy link (name, menu and photos come from it) →
+//   connect email → live. Without a link, or if the listing has no dishes, they add the menu by hand.
 //
-// The owner signs in first, so the restaurant is created with them as its owner. Every step saves as it
-// goes, so leaving and coming back picks up where they were.
+// Address, FSSAI, GSTIN, PAN, UPI and the kitchen's location are optional, tucked under "More details".
+// Delivery starts on the defaults (Zomato riders and pickup); it can be changed later.
 
 type Journey = "new" | "live";
-type StepId = "details" | "menu" | "docs" | "delivery" | "live";
-const STEPS: Record<Journey, StepId[]> = { new: ["details", "menu", "docs", "delivery", "live"], live: ["details", "delivery", "live"] };
+type StepId = "details" | "menu" | "email" | "live";
 
-type Details = { ownerName: string; ownerPhone: string; name: string; area: string; city: string; address: string; listings: Partial<Record<Platform, string>> };
+type Details = { ownerName: string; ownerPhone: string; name: string; area: string; city: string; address: string; fssai: string; gstin: string; pan: string; upi: string; listings: Partial<Record<Platform, string>> };
 type ListingRead = { url: string; state: "loading" } | { url: string; state: "ok"; listing: PlatformListing } | { url: string; state: "error"; message: string };
 type Dish = { name: string; category: string; price: number; veg: boolean; description: string };
-type DocResult = { is_expected_document: boolean; problem: string; holder_name: string; number: string; valid_until: string; extra: string };
 type LatLng = { lat: number; lng: number };
 
 const input = "w-full rounded-xl bg-surface px-3.5 py-3 text-[1.02rem] outline-none shadow-[inset_0_0_0_1px_var(--line)] focus:shadow-[inset_0_0_0_2px_var(--turmeric)]";
@@ -78,14 +75,14 @@ function JoinInner() {
         <Title
           sub={
             journey === "new"
-              ? hi ? "साइन इन कीजिए, फिर रसोई, मेन्यू और डिलीवरी सेट कीजिए। कुछ ही मिनट में आपका पेज लाइव।" : "Sign in, then set up your kitchen, menu and delivery. Your page is live in a few minutes."
+              ? hi ? "साइन इन कीजिए, फिर रसोई का नाम और मेन्यू की फ़ोटो। कुछ ही मिनट में आपका पेज लाइव।" : "Sign in, then add your kitchen's name and a photo of your menu. Your page is live in a few minutes."
               : hi ? "साइन इन कीजिए, फिर अपना Zomato या Swiggy लिंक डालिए। कुछ ही मिनट में आपका ऑर्डर पेज लाइव।" : "Sign in, then paste your Zomato or Swiggy link. Your ordering page is live in a few minutes."
           }
         >
           {journey === "new" ? (hi ? "अपनी रसोई ऑनलाइन लाइए" : "Get your kitchen online") : hi ? "अपना ऑर्डर पेज बनाइए" : "Create your ordering page"}
         </Title>
         <div className="mt-8 max-w-xl">
-          <SignInCard returnTo={here} />
+          <SignInCard returnTo={here} staff={false} />
         </div>
       </div>
     );
@@ -105,6 +102,10 @@ function JoinInner() {
     area: mine?.area ?? "",
     city: mine?.city ?? "",
     address: mine?.address ?? "",
+    fssai: mine?.fssai ?? "",
+    gstin: mine?.gstin ?? "",
+    pan: mine?.pan ?? "",
+    upi: mine?.upiId ?? "",
     listings: { ...(mine?.listings ?? {}) },
   };
   // A listing link pasted on the landing page arrives as ?zomato= or ?swiggy=.
@@ -113,25 +114,33 @@ function JoinInner() {
     if (link && !initial.listings[p]) initial.listings[p] = link;
   }
   // Keyed by journey only: creating the restaurant changes the outlet, and the steps must carry on.
-  return <Wizard key={journey} journey={journey} initial={initial} />;
+  const resume = params.get("step") === "email" && journey === "live" ? "email" : "details";
+  return <Wizard key={journey} journey={journey} initial={initial} start={resume} />;
 }
 
-function Wizard({ journey, initial }: { journey: Journey; initial: Details }) {
+function Wizard({ journey, initial, start }: { journey: Journey; initial: Details; start: StepId }) {
   const hi = useHi();
-  const steps = STEPS[journey];
-  const [step, setStep] = useState<StepId>("details");
-  const at = steps.indexOf(step);
-  const next = () => {
-    setStep(steps[Math.min(at + 1, steps.length - 1)]);
+  // Home kitchens always add their menu; restaurants only when their listing brought no dishes.
+  const [needsMenu, setNeedsMenu] = useState(journey === "new");
+  const steps: StepId[] = journey === "new" ? ["details", "menu", "live"] : needsMenu ? ["details", "menu", "email", "live"] : ["details", "email", "live"];
+  const [step, setStep] = useState<StepId>(start);
+  const at = Math.max(0, steps.indexOf(step));
+  const go = (s: StepId) => {
+    setStep(s);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const back = () => setStep(steps[Math.max(at - 1, 0)]);
+  const next = (list = steps) => go(list[Math.min(list.indexOf(step) + 1, list.length - 1)]);
+  const back = () => go(steps[Math.max(at - 1, 0)]);
+  const afterDetails = (menu: boolean) => {
+    const need = journey === "new" || menu;
+    setNeedsMenu(need);
+    next(journey === "new" ? ["details", "menu", "live"] : need ? ["details", "menu", "email", "live"] : ["details", "email", "live"]);
+  };
 
   const LABEL: Record<StepId, string> = {
     details: journey === "new" ? (hi ? "आपकी रसोई" : "Your kitchen") : hi ? "आपका रेस्टोरेंट" : "Your restaurant",
     menu: hi ? "मेन्यू" : "Menu",
-    docs: hi ? "दस्तावेज़" : "Documents",
-    delivery: hi ? "डिलीवरी" : "Delivery",
+    email: hi ? "ईमेल" : "Email",
     live: hi ? "आपका पेज" : "Your page",
   };
 
@@ -150,10 +159,9 @@ function Wizard({ journey, initial }: { journey: Journey; initial: Details }) {
         {hi ? `क़दम ${at + 1} / ${steps.length}` : `Step ${at + 1} of ${steps.length}`}
       </p>
 
-      {step === "details" && <DetailsStep journey={journey} initial={initial} onDone={next} />}
-      {step === "menu" && <MenuStep onDone={next} onBack={back} />}
-      {step === "docs" && <DocsStep onDone={next} onBack={back} />}
-      {step === "delivery" && <DeliveryStep journey={journey} onDone={next} onBack={back} />}
+      {step === "details" && <DetailsStep journey={journey} initial={initial} onDone={afterDetails} />}
+      {step === "menu" && <MenuStep onDone={() => next()} onBack={back} />}
+      {step === "email" && <EmailStep onDone={() => next()} />}
       {step === "live" && <LiveStep journey={journey} />}
     </div>
   );
@@ -210,13 +218,14 @@ function useLocate() {
 
 /* ---------------- step 1: who and where ---------------- */
 
-function DetailsStep({ journey, initial, onDone }: { journey: Journey; initial: Details; onDone: () => void }) {
+function DetailsStep({ journey, initial, onDone }: { journey: Journey; initial: Details; onDone: (needsMenu: boolean) => void }) {
   const hi = useHi();
   const { lang, outlet } = useApp();
   const [f, setF] = useState<Details>(initial);
   const [read, setRead] = useState<Partial<Record<Platform, ListingRead>>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [more, setMore] = useState(!!(initial.address || initial.fssai || initial.gstin || initial.pan || initial.upi));
   const loc = useLocate();
   const set = (k: keyof Omit<Details, "listings">) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -247,11 +256,10 @@ function DetailsStep({ journey, initial, onDone }: { journey: Journey; initial: 
     if (!f.ownerName.trim() || !f.name.trim() || !f.area.trim() || !f.city.trim()) {
       return setError(hi ? "नाम, रसोई/रेस्टोरेंट, इलाक़ा और शहर भरें।" : "Fill in your name, the kitchen's name, area and city.");
     }
-    if (live && linked.length === 0) return setError(hi ? "अपना Zomato या Swiggy लिंक डालिए।" : "Paste your Zomato or Swiggy link.");
     setBusy(true);
     setError(null);
     try {
-      await api<OutletDTO>("/api/outlet", {
+      const made = await api<OutletDTO & { read: Partial<Record<Platform, { imported: number; matched: number } | { error: string }>> }>("/api/outlet", {
         method: "POST",
         json: {
           journey,
@@ -263,12 +271,17 @@ function DetailsStep({ journey, initial, onDone }: { journey: Journey; initial: 
           area: f.area,
           city: f.city,
           address: f.address,
+          fssai: f.fssai.replace(/\s/g, "") || null,
+          gstin: f.gstin.trim() || null,
+          pan: f.pan.trim() || null,
           listings: Object.fromEntries(linked.map((p) => [p, f.listings[p] ?? ""])),
         },
       });
-      if (loc.where) await api("/api/outlet", { method: "PATCH", json: { location: loc.where } });
+      // The page goes live straight away, on the default delivery (Zomato riders and pickup).
+      await api("/api/outlet", { method: "PATCH", json: { ordering: true, upiId: f.upi.trim() || null, ...(loc.where ? { location: loc.where } : {}) } });
       refreshAll();
-      onDone();
+      const dishes = Object.values(made.read ?? {}).reduce((n, r) => n + (r && "imported" in r ? r.imported + r.matched : 0), 0);
+      onDone(dishes === 0);
     } catch (err) {
       setError((err as Error).message);
       setBusy(false);
@@ -277,7 +290,7 @@ function DetailsStep({ journey, initial, onDone }: { journey: Journey; initial: 
 
   return (
     <form onSubmit={submit} noValidate className="mt-1">
-      <Title sub={live ? (hi ? "अपना Zomato या Swiggy लिंक डालिए। नाम, पता, मेन्यू और फ़ोटो हम वहीं से ले लेंगे।" : "Paste your Zomato or Swiggy link. We bring your name, address, menu and photos from it.") : hi ? "आपकी रसोई के बारे में थोड़ा-सा। एक मिनट लगेगा।" : "A little about you and your kitchen. It takes a minute."}>
+      <Title sub={live ? (hi ? "अपना Zomato या Swiggy लिंक डालिए, नाम, मेन्यू और फ़ोटो वहीं से आ जाएँगे। लिंक नहीं है? नीचे भर दीजिए।" : "Paste your Zomato or Swiggy link and your name, menu and photos come from it. No link? Fill in the details below.") : hi ? "बस नाम और इलाक़ा। बाक़ी सब ज़रूरी नहीं।" : "Just a name and where you are. Everything else is optional."}>
         {live ? (hi ? "अपना ऑर्डर पेज बनाइए" : "Create your ordering page") : hi ? "आपकी रसोई" : "Your kitchen"}
       </Title>
 
@@ -345,10 +358,30 @@ function DetailsStep({ journey, initial, onDone }: { journey: Journey; initial: 
         <Field className="sm:col-span-2" label={live ? (hi ? "रेस्टोरेंट का नाम" : "Restaurant name") : hi ? "रसोई का नाम" : "Kitchen name"} value={f.name} onChange={set("name")} autoComplete="organization" placeholder={live ? "" : hi ? "जैसे मीना की रसोई" : "e.g. Meena's Kitchen"} required />
         <Field label={hi ? "इलाक़ा" : "Area or locality"} value={f.area} onChange={set("area")} placeholder={hi ? "जैसे ग्रीन पार्क" : "e.g. Green Park"} required />
         <Field label={hi ? "शहर" : "City"} value={f.city} onChange={set("city")} autoComplete="address-level2" required />
-        <Field className="sm:col-span-2" label={hi ? "पूरा पता" : "Full address"} hint={journey === "new" ? (hi ? "ग्राहकों को नहीं दिखता" : "not shown to customers") : undefined} value={f.address} onChange={set("address")} autoComplete="street-address" placeholder={hi ? "मकान/दुकान नं., गली, लैंडमार्क" : "House or shop no., street, landmark"} />
-        <div className="sm:col-span-2">
-          <LocateButton loc={loc} saved={!!outlet?.location} />
-        </div>
+      </fieldset>
+
+      {/* Optional: everything a page can go live without */}
+      <fieldset className="mt-8">
+        <legend className="sr-only">{hi ? "और जानकारी" : "More details"}</legend>
+        <button type="button" onClick={() => setMore((v) => !v)} aria-expanded={more} className="flex w-full items-center justify-between rounded-2xl bg-surface px-4 py-3.5 text-left shadow-[inset_0_0_0_1px_var(--line)]">
+          <span>
+            <span className="block font-medium">{hi ? "और जानकारी" : "More details"}</span>
+            <span className="block text-sm text-muted">{hi ? "पता, FSSAI, GSTIN, PAN, UPI · ज़रूरी नहीं" : "Address, FSSAI, GSTIN, PAN, UPI · optional"}</span>
+          </span>
+          <Plus aria-hidden className={`size-5 shrink-0 transition-transform ${more ? "rotate-45" : ""}`} />
+        </button>
+        {more && (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Field className="sm:col-span-2" label={hi ? "पूरा पता" : "Full address"} hint={journey === "new" ? (hi ? "ग्राहकों को नहीं दिखता" : "not shown to customers") : undefined} value={f.address} onChange={set("address")} autoComplete="street-address" placeholder={hi ? "मकान/दुकान नं., गली, लैंडमार्क" : "House or shop no., street, landmark"} />
+            <Field label={hi ? "FSSAI नंबर" : "FSSAI number"} hint={hi ? "14 अंक" : "14 digits"} value={f.fssai} onChange={set("fssai")} inputMode="numeric" maxLength={17} />
+            <Field label="GSTIN" hint={hi ? "अगर रजिस्टर्ड हैं" : "if registered"} value={f.gstin} onChange={(e) => setF((x) => ({ ...x, gstin: e.target.value.toUpperCase() }))} maxLength={15} />
+            <Field label="PAN" value={f.pan} onChange={(e) => setF((x) => ({ ...x, pan: e.target.value.toUpperCase() }))} maxLength={10} />
+            <Field label={hi ? "UPI ID" : "UPI ID"} hint={hi ? "ग्राहक सीधे भुगतान करें" : "for direct payments"} value={f.upi} onChange={set("upi")} placeholder="name@okhdfc" autoComplete="off" />
+            <div className="sm:col-span-2">
+              <LocateButton loc={loc} saved={!!outlet?.location} />
+            </div>
+          </div>
+        )}
       </fieldset>
 
       <ErrorLine error={error} />
@@ -380,7 +413,19 @@ function LocateButton({ loc, saved }: { loc: ReturnType<typeof useLocate>; saved
   );
 }
 
-/* ---------------- step 2 (home chefs): the menu, from photos ---------------- */
+/* ---------------- the menu, from photos ---------------- */
+
+// Dishes grouped by their section, sections in the order a menu reads (starters before mains before
+// breads, rice and sweets), dishes cheapest first inside a section.
+const SECTION_ORDER = ["breakfast", "snack", "starter", "chaat", "soup", "salad", "thali", "combo", "main", "curry", "sabzi", "dal", "biryani", "rice", "bread", "roti", "paratha", "chinese", "dessert", "sweet", "beverage", "drink"];
+function sectionRank(c: string) {
+  const k = c.toLowerCase();
+  const i = SECTION_ORDER.findIndex((w) => k.includes(w));
+  return i < 0 ? SECTION_ORDER.length : i;
+}
+function sortMenu(list: Dish[]): Dish[] {
+  return [...list].sort((a, b) => sectionRank(a.category) - sectionRank(b.category) || a.category.localeCompare(b.category) || a.price - b.price);
+}
 
 function MenuStep({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
   const hi = useHi();
@@ -402,7 +447,7 @@ function MenuStep({ onDone, onBack }: { onDone: () => void; onBack: () => void }
         const { items } = await api<{ items: Dish[] }>("/api/onboarding/menu", { method: "POST", body: form });
         setDishes((d) => {
           const seen = new Set(d.map((x) => x.name.toLowerCase()));
-          return [...d, ...items.filter((x) => !seen.has(x.name.toLowerCase()))];
+          return sortMenu([...d, ...items.filter((x) => !seen.has(x.name.toLowerCase()))]);
         });
       } catch (e) {
         setError(e instanceof ApiError && e.status === 503 ? (hi ? "इस सर्वर पर फ़ोटो से मेन्यू पढ़ना चालू नहीं है। डिश नीचे लिख दीजिए।" : "Reading menus from photos isn't switched on for this server. Type your dishes below.") : (e as Error).message);
@@ -420,7 +465,7 @@ function MenuStep({ onDone, onBack }: { onDone: () => void; onBack: () => void }
     setBusy(true);
     setError(null);
     try {
-      await api("/api/menu/import", { method: "POST", json: { items: good.map((d) => ({ ...d, name: d.name.trim(), category: d.category.trim() || "Menu", price: Math.round(d.price) })) } });
+      await api("/api/menu/import", { method: "POST", json: { items: sortMenu(good).map((d) => ({ ...d, name: d.name.trim(), category: d.category.trim() || "Menu", price: Math.round(d.price) })) } });
       refreshAll();
       onDone();
     } catch (e) {
@@ -485,208 +530,24 @@ function MenuStep({ onDone, onBack }: { onDone: () => void; onBack: () => void }
   );
 }
 
-/* ---------------- step 3 (home chefs): FSSAI and GSTIN ---------------- */
+/* ---------------- restaurants: connect email ---------------- */
 
-function DocsStep({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
+function EmailStep({ onDone }: { onDone: () => void }) {
   const hi = useHi();
-  const { outlet } = useApp();
-  const [fssai, setFssai] = useState(outlet?.fssai ?? "");
-  const [gstin, setGstin] = useState(outlet?.gstin ?? "");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function save(skip: boolean) {
-    setBusy(true);
-    setError(null);
-    try {
-      if (!skip) await api("/api/outlet", { method: "PATCH", json: { fssai: fssai.replace(/\s/g, "") || null, gstin: gstin.trim().toUpperCase() || null } });
-      refreshAll();
-      onDone();
-    } catch (e) {
-      setError((e as Error).message);
-      setBusy(false);
-    }
-  }
-
   return (
     <div>
-      <Title sub={hi ? "फ़ोटो लीजिए, नंबर हम पढ़ लेंगे। FSSAI नंबर आपके पेज पर दिखता है, जिससे ग्राहक भरोसा करते हैं।" : "Take a photo and we read the number. Your FSSAI number shows on your page, which customers trust."}>
-        {hi ? "दस्तावेज़" : "Documents"}
+      <Title sub={hi ? "Zest आपके Zomato और Swiggy के ऑर्डर, पेआउट और रेटिंग वाले ईमेल पढ़कर हर सुबह WhatsApp पर हिसाब भेजता है। सिर्फ़ पढ़ता है, कभी भेजता नहीं।" : "Zest reads your order, payout and rating emails from Zomato and Swiggy and sends you a summary on WhatsApp every morning. It only reads; it never sends."}>
+        {hi ? "अपना ईमेल जोड़िए" : "Connect your email"}
       </Title>
-      <div className="mt-8 grid gap-4">
-        <DocCard kind="fssai" title={hi ? "FSSAI रजिस्ट्रेशन या लाइसेंस" : "FSSAI registration or licence"} why={hi ? "घर की रसोई के लिए भी, खाना बेचने और पहुँचाने के लिए ज़रूरी।" : "Needed to sell and deliver food, home kitchens included."} value={fssai} onValue={setFssai} pattern={/^\d{14}$/} placeholder="14 digits" />
-        <DocCard kind="gst" title="GSTIN" why={hi ? "सिर्फ़ अगर आप GST में रजिस्टर्ड हैं।" : "Only if you're registered for GST."} value={gstin} onValue={(v) => setGstin(v.toUpperCase())} pattern={/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z\d]Z[A-Z\d]$/} placeholder="07ABCDE1234F1Z5" optional />
+      <div className="mt-8">
+        <MailboxCard returnTo="/join?journey=live&step=email" />
       </div>
-      <ErrorLine error={error} />
       <div className="mt-8 flex flex-wrap items-center gap-3">
-        <button type="button" onClick={() => save(false)} disabled={busy} className={primary}>
-          {busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
+        <button type="button" onClick={onDone} className={primary}>
           {hi ? "आगे बढ़ें" : "Continue"}
         </button>
-        <button type="button" onClick={() => save(true)} disabled={busy} className="px-3 text-ink-2 underline underline-offset-4">
-          {hi ? "बाद में जोड़ूँगा" : "I'll add these later"}
-        </button>
-        <button type="button" onClick={onBack} className="px-3 text-ink-2 underline underline-offset-4">
-          {hi ? "पीछे" : "Back"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function DocCard({ kind, title, why, value, onValue, pattern, placeholder, optional }: { kind: "fssai" | "gst"; title: string; why: string; value: string; onValue: (v: string) => void; pattern: RegExp; placeholder: string; optional?: boolean }) {
-  const hi = useHi();
-  const [state, setState] = useState<"idle" | "reading" | "ok" | "problem">(value ? "ok" : "idle");
-  const [note, setNote] = useState<string | null>(null);
-  const clean = value.replace(/\s/g, "");
-  const valid = !clean || pattern.test(clean);
-
-  async function read(f: File | undefined) {
-    if (!f) return;
-    setState("reading");
-    setNote(null);
-    const form = new FormData();
-    form.set("kind", kind);
-    form.set("file", f);
-    try {
-      const r = await api<DocResult>("/api/onboarding/document", { method: "POST", body: form });
-      if (r.is_expected_document && r.number) {
-        onValue(r.number.replace(/\s/g, ""));
-        setState("ok");
-        setNote([r.holder_name, r.valid_until && (hi ? `${r.valid_until} तक मान्य` : `valid till ${r.valid_until}`)].filter(Boolean).join(" · "));
-      } else {
-        setState("problem");
-        setNote(r.problem || (hi ? "यह सही दस्तावेज़ नहीं लगा।" : "That didn't look like the right document."));
-      }
-    } catch (e) {
-      setState("problem");
-      setNote(e instanceof ApiError && e.status === 503 ? (hi ? "इस सर्वर पर फ़ोटो पढ़ना चालू नहीं है। नंबर लिख दीजिए।" : "Reading photos isn't switched on for this server. Type the number.") : (e as Error).message);
-    }
-  }
-
-  return (
-    <div className="rounded-2xl bg-surface p-4 shadow-[inset_0_0_0_1px_var(--line)] sm:p-5">
-      <div className="flex items-start gap-3">
-        <FileText aria-hidden className="mt-0.5 size-5 shrink-0 text-turmeric" />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold">
-            {title} {optional && <span className="text-sm font-normal text-muted">{hi ? "ज़रूरी नहीं" : "optional"}</span>}
-          </p>
-          <p className="text-sm text-ink-2">{why}</p>
-        </div>
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <label className={`${secondary} min-h-11 cursor-pointer text-sm`}>
-          {state === "reading" ? <Loader2 aria-hidden className="size-4 animate-spin" /> : <Upload aria-hidden className="size-4" />}
-          {state === "reading" ? (hi ? "पढ़ रहे हैं…" : "Reading…") : hi ? "फ़ोटो से पढ़ें" : "Read from a photo"}
-          <input type="file" accept="image/*,application/pdf" capture="environment" className="sr-only" onChange={(e) => read(e.target.files?.[0])} />
-        </label>
-        <span className="text-sm text-muted">{hi ? "या" : "or"}</span>
-        <input value={value} onChange={(e) => onValue(e.target.value)} placeholder={placeholder} aria-label={title} className={`${input} min-w-0 flex-1 py-2.5 font-mono tracking-wide`} />
-      </div>
-      {note && <p className={`mt-2 text-sm ${state === "problem" ? "text-chilli" : "text-leaf"}`}>{note}</p>}
-      {!valid && <p className="mt-2 text-sm text-chilli">{kind === "fssai" ? (hi ? "FSSAI नंबर में 14 अंक होते हैं।" : "An FSSAI number has 14 digits.") : hi ? "GSTIN में 15 अक्षर होते हैं।" : "A GSTIN has 15 characters."}</p>}
-    </div>
-  );
-}
-
-/* ---------------- delivery and payment (both journeys) ---------------- */
-
-function DeliveryStep({ journey, onDone, onBack }: { journey: Journey; onDone: () => void; onBack: () => void }) {
-  const hi = useHi();
-  const { outlet } = useApp();
-  const [d, setD] = useState<DeliverySettings>(outlet?.delivery ?? DEFAULT_DELIVERY);
-  const [upi, setUpi] = useState(outlet?.upiId ?? "");
-  const [free, setFree] = useState(d.freeAbove ? String(d.freeAbove) : "");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const loc = useLocate();
-  const delivers = d.zomatoRider || d.ownStaff;
-  const located = !!loc.where || !!outlet?.location;
-
-  async function save() {
-    if (!delivers && !d.pickup) return setError(hi ? "डिलीवरी या पिकअप में से कम से कम एक चुनिए।" : "Choose delivery, pickup, or both.");
-    setBusy(true);
-    setError(null);
-    try {
-      await api("/api/outlet", {
-        method: "PATCH",
-        json: { delivery: { ...d, freeAbove: free ? Number(free) : null }, upiId: upi.trim() || null, ordering: true, ...(loc.where ? { location: loc.where } : {}) },
-      });
-      refreshAll();
-      onDone();
-    } catch (e) {
-      setError((e as Error).message);
-      setBusy(false);
-    }
-  }
-
-  const Toggle = ({ on, onChange, icon: Icon, title, text }: { on: boolean; onChange: (v: boolean) => void; icon: typeof Bike; title: string; text: string }) => (
-    <button type="button" role="switch" aria-checked={on} onClick={() => onChange(!on)} className={`flex w-full items-start gap-3 rounded-2xl p-4 text-left transition-colors ${on ? "bg-surface shadow-[inset_0_0_0_2px_var(--turmeric)]" : "bg-surface shadow-[inset_0_0_0_1px_var(--line)]"}`}>
-      <Icon aria-hidden className={`mt-0.5 size-5 shrink-0 ${on ? "text-turmeric" : "text-muted"}`} />
-      <span className="min-w-0 flex-1">
-        <span className="block font-semibold">{title}</span>
-        <span className="block text-sm text-ink-2">{text}</span>
-      </span>
-      <span aria-hidden className={`mt-0.5 flex h-6 w-10 shrink-0 items-center rounded-full p-0.5 transition-colors ${on ? "justify-end bg-turmeric" : "justify-start bg-line"}`}>
-        <span className="size-5 rounded-full bg-paper" />
-      </span>
-    </button>
-  );
-
-  return (
-    <div>
-      <Title sub={hi ? "आपके पेज के ऑर्डर ग्राहक तक कैसे पहुँचें, और पैसा कहाँ आए।" : "How orders from your page reach customers, and where the money goes."}>{hi ? "डिलीवरी और भुगतान" : "Delivery and payment"}</Title>
-
-      <div className="mt-8 grid gap-3">
-        <Toggle on={d.zomatoRider} onChange={(v) => setD({ ...d, zomatoRider: v })} icon={Bike} title={hi ? "Zomato राइडर से डिलीवरी" : "Delivery by Zomato riders"} text={hi ? "खाना तैयार होते ही राइडर बुक, ग्राहक को लाइव ट्रैकिंग।" : "A rider is booked as the food gets ready; the customer tracks it live."} />
-        <Toggle on={d.ownStaff} onChange={(v) => setD({ ...d, ownStaff: v })} icon={Store} title={hi ? "अपने स्टाफ़ से डिलीवरी" : "Delivery by your own staff"} text={d.zomatoRider ? (hi ? "जब Zomato राइडर बंद हों।" : "Used when Zomato riders are switched off.") : hi ? "आपका स्टाफ़ ले जाता है, ग्राहक को ट्रैकिंग लिंक।" : "Your staff take it; the customer gets a tracking link."} />
-        <Toggle on={d.pickup} onChange={(v) => setD({ ...d, pickup: v })} icon={Leaf} title={hi ? "पिकअप" : "Pickup"} text={hi ? "ग्राहक ख़ुद ले जाए।" : "Customers collect it themselves."} />
-      </div>
-
-      {delivers && (
-        <div className="mt-6 grid gap-4 rounded-2xl bg-surface p-4 shadow-[inset_0_0_0_1px_var(--line)] sm:grid-cols-2 sm:p-5">
-          <fieldset className="sm:col-span-2">
-            <legend className="text-sm text-ink-2">{hi ? "डिलीवरी फ़ीस (दूरी से तय) कौन देगा?" : "Who pays the delivery fee (priced by distance)?"}</legend>
-            <div className="mt-1.5 grid grid-cols-2 gap-1 rounded-xl bg-sunken p-1">
-              {(["customer", "restaurant"] as const).map((w) => (
-                <button key={w} type="button" aria-pressed={d.feePaidBy === w} onClick={() => setD({ ...d, feePaidBy: w })} className={`min-h-10 rounded-lg font-medium ${d.feePaidBy === w ? "bg-ink text-paper" : "text-ink-2"}`}>
-                  {w === "customer" ? (hi ? "ग्राहक" : "The customer") : hi ? "मैं" : "I do"}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          {d.feePaidBy === "customer" && <Field label={hi ? "इससे ऊपर के ऑर्डर पर मुफ़्त डिलीवरी" : "Free delivery on orders above"} hint={hi ? "ज़रूरी नहीं" : "optional"} value={free} onChange={(e) => setFree(e.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="₹ 499" />}
-          <label className="block">
-            <span className="mb-1 block text-sm text-ink-2">{hi ? "कितनी दूर तक" : "Deliver up to"}</span>
-            <select value={d.maxKm} onChange={(e) => setD({ ...d, maxKm: Number(e.target.value) })} className={input}>
-              {[3, 5, 7, 10, 15].map((k) => (
-                <option key={k} value={k}>
-                  {k} km
-                </option>
-              ))}
-            </select>
-          </label>
-          {!located && (
-            <div className="sm:col-span-2">
-              <LocateButton loc={loc} saved={false} />
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="mt-6">
-        <Field label={hi ? "आपकी UPI ID" : "Your UPI ID"} hint={hi ? "ग्राहक सीधे इसमें भुगतान करते हैं" : "customers pay straight into it"} value={upi} onChange={(e) => setUpi(e.target.value)} placeholder="name@okhdfc" autoComplete="off" />
-      </div>
-
-      <ErrorLine error={error} />
-      <div className="mt-8 flex flex-wrap items-center gap-3">
-        <button type="button" onClick={save} disabled={busy} className={primary}>
-          {busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
-          {journey === "new" ? (hi ? "मेरा पेज बनाइए" : "Create my page") : hi ? "मेरा ऑर्डर पेज बनाइए" : "Create my ordering page"}
-        </button>
-        <button type="button" onClick={onBack} className="px-3 text-ink-2 underline underline-offset-4">
-          {hi ? "पीछे" : "Back"}
+        <button type="button" onClick={onDone} className="px-3 text-ink-2 underline underline-offset-4">
+          {hi ? "बाद में" : "Do this later"}
         </button>
       </div>
     </div>

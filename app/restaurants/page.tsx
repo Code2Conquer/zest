@@ -2,7 +2,7 @@
 
 import "../landing.css";
 import { useState } from "react";
-import { BellRing, Check, Hand, Mail, PhoneCall, Plus, Printer, X } from "lucide-react";
+import { BellRing, Check, Hand, Handshake, IndianRupee, Link2, Mail, PhoneCall, Plus, Printer, X } from "lucide-react";
 import { Estimator } from "@/components/landing/estimator";
 import { HeroPhoto } from "@/components/landing/hero-photo";
 import { Promises } from "@/components/landing/promises";
@@ -132,9 +132,9 @@ export default function Restaurants() {
       <Promises
         title={{ en: "Your own orders, without the hard parts.", hi: "अपने ऑर्डर, बिना झंझट।" }}
         items={[
-          { photo: "/photos/stage-scale.webp", title: { en: "It's easy", hi: "आसान है" }, text: { en: "Paste your Zomato or Swiggy link. Your page, menu and photos are ready in a minute.", hi: "अपना Zomato या Swiggy लिंक डालिए। पेज, मेन्यू और फ़ोटो एक मिनट में तैयार।" } },
-          { photo: "/photos/team-money.webp", title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. Customers pay you by UPI, and they stay your customers.", hi: "शुरुआत मुफ़्त। ग्राहक UPI से आपको भुगतान करते हैं, और आपके ग्राहक बने रहते हैं।" } },
-          { photo: "/photos/team-rider.webp", title: { en: "It sits alongside", hi: "साथ-साथ चलता है" }, text: { en: "Nothing changes on Zomato or Swiggy. Zomato riders deliver your own orders too.", hi: "Zomato या Swiggy पर कुछ नहीं बदलता। आपके अपने ऑर्डर भी Zomato राइडर पहुँचाते हैं।" } },
+          { icon: Link2, title: { en: "It's easy", hi: "आसान है" }, text: { en: "Paste your Zomato or Swiggy link. Your page, menu and photos are ready in a minute.", hi: "अपना Zomato या Swiggy लिंक डालिए। पेज, मेन्यू और फ़ोटो एक मिनट में तैयार।" } },
+          { icon: IndianRupee, title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. Customers pay you by UPI, and they stay your customers.", hi: "शुरुआत मुफ़्त। ग्राहक UPI से आपको भुगतान करते हैं, और आपके ग्राहक बने रहते हैं।" } },
+          { icon: Handshake, title: { en: "It sits alongside", hi: "साथ-साथ चलता है" }, text: { en: "Nothing changes on Zomato or Swiggy. Zomato riders deliver your own orders too.", hi: "Zomato या Swiggy पर कुछ नहीं बदलता। आपके अपने ऑर्डर भी Zomato राइडर पहुँचाते हैं।" } },
         ]}
       />
 

@@ -141,6 +141,7 @@ export const outlets = sqliteTable("outlets", {
   // Optional at sign-up: FSSAI licence number and GSTIN as the owner typed them.
   fssai: text("fssai"),
   gstin: text("gstin"),
+  pan: text("pan"),
   // The owner's own listing links, e.g. https://www.zomato.com/ncr/yummy-milkshake-ip-extension-new-delhi
   listings: text("listings", { mode: "json" }).$type<Partial<Record<Platform, string>>>().notNull().default({}),
   // What the public listing pages said when last read (menu excluded; it goes to menu_items).

@@ -31,6 +31,7 @@ export async function outletDTO(o: Outlet): Promise<OutletDTO> {
     address: o.address,
     fssai: o.fssai,
     gstin: o.gstin,
+    pan: o.pan,
     listings: o.listings,
     listing: o.listingData,
     cuisines: o.cuisines,

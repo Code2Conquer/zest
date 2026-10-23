@@ -215,9 +215,13 @@ Do I need to leave Zomato or Swiggy? · Will it change anything on the apps? · 
 
 ## 9. Onboarding (`/join`) and the ordering page
 
-**Home chefs and new kitchens** (`/join?journey=new`), five steps: your kitchen (name, phone, area, city, address, kitchen location) → your menu (photos read by Claude vision into an editable dish list; typing works too) → FSSAI and GSTIN (read from a photo or typed) → delivery and payment → your page is live (link, QR, WhatsApp share).
+Sign-in is Google only on this screen (no staff code or PIN here; staff sign in from /login).
 
-**Restaurants on Zomato or Swiggy** (`/join?journey=live`), three steps: the basics and the listing link (name, address, menu and photos come from it) → delivery and payment → your page is live (plus "connect email for the morning summary").
+**Home kitchens** (`/join?journey=new`), three steps: your kitchen (your name, kitchen name, area, city; phone optional) → your menu (photos read by Claude vision into a list sorted by section, or typed) → your page is live (link, QR, WhatsApp share).
+
+**Restaurants** (`/join?journey=live`): your Zomato or Swiggy link (name, menu and photos come from it; without a link they fill in the basics) → your menu, only if the listing brought no dishes → connect email (or later) → your page is live.
+
+**Optional, under "More details"** on the first step: full address, FSSAI, GSTIN, PAN, UPI ID, the kitchen's location. The page goes live on the default delivery (Zomato riders and pickup); delivery settings can be changed later.
 
 **Delivery and payment** (both): Zomato riders (default), own staff, pickup; who pays the delivery fee; free above an amount; maximum distance; UPI ID. Delivery is priced by distance from the kitchen's location (`lib/delivery.ts`; the rider fee estimate stands in until the Zomato rider booking returns a live quote).
 
@@ -246,7 +250,7 @@ Then **"From a home kitchen to a thela."**: four photo tiles (home kitchens, tif
 Both pages follow the shape of Airbnb's "host your home" page, which solved the same problem for homes:
 
 1. **What you could earn**: "Your kitchen could earn ₹X a month on Zest" / "Your restaurant could earn ₹X more a month, from your own page". Kind-of-kitchen presets and two sliders (orders a day, average order); the sum is shown (orders × average × 26 days) and labelled an estimate. A large photo of the food, framed at its own shape (no cropping), with the incoming order. Homepage presets: home kitchen, tiffin service, stall or thela (no cloud kitchen).
-2. **Three promises**: It's easy · It's worth it · Delivery is handled (restaurants: It sits alongside).
+2. **Three promises**, each with a simple line icon (no photos): It's easy · It's worth it · Delivery is handled (restaurants: It sits alongside).
 3. **The case**: homepage "Cook for more than your WhatsApp group." (five reasons, today vs with Zest, one cited figure); restaurants "The orders you already get, and lose."
 4. **You're covered**: homepage "When you sell on Zest, you're covered." (paid before you cook, tracked to the door, real people ordering, help on WhatsApp) with the delivery map; restaurants: the direct-order journey.
 5. **How it looks / runs**: homepage "Your kitchen looks great on Zest." (your page, showing up on Google, the Soundbox); restaurants: the Soundbox and "Yesterday's sales, on WhatsApp by 7:30."

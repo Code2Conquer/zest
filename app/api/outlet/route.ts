@@ -24,6 +24,7 @@ const Profile = z.object({
   address: z.string().trim().max(240),
   fssai: z.string().trim().regex(/^\d{14}$/, "An FSSAI licence number has 14 digits").nullable(),
   gstin: z.string().trim().toUpperCase().regex(/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z\d]Z[A-Z\d]$/, "That doesn't look like a GSTIN (15 characters, e.g. 07ABCDE1234F1Z5)").nullable(),
+  pan: z.string().trim().toUpperCase().regex(/^[A-Z]{5}\d{4}[A-Z]$/, "That doesn't look like a PAN (10 characters, e.g. ABCDE1234F)").nullable().optional(),
   listings: z.object({ zomato: z.string().max(300), swiggy: z.string().max(300) }).partial(),
 });
 

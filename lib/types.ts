@@ -29,6 +29,7 @@ export type OutletDTO = {
   address: string;
   fssai: string | null;
   gstin: string | null;
+  pan: string | null;
   listings: Partial<Record<Platform, string>>;
   listing: Partial<Record<Platform, ListingSummary>>;
   cuisines: string;

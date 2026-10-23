@@ -1,7 +1,7 @@
 "use client";
 
 import "./landing.css";
-import { Check } from "lucide-react";
+import { Bike, Camera, Check, IndianRupee } from "lucide-react";
 import { DeliveryMap } from "@/components/landing/delivery";
 import { Estimator } from "@/components/landing/estimator";
 import { HeroPhone } from "@/components/landing/hero-phone";
@@ -90,9 +90,9 @@ export default function Home() {
       <Promises
         title={{ en: "Selling online, without the hard parts.", hi: "ऑनलाइन बेचना, बिना झंझट।" }}
         items={[
-          { photo: "/photos/stage-new.webp", title: { en: "It's easy", hi: "आसान है" }, text: { en: "Send a photo of your menu and your page is ready in minutes. Help is a WhatsApp away.", hi: "मेन्यू की फ़ोटो भेजिए, कुछ ही मिनट में पेज तैयार। मदद बस एक WhatsApp दूर।" } },
-          { photo: "/photos/team-money.webp", title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. You set your prices, and customers pay you by UPI, straight to your bank.", hi: "शुरुआत मुफ़्त। दाम आप तय करें, ग्राहक UPI से सीधे आपके बैंक में भुगतान करें।" } },
-          { photo: "/photos/team-rider.webp", title: { en: "Delivery is handled", hi: "डिलीवरी की चिंता नहीं" }, text: { en: "Zomato riders pick up from your door and deliver up to 7 km. Or send your own helper.", hi: "Zomato राइडर आपके दरवाज़े से उठाकर 7 किमी तक पहुँचाते हैं। या अपना हेल्पर भेजिए।" } },
+          { icon: Camera, title: { en: "It's easy", hi: "आसान है" }, text: { en: "Send a photo of your menu and your page is ready in minutes. Help is a WhatsApp away.", hi: "मेन्यू की फ़ोटो भेजिए, कुछ ही मिनट में पेज तैयार। मदद बस एक WhatsApp दूर।" } },
+          { icon: IndianRupee, title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. You set your prices, and customers pay you by UPI, straight to your bank.", hi: "शुरुआत मुफ़्त। दाम आप तय करें, ग्राहक UPI से सीधे आपके बैंक में भुगतान करें।" } },
+          { icon: Bike, title: { en: "Delivery is handled", hi: "डिलीवरी की चिंता नहीं" }, text: { en: "Zomato riders pick up from your door and deliver up to 7 km. Or send your own helper.", hi: "Zomato राइडर आपके दरवाज़े से उठाकर 7 किमी तक पहुँचाते हैं। या अपना हेल्पर भेजिए।" } },
         ]}
       />
 
@@ -158,6 +158,7 @@ export default function Home() {
             >
               <div className="h-[300px] origin-top scale-[0.62]">
                 <HeroPhone
+                  cover="/photos/team-menu.webp"
                   name={{ en: "Meena's Kitchen", hi: "मीना की रसोई" }}
                   meta={{ en: "Home kitchen · Green Park · Pure veg", hi: "घर की रसोई · ग्रीन पार्क · शुद्ध शाकाहारी" }}
                   dishes={[
