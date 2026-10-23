@@ -13,9 +13,9 @@ export function ChannelTag({ channel, className = "" }: { channel: Channel; clas
 }
 
 export function Wordmark({ className = "" }: { className?: string }) {
-  // The logo is the word: "zest" in lowercase, in the display face, heavy and tight, in turmeric.
+  // The logo is the word: "zest" in lowercase, in the website face at its heaviest, tight, in turmeric.
   return (
-    <span role="img" aria-label="Zest" className={`inline-block font-extrabold leading-none tracking-[-0.055em] text-turmeric ${className || "text-[1.65rem]"}`} style={{ fontFamily: "var(--font-site-display, inherit)" }}>
+    <span role="img" aria-label="Zest" className={`inline-block font-extrabold leading-none tracking-[-0.055em] text-turmeric ${className || "text-[1.65rem]"}`} style={{ fontFamily: "var(--font-site, inherit)" }}>
       <span aria-hidden>zest</span>
     </span>
   );

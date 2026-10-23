@@ -18,6 +18,14 @@ export const AGENT_NAME: Record<AgentId, Bi> = {
 
 export const agentName = (id: string): Bi => AGENT_NAME[id as AgentId] ?? AGENT_NAME.orchestrator;
 
+/** For a home kitchen, tiffin or stall: their own page, menu and regulars; nothing about Zomato or Swiggy. */
+export const HOME_STARTER_SUGGESTIONS: Bi[] = [
+  { en: "How did we do yesterday?", hi: "कल का दिन कैसा रहा?" },
+  { en: "Rajma is finished, turn it off", hi: "राजमा ख़त्म है, बंद करो" },
+  { en: "Who are my regulars?", hi: "मेरे पुराने ग्राहक कौन हैं?" },
+  { en: "Write today's menu for WhatsApp", hi: "आज का मेन्यू WhatsApp के लिए लिखो" },
+];
+
 export const STARTER_SUGGESTIONS: Bi[] = [
   { en: "Why is my Swiggy payout lower this week?", hi: "इस हफ़्ते Swiggy पेआउट कम क्यों है?" },
   { en: "Reply to new reviews", hi: "नए रिव्यू का जवाब दो" },

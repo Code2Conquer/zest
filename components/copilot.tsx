@@ -3,7 +3,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
 import { ArrowUp, Mic, RotateCcw, X } from "lucide-react";
-import { agentName, STARTER_SUGGESTIONS } from "@/lib/agents";
+import { agentName, HOME_STARTER_SUGGESTIONS, STARTER_SUGGESTIONS } from "@/lib/agents";
+import { isHomeKitchen } from "@/lib/nav";
 import { api, refreshAll, useApi } from "@/lib/api";
 import { useApp } from "@/lib/state";
 import type { ChatEntry, CopilotReply } from "@/lib/types";
@@ -72,7 +73,7 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
   }
 
   const last = [...messages].reverse().find((m) => m.role === "assistant");
-  const suggestions = last && last.role === "assistant" && last.reply.suggestions.length ? last.reply.suggestions : STARTER_SUGGESTIONS.map((s) => pick(s));
+  const suggestions = last && last.role === "assistant" && last.reply.suggestions.length ? last.reply.suggestions : (isHomeKitchen(outlet) ? HOME_STARTER_SUGGESTIONS : STARTER_SUGGESTIONS).map((s) => pick(s));
 
   return (
     <section aria-label={t("nav.copilot")} className="flex h-full min-h-0 flex-col bg-paper">
@@ -99,7 +100,7 @@ export function Copilot({ onClose }: { onClose?: () => void }) {
       </header>
 
       <div ref={scroller} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 py-4" aria-live="polite">
-        <p className="max-w-[46ch] text-[0.98rem] leading-relaxed text-ink-2">{t("copilot.hello")}</p>
+        <p className="max-w-[46ch] text-[0.98rem] leading-relaxed text-ink-2">{isHomeKitchen(outlet) ? pick({ en: "Good morning. Ask me about your orders, menu or regulars, or pick one of these.", hi: "सुप्रभात। अपने ऑर्डर, मेन्यू या पुराने ग्राहकों के बारे में पूछिए, या इनमें से चुनिए।" }) : t("copilot.hello")}</p>
 
         {messages.map((m) =>
           m.role === "user" ? (

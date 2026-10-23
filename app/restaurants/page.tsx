@@ -93,12 +93,8 @@ export default function Restaurants() {
             </h1>
             <div className="mt-3">
               <Estimator
-                presets={[
-                  { id: "qsr", label: { en: "Quick service", hi: "क्विक सर्विस" }, orders: 12, avg: 350 },
-                  { id: "family", label: { en: "Family restaurant", hi: "फ़ैमिली रेस्टोरेंट" }, orders: 8, avg: 900 },
-                  { id: "cloud", label: { en: "Cloud kitchen", hi: "क्लाउड किचन" }, orders: 15, avg: 400 },
-                ]}
-                orders={[1, 60]}
+                presets={[{ id: "restaurant", label: { en: "Restaurant", hi: "रेस्टोरेंट" }, orders: 10, avg: 450 }]}
+                orders={[2, 60]}
                 per={{ en: "more a month, from your own page", hi: "हर महीने और, आपके अपने पेज से" }}
                 ordersLabel={{ en: "Direct orders a day", hi: "रोज़ के सीधे ऑर्डर" }}
               />

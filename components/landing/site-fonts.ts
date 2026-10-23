@@ -1,10 +1,9 @@
-import { Bricolage_Grotesque, Inter, Noto_Sans_Devanagari } from "next/font/google";
+import { Noto_Sans_Devanagari, Plus_Jakarta_Sans } from "next/font/google";
 
-// The public website's type (homepage and /restaurants): Inter, with Noto Sans Devanagari for Hindi.
-// Declared here rather than in the root layout, so only these pages preload Inter and the owner app
-// never downloads it. Devanagari isn't preloaded: English readers never need it.
-export const site = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-site", display: "swap" });
+// The website's type (homepage, /restaurants and onboarding): Plus Jakarta Sans for everything, a friendly
+// geometric sans in the spirit of Airbnb's Cereal; Noto Sans Devanagari for Hindi. Headlines use its 800.
+export const site = Plus_Jakarta_Sans({ subsets: ["latin", "latin-ext"], variable: "--font-site", display: "swap", weight: ["400", "500", "600", "700", "800"] });
 export const siteDeva = Noto_Sans_Devanagari({ subsets: ["devanagari"], variable: "--font-site-deva", display: "swap", preload: false });
-// Headlines: Bricolage Grotesque, a grotesque with a little warmth and ink-trap character at heavy weights.
-export const siteDisplay = Bricolage_Grotesque({ subsets: ["latin", "latin-ext"], variable: "--font-site-display", display: "swap", weight: ["700", "800"] });
-export const siteFonts = `${site.variable} ${siteDeva.variable} ${siteDisplay.variable}`;
+// Kept as a name for the display face, so the wordmark and headlines read from one variable.
+export const siteDisplay = site;
+export const siteFonts = `${site.variable} ${siteDeva.variable}`;

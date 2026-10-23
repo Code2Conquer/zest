@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
@@ -18,6 +18,8 @@ export function Estimator({ presets, orders: [oMin, oMax], per, ordersLabel }: {
   const [kind, setKind] = useState(presets[0].id);
   const [orders, setOrders] = useState(presets[0].orders);
   const avg = presets.find((p) => p.id === kind)?.avg ?? presets[0].avg;
+  const target = orders * avg * DAYS;
+  const shown = useCountUp(target);
   const choose = (p: Preset) => {
     setKind(p.id);
     setOrders(p.orders);
@@ -26,8 +28,17 @@ export function Estimator({ presets, orders: [oMin, oMax], per, ordersLabel }: {
   return (
     <div>
       <p className="hero-in d1 flex flex-wrap items-baseline gap-x-3">
-        <span className="lp-display text-[56px] leading-none tabular-nums text-[var(--z-turmeric)] sm:text-[80px] xl:text-[96px]" aria-live="polite">
-          {inr(orders * avg * DAYS)}
+        <span className="lp-display relative inline-block text-[56px] leading-none tabular-nums text-[var(--z-turmeric)] sm:text-[80px] xl:text-[96px]" aria-live="polite">
+          {/* The final amount always holds the space, and the counting figure is drawn over it, so the line never reflows. */}
+          <span className="invisible">{inr(target)}</span>
+          {shown != null && <span className="absolute inset-y-0 left-0">{inr(shown)}</span>}
+          {shown == null && (
+            <span className="est-dots absolute inset-y-0 left-0 inline-flex items-center gap-[0.12em]" aria-label="…">
+              <i />
+              <i />
+              <i />
+            </span>
+          )}
         </span>
         <span className="text-[22px] font-medium text-[var(--lp-muted)] sm:text-[28px]">{pick(per)}</span>
       </p>
@@ -57,6 +68,44 @@ export function Estimator({ presets, orders: [oMin, oMax], per, ordersLabel }: {
       </div>
     </div>
   );
+}
+
+/**
+ * The figure as Airbnb shows it: three dots thinking for a moment, then the amount counting up. Later
+ * changes glide from the old amount to the new. Reduced motion shows the amount at once.
+ */
+function useCountUp(target: number): number | null {
+  const [value, setValue] = useState<number | null>(null);
+  const from = useRef<number | null>(null);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      from.current = target;
+      return setValue(target);
+    }
+    const first = from.current == null;
+    const start = from.current ?? 0;
+    let raf = 0;
+    const run = () => {
+      const t0 = performance.now();
+      const dur = first ? 900 : 350;
+      const tick = (now: number) => {
+        const k = Math.min(1, (now - t0) / dur);
+        const eased = 1 - Math.pow(1 - k, 3);
+        const v = Math.round(start + (target - start) * eased);
+        from.current = v;
+        setValue(v);
+        if (k < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+    const wait = first ? setTimeout(run, 1100) : null;
+    if (!first) run();
+    return () => {
+      if (wait) clearTimeout(wait);
+      cancelAnimationFrame(raf);
+    };
+  }, [target]);
+  return value;
 }
 
 function Slider({ label, value, display, min, max, step, onChange }: { label: string; value: number; display: string; min: number; max: number; step: number; onChange: (v: number) => void }) {

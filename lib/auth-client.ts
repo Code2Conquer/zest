@@ -3,11 +3,11 @@
 import { api, refreshAll, useApi } from "./api";
 
 export type Me = {
-  user: { name: string; email: string | null } | null;
+  user: { name: string; email: string | null; phone: string | null } | null;
   role: "owner" | "manager" | "kitchen" | "cashier" | "rider" | null;
   outletId: string | null;
   staffCode: string | null;
-  methods: { google: boolean; dev: boolean };
+  methods: { google: boolean; dev: boolean; phone: boolean };
 };
 
 /** Who is signed in on this browser. */

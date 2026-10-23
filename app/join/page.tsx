@@ -7,7 +7,7 @@ import { Bike, Camera, Check, ChevronLeft, Copy, ExternalLink, Loader2, LocateFi
 import { ChannelTag, Wordmark } from "@/components/bits";
 import { ListingPreview } from "@/components/listing-preview";
 import { MailboxCard } from "@/components/mailbox-card";
-import { SignInCard } from "@/components/sign-in";
+import { PhoneLogin } from "@/components/phone-login";
 import { FoodWall } from "@/components/food-wall";
 import { siteFonts } from "@/components/landing/site-fonts";
 import { api, ApiError, refreshAll } from "@/lib/api";
@@ -76,20 +76,14 @@ function JoinInner() {
   const hi = useHi();
 
   if (me && !me.user) {
-    const here = `/join${params.toString() ? `?${params}` : ""}`;
     return (
-      <div className="pt-2">
-        <Title
-          sub={
-            journey === "new"
-              ? hi ? "फिर बताइए आप क्या बेचते हैं, और मेन्यू की फ़ोटो भेजिए। कुछ ही मिनट में आपका पेज लाइव।" : "Then tell us what you sell and send a photo of your menu. Your page is live in a few minutes."
-              : hi ? "साइन इन कीजिए, फिर अपना Zomato या Swiggy लिंक डालिए। कुछ ही मिनट में आपका ऑर्डर पेज लाइव।" : "Sign in, then paste your Zomato or Swiggy link. Your ordering page is live in a few minutes."
-          }
-        >
-          {hi ? "लॉग इन या साइन अप" : "Log in or sign up"}
-        </Title>
-        <div className="mt-7">
-          <SignInCard returnTo={here} staff={false} />
+      <div>
+        <h1 className="text-center text-[clamp(1.6rem,4vw,2rem)] font-bold tracking-[-0.02em]">{hi ? "लॉग इन या साइन अप" : "Log in or sign up"}</h1>
+        <p className="mx-auto mt-2 max-w-[34ch] text-center text-[15px] text-[#9aa0a6]">
+          {journey === "new" ? (hi ? "अपनी रसोई को कुछ ही मिनट में ऑनलाइन लाइए।" : "Get your kitchen online in a few minutes.") : hi ? "कुछ ही मिनट में अपना ऑर्डर पेज बनाइए।" : "Create your ordering page in a few minutes."}
+        </p>
+        <div className="mx-auto mt-7 max-w-[420px]">
+          <PhoneLogin onDone={() => window.location.reload()} />
         </div>
       </div>
     );
@@ -104,7 +98,7 @@ function JoinInner() {
   const mine = outlet && !outlet.isDemo ? outlet : null;
   const initial: Details = {
     ownerName: mine?.ownerName ?? "",
-    ownerPhone: mine?.ownerPhone ?? "",
+    ownerPhone: mine?.ownerPhone ?? me.user?.phone?.replace(/^\+91/, "") ?? "",
     name: mine?.name === "My restaurant" ? "" : (mine?.name ?? ""),
     area: mine?.area ?? "",
     city: mine?.city ?? "",

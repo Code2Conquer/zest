@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Menu as MenuIcon, MessageSquareText, Sparkles, X } from "lucide-react";
 import { useApi } from "@/lib/api";
 import { signOutHere, useMe } from "@/lib/auth-client";
-import { NAV_GROUPS, navItem, type NavItem } from "@/lib/nav";
+import { isHomeKitchen, navGroupsFor, navItem, type NavItem } from "@/lib/nav";
 import { useApp, useOutlet } from "@/lib/state";
 import { Copilot } from "./copilot";
 import { LangToggle, Wordmark } from "./bits";
@@ -40,7 +40,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (screenOnly && path !== "/app/orders") router.replace("/app/orders");
   }, [screenOnly, path, router]);
-  const groups = screenOnly ? NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => i.href === "/app/orders") })).filter((g) => g.items.length) : NAV_GROUPS;
+  const home = isHomeKitchen(outlet);
+  const base = navGroupsFor(home);
+  const groups = screenOnly ? base.map((g) => ({ ...g, items: g.items.filter((i) => i.href === "/app/orders") })).filter((g) => g.items.length) : base;
   // Drafts waiting for the owner's OK, shown on Today.
   const { data: pending } = useApi<{ id: string }[]>(me && !screenOnly ? "/api/approvals?status=pending" : null);
   const waiting = pending?.length ?? 0;
@@ -91,7 +93,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           {me?.user && (
             <div className="text-sm">
               <p className="truncate text-[#eef2ec]/80">
-                {me.user.name || me.user.email}
+                {me.user.name || me.user.email || me.user.phone}
                 {me.role && <span className="text-[#eef2ec]/50"> · {pick(ROLE_NAME[me.role])}</span>}
               </p>
               <button type="button" onClick={() => void signOutHere()} className="text-[#eef2ec]/60 underline underline-offset-2 hover:text-[#eef2ec]">
@@ -199,7 +201,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
       {/* Bottom tabs, mobile */}
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 grid h-[72px] grid-cols-5 border-t border-line bg-surface lg:hidden">
-        {MOBILE_TABS.map((tab) => {
+        {(home ? (["/app", "/app/orders", "copilot", "/app/menu", "more"] as const) : MOBILE_TABS).map((tab) => {
           if (tab === "copilot") {
             return (
               <button key={tab} type="button" onClick={() => setCopilotOpen(true)} className="flex flex-col items-center justify-center gap-1">

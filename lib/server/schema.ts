@@ -25,6 +25,14 @@ export const users = sqliteTable("users", {
   createdAt: text("created_at").notNull().$defaultFn(now),
 });
 
+/** A one-time sign-in code per mobile number (hashed), for sign-in by phone. */
+export const otpCodes = sqliteTable("otp_codes", {
+  phone: text("phone").primaryKey(),
+  codeHash: text("code_hash").notNull(),
+  expiresAt: text("expires_at").notNull(),
+  attempts: integer("attempts").notNull().default(0),
+});
+
 /** A person's role at a brand, for all its outlets (outletIds null) or some. */
 export const memberships = sqliteTable("memberships", {
   id: text("id").primaryKey().$defaultFn(id),

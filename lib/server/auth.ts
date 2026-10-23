@@ -139,6 +139,18 @@ export async function signIn(identity: { email: string; name: string }): Promise
   return startSession(user, membership, preferred);
 }
 
+/** Signs in a person verified by a code sent to their mobile. Returns null when they have no restaurant yet. */
+export async function signInByPhone(phone: string): Promise<SessionUser | null> {
+  let [user] = await db.select().from(users).where(eq(users.phone, phone));
+  if (!user) [user] = await db.insert(users).values({ phone, name: "" }).returning();
+  const [membership] = await db.select().from(memberships).where(and(eq(memberships.userId, user.id), eq(memberships.active, true)));
+  if (!membership) {
+    await startUserSession(user);
+    return null;
+  }
+  return startSession(user, membership);
+}
+
 /** The session if the person holds one of these roles; 401 without a session, 403 with the wrong role. */
 export function requireRole(session: SessionUser | null, roles: Role[]): SessionUser {
   if (!session) throw new HttpError(401, "Sign in to make changes.");

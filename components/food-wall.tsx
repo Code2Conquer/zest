@@ -1,8 +1,8 @@
 "use client";
 
-// The backdrop for onboarding, after Airbnb's wall of city posters: columns of food photos, offset from
-// each other and drifting slowly up and down, dimmed so the card in front stays the focus. Decorative
-// only; with reduced motion the columns hold still.
+// The backdrop for onboarding, after Airbnb's wall of city posters: a still grid of food photos in
+// columns offset from each other, dimmed so the card in front stays the focus. It never moves, so
+// nothing shifts behind the form while someone types. Decorative only.
 
 const PHOTOS = [
   "/photos/in/thali.webp",
@@ -33,9 +33,9 @@ export function FoodWall() {
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-0 overflow-hidden">
       <div className="absolute inset-x-[-6%] top-[-12%] flex justify-center gap-4 sm:gap-6">
         {cols.map((col, c) => (
-          <div key={c} className={`fw-col flex w-[150px] shrink-0 flex-col gap-4 sm:w-[210px] sm:gap-6 ${c % 2 ? "fw-up" : "fw-down"}`} style={{ marginTop: `${(c % 3) * 70 - 40}px`, animationDuration: `${38 + c * 4}s` }}>
-            {[...col, ...col].map((src, r) => (
-              <img key={r} src={src} alt="" loading={r < 4 ? "eager" : "lazy"} className="aspect-[3/4] w-full rounded-[22px] object-cover" />
+          <div key={c} className="flex w-[150px] shrink-0 flex-col gap-4 sm:w-[210px] sm:gap-6" style={{ marginTop: `${c % 2 ? -110 : 0}px` }}>
+            {col.map((src, r) => (
+              <img key={r} src={src} alt="" loading="eager" className="aspect-[3/4] w-full rounded-[22px] object-cover" />
             ))}
           </div>
         ))}

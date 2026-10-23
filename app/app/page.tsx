@@ -8,6 +8,7 @@ import { ChannelTag } from "@/components/bits";
 import { ChannelSplit, rupees } from "@/components/cards";
 import { Dish } from "@/components/dishes";
 import { useApi } from "@/lib/api";
+import { isHomeKitchen } from "@/lib/nav";
 import { METHODS, type Channel } from "@/lib/platforms";
 import { useApp, useOutlet } from "@/lib/state";
 import type { ApprovalDTO, TodayDTO } from "@/lib/types";
@@ -17,7 +18,8 @@ export default function Today() {
   const { outlet, live, connections } = useOutlet();
   const { data, error, loading } = useApi<TodayDTO>(outlet ? `/api/today?o=${outlet.id}` : null);
   const hi = lang === "hi";
-  const channels: Channel[] = [...live, "dine"];
+  const home = isHomeKitchen(outlet);
+  const channels: Channel[] = home ? ["web", "whatsapp", "phone"] : [...live, "dine"];
   // Tickets decided this visit stay on screen with their result instead of vanishing.
   const [decided, setDecided] = useState<ApprovalDTO[]>([]);
   const pendingIds = new Set(data?.approvals.map((a) => a.id));
@@ -31,7 +33,21 @@ export default function Today() {
   return (
     <Page eyebrow={dateLabel} title={`${greeting}${outlet?.ownerName ? `, ${outlet.ownerName}` : ""}`}>
 
-      {outlet && !outlet.isDemo && connections.length === 0 && !outlet.email && (
+      {home && outlet?.slug && (
+        <section className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl bg-turmeric-soft p-5">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">{hi ? "आपका पेज लाइव है" : "Your page is live"}</p>
+            <p className="mt-0.5 truncate text-ink-2">{typeof window !== "undefined" ? `${window.location.host}/r/${outlet.slug}` : `/r/${outlet.slug}`}</p>
+          </div>
+          <a href={`/r/${outlet.slug}`} target="_blank" rel="noreferrer" className="rounded-full bg-ink px-4 py-2 text-sm font-medium text-paper">
+            {hi ? "पेज खोलें" : "Open page"}
+          </a>
+          <a href={`https://wa.me/?text=${encodeURIComponent(`${hi ? "अब हमसे ऑनलाइन ऑर्डर कीजिए" : "Order from us online"}: ${typeof window !== "undefined" ? window.location.origin : ""}/r/${outlet.slug}`)}`} target="_blank" rel="noreferrer" className="rounded-full px-4 py-2 text-sm font-medium shadow-[inset_0_0_0_1.5px_var(--ink-2)]">
+            {hi ? "WhatsApp पर भेजें" : "Share on WhatsApp"}
+          </a>
+        </section>
+      )}
+      {outlet && !outlet.isDemo && !home && connections.length === 0 && !outlet.email && (
         <Link href="/connect" className="mt-6 block rounded-2xl bg-turmeric-soft p-5 hover:shadow-[0_0_0_1px_var(--turmeric)]">
           <p className="font-medium">{hi ? "अभी कुछ जुड़ा नहीं है" : "Nothing is connected yet"}</p>
           <p className="mt-1 text-ink-2">{hi ? "ईमेल या कोई प्लेटफ़ॉर्म जोड़ें, और आपकी बिक्री, पेआउट और रिव्यू यहाँ दिखने लगेंगे।" : "Connect your email or a platform and your sales, payouts and reviews will start showing here."}</p>
@@ -52,6 +68,22 @@ export default function Today() {
         {data && <ChannelSplit sales={data.sales} channels={channels} />}
       </section>
 
+      {home ? (
+        <section className="mt-4 grid gap-4 sm:grid-cols-3">
+          <Link href="/app/orders" className="rounded-2xl bg-surface p-5 shadow-[0_0_0_1px_var(--line)] hover:shadow-[0_0_0_1px_var(--ink-2)]">
+            <h2 className="text-ink-2">{hi ? "आज के ऑर्डर" : "Today's orders"}</h2>
+            <p className="mt-1 text-sm text-muted">{hi ? "पेज और WhatsApp से आए ऑर्डर, यहीं मंज़ूर कीजिए" : "From your page and WhatsApp; accept them here"}</p>
+          </Link>
+          <Link href="/app/menu" className="rounded-2xl bg-surface p-5 shadow-[0_0_0_1px_var(--line)] hover:shadow-[0_0_0_1px_var(--ink-2)]">
+            <h2 className="text-ink-2">{hi ? "आज का मेन्यू" : "Today's menu"}</h2>
+            <p className="mt-1 text-sm text-muted">{hi ? "जो बना है वह चालू, जो ख़त्म हुआ वह बंद" : "Switch on what's cooking, off what's finished"}</p>
+          </Link>
+          <Link href="/app/customers" className="rounded-2xl bg-surface p-5 shadow-[0_0_0_1px_var(--line)] hover:shadow-[0_0_0_1px_var(--ink-2)]">
+            <h2 className="text-ink-2">{hi ? "आपके ग्राहक" : "Your customers"}</h2>
+            <p className="mt-1 text-sm text-muted">{hi ? "पुराने ग्राहक और उनकी पसंद" : "Your regulars and what they like"}</p>
+          </Link>
+        </section>
+      ) : (
       <section className="mt-4 grid gap-4 sm:grid-cols-3">
         <Link href="/app/money" className="rounded-2xl bg-surface p-5 shadow-[0_0_0_1px_var(--line)] hover:shadow-[0_0_0_1px_var(--ink-2)]">
           <h2 className="text-ink-2">{t("today.payout")}</h2>
@@ -99,7 +131,7 @@ export default function Today() {
           <p className="mt-1 text-sm text-muted">{hi ? "बिना जवाब वाले 1–2 स्टार रिव्यू" : "1 and 2 star reviews without a reply"}</p>
         </Link>
       </section>
-
+      )}
       {data && data.topDishes.length > 0 && (
         <section className="mt-10">
           <div className="flex items-baseline justify-between">
@@ -137,7 +169,7 @@ export default function Today() {
         </div>
       </section>
 
-      <section className="mt-10">
+      {!home && <section className="mt-10">
         <h2 className="text-sm text-muted">{t("today.sources")}</h2>
         <ul className="mt-2 flex flex-wrap gap-x-6 gap-y-2 text-sm text-ink-2">
           {outlet?.email && <li>{outlet.email === "gmail" ? "Gmail" : "Outlook"}</li>}
@@ -164,7 +196,7 @@ export default function Today() {
             );
           })}
         </ul>
-      </section>
+      </section>}
     </Page>
   );
 }

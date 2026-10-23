@@ -34,6 +34,7 @@
   color: var(--lp-ink);
   font-family: var(--font-site), var(--font-site-deva), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.006em;
 }
 
 /* Dark: Ink becomes the page, Turmeric stays as it is. */
@@ -300,6 +301,12 @@
 @keyframes za-in { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: none; } }
 .za-pulse { animation: zm-breathe 1.2s ease-out infinite; }
 
+/* The estimator thinking: three dots bouncing in turn, then the amount counts up. */
+.est-dots i { display: block; width: 0.16em; height: 0.16em; border-radius: 999px; background: currentColor; animation: est-dot 900ms ease-in-out infinite; }
+.est-dots i:nth-child(2) { animation-delay: 150ms; }
+.est-dots i:nth-child(3) { animation-delay: 300ms; }
+@keyframes est-dot { 0%, 80%, 100% { transform: translateY(0); opacity: 0.35; } 40% { transform: translateY(-0.12em); opacity: 1; } }
+
 .lp details > summary {
   list-style: none;
   cursor: pointer;
@@ -346,9 +353,9 @@
 
 /* Display type for the website: Inter, bold and tightly set. */
 .lp-display {
-  font-family: var(--font-site-display), var(--font-site), var(--font-site-deva), system-ui, sans-serif;
+  font-family: var(--font-site), var(--font-site-deva), system-ui, sans-serif;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
 }
 
 /* The seller's handwritten menu note: ballpoint on a torn notebook page. */

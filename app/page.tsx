@@ -47,7 +47,7 @@ export default function Home() {
       <section aria-labelledby="hero-h" className="lp-wrap flex items-center pb-14 pt-6 lg:min-h-[min(820px,calc(100svh-76px))] lg:pb-12 lg:pt-0">
         <div className="grid w-full grid-cols-[minmax(0,1fr)] items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
           <div>
-            <h1 id="hero-h" className="lp-display hero-in text-[36px] leading-[1.04] [text-wrap:balance] sm:text-[52px] xl:text-[60px]">
+            <h1 id="hero-h" className="lp-display hero-in min-h-[2.08em] text-[36px] leading-[1.04] [text-wrap:balance] sm:min-h-0 sm:text-[52px] xl:text-[60px]">
               {pick({ en: "Your kitchen could earn", hi: "आपकी रसोई कमा सकती है" })}
             </h1>
             <div className="mt-3">

@@ -265,16 +265,24 @@ The +97.6% figure is shown without its source line on the page (source: Kim & Le
 
 ## 12. Brand and imagery (October 2026)
 
-- **Logo:** the word only: "zest" in lowercase, Bricolage Grotesque extra-bold, tight, in turmeric. No mark, no dot, no frame; the favicon is a turmeric "z" with no background. Zest the assistant is one question in an ink pill with a turmeric edge and a shimmering dot grid, ending in a turmeric button that plays a Lottie (public/lottie/zest-sparkle.json, a pulsing cross of dots); the question changes every few seconds and tapping it asks it. Inside, suggested questions are raised, turmeric-edged chips with a light sweeping across. On a phone the pill appears after the hero; it steps aside for the closing call to action.
-- **Type:** headlines in Bricolage Grotesque (800), body in Inter, Hindi in Noto Sans Devanagari. One text scale on the website: 14 · 16 · 18 · 22 · 28, plus the display sizes.
+- **Logo:** the word only: "zest" in lowercase, Plus Jakarta Sans extra-bold, tight, in turmeric. No mark, no dot, no frame; the favicon is a turmeric "z" with no background. Zest the assistant is one question in an ink pill with a turmeric edge and a shimmering dot grid, ending in a turmeric button that plays a Lottie (public/lottie/zest-sparkle.json, a pulsing cross of dots); the question changes every few seconds and tapping it asks it. Inside, suggested questions are raised, turmeric-edged chips with a light sweeping across. On a phone the pill appears after the hero; it steps aside for the closing call to action.
+- **Type:** one family, Plus Jakarta Sans (the closest open match to Airbnb Cereal: round, friendly, clear at small sizes), 800 for headlines and 400–600 for body; Hindi in Noto Sans Devanagari. One text scale on the website: 14 · 16 · 18 · 22 · 28, plus the display sizes.
 - **Photography:** Indian people and places only (public/photos/in, Unsplash License, sources in credits.json): a home kitchen tawa (home hero), a cook at a flaming wok (restaurant hero), a Zomato rider in Indian traffic ("you're covered"), a thali for pure-veg ordering pages. No European streets or kitchens.
 
 ## 13. Home-kitchen-only homepage and an immersive start (October 2026)
 
 - The homepage estimator is for home kitchens only: one slider (orders a day) at a fixed ₹150 average order × 26 days. /restaurants keeps its kinds, each with a fixed average order.
-- "Get started" opens /join on a wall of food photos drifting in columns behind a centered card (after Airbnb's sign-up): "Log in or sign up", then "What do you sell from?" (🍲 Home kitchen · 🍱 Tiffin service · 🛺 Street stall), then the kitchen's details (labels follow the choice; it's saved as the page's cuisine line), menu, and the live page.
+- "Get started" opens /join on a still wall of food photos in offset columns behind a centered card (it never moves, so nothing shifts while someone types) (after Airbnb's sign-up): "Log in or sign up", then "What do you sell from?" (🍲 Home kitchen · 🍱 Tiffin service · 🛺 Street stall), then the kitchen's details (labels follow the choice; it's saved as the page's cuisine line), menu, and the live page.
 
 ## 14. Headlines (October 2026, after Airbnb and Zomato's voice: short, warm, a little playful)
 
 Home: Your kitchen could earn ₹X · You cook. We handle the rest. (Live in minutes · Your money, your bank · Delivery? Sorted.) · From one building to the whole city. · Cook with peace of mind. · Looks good enough to order. (One photo in. A full menu out. · Found on Google. Shared on WhatsApp. · Orders you can hear) · Your first order is a tap away.
 Restaurants: Your restaurant could earn ₹X more · Your regulars. Your page. Your orders. (One link, done · Every rupee, yours · Zomato and Swiggy stay) · Orders slip through. Not anymore. · From your page to their plate. · Three tablets. One rush. No missed orders. · Yesterday's sales, on WhatsApp by 7:30. · Keep Zomato and Swiggy. Add your own.
+
+## 15. Mobile login first, two dashboards, one colour (October 2026)
+
+- **Sign-in is a mobile number and a 6-digit code, and it comes first** (after Airbnb): /join asks for the number before anything else, then the kind of kitchen and its details. Codes go out on WhatsApp (an authentication template; set WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_OTP_TEMPLATE). Codes last 10 minutes, allow 5 tries, and are rate-limited by number and by IP.
+- **Restaurants' landing says "restaurant" plainly**, with its own estimator at a fixed ₹450 average order.
+- **The estimate thinks before it answers:** three dots for about a second, then the amount counts up; the final figure holds its space throughout so nothing on the page moves.
+- **Two dashboards.** A home kitchen (a new page, nothing on Zomato or Swiggy) sees its live page, today's orders, today's menu and its customers, with a short menu (Today, Orders, Menu & stock, Customers, Settings). A restaurant on Zomato/Swiggy keeps the full view: payouts, ratings, complaints, sources.
+- **Turmeric stays** (#E9A31A). It is ours and not Zomato's red or Swiggy's orange, reads as Indian kitchens, and holds strong contrast with dark ink on the dark site.

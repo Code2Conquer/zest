@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS customers (
   spent INTEGER NOT NULL DEFAULT 0, first_order_at TEXT NOT NULL, last_order_at TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS customers_brand_phone ON customers (brand_id, phone);
+CREATE TABLE IF NOT EXISTS otp_codes (phone TEXT PRIMARY KEY, code_hash TEXT NOT NULL, expires_at TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS rate_limits (key TEXT NOT NULL, window_start INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (key, window_start));
 CREATE TABLE IF NOT EXISTS order_lines (
   id TEXT PRIMARY KEY, order_id TEXT NOT NULL, item_id TEXT, name TEXT NOT NULL, qty INTEGER NOT NULL,
