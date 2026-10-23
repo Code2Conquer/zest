@@ -86,13 +86,16 @@ Fields: Name · Business name · Phone (WhatsApp) · City · Type (Home kitchen 
 One message, top to bottom: **get online orders, and deliver them yourself or with Zomato.** Everything on the page supports that line; anything that doesn't (the agents, search and AI answers, Instagram, regulars) stays out of the homepage until it is live and proven. Target: under 600 words, about six phone screens.
 
 ### Header (both pages)
-Zest · English/हिंदी · **Start free** (desktop only; phones use the hero button and the sticky bar). No Log in. No section links, no theme switch, no menu button: the audience switch under the header moves between the two pages.
+Zest · **Home kitchens | Restaurants** tabs · हिंदी (or English) · **Start free** (desktop only; phones use the hero button and the sticky bar). No Log in. The tabs replace the separate audience switch.
+
+### First screen (both pages)
+One pitch, one action, one object. Headline in two lines at every width; one sentence; one button (homepage) or the paste-your-link box (restaurants) with a quiet sample link; one phone showing the seller's page with real dish photos and one order that slides over its foot once. The words rise, the phone rises, the order slides in; nothing loops. The Soundbox and delivery choices live in their own sections. No section links, no theme switch, no menu button: the audience switch under the header moves between the two pages.
 
 ### Audience switch (above the headline, on both pages)
 A two-part switch: **Home kitchen, tiffin or stall** | **Restaurant on Zomato or Swiggy** (phone: *Home chef or stall* | *Restaurant*). The current page is filled in Ink. This replaces the old two-card split under the hero.
 
 ### Hero
-- **Headline:** Get online orders. Deliver them yourself, or with Zomato.
+- **Headline:** Online orders. Zomato delivers.
 - **Subhead:** Your own ordering page for your home kitchen, tiffin service or stall. Customers order on WhatsApp and pay you by UPI.
 - **Actions:** [Get started free] (live sign-up, `/join?journey=new`) · [See a sample page] (`/r/meenas-kitchen`). Both actions work today.
 - **Ticks:** Free to start · UPI straight to your bank · No app to learn

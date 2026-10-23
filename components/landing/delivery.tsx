@@ -38,28 +38,28 @@ export function DeliveryMap() {
 
   return (
     <div ref={box} className="grid items-center gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-      <div data-ui className="rounded-[24px] bg-[var(--lp-paper)] p-3 outline outline-1 -outline-offset-1 outline-[var(--lp-line)]">
-        <svg viewBox="0 0 560 260" className="w-full" role="img" aria-label={pick({ en: "A neighbourhood map: the kitchen and three guests at different distances", hi: "मोहल्ले का नक्शा: रसोई और अलग-अलग दूरी पर तीन ग्राहक" })}>
+      <div data-ui className="overflow-hidden rounded-[24px]">
+        <svg viewBox="0 0 560 260" className="block w-full" role="img" aria-label={pick({ en: "A neighbourhood map: the kitchen and three guests at different distances", hi: "मोहल्ले का नक्शा: रसोई और अलग-अलग दूरी पर तीन ग्राहक" })}>
           {/* the neighbourhood, drawn like a phone map: land, parks, roads with names */}
-          <rect width="560" height="260" rx="14" fill="#efe9dc" />
-          <rect x="285" y="150" width="100" height="58" rx="10" fill="#cfe3c2" />
-          <text x="335" y="183" textAnchor="middle" fontSize="11" fill="#4c7a3d">Deer Park</text>
-          <rect x="18" y="160" width="70" height="48" rx="10" fill="#cfe3c2" />
+          <rect width="560" height="260" rx="14" fill="#22262b" />
+          <rect x="285" y="150" width="100" height="58" rx="10" fill="#23382c" />
+          <text x="335" y="183" textAnchor="middle" fontSize="11" fill="#5fb07e">Deer Park</text>
+          <rect x="18" y="160" width="70" height="48" rx="10" fill="#23382c" />
           {[40, 130, 220].map((y) => (
-            <rect key={y} x="0" y={y} width="560" height="11" fill="#fff" stroke="#e0d8c8" />
+            <rect key={y} x="0" y={y} width="560" height="11" fill="#2e3338" />
           ))}
           {[100, 260, 400].map((x) => (
-            <rect key={x} x={x} y="0" width="11" height="260" fill="#fff" stroke="#e0d8c8" />
+            <rect key={x} x={x} y="0" width="11" height="260" fill="#2e3338" />
           ))}
-          <text x="470" y="126" textAnchor="middle" fontSize="10.5" fill="#8a8172">Aurobindo Marg</text>
-          <text x="180" y="36" textAnchor="middle" fontSize="10.5" fill="#8a8172">Green Park Main</text>
-          <text x="500" y="250" textAnchor="middle" fontSize="11" fontWeight="600" fill="#8a8172">HAUZ KHAS</text>
+          <text x="470" y="126" textAnchor="middle" fontSize="10.5" fill="#7d838a">Aurobindo Marg</text>
+          <text x="180" y="36" textAnchor="middle" fontSize="10.5" fill="#7d838a">Green Park Main</text>
+          <text x="500" y="250" textAnchor="middle" fontSize="11" fontWeight="600" fill="#7d838a">Hauz Khas</text>
           {/* routes, drawn as each choice is made */}
           {CASES.map((c, k) => (
             <path key={c.id} d={`M ${HOME.x} ${HOME.y} L ${c.x} ${HOME.y} L ${c.x} ${c.y}`} fill="none" stroke={k <= lit ? "var(--z-turmeric)" : "transparent"} strokeWidth="4" strokeDasharray="7 7" strokeLinecap="round" />
           ))}
           {/* the kitchen */}
-          <rect x={HOME.x - 16} y={HOME.y - 16} width="32" height="32" rx="8" fill="#1c1f23" />
+          <rect x={HOME.x - 16} y={HOME.y - 16} width="32" height="32" rx="8" fill="#fafaf6" />
           <circle cx={HOME.x} cy={HOME.y} r="6" fill="var(--z-turmeric)" />
           <text x={HOME.x} y={HOME.y - 24} textAnchor="middle" fontSize="13" fontWeight="600" fill="var(--lp-ink)">
             Meena
@@ -67,7 +67,7 @@ export function DeliveryMap() {
           {/* the guests */}
           {CASES.map((c, k) => (
             <g key={c.id}>
-              <circle cx={c.x} cy={c.y} r="11" fill={k <= lit ? "var(--z-leaf)" : "var(--lp-line)"} className="transition-colors duration-500" />
+              <circle cx={c.x} cy={c.y} r="11" fill={k <= lit ? "var(--z-leaf)" : "#3a3f45"} className="transition-colors duration-500" />
               <circle cx={c.x} cy={c.y} r="4" fill="#fff" />
             </g>
           ))}
@@ -75,7 +75,7 @@ export function DeliveryMap() {
       </div>
       <ol className="space-y-3">
         {CASES.map((c, k) => (
-          <li key={c.id} className={`rounded-2xl p-4 transition-colors duration-500 ${k <= lit ? "bg-[var(--lp-paper)] outline outline-2 -outline-offset-2 outline-[var(--z-turmeric)]" : "bg-[var(--lp-paper)] outline outline-1 -outline-offset-1 outline-[var(--lp-line)]"}`}>
+          <li key={c.id} className={`rounded-2xl bg-[var(--lp-paper)] p-4 transition-shadow duration-500 ${k <= lit ? "shadow-[inset_0_0_0_2px_var(--z-turmeric)]" : ""}`}>{/* the ring marks the chosen way: a state, not decoration. taste-skill-ignore */}
             <p className="flex items-center justify-between gap-3 text-[16px]">
               <span className="font-semibold">{pick(c.who)}</span>
               <span className={`rounded-full px-2.5 py-0.5 text-[13px] font-semibold ${k <= lit ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : "bg-[var(--lp-sunken)]"}`}>{pick(c.how)}</span>

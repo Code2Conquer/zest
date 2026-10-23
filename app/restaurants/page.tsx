@@ -3,10 +3,10 @@
 import "../landing.css";
 import { useState } from "react";
 import { BellRing, Check, Hand, Mail, PhoneCall, Plus, Printer, X } from "lucide-react";
-import { AudienceSwitch } from "@/components/landing/audience-switch";
+import { HeroPhone } from "@/components/landing/hero-phone";
 import { DirectOrderJourney } from "@/components/landing/journey";
 import { LostOrders } from "@/components/landing/lost-orders";
-import { MorningSummary, RestaurantStage, RestaurantVoice } from "@/components/landing/restaurants";
+import { MorningSummary, RestaurantVoice } from "@/components/landing/restaurants";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { siteFonts } from "@/components/landing/site-fonts";
 import { SiteHeader } from "@/components/landing/site-header";
@@ -47,7 +47,7 @@ const FAQ: { q: Bi; a: Bi }[] = [
   { q: { en: "What does it cost?", hi: "इसका ख़र्च कितना है?" }, a: { en: "Your page is free to start.", hi: "आपका पेज शुरू करना मुफ़्त है।" } },
 ];
 
-const H2 = "lp-display text-[clamp(30px,3.4vw,48px)] leading-[1.04] [text-wrap:balance]";
+const H2 = "lp-display text-[clamp(30px,3.6vw,52px)] leading-[1.04] [text-wrap:balance]";
 const LEAD = "max-w-[36em] text-[17px] leading-relaxed text-[var(--lp-muted)] sm:text-[18px]";
 
 /** A Zomato or Swiggy link goes to sign-up with the listing filled in. */
@@ -96,60 +96,74 @@ export default function Restaurants() {
 
   return (
     <div className={`lp min-h-dvh overflow-x-clip ${siteFonts}`}>
-      <SiteHeader start={{ href: START, label: { en: "Get started free", hi: "मुफ़्त शुरू करें" } }} />
+      <SiteHeader current="restaurants" start={{ href: START, label: { en: "Get started free", hi: "मुफ़्त शुरू करें" } }} />
 
-      {/* Hero: keep Zomato and Swiggy, add the orders they never see */}
-      <section aria-labelledby="hero-h" className="lp-wrap pb-6 pt-2 sm:pb-12 lg:pb-16 lg:pt-4">
-        <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
+      {/* First screen: one pitch, one action, one phone */}
+      <section aria-labelledby="hero-h" className="lp-wrap flex items-center pb-14 pt-6 lg:min-h-[calc(100svh-76px)] lg:pb-16 lg:pt-0">
+        <div className="grid w-full grid-cols-[minmax(0,1fr)] items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
           <div>
-            <AudienceSwitch current="restaurants" />
-            <h1 id="hero-h" className="lp-display mt-6 text-[40px] leading-[1.02] [text-wrap:balance] sm:mt-8 sm:text-[60px] xl:text-[72px]">
+            <h1 id="hero-h" className="lp-display hero-in text-[36px] leading-[1.03] [text-wrap:balance] sm:text-[60px] xl:text-[72px]">
               {pick({ en: "Orders Zomato and Swiggy never see.", hi: "वे ऑर्डर जो Zomato और Swiggy तक नहीं पहुँचते।" })}
             </h1>
-            <p className={`mt-5 ${LEAD}`}>
+            <p className={`hero-in d1 mt-6 ${LEAD} sm:text-[19px]`}>
               {pick({
-                en: "Phone, WhatsApp and party orders, taken on your own page, paid by UPI and delivered by Zomato riders. Your Zomato and Swiggy listings stay just as they are.",
-                hi: "फ़ोन, WhatsApp और पार्टी के ऑर्डर, आपके अपने पेज पर, UPI से भुगतान और Zomato राइडर से डिलीवरी। Zomato और Swiggy पर आपकी लिस्टिंग वैसी ही रहती है।",
+                en: "Phone, WhatsApp and party orders on your own page, paid by UPI and delivered by Zomato riders. Your listings stay just as they are.",
+                hi: "फ़ोन, WhatsApp और पार्टी के ऑर्डर आपके अपने पेज पर, UPI से भुगतान और Zomato राइडर से डिलीवरी। आपकी लिस्टिंग वैसी ही रहती है।",
               })}
             </p>
-            <div className="mt-7">
+            <div className="hero-in d2 mt-8">
               <LinkStart id="hero-start" />
+              <p className="mt-4 px-2 text-[15px] text-[var(--lp-muted)]">
+                {pick({ en: "Ready in a minute, with your menu and photos.", hi: "एक मिनट में तैयार, आपके मेन्यू और फ़ोटो के साथ।" })}{" "}
+                <a href="/r/rasoi-27" className="lp-link font-medium text-[var(--lp-ink)]">
+                  {pick({ en: "See a sample", hi: "सैंपल देखिए" })}
+                </a>
+              </p>
             </div>
-            <p className="mt-3 px-2 text-[15px] text-[var(--lp-muted)]">
-              {pick({ en: "Your page is ready in a minute, with your menu and photos.", hi: "एक मिनट में आपका पेज तैयार, आपके मेन्यू और फ़ोटो के साथ।" })}{" "}
-              <a href="/r/rasoi-27" className="lp-link font-medium text-[var(--lp-ink)]">
-                {pick({ en: "See a sample", hi: "सैंपल देखिए" })}
-              </a>
-            </p>
           </div>
-          <RestaurantStage />
+          <HeroPhone
+            name={{ en: "Rasoi 27", hi: "Rasoi 27" }}
+            meta={{ en: "North Indian · Biryani · Indiranagar", hi: "नॉर्थ इंडियन · बिरयानी · इंदिरानगर" }}
+            cover="/photos/hero-sizzler.webp"
+            dishes={[
+              { name: { en: "Chicken biryani", hi: "चिकन बिरयानी" }, price: 349, photo: "/photos/dish-biryani.webp" },
+              { name: { en: "Butter chicken", hi: "बटर चिकन" }, price: 329, photo: "/photos/dish-butter-chicken.webp" },
+              { name: { en: "Tandoori chicken", hi: "तंदूरी चिकन" }, price: 379, photo: "/photos/dish-tandoori.webp" },
+            ]}
+            order={{
+              from: { en: "New order · your page", hi: "नया ऑर्डर · आपका पेज" },
+              items: { en: "Office party: 12 chicken biryani", hi: "ऑफ़िस पार्टी: 12 चिकन बिरयानी" },
+              paid: { en: "Paid ₹4,188 · UPI", hi: "₹4,188 मिले · UPI" },
+              rider: { en: "Zomato rider · 1:40", hi: "Zomato राइडर · 1:40" },
+            }}
+          />
         </div>
       </section>
 
       {/* Why: the orders a restaurant already gets outside Zomato and Swiggy, and loses */}
-      <section id="orders" aria-labelledby="orders-h" className="scroll-mt-4 py-12 lg:py-14">
+      <section id="orders" aria-labelledby="orders-h" className="scroll-mt-4 py-16 lg:py-24">
         <div className="lp-wrap">
           <div className="grid gap-3 lg:grid-cols-2 lg:items-end lg:gap-12">
-            <h2 id="orders-h" className={`max-w-[20ch] ${H2}`}>
+            <h2 id="orders-h" className={`rv max-w-[20ch] ${H2}`}>
               {pick({ en: "The orders you already get, and lose.", hi: "जो ऑर्डर आपको पहले से मिलते हैं, और छूट जाते हैं।" })}
             </h2>
-            <p className={LEAD}>
+            <p className={`rv d1 ${LEAD}`}>
               {pick({ en: "Calls, WhatsApps and party orders never reach Zomato or Swiggy. Today they get lost in the rush.", hi: "कॉल, WhatsApp और पार्टी के ऑर्डर Zomato या Swiggy तक नहीं पहुँचते। आज वे भीड़ में खो जाते हैं।" })}
             </p>
           </div>
-          <div className="mt-8">
+          <div className="rv d2 mt-10">
             <LostOrders />
           </div>
         </div>
       </section>
 
       {/* How a direct order is delivered, played step by step */}
-      <section id="delivery" aria-labelledby="delivery-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-12 lg:py-16">
+      <section id="delivery" aria-labelledby="delivery-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-24">
         <div className="lp-wrap">
-          <h2 id="delivery-h" className={`max-w-[22ch] ${H2}`}>
+          <h2 id="delivery-h" className={`rv max-w-[22ch] ${H2}`}>
             {pick({ en: "How a direct order reaches your customer.", hi: "सीधा ऑर्डर आपके ग्राहक तक कैसे पहुँचता है।" })}
           </h2>
-          <div className="mt-8">
+          <div className="rv d1 mt-10">
             <DirectOrderJourney />
           </div>
         </div>
@@ -158,7 +172,7 @@ export default function Restaurants() {
       {/* Alongside Zomato and Swiggy, never instead */}
       <section aria-labelledby="alongside-h" className="bg-[#15181b] py-12 text-[#f1f1ec] lg:py-16">
         <div className="lp-wrap">
-          <h2 id="alongside-h" className={`max-w-[20ch] ${H2}`}>
+          <h2 id="alongside-h" className={`rv max-w-[20ch] ${H2}`}>
             {pick({ en: "Built to sit alongside Zomato and Swiggy.", hi: "Zomato और Swiggy के साथ-साथ चलने के लिए बना।" })}
           </h2>
           <ul className="mt-8 grid gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4">
@@ -174,10 +188,10 @@ export default function Restaurants() {
       </section>
 
       {/* The Soundbox: the problem in a busy kitchen, and the one box that solves it */}
-      <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-12 lg:py-16">
+      <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-16 lg:py-24">
         <div className="lp-wrap grid items-start gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
           <div>
-            <h2 id="soundbox-h" className={H2}>
+            <h2 id="soundbox-h" className={`rv ${H2}`}>
               {pick({ en: "Three tablets. One rush. No missed orders.", hi: "तीन टैबलेट। एक भीड़। कोई ऑर्डर नहीं छूटता।" })}
             </h2>
             <p className={`mt-4 ${LEAD}`}>
@@ -218,13 +232,13 @@ export default function Restaurants() {
       </section>
 
       {/* Morning summary, played on the owner's phone */}
-      <section id="summary" aria-labelledby="summary-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-12 lg:py-14">
+      <section id="summary" aria-labelledby="summary-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-24">
         <div className="lp-wrap">
           <MorningSummary
             intro={
               <>
                 <h2 id="summary-h" className={H2}>
-                  {pick({ en: "Know your numbers before you open the shutter.", hi: "शटर खुलने से पहले अपना हिसाब जानिए।" })}
+                  {pick({ en: "Your numbers, before the shutter opens.", hi: "शटर खुलने से पहले, आपका हिसाब।" })}
                 </h2>
                 <p className={`mt-4 ${LEAD}`}>{pick({ en: "One WhatsApp at 7:30 every morning, built from your Zomato and Swiggy emails.", hi: "हर सुबह 7:30 बजे एक WhatsApp, आपके Zomato और Swiggy ईमेल से बना।" })}</p>
               </>
@@ -240,9 +254,9 @@ export default function Restaurants() {
       </section>
 
       {/* Questions */}
-      <section id="faq" aria-labelledby="faq-h" className="scroll-mt-4 py-12 lg:py-16">
+      <section id="faq" aria-labelledby="faq-h" className="scroll-mt-4 py-16 lg:py-24">
         <div className="lp-wrap grid gap-8 lg:grid-cols-12 lg:gap-10">
-          <h2 id="faq-h" className={`lg:col-span-4 ${H2}`}>
+          <h2 id="faq-h" className={`rv lg:col-span-4 ${H2}`}>
             {pick({ en: "Questions restaurants ask", hi: "रेस्टोरेंट क्या पूछते हैं" })}
           </h2>
           <div className="grid gap-3 lg:col-span-8">
@@ -263,7 +277,7 @@ export default function Restaurants() {
       <section id="final-start" aria-labelledby="start-h" className="bg-[var(--z-turmeric)] py-14 text-[#1c1f23] lg:py-20">
         <div className="lp-wrap grid items-center gap-7 lg:grid-cols-2 lg:gap-12">
           <h2 id="start-h" className={H2}>
-            {pick({ en: "Keep Zomato and Swiggy. Add your own orders.", hi: "Zomato और Swiggy रखिए। अपने ऑर्डर भी जोड़िए।" })}
+            {pick({ en: "Keep Zomato and Swiggy. Add your own.", hi: "Zomato और Swiggy रखिए। अपने ऑर्डर जोड़िए।" })}
           </h2>
           <LinkStart tone="turmeric" />
         </div>

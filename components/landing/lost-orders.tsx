@@ -56,8 +56,8 @@ export function LostOrders() {
 
   return (
     <div ref={box} className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-6">
-      {/* The four kinds: a list on wide screens, a scrolling row on a phone */}
-      <div role="tablist" aria-label={pick({ en: "Kinds of order", hi: "ऑर्डर के प्रकार" })} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-col lg:gap-1.5 lg:overflow-visible lg:px-0 lg:pb-0">
+      {/* The four kinds: a list on wide screens, a two-by-two grid on a phone */}
+      <div role="tablist" aria-label={pick({ en: "Kinds of order", hi: "ऑर्डर के प्रकार" })} className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:gap-1.5">
         {KINDS.map((x, i) => {
           const on = i === k;
           return (
@@ -67,14 +67,13 @@ export function LostOrders() {
               role="tab"
               aria-selected={on}
               onClick={() => choose(i)}
-              className={`flex shrink-0 items-center gap-3 rounded-2xl px-4 py-3 text-left transition-colors lg:py-4 ${on ? "bg-[var(--lp-paper)]" : "hover:bg-[var(--lp-paper)]/60"}`}
-              style={on ? { boxShadow: "inset 3px 0 0 var(--z-turmeric)" } : undefined}
+              className={`relative flex items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors sm:px-4 lg:py-4 ${on ? "bg-[var(--lp-paper)] before:absolute before:inset-y-3 before:left-0 before:w-[3px] before:rounded-full before:bg-[var(--z-turmeric)]" : "hover:bg-[var(--lp-paper)]/60"}`}
             >
-              <span className={`grid size-10 shrink-0 place-items-center rounded-full transition-colors ${on ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : "bg-[var(--lp-sunken)] text-[var(--lp-muted)]"}`}>
+              <span className={`hidden size-10 shrink-0 place-items-center rounded-full transition-colors sm:grid ${on ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : "bg-[var(--lp-sunken)] text-[var(--lp-muted)]"}`}>
                 <x.icon aria-hidden size={18} />
               </span>
               <span className="min-w-0">
-                <span className={`block whitespace-nowrap text-[16px] font-semibold leading-snug ${on ? "" : "text-[var(--lp-muted)]"}`}>{pick(x.title)}</span>
+                <span className={`block text-[15px] font-semibold leading-snug sm:text-[16px] ${on ? "" : "text-[var(--lp-muted)]"}`}>{pick(x.title)}</span>
                 <span className="hidden text-[14.5px] leading-snug text-[var(--lp-muted)] lg:block">{pick(x.line)}</span>
               </span>
             </button>

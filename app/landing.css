@@ -202,6 +202,30 @@
 @keyframes jr-route { to { stroke-dashoffset: 0; } }
 .jr-stage { width: 0; animation: jr-fill 500ms ease-out forwards; }
 
+/* The first screen, once, on load: the words rise in order, the phone rises, then the order slides in
+   and its dot pings. Nothing loops and nothing changes size. */
+.hero-in { animation: hero-in 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.hero-in.d1 { animation-delay: 90ms; }
+.hero-in.d2 { animation-delay: 180ms; }
+.hero-rise { animation: hero-in 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 150ms both; }
+.hero-note { animation: hero-note 650ms cubic-bezier(0.2, 0.8, 0.3, 1.15) 1000ms both; }
+.hero-ping { animation: hero-ping 1.6s cubic-bezier(0, 0, 0.2, 1) 1.6s 3; }
+@keyframes hero-in { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@keyframes hero-note { from { opacity: 0; transform: translate(-14px, 18px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes hero-ping { 75%, 100% { transform: scale(2.4); opacity: 0; } }
+
+/* Further down, each part of a section rises into place as it scrolls in, driven by the scroll itself:
+   no script, so nothing is hidden before it runs, and browsers without scroll timelines show it still. */
+@supports (animation-timeline: view()) {
+  .rv {
+    animation: hero-in linear both;
+    animation-timeline: view();
+    animation-range: entry 5% entry 45%;
+  }
+  .rv.d1 { animation-range: entry 12% entry 52%; }
+  .rv.d2 { animation-range: entry 19% entry 59%; }
+}
+
 .lp details > summary {
   list-style: none;
   cursor: pointer;
@@ -219,7 +243,12 @@
   .hs-chip,
   .jr-in,
   .jr-pop,
-  .jr-press {
+  .jr-press,
+  .hero-in,
+  .hero-rise,
+  .hero-note,
+  .hero-ping,
+  .rv {
     animation: none !important;
   }
   .jr-route,
