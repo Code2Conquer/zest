@@ -1,0 +1,10 @@
+[
+ {
+  "files": [
+   "pot_of_food_3d.png",
+   "fork_and_knife_with_plate_3d.png"
+  ],
+  "source": "https://github.com/microsoft/fluentui-emoji",
+  "license": "MIT"
+ }
+]
