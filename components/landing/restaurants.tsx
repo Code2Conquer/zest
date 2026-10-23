@@ -137,7 +137,7 @@ export function MorningSummary({ intro, cta }: { intro: React.ReactNode; cta: Re
           </div>
           <div className="flex items-center gap-2.5 border-b border-[#e5e5e5] bg-[#f6f6f6] px-3 py-2">{/* taste-skill-ignore */}
             <ChevronLeft aria-hidden size={20} className="text-[#007aff]" />
-            <span className="grid size-8 place-items-center rounded-full bg-[#1c1f23] text-[15px] font-extrabold tracking-[-0.05em] text-[#f1f1ec]">z<span className="text-[#e9a31a]">.</span></span>
+            <span className="grid size-8 place-items-center text-[19px] font-extrabold tracking-[-0.06em] text-[#e9a31a]">z</span>
             <div className="min-w-0 flex-1 leading-tight">
               <p className="text-[14px] font-semibold">Zest</p>
               <p className="text-[11px] text-[#54656f]">{beat === -1 ? pick({ en: "typing…", hi: "लिख रहा है…" }) : pick({ en: "online", hi: "ऑनलाइन" })}</p>

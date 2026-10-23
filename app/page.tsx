@@ -83,11 +83,11 @@ export default function Home() {
 
       {/* Three plain promises */}
       <Promises
-        title={{ en: "Selling online, without the hard parts.", hi: "ऑनलाइन बेचना, बिना झंझट।" }}
+        title={{ en: "You cook. We handle the rest.", hi: "आप पकाइए। बाक़ी हम संभालेंगे।" }}
         items={[
-          { icon: Camera, title: { en: "It's easy", hi: "आसान है" }, text: { en: "Send a photo of your menu and your page is ready in minutes. Help is a WhatsApp away.", hi: "मेन्यू की फ़ोटो भेजिए, कुछ ही मिनट में पेज तैयार। मदद बस एक WhatsApp दूर।" } },
-          { icon: IndianRupee, title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. You set your prices, and customers pay you by UPI, straight to your bank.", hi: "शुरुआत मुफ़्त। दाम आप तय करें, ग्राहक UPI से सीधे आपके बैंक में भुगतान करें।" } },
-          { icon: Bike, title: { en: "Delivery is handled", hi: "डिलीवरी की चिंता नहीं" }, text: { en: "Zomato riders pick up from your door and deliver up to 7 km. Or send your own helper.", hi: "Zomato राइडर आपके दरवाज़े से उठाकर 7 किमी तक पहुँचाते हैं। या अपना हेल्पर भेजिए।" } },
+          { icon: Camera, title: { en: "Live in minutes", hi: "मिनटों में लाइव" }, text: { en: "Send a photo of your menu and your page is ready in minutes. Help is a WhatsApp away.", hi: "मेन्यू की फ़ोटो भेजिए, कुछ ही मिनट में पेज तैयार। मदद बस एक WhatsApp दूर।" } },
+          { icon: IndianRupee, title: { en: "Your money, your bank", hi: "आपका पैसा, आपका बैंक" }, text: { en: "Free to start. You set your prices, and customers pay you by UPI, straight to your bank.", hi: "शुरुआत मुफ़्त। दाम आप तय करें, ग्राहक UPI से सीधे आपके बैंक में भुगतान करें।" } },
+          { icon: Bike, title: { en: "Delivery? Sorted.", hi: "डिलीवरी? हो गई।" }, text: { en: "Zomato riders pick up from your door and deliver up to 7 km. Or send your own helper.", hi: "Zomato राइडर आपके दरवाज़े से उठाकर 7 किमी तक पहुँचाते हैं। या अपना हेल्पर भेजिए।" } },
         ]}
       />
 
@@ -97,7 +97,7 @@ export default function Home() {
           <div className="grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end lg:gap-12">
             <div>
               <h2 id="why-h" className={`rv ${H2}`}>
-                {pick({ en: "Cook for more than your WhatsApp group.", hi: "अपने WhatsApp ग्रुप से आगे भी खाना बेचिए।" })}
+                {pick({ en: "From one building to the whole city.", hi: "एक बिल्डिंग से पूरे शहर तक।" })}
               </h2>
               <p className={`rv d1 mt-4 ${LEAD}`}>
                 {pick({ en: "What changes when your kitchen takes orders online. Tap a reason to see it.", hi: "रसोई ऑनलाइन ऑर्डर लेने लगे तो क्या बदलता है। देखने के लिए कोई वजह चुनिए।" })}
@@ -125,7 +125,7 @@ export default function Home() {
             </div>
             <div>
               <h2 id="covered-h" className={`rv max-w-[18ch] ${H2}`}>
-                {pick({ en: "When you sell on Zest, you're covered.", hi: "Zest पर बेचें, तो आप सुरक्षित हैं।" })}
+                {pick({ en: "Cook with peace of mind.", hi: "बेफ़िक्र होकर पकाइए।" })}
               </h2>
               <ul className="rv d1 mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2">
                 {COVERED.map((c) => (
@@ -150,12 +150,12 @@ export default function Home() {
       <section id="looks" aria-labelledby="looks-h" className="scroll-mt-4 py-16 lg:py-20">
         <div className="lp-wrap">
           <h2 id="looks-h" className={`rv ${H2}`}>
-            {pick({ en: "Your kitchen looks great on Zest.", hi: "Zest पर आपकी रसोई शानदार दिखती है।" })}
+            {pick({ en: "Looks good enough to order.", hi: "देखते ही ऑर्डर करने का मन करे।" })}
           </h2>
           <ul className="mt-10 grid gap-5 lg:grid-cols-3">
             <Showcase
               className="rv"
-              title={{ en: "A beautiful page, from one photo", hi: "एक फ़ोटो से, एक सुंदर पेज" }}
+              title={{ en: "One photo in. A full menu out.", hi: "एक फ़ोटो दीजिए, पूरा मेन्यू पाइए।" }}
               text={{ en: "Your dishes, prices and photos, laid out the way customers like to order.", hi: "आपकी डिश, दाम और फ़ोटो, वैसे जैसे ग्राहक ऑर्डर करना पसंद करते हैं।" }}
             >
               <div className="h-[300px] origin-top scale-[0.62]">
@@ -173,14 +173,14 @@ export default function Home() {
             </Showcase>
             <Showcase
               className="rv d1"
-              title={{ en: "Show up where people look", hi: "वहाँ दिखिए जहाँ लोग ढूँढते हैं" }}
+              title={{ en: "Found on Google. Shared on WhatsApp.", hi: "Google पर मिलिए, WhatsApp पर छाइए।" }}
               text={{ en: "On Google, in your society's WhatsApp groups, and as a QR on your counter.", hi: "Google पर, सोसाइटी के WhatsApp ग्रुप में, और काउंटर पर QR के रूप में।" }}
             >
               <ReachZest />
             </Showcase>
             <Showcase
               className="rv d2"
-              title={{ en: "Hear every order", hi: "हर ऑर्डर सुनिए" }}
+              title={{ en: "Orders you can hear", hi: "ऑर्डर जो सुनाई दें" }}
               text={{ en: "The Zest Soundbox speaks each order on your counter. Press the top to accept.", hi: "Zest Soundbox हर ऑर्डर काउंटर पर बोलकर बताता है। मंज़ूर करने के लिए ऊपर दबाइए।" }}
               dark
             >
@@ -195,7 +195,7 @@ export default function Home() {
         <div className="lp-wrap flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 id="start-h" className={H2}>
-              {pick({ en: "Start taking online orders today.", hi: "आज से ऑनलाइन ऑर्डर लेना शुरू कीजिए।" })}
+              {pick({ en: "Your first order is a tap away.", hi: "पहला ऑर्डर, बस एक टैप दूर।" })}
             </h2>
             <p className="mt-3 text-[18px]">{pick({ en: "Free to start. Set up in a few minutes.", hi: "शुरुआत मुफ़्त। कुछ ही मिनट में तैयार।" })}</p>
           </div>

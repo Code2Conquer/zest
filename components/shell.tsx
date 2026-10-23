@@ -52,7 +52,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {/* Left rail, desktop */}
       <nav aria-label="Main" className="hidden w-60 shrink-0 flex-col bg-curry px-3 py-5 text-[#eef2ec] lg:flex">
         <Link href="/" className="px-3">
-          <Wordmark className="text-[#eef2ec]" />
+          <Wordmark className="text-[30px]" />
         </Link>
         <div className="mt-6 px-3">
           <p className="font-medium">{outlet?.name ?? "\u00a0"}</p>
@@ -135,7 +135,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         )}
         <header className="flex items-center justify-between border-b border-line px-4 py-3 lg:hidden">
           <Link href="/">
-            <Wordmark className="text-2xl" />
+            <Wordmark className="text-[28px]" />
           </Link>
           <div className="flex items-center gap-1">
             <LangToggle />

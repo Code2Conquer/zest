@@ -53,7 +53,7 @@ export default function Join() {
       <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-8">
         <Link href="/" aria-label="Back to start" className="inline-flex items-center gap-1 text-[#f1f1ec]/80 hover:text-[#f1f1ec]">
           <ChevronLeft aria-hidden className="size-5" />
-          <Wordmark className="text-[30px] text-[#f1f1ec]" />
+          <Wordmark className="text-[34px]" />
         </Link>
       </header>
       {/* The card, in front of the wall */}

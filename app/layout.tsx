@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Anek_Devanagari, Anek_Latin, IBM_Plex_Mono, Kalam } from "next/font/google";
 import { AppStateProvider } from "@/lib/state";
+import { siteDisplay } from "@/components/landing/site-fonts";
 import "./globals.css";
 
 // One family, two scripts: Anek (Ek Type) draws Latin and Devanagari to the same
@@ -30,7 +31,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" className={`${latin.variable} ${deva.variable} ${kot.variable} ${hand.variable}`} suppressHydrationWarning>
+    <html lang="en" data-theme="dark" className={`${latin.variable} ${deva.variable} ${kot.variable} ${hand.variable} ${siteDisplay.variable}`} suppressHydrationWarning>
       <body>
         <AppStateProvider>{children}</AppStateProvider>
       </body>

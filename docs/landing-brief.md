@@ -265,7 +265,7 @@ The +97.6% figure is shown without its source line on the page (source: Kim & Le
 
 ## 12. Brand and imagery (October 2026)
 
-- **Logo:** the wordmark only: "zest" in lowercase, extra-bold, tight, with one turmeric fleck after the "t". Zest the assistant is one question in an ink pill with a turmeric edge and a shimmering dot grid, ending in a turmeric button that plays a Lottie (public/lottie/zest-sparkle.json, a pulsing cross of dots); the question changes every few seconds and tapping it asks it. Inside, suggested questions are raised, turmeric-edged chips with a light sweeping across. On a phone the pill appears after the hero; it steps aside for the closing call to action.
+- **Logo:** the word only: "zest" in lowercase, Bricolage Grotesque extra-bold, tight, in turmeric. No mark, no dot, no frame; the favicon is a turmeric "z" with no background. Zest the assistant is one question in an ink pill with a turmeric edge and a shimmering dot grid, ending in a turmeric button that plays a Lottie (public/lottie/zest-sparkle.json, a pulsing cross of dots); the question changes every few seconds and tapping it asks it. Inside, suggested questions are raised, turmeric-edged chips with a light sweeping across. On a phone the pill appears after the hero; it steps aside for the closing call to action.
 - **Type:** headlines in Bricolage Grotesque (800), body in Inter, Hindi in Noto Sans Devanagari. One text scale on the website: 14 · 16 · 18 · 22 · 28, plus the display sizes.
 - **Photography:** Indian people and places only (public/photos/in, Unsplash License, sources in credits.json): a home kitchen tawa (home hero), a cook at a flaming wok (restaurant hero), a Zomato rider in Indian traffic ("you're covered"), a thali for pure-veg ordering pages. No European streets or kitchens.
 
@@ -273,3 +273,8 @@ The +97.6% figure is shown without its source line on the page (source: Kim & Le
 
 - The homepage estimator is for home kitchens only: one slider (orders a day) at a fixed ₹150 average order × 26 days. /restaurants keeps its kinds, each with a fixed average order.
 - "Get started" opens /join on a wall of food photos drifting in columns behind a centered card (after Airbnb's sign-up): "Log in or sign up", then "What do you sell from?" (🍲 Home kitchen · 🍱 Tiffin service · 🛺 Street stall), then the kitchen's details (labels follow the choice; it's saved as the page's cuisine line), menu, and the live page.
+
+## 14. Headlines (October 2026, after Airbnb and Zomato's voice: short, warm, a little playful)
+
+Home: Your kitchen could earn ₹X · You cook. We handle the rest. (Live in minutes · Your money, your bank · Delivery? Sorted.) · From one building to the whole city. · Cook with peace of mind. · Looks good enough to order. (One photo in. A full menu out. · Found on Google. Shared on WhatsApp. · Orders you can hear) · Your first order is a tap away.
+Restaurants: Your restaurant could earn ₹X more · Your regulars. Your page. Your orders. (One link, done · Every rupee, yours · Zomato and Swiggy stay) · Orders slip through. Not anymore. · From your page to their plate. · Three tablets. One rush. No missed orders. · Yesterday's sales, on WhatsApp by 7:30. · Keep Zomato and Swiggy. Add your own.

@@ -128,11 +128,11 @@ export default function Restaurants() {
 
       {/* Three plain promises */}
       <Promises
-        title={{ en: "Your own orders, without the hard parts.", hi: "अपने ऑर्डर, बिना झंझट।" }}
+        title={{ en: "Your regulars. Your page. Your orders.", hi: "आपके ग्राहक। आपका पेज। आपके ऑर्डर।" }}
         items={[
-          { icon: Link2, title: { en: "It's easy", hi: "आसान है" }, text: { en: "Paste your Zomato or Swiggy link. Your page, menu and photos are ready in a minute.", hi: "अपना Zomato या Swiggy लिंक डालिए। पेज, मेन्यू और फ़ोटो एक मिनट में तैयार।" } },
-          { icon: IndianRupee, title: { en: "It's worth it", hi: "फ़ायदेमंद है" }, text: { en: "Free to start. Customers pay you by UPI, and they stay your customers.", hi: "शुरुआत मुफ़्त। ग्राहक UPI से आपको भुगतान करते हैं, और आपके ग्राहक बने रहते हैं।" } },
-          { icon: Handshake, title: { en: "It sits alongside", hi: "साथ-साथ चलता है" }, text: { en: "Nothing changes on Zomato or Swiggy. Zomato riders deliver your own orders too.", hi: "Zomato या Swiggy पर कुछ नहीं बदलता। आपके अपने ऑर्डर भी Zomato राइडर पहुँचाते हैं।" } },
+          { icon: Link2, title: { en: "One link, done", hi: "एक लिंक, बस" }, text: { en: "Paste your Zomato or Swiggy link. Your page, menu and photos are ready in a minute.", hi: "अपना Zomato या Swiggy लिंक डालिए। पेज, मेन्यू और फ़ोटो एक मिनट में तैयार।" } },
+          { icon: IndianRupee, title: { en: "Every rupee, yours", hi: "हर रुपया, आपका" }, text: { en: "Free to start. Customers pay you by UPI, and they stay your customers.", hi: "शुरुआत मुफ़्त। ग्राहक UPI से आपको भुगतान करते हैं, और आपके ग्राहक बने रहते हैं।" } },
+          { icon: Handshake, title: { en: "Zomato and Swiggy stay", hi: "Zomato और Swiggy बने रहें" }, text: { en: "Nothing changes on Zomato or Swiggy. Zomato riders deliver your own orders too.", hi: "Zomato या Swiggy पर कुछ नहीं बदलता। आपके अपने ऑर्डर भी Zomato राइडर पहुँचाते हैं।" } },
         ]}
       />
 
@@ -141,7 +141,7 @@ export default function Restaurants() {
         <div className="lp-wrap">
           <div className="grid gap-3 lg:grid-cols-2 lg:items-end lg:gap-12">
             <h2 id="orders-h" className={`rv max-w-[20ch] ${H2}`}>
-              {pick({ en: "The orders you already get, and lose.", hi: "जो ऑर्डर आपको पहले से मिलते हैं, और छूट जाते हैं।" })}
+              {pick({ en: "Orders slip through. Not anymore.", hi: "ऑर्डर छूटते थे। अब नहीं।" })}
             </h2>
             <p className={`rv d1 ${LEAD}`}>
               {pick({ en: "Calls, WhatsApps and party orders never reach Zomato or Swiggy. Today they get lost in the rush.", hi: "कॉल, WhatsApp और पार्टी के ऑर्डर Zomato या Swiggy तक नहीं पहुँचते। आज वे भीड़ में खो जाते हैं।" })}
@@ -157,7 +157,7 @@ export default function Restaurants() {
       <section id="delivery" aria-labelledby="delivery-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-20">
         <div className="lp-wrap">
           <h2 id="delivery-h" className={`rv max-w-[22ch] ${H2}`}>
-            {pick({ en: "How a direct order reaches your customer.", hi: "सीधा ऑर्डर आपके ग्राहक तक कैसे पहुँचता है।" })}
+            {pick({ en: "From your page to their plate.", hi: "आपके पेज से उनकी थाली तक।" })}
           </h2>
           <div className="rv d1 mt-10">
             <DirectOrderJourney />
