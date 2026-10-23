@@ -40,8 +40,13 @@
   "license": "Unsplash License"
  },
  {
-  "file": "restaurant-owner.webp",
-  "source": "https://unsplash.com/photos/woman-smiles-at-the-camera-in-a-coffee-shop-MTNOD93s6VI",
-  "license": "Unsplash License"
+  "file": "restaurant-table.jpg",
+  "source": "Zest team's own photo",
+  "license": "Owned"
+ },
+ {
+  "file": "home-vada-pav.jpg",
+  "source": "Zest team's own photo",
+  "license": "Owned"
  }
 ]

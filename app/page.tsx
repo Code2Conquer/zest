@@ -65,9 +65,9 @@ export default function Home() {
             </div>
           </div>
           <HeroPhoto
-            photo="/photos/in/home-cooking.webp"
-            ratio="4 / 5"
-            alt={pick({ en: "Hands pressing a roti on a tawa in a home kitchen", hi: "घर की रसोई में तवे पर रोटी सेंकते हाथ" })}
+            photo="/photos/in/home-vada-pav.jpg"
+            ratio="736 / 781"
+            alt={pick({ en: "Vada pav with fried green chillies and red chutney on a steel plate", hi: "स्टील की प्लेट पर तली हरी मिर्च और लाल चटनी के साथ वड़ा पाव" })}
             order={{
               from: { en: "New order · Flat 302", hi: "नया ऑर्डर · फ़्लैट 302" },
               items: { en: "2 veg thali, 1 pav bhaji", hi: "2 वेज थाली, 1 पाव भाजी" },
