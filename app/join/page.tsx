@@ -11,7 +11,7 @@ import { PhoneLogin } from "@/components/phone-login";
 import { FoodWall } from "@/components/food-wall";
 import { siteFonts } from "@/components/landing/site-fonts";
 import { api, ApiError, refreshAll } from "@/lib/api";
-import { useMe } from "@/lib/auth-client";
+import { signOutHere, useMe } from "@/lib/auth-client";
 import { cityName, parseListing } from "@/lib/listing";
 import { CHANNEL_NAME, PLATFORMS, type Platform } from "@/lib/platforms";
 import { useApp } from "@/lib/state";
@@ -55,16 +55,40 @@ export default function Join() {
           <ChevronLeft aria-hidden className="size-5" />
           <Wordmark className="text-[34px]" />
         </Link>
+        <SignedInAs />
       </header>
       {/* The card, in front of the wall */}
-      <main className="relative z-10 mx-auto flex min-h-[calc(100dvh-84px)] max-w-[680px] items-start justify-center px-3 pb-10 sm:items-center sm:px-6">
-        <div className="w-full rounded-[32px] bg-[#16191c] p-6 shadow-[0_40px_120px_-30px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.07)] sm:p-10">
+      <main className="relative z-10 mx-auto flex min-h-[calc(100dvh-84px)] max-w-[680px] items-start justify-center px-3 pb-10 pt-4 sm:pt-0 sm:items-center sm:px-6">
+        <div className="mx-auto w-full rounded-[32px] bg-[#16191c] p-6 has-[[data-login]]:max-w-[540px] shadow-[0_40px_120px_-30px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.07)] sm:p-10">
           <Suspense>
             <JoinInner />
           </Suspense>
         </div>
       </main>
     </div>
+  );
+}
+
+/** Who this is, so someone already signed in on this browser knows why there's no login, and can switch. */
+function SignedInAs() {
+  const { data: me } = useMe();
+  const hi = useHi();
+  const who = me?.user?.phone ?? me?.user?.email ?? me?.user?.name;
+  if (!who) return null;
+  return (
+    <p className="flex items-center gap-3 rounded-full bg-[#16191c]/85 px-4 py-2 text-[14px] text-[#c9cdd1] backdrop-blur">
+      <span className="max-w-[40vw] truncate">{who}</span>
+      <button
+        type="button"
+        onClick={async () => {
+          await signOutHere();
+          window.location.reload();
+        }}
+        className="font-semibold text-[#f1f1ec] underline underline-offset-4"
+      >
+        {hi ? "लॉग आउट" : "Log out"}
+      </button>
+    </p>
   );
 }
 
@@ -77,13 +101,16 @@ function JoinInner() {
 
   if (me && !me.user) {
     return (
-      <div>
-        <h1 className="text-center text-[clamp(1.6rem,4vw,2rem)] font-bold tracking-[-0.02em]">{hi ? "लॉग इन या साइन अप" : "Log in or sign up"}</h1>
-        <p className="mx-auto mt-2 max-w-[34ch] text-center text-[15px] text-[#9aa0a6]">
-          {journey === "new" ? (hi ? "अपनी रसोई को कुछ ही मिनट में ऑनलाइन लाइए।" : "Get your kitchen online in a few minutes.") : hi ? "कुछ ही मिनट में अपना ऑर्डर पेज बनाइए।" : "Create your ordering page in a few minutes."}
-        </p>
-        <div className="mx-auto mt-7 max-w-[420px]">
-          <PhoneLogin onDone={() => window.location.reload()} />
+      <div data-login className="-mx-6 -mt-6 sm:-mx-10 sm:-mt-10">
+        <h1 className="border-b border-white/10 px-6 py-5 text-center text-[16px] font-bold">{hi ? "लॉग इन या साइन अप" : "Log in or sign up"}</h1>
+        <div className="px-6 pt-7 sm:px-10">
+          <h2 className="text-[26px] font-extrabold tracking-[-0.02em]">{hi ? "Zest में स्वागत है" : "Welcome to Zest"}</h2>
+          <p className="mt-1.5 text-[15px] text-[#9aa0a6]">
+            {journey === "new" ? (hi ? "अपनी रसोई को कुछ ही मिनट में ऑनलाइन लाइए।" : "Get your kitchen online in a few minutes.") : hi ? "कुछ ही मिनट में अपना ऑर्डर पेज बनाइए।" : "Create your ordering page in a few minutes."}
+          </p>
+          <div className="mt-6">
+            <PhoneLogin onDone={() => window.location.reload()} />
+          </div>
         </div>
       </div>
     );

@@ -272,7 +272,7 @@ The +97.6% figure is shown without its source line on the page (source: Kim & Le
 ## 13. Home-kitchen-only homepage and an immersive start (October 2026)
 
 - The homepage estimator is for home kitchens only: one slider (orders a day) at a fixed ₹150 average order × 26 days. /restaurants keeps its kinds, each with a fixed average order.
-- "Get started" opens /join on a still wall of food photos in offset columns behind a centered card (it never moves, so nothing shifts while someone types) (after Airbnb's sign-up): "Log in or sign up", then "What do you sell from?" (🍲 Home kitchen · 🍱 Tiffin service · 🛺 Street stall), then the kitchen's details (labels follow the choice; it's saved as the page's cuisine line), menu, and the live page.
+- "Get started" opens /join on a still wall of 32 different Indian food photos (Unsplash, public/photos/wall/credits.json) in offset columns behind a centered card (it never moves, so nothing shifts while someone types) (after Airbnb's sign-up): "Log in or sign up", then "What do you sell from?" (🍲 Home kitchen · 🍱 Tiffin service · 🛺 Street stall), then the kitchen's details (labels follow the choice; it's saved as the page's cuisine line), menu, and the live page.
 
 ## 14. Headlines (October 2026, after Airbnb and Zomato's voice: short, warm, a little playful)
 
@@ -282,7 +282,7 @@ Restaurants: Your restaurant could earn ₹X more · Your regulars. Your page. Y
 ## 15. Mobile login first, two dashboards, one colour (October 2026)
 
 - **Sign-in is a mobile number and a 6-digit code, and it comes first** (after Airbnb): /join asks for the number before anything else, then the kind of kitchen and its details. Codes go out on WhatsApp (an authentication template; set WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_OTP_TEMPLATE). Codes last 10 minutes, allow 5 tries, and are rate-limited by number and by IP.
-- **Restaurants' landing says "restaurant" plainly**, with its own estimator at a fixed ₹450 average order.
+- **Restaurants' landing says "restaurant" plainly**, with its own estimator at a fixed ₹300 average order.
 - **The estimate thinks before it answers:** three dots for about a second, then the amount counts up; the final figure holds its space throughout so nothing on the page moves.
 - **Two dashboards.** A home kitchen (a new page, nothing on Zomato or Swiggy) sees its live page, today's orders, today's menu and its customers, with a short menu (Today, Orders, Menu & stock, Customers, Settings). A restaurant on Zomato/Swiggy keeps the full view: payouts, ratings, complaints, sources.
 - **Turmeric stays** (#E9A31A). It is ours and not Zomato's red or Swiggy's orange, reads as Indian kitchens, and holds strong contrast with dark ink on the dark site.

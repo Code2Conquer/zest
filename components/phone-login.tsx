@@ -53,22 +53,48 @@ export function PhoneLogin({ onDone }: { onDone: (hasRestaurant: boolean) => voi
     }
   }
 
-  const field = "w-full rounded-2xl bg-[#0d0f12] px-4 py-4 text-[17px] text-[#f1f1ec] outline-none shadow-[inset_0_0_0_1px_rgb(255_255_255/0.14)] placeholder:text-[#6f757c] focus:shadow-[inset_0_0_0_2px_#e9a31a]";
-  const button = "mt-4 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-[#e9a31a] text-[17px] font-semibold text-[#1c1f23] disabled:opacity-50";
+  const digits = phone;
+  const valid = /^[6-9]\d{9}$/.test(digits);
+  const wrongStart = digits.length > 0 && !/^[6-9]/.test(digits);
+  // One box holding its label, after Airbnb: a quiet edge that turns white while typing, no second ring.
+  const box = "rounded-2xl bg-[#0f1114] shadow-[inset_0_0_0_1px_rgb(255_255_255/0.16)] transition-shadow focus-within:shadow-[inset_0_0_0_2px_#f1f1ec]";
+  const input = "w-full bg-transparent text-[#f1f1ec] outline-none placeholder:text-[#5d636a] focus-visible:!outline-none";
+  const button = "mt-5 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl text-[17px] font-semibold transition-colors bg-[#e9a31a] text-[#1c1f23] hover:bg-[#f0b13a] disabled:cursor-not-allowed disabled:bg-[#2a2e33] disabled:text-[#7c828a]";
 
   if (!sent)
     return (
       <form onSubmit={send}>
-        <label htmlFor="phone" className="sr-only">
-          {hi ? "मोबाइल नंबर" : "Mobile number"}
-        </label>
-        <div className="flex items-center gap-2">
-          <span className="rounded-2xl bg-[#0d0f12] px-4 py-4 text-[17px] text-[#9aa0a6] shadow-[inset_0_0_0_1px_rgb(255_255_255/0.14)]">+91</span>
-          <input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" inputMode="numeric" autoComplete="tel-national" placeholder={hi ? "मोबाइल नंबर" : "Mobile number"} className={field} autoFocus />
+        <div className={box}>
+          <label htmlFor="phone" className="block px-4 pt-3 text-[13px] font-medium text-[#9aa0a6]">
+            {hi ? "मोबाइल नंबर" : "Mobile number"}
+          </label>
+          <div className="flex items-center gap-2 px-4 pb-3.5 pt-1 text-[19px] tabular-nums">
+            <span className="text-[#9aa0a6]">+91</span>
+            <input
+              id="phone"
+              value={digits.length > 5 ? `${digits.slice(0, 5)} ${digits.slice(5)}` : digits}
+              onChange={(e) => {
+                setPhone(e.target.value.replace(/\D/g, "").replace(/^(91|0)(?=\d{10})/, "").slice(0, 10));
+                setError(null);
+              }}
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel-national"
+              placeholder="98765 43210"
+              maxLength={11}
+              aria-invalid={wrongStart || undefined}
+              className={`${input} tracking-[0.02em]`}
+              autoFocus
+            />
+          </div>
         </div>
-        <p className="mt-2 text-[13.5px] text-[#9aa0a6]">{hi ? "हम WhatsApp पर एक कोड भेजेंगे।" : "We'll send a code on WhatsApp."}</p>
+        <p className={`mt-2.5 text-[13.5px] ${wrongStart ? "text-[#e2735f]" : "text-[#9aa0a6]"}`}>
+          {wrongStart
+            ? hi ? "मोबाइल नंबर 6, 7, 8 या 9 से शुरू होता है।" : "Mobile numbers start with 6, 7, 8 or 9."
+            : hi ? "हम WhatsApp पर एक कोड भेजेंगे।" : "We'll send a code on WhatsApp."}
+        </p>
         {error && <p className="mt-3 text-[14px] text-[#e2735f]">{error}</p>}
-        <button type="submit" disabled={busy || phone.replace(/\D/g, "").length < 10} className={button}>
+        <button type="submit" disabled={busy || !valid} className={button}>
           {busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
           {hi ? "आगे बढ़ें" : "Continue"}
         </button>
@@ -83,10 +109,12 @@ export function PhoneLogin({ onDone }: { onDone: (hasRestaurant: boolean) => voi
           {hi ? "नंबर बदलें" : "Change number"}
         </button>
       </p>
-      <label htmlFor="code" className="sr-only">
-        {hi ? "6 अंकों का कोड" : "6-digit code"}
-      </label>
-      <input ref={codeBox} id="code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="••••••" className={`${field} mt-4 text-center text-[26px] font-semibold tracking-[0.5em]`} />
+      <div className={`${box} mt-4`}>
+        <label htmlFor="code" className="block px-4 pt-3 text-[13px] font-medium text-[#9aa0a6]">
+          {hi ? "6 अंकों का कोड" : "6-digit code"}
+        </label>
+        <input ref={codeBox} id="code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="––––––" maxLength={6} className={`${input} px-4 pb-3.5 pt-1 text-[24px] font-semibold tracking-[0.4em] tabular-nums`} />
+      </div>
       {hint && <p className="mt-2 text-[13.5px] text-[#9aa0a6]">{hi ? `टेस्ट सर्वर: कोड ${hint} अपने-आप भर दिया।` : `Test server: code ${hint} filled in for you.`}</p>}
       {error && <p className="mt-3 text-[14px] text-[#e2735f]">{error}</p>}
       <button type="submit" disabled={busy || code.length !== 6} className={button}>
