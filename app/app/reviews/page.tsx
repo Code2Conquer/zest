@@ -11,7 +11,7 @@ import { useApp, useOutlet } from "@/lib/state";
 import type { ApprovalDTO, ReviewDTO } from "@/lib/types";
 
 export default function Reviews() {
-  const { t, lang, pick } = useApp();
+  const { lang, pick } = useApp();
   const { outlet, live } = useOutlet();
   const { data, error } = useApi<ReviewDTO[]>(outlet ? `/api/reviews?o=${outlet.id}` : null);
   const hi = lang === "hi";

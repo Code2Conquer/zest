@@ -48,7 +48,7 @@ function dishFor(items: string): DishKind {
 const TARGET_MINS = 15;
 
 export default function Orders() {
-  const { t, pick, state } = useApp();
+  const { pick, state } = useApp();
   const { live, outlet } = useOutlet();
   const { data, error, setData } = useApi<OrderDTO[]>(outlet ? `/api/orders?o=${outlet.id}` : null);
   // Changes arrive live; each replaces the order with the same id, newest placed first.

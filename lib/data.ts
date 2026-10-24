@@ -177,8 +177,6 @@ export type MenuItem = {
   ordersLast7: number;
 };
 
-export const MENU_CATEGORIES = ["Starters", "Main course", "Biryani", "Thalis", "Breads", "Desserts"] as const;
-
 export const MENU: MenuItem[] = [
   { id: "m1", photo: "/photos/menu-paneer-tikka.webp", name: "Paneer tikka", category: "Starters", kind: "paneer-tikka", veg: true, bestseller: true, description: "Cottage cheese marinated overnight in hung curd and Kashmiri chilli, charred in the tandoor with onion and capsicum. Served with mint chutney.", rating: 4.4, votes: 612, price: { zomato: 289, swiggy: 289 }, available: { zomato: true, swiggy: true }, ordersLast7: 142 },
   { id: "m7", photo: "/photos/menu-malai-tikka.webp", name: "Malai tikka", category: "Starters", kind: "paneer-tikka", veg: true, description: "Soft paneer in a cream, cashew and green cardamom marinade, finished on charcoal.", rating: 4.1, votes: 188, price: { zomato: 309, swiggy: 309 }, available: { zomato: true, swiggy: true }, ordersLast7: 41 },
@@ -192,16 +190,6 @@ export const MENU: MenuItem[] = [
   { id: "m11", photo: "/photos/menu-garlic-naan.webp", name: "Garlic naan", category: "Breads", kind: "butter-naan", veg: true, description: "Naan topped with chopped garlic and coriander.", rating: 4.1, votes: 356, price: { zomato: 69, swiggy: 69 }, available: { zomato: true, swiggy: true }, ordersLast7: 133 },
   { id: "m6", photo: "/photos/menu-gajar-halwa.webp", name: "Gajar halwa", category: "Desserts", kind: "gulab-jamun", veg: true, description: "Red carrots slow-cooked in milk with ghee, khoya and cardamom, topped with almonds. Served warm.", rating: 4.6, votes: 488, price: { zomato: 99, swiggy: 99 }, available: { zomato: true, swiggy: true }, ordersLast7: 64 },
 ];
-
-/** Top sellers from yesterday, for the Today screen. */
-export const TOP_DISHES_YESTERDAY: { id: string; orders: number }[] = [
-  { id: "m2", orders: 31 },
-  { id: "m1", orders: 24 },
-  { id: "m3", orders: 19 },
-  { id: "m10", orders: 42 },
-];
-
-export const COMPLAINTS_OPEN: Record<Platform, number> = { zomato: 1, swiggy: 2 };
 
 export function rupees(n: number) {
   return "₹" + n.toLocaleString("en-IN");

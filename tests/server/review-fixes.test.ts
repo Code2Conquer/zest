@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { GET as payoutsGet } from "@/app/api/payouts/route";
 import { GET as ordersGet } from "@/app/api/orders/route";
 import { POST as staffPost } from "@/app/api/staff/route";
-import { addOwner } from "@/lib/server/auth";
 import { client, db } from "@/lib/server/db";
 import { enqueue, registerHandler, runDueJobs } from "@/lib/server/jobs";
 import { safeReturn } from "@/lib/server/oauth-state";

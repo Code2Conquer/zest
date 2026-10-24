@@ -341,26 +341,6 @@ body {
 
 /* Zest the assistant, on the website and in the dashboard. */
 @keyframes zm-breathe { 0% { box-shadow: 0 0 0 0 rgb(233 163 26 / 0.55); } 70%, 100% { box-shadow: 0 0 0 14px rgb(233 163 26 / 0); } } /* taste-skill-ignore */
-/* Zest's question pill: ink, a fine turmeric edge with a soft glow, a dot grid that shimmers across it,
-   and the question sliding in each time it changes. */
-.za-pill {
-  background: #0d0f12;
-  box-shadow: inset 0 0 0 1px rgb(233 163 26 / 0.55), 0 0 0 4px rgb(233 163 26 / 0.08), 0 18px 40px -14px rgb(0 0 0 / 0.8); /* taste-skill-ignore */
-}
-.za-dots {
-  background-image: radial-gradient(rgb(233 163 26 / 0.55) 1px, transparent 1.4px); /* taste-skill-ignore: the dot grid */
-  background-size: 7px 7px;
-  -webkit-mask-image: linear-gradient(100deg, transparent 20%, #000 45%, #000 55%, transparent 80%); /* taste-skill-ignore */
-  mask-image: linear-gradient(100deg, transparent 20%, #000 45%, #000 55%, transparent 80%); /* taste-skill-ignore */
-  -webkit-mask-size: 220% 100%;
-  mask-size: 220% 100%;
-  opacity: 0.5;
-  animation: za-shimmer 3.2s linear infinite;
-}
-@keyframes za-shimmer { from { -webkit-mask-position: 120% 0; mask-position: 120% 0; } to { -webkit-mask-position: -120% 0; mask-position: -120% 0; } }
-.za-q { animation: za-q 520ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
-@keyframes za-q { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-/* Suggested questions inside Zest: raised, edged in turmeric, with a light sweeping across. */
 .za-chip {
   background: var(--lp-sunken, var(--surface));
   box-shadow: inset 0 0 0 1px rgb(233 163 26 / 0.45), 0 8px 18px -10px rgb(0 0 0 / 0.7); /* taste-skill-ignore */
@@ -380,11 +360,9 @@ body {
 @keyframes za-sweep { 0%, 35% { transform: translateX(-100%); } 75%, 100% { transform: translateX(100%); } }
 .za-scrim { animation: za-fade 220ms ease-out both; }
 @keyframes za-fade { from { opacity: 0; } }
-.za-in { animation: za-in 320ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
-@keyframes za-in { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: none; } }
 .za-pulse { animation: zm-breathe 1.2s ease-out infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .za-in, .za-scrim, .za-pulse, .za-dots, .za-q, .za-chip::after { animation: none; }
+  .za-scrim, .za-pulse, .za-chip::after { animation: none; }
 }
 
 /* Zest's orb (components/zest-orb.tsx): bands of light drifting inside a glass sphere, after Tara. */

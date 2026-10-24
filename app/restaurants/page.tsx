@@ -2,7 +2,7 @@
 
 import "../landing.css";
 import { useState } from "react";
-import { BellRing, Check, Hand, Handshake, IndianRupee, Link2, Mail, PhoneCall, Plus, Printer, X } from "lucide-react";
+import { BellRing, Hand, Handshake, IndianRupee, Link2, Mail, PhoneCall, Plus, Printer, X } from "lucide-react";
 import { Estimator } from "@/components/landing/estimator";
 import { HeroPhoto } from "@/components/landing/hero-photo";
 import { Promises } from "@/components/landing/promises";

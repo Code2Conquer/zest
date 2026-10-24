@@ -11,7 +11,7 @@ import { useApp, useOutlet } from "@/lib/state";
 import type { PayoutDTO } from "@/lib/types";
 
 export default function Money() {
-  const { t, lang, pick } = useApp();
+  const { lang, pick } = useApp();
   const { outlet, live } = useOutlet();
   const { data, error } = useApi<PayoutDTO[]>(outlet ? `/api/payouts?o=${outlet.id}` : null);
   const hi = lang === "hi";

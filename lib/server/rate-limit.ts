@@ -19,9 +19,3 @@ export async function checkRate(key: string, limit: number, windowSec: number): 
 export async function refundRate(key: string, windowSec: number): Promise<void> {
   await client().execute({ sql: "UPDATE rate_limits SET count = MAX(count - 1, 0) WHERE key = ? AND window_start = ?", args: [key, windowStart(windowSec)] });
 }
-
-/** Hits so far against `key` in the current window, without adding one. */
-export async function rateCount(key: string, windowSec: number): Promise<number> {
-  const rs = await client().execute({ sql: "SELECT count FROM rate_limits WHERE key = ? AND window_start = ?", args: [key, windowStart(windowSec)] });
-  return rs.rows.length ? Number(rs.rows[0].count) : 0;
-}

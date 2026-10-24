@@ -35,7 +35,7 @@ function ReachToday() {
     </div>
   );
 }
-export function ReachZest() {
+function ReachZest() {
   const { pick } = useApp();
   return (
     <div data-ui className={`${card} w-[300px]`}>

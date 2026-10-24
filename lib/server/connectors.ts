@@ -36,8 +36,6 @@ export type IncomingOrder = {
   prepMins?: number;
 };
 
-export class ConnectorError extends Error {}
-
 /** Mirrors actions locally without reaching a real platform. Used for the demo restaurant. */
 class SandboxConnector implements PlatformConnector {
   readonly method = "sandbox" as const;

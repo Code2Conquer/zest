@@ -6,8 +6,6 @@ import { useId } from "react";
 
 export type DishKind = "biryani" | "paneer-tikka" | "dal-makhani" | "thali" | "chole-bhature" | "gulab-jamun" | "rajma-chawal" | "butter-naan";
 
-export const DISH_KINDS: DishKind[] = ["biryani", "paneer-tikka", "dal-makhani", "thali", "chole-bhature", "gulab-jamun", "rajma-chawal", "butter-naan"];
-
 /** Steel katori: rim, inner wall, then the food surface. */
 function Katori({ cx, cy, r, fill, id, children }: { cx: number; cy: number; r: number; fill: string; id: string; children?: React.ReactNode }) {
   return (
@@ -242,52 +240,6 @@ export function Dish({ kind, size = 120, steam = false, className = "", label }:
           <path d="M48 40 c-6 -8 6 -12 0 -22" />
           <path d="M60 36 c-6 -8 6 -12 0 -24" />
           <path d="M72 40 c-6 -8 6 -12 0 -22" />
-        </g>
-      )}
-    </svg>
-  );
-}
-
-/** Whole spices, for garnish around the landing page. */
-export function Spice({ kind, size = 40, className = "" }: { kind: "chilli" | "star-anise" | "cardamom" | "cinnamon" | "leaf"; size?: number; className?: string }) {
-  return (
-    <svg viewBox="0 0 40 40" width={size} height={size} aria-hidden className={className}>
-      {kind === "chilli" && (
-        <g>
-          <path d="M8 30 C14 30 28 22 32 10 C33 7 30 6 29 9 C25 18 16 24 8 26 C5 27 5 30 8 30z" fill="#c8371f" />
-          <path d="M29 9 C30 6 32 4 34 4" stroke="#3f7a2e" strokeWidth={2.4} fill="none" strokeLinecap="round" />
-          <path d="M12 27 C18 25 24 20 27 14" stroke="rgba(255,255,255,0.45)" strokeWidth={1.4} fill="none" strokeLinecap="round" />
-        </g>
-      )}
-      {kind === "star-anise" && (
-        <g transform="translate(20 20)">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <g key={i} transform={`rotate(${i * 45})`}>
-              <path d="M0 -2 C3 -6 3 -14 0 -17 C-3 -14 -3 -6 0 -2z" fill="#6b3a1e" />
-              <ellipse cx={0} cy={-10} rx={1.3} ry={2.2} fill="#c98a4a" />
-            </g>
-          ))}
-          <circle r={2.6} fill="#4a2410" />
-        </g>
-      )}
-      {kind === "cardamom" && (
-        <g>
-          <path d="M20 4 C30 10 30 30 20 36 C10 30 10 10 20 4z" fill="#8fae5a" />
-          <path d="M20 6 L20 34 M15 12 C17 20 17 26 15 30 M25 12 C23 20 23 26 25 30" stroke="#6a8a3e" strokeWidth={1.2} fill="none" />
-        </g>
-      )}
-      {kind === "cinnamon" && (
-        <g transform="rotate(-30 20 20)">
-          <rect x={4} y={14} width={32} height={12} rx={6} fill="#9a5a2a" />
-          <path d="M6 18 H34 M6 22 H34" stroke="#6b3a1e" strokeWidth={1.2} />
-          <ellipse cx={36} cy={20} rx={3} ry={6} fill="#c58a4e" />
-          <path d="M36 16 a3 4 0 1 0 0.1 0" stroke="#6b3a1e" strokeWidth={1} fill="none" />
-        </g>
-      )}
-      {kind === "leaf" && (
-        <g>
-          <path d="M6 34 C6 18 18 6 34 6 C34 22 22 34 6 34z" fill="#3f8a3a" />
-          <path d="M8 32 L30 10" stroke="#2a6a28" strokeWidth={1.4} />
         </g>
       )}
     </svg>

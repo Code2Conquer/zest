@@ -101,25 +101,6 @@
   background: var(--lp-accent);
   color: var(--lp-accent-ink);
 }
-.lp-ghost {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 52px;
-  padding: 0 1.25rem;
-  border-radius: 999px;
-  background: var(--lp-sunken);
-  font-weight: 600;
-  font-size: 17px;
-  transition: transform 160ms ease;
-}
-.lp-ghost.on-dark {
-  background: #2e3338;
-  color: #f1f1ec;
-}
-.lp-ghost:hover {
-  transform: translateY(-2px);
-}
 /* Keyboard focus: one visible ring for every control on the website, including the demos. */
 .lp :where(a, button, summary, input, select, [tabindex]):focus-visible {
   outline: 3px solid var(--z-turmeric);
@@ -145,37 +126,18 @@
   0%, 60%, 100% { opacity: 0.35; transform: none; }
   30% { opacity: 1; transform: translateY(-2px); }
 }
-.lp-arrive {
-  animation: lp-arrive 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-@keyframes lp-arrive {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
 
 /* Zest Soundbox: sound rings spreading from the speaker while it announces. */
-.lp-ring {
-  animation: lp-ring 1600ms cubic-bezier(0.2, 0.6, 0.3, 1) 3 both;
-}
-.lp-ring.late {
-  animation-delay: 500ms;
-}
-@keyframes lp-ring {
   from { transform: scale(1); opacity: 0.9; }
   to { transform: scale(1.9); opacity: 0; }
 }
 
 /* Agent flow: dashes travelling along a connector, and the active arc drawing itself in. */
-.lp-flow {
-  animation: lp-flow 1.2s linear infinite;
-}
-@keyframes lp-flow {
   to { stroke-dashoffset: -26; }
 }
-.lp-arc {
-  animation: lp-flow 1.2s linear infinite, lp-arc-in 700ms ease-out both;
-}
-@keyframes lp-arc-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
@@ -256,12 +218,8 @@
   box-shadow: 0 0 0 4px var(--z-turmeric); /* taste-skill-ignore */
 }
 
-/* Zest's mark: a slow breathing ring at rest, a quicker one while it listens or thinks. */
-.zm-ring { box-shadow: 0 0 0 0 rgb(233 163 26 / 0.55); animation: zm-breathe 2.8s ease-out infinite; } /* taste-skill-ignore */
-.zm.is-speaking .zm-ring { animation-duration: 1s; }
-.zm.is-speaking svg { animation: zm-nod 1s ease-in-out infinite; transform-origin: center; }
-@keyframes zm-nod { 0%, 100% { transform: none; } 50% { transform: scale(0.9); } }
-/* Zest's question pill, chips and panel motion live in globals.css: the dashboard uses them too. */
+/* Zest's mark: a slow breathing ring at rest, a quicker one while it listens or thinks. */ /* taste-skill-ignore */
+
 
 /* The estimator thinking: three dots bouncing in turn, then the amount counts up. */
 .est-dots i { display: block; width: 0.16em; height: 0.16em; border-radius: 999px; background: currentColor; animation: est-dot 900ms ease-in-out infinite; }
@@ -278,11 +236,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-arrive,
   .lp-typing i,
-  .lp-ring,
-  .lp-flow,
-  .lp-arc,
   .hs-chip,
   .jr-in,
   .jr-pop,
@@ -291,13 +245,6 @@
   .hero-rise,
   .hero-note,
   .hero-ping,
-  .zm-ring,
-  .zm svg,
-  .za-in,
-  .za-pulse,
-  .za-dots,
-  .za-q,
-  .za-chip::after,
   .rv {
     animation: none !important;
   }
@@ -307,13 +254,12 @@
     stroke-dashoffset: 0;
     width: 100%;
   }
-  .lp-btn,
-  .lp-ghost {
+  .lp-btn {
     transition: none;
   }
 }
 
-/* Display type for the website: Inter, bold and tightly set. */
+/* Display type for the website: Plus Jakarta Sans, extra-bold and tightly set. */
 .lp-display {
   font-family: var(--font-site), var(--font-site-deva), system-ui, sans-serif;
   font-weight: 800;
