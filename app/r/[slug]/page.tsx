@@ -204,7 +204,7 @@ function Storefront({ slug }: { slug: string }) {
             <li className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-medium ${shop.open ? "bg-leaf-soft text-leaf" : "bg-chilli-soft text-chilli"}`}>
               <Clock aria-hidden className="size-3.5" />
               {shop.open ? (hi ? "अभी खुला" : "Open now") : hi ? "अभी बंद" : "Closed now"}
-              {shop.hoursToday && <span className="font-normal opacity-80">· {shop.hoursToday}</span>}
+              {shop.hoursToday && <span className="font-normal">· {shop.hoursToday}</span>}
             </li>
             {shop.costForTwo && (
               <li className="inline-flex items-center gap-1.5 rounded-full bg-sunken px-3 py-1.5">
@@ -214,7 +214,7 @@ function Storefront({ slug }: { slug: string }) {
               </li>
             )}
             {shop.pureVeg && (
-              <li className="inline-flex items-center gap-1.5 rounded-full bg-sunken px-3 py-1.5 text-veg">
+              <li className="inline-flex items-center gap-1.5 rounded-full bg-sunken px-3 py-1.5 text-leaf">
                 <span className="food-mark scale-75" aria-hidden />
                 {hi ? "शुद्ध शाकाहारी" : "Pure veg"}
               </li>
