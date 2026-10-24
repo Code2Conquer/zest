@@ -55,8 +55,8 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
 
   return (
     <div ref={box} className="grid gap-4 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-6">
-      {/* The reasons: a list on wide screens; on a phone chips that wrap, so every reason is in view */}
-      <div role="tablist" aria-label={pick(label)} className="flex flex-wrap gap-2 lg:grid lg:gap-1.5">
+      {/* The reasons: a list on wide screens; on a phone a two-column grid of chips, all in view */}
+      <div role="tablist" aria-label={pick(label)} className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:gap-1.5">
         {items.map((x, i) => {
           const on = i === k;
           return (
@@ -66,7 +66,7 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
               role="tab"
               aria-selected={on}
               onClick={() => choose(i)}
-              className={`relative flex items-center gap-2.5 text-left transition-colors max-lg:min-h-10 max-lg:rounded-full max-lg:px-3.5 max-lg:text-[14px] lg:gap-3 lg:rounded-2xl lg:px-4 lg:py-4 ${
+              className={`relative flex items-center gap-2.5 text-left transition-colors max-lg:min-h-12 max-lg:rounded-2xl max-lg:px-3 max-lg:py-2 max-lg:text-[13.5px] max-lg:leading-tight lg:gap-3 lg:rounded-2xl lg:px-4 lg:py-4 ${
                 on
                   ? "max-lg:bg-[var(--lp-ink)] max-lg:text-[var(--lp-on-ink)] lg:bg-[var(--lp-paper)] lg:before:absolute lg:before:inset-y-3 lg:before:left-0 lg:before:w-[3px] lg:before:rounded-full lg:before:bg-[var(--z-turmeric)]"
                   : "max-lg:bg-[var(--lp-paper)] max-lg:text-[var(--lp-muted)] lg:hover:bg-[var(--lp-paper)]/60"
@@ -76,7 +76,7 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
                 <x.icon aria-hidden size={18} />
               </span>
               <span className="min-w-0">
-                <span className={`block whitespace-nowrap font-semibold leading-snug lg:whitespace-normal lg:text-[16px] ${on ? "" : "lg:text-[var(--lp-muted)]"}`}>{pick(x.title)}</span>
+                <span className={`block font-semibold leading-snug lg:text-[16px] ${on ? "" : "lg:text-[var(--lp-muted)]"}`}>{pick(x.title)}</span>
                 <span className="hidden text-[14px] leading-snug text-[var(--lp-muted)] lg:block">{pick(x.line)}</span>
               </span>
             </button>
@@ -87,7 +87,7 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
       {/* The stage. Wide screens: today and with Zest side by side, so the panel is full and the change
           is seen at a glance. Phones: one at a time, with the switch. */}
       <div role="tabpanel" className="rounded-[24px] bg-[var(--lp-paper)] p-3 sm:p-4">
-        <div className="flex items-center justify-between gap-3 lg:hidden">
+        <div className="flex items-center justify-center gap-3 lg:hidden">
           <div role="radiogroup" aria-label={pick({ en: "Today or with Zest", hi: "आज या Zest के साथ" })} className="inline-flex rounded-full bg-[var(--lp-sunken)] p-1 text-[14px] font-semibold">
             {[false, true].map((z) => (
               <button
@@ -105,8 +105,7 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
               </button>
             ))}
           </div>
-          <p className="truncate text-[14px] text-[var(--lp-muted)] max-sm:hidden">{pick(item.line)}</p>
-        </div>
+                  </div>
         <div className="mt-3 grid gap-3 lg:mt-0 lg:grid-cols-2">
           {([false, true] as const).map((z) => (
             <div key={String(z)} className={`relative rounded-[18px] bg-[var(--lp-sunken)] ${zest === z ? "" : "max-lg:hidden"}`}>
