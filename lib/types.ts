@@ -22,6 +22,8 @@ export type OutletDTO = {
   upiId: string | null;
   ordering: boolean;
   delivery: DeliverySettings;
+  /** Daily order cut-offs by menu section, India time ("Lunch" → "11:00"). */
+  cutoffs: Record<string, string>;
   location: { lat: number; lng: number } | null;
   name: string;
   area: string;
@@ -60,6 +62,9 @@ export type MenuItemDTO = {
   price: Record<Platform, number>;
   available: Record<Platform, boolean>;
   ordersLast7: number;
+  /** How many the kitchen makes a day (null: no limit), and how many are left today. */
+  dailyLimit: number | null;
+  leftToday?: number | null;
 };
 
 export type OrderLineDTO = {
@@ -88,9 +93,11 @@ export type OrderDTO = {
   fulfilment?: "pickup" | "table" | "delivery" | null;
   tableLabel?: string | null;
   paymentStatus?: "unpaid" | "paid" | null;
-  paymentMethod?: "upi" | "counter" | null;
+  paymentMethod?: "upi" | "counter" | "online" | null;
+  refundStatus?: "pending" | "refunded" | "failed" | null;
   note?: string | null;
-  delivery?: { by: "zomato_rider" | "own_staff" | null; address: string | null; fee: number | null; km: number | null } | null;
+  delivery?: { by: "zomato_rider" | "own_staff" | null; address: string | null; fee: number | null; km: number | null; rider?: { name: string; phone?: string; eta?: string; trackUrl?: string; status: string } | null } | null;
+  fromPlan?: boolean;
   customer?: { name: string; phone: string } | null;
 };
 

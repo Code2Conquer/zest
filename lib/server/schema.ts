@@ -83,6 +83,8 @@ export const customers = sqliteTable(
     spent: integer("spent").notNull().default(0),
     firstOrderAt: text("first_order_at").notNull().$defaultFn(now),
     lastOrderAt: text("last_order_at").notNull().$defaultFn(now),
+    // The kitchen's own note on this regular, e.g. "less spicy, no onion".
+    note: text("note").notNull().default(""),
   },
   (t) => [uniqueIndex("customers_brand_phone").on(t.brandId, t.phone)],
 );
@@ -132,6 +134,8 @@ export const outlets = sqliteTable("outlets", {
   ordering: integer("ordering", { mode: "boolean" }).notNull().default(false),
   // How the ordering site delivers (lib/delivery.ts), and where the kitchen is, for pricing by distance.
   delivery: text("delivery", { mode: "json" }).$type<DeliverySettings | null>(),
+  // Daily order cut-offs by menu section, India time: { "Lunch": "11:00" } stops lunch orders at 11 am.
+  cutoffs: text("cutoffs", { mode: "json" }).$type<Record<string, string>>().notNull().default({}),
   lat: real("lat"),
   lng: real("lng"),
   name: text("name").notNull(),
@@ -193,6 +197,8 @@ export const menuItems = sqliteTable("menu_items", {
   price: text("price", { mode: "json" }).$type<Record<Platform, number>>().notNull(),
   available: text("available", { mode: "json" }).$type<Record<Platform, boolean>>().notNull(),
   ordersLast7: integer("orders_last7").notNull().default(0),
+  // How many the kitchen makes in a day; the ordering page counts down and closes the dish at zero. Null: no limit.
+  dailyLimit: integer("daily_limit"),
   sort: integer("sort").notNull().default(0),
   updatedAt: text("updated_at").notNull().$defaultFn(now),
 });
@@ -216,7 +222,15 @@ export const orders = sqliteTable(
     fulfilment: text("fulfilment").$type<"pickup" | "table" | "delivery">(),
     tableLabel: text("table_label"),
     paymentStatus: text("payment_status").$type<"unpaid" | "paid">(),
-    paymentMethod: text("payment_method").$type<"upi" | "counter">(),
+    // "online": paid through the payment gateway, confirmed by it; "upi": the customer's UPI app, confirmed by staff.
+    paymentMethod: text("payment_method").$type<"upi" | "counter" | "online">(),
+    pgOrderId: text("pg_order_id"),
+    pgPaymentId: text("pg_payment_id"),
+    refundStatus: text("refund_status").$type<"pending" | "refunded" | "failed">(),
+    // The rider carrying a delivery, once one is booked.
+    rider: text("rider", { mode: "json" }).$type<{ name: string; phone?: string; eta?: string; trackUrl?: string; status: "requested" | "assigned" | "picked_up" | "delivered" | "unavailable" } | null>(),
+    // A weekly tiffin plan this order came from.
+    planId: text("plan_id"),
     note: text("note"),
     // Delivery orders from the ordering site: where to, who carries it, and what the customer paid for it.
     deliveryAddress: text("delivery_address"),
@@ -460,3 +474,29 @@ export const soundboxWaitlist = sqliteTable("soundbox_waitlist", {
   section: text("section").notNull(),
   createdAt: text("created_at").notNull().$defaultFn(now),
 });
+
+/**
+ * A regular's weekly tiffin plan: the same dish on chosen days, paid for the week. Each morning the day's
+ * order is created from it, unless that day is skipped.
+ */
+export const plans = sqliteTable("plans", {
+  id: text("id").primaryKey().$defaultFn(id),
+  outletId: text("outlet_id").notNull(),
+  customerId: text("customer_id").notNull(),
+  itemId: text("item_id").notNull(),
+  qty: integer("qty").notNull().default(1),
+  // 0 = Sunday … 6 = Saturday
+  days: text("days", { mode: "json" }).$type<number[]>().notNull(),
+  fulfilment: text("fulfilment").$type<"delivery" | "pickup">().notNull().default("delivery"),
+  address: text("address").notNull().default(""),
+  note: text("note").notNull().default(""),
+  // The week (or weeks) paid for, India dates, inclusive.
+  startsOn: text("starts_on").notNull(),
+  endsOn: text("ends_on").notNull(),
+  amount: integer("amount").notNull(),
+  paymentStatus: text("payment_status").$type<"unpaid" | "paid">().notNull().default("unpaid"),
+  skips: text("skips", { mode: "json" }).$type<string[]>().notNull().default([]),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+});
+export type PlanRow = typeof plans.$inferSelect;

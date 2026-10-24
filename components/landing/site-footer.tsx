@@ -5,6 +5,9 @@ import { ArrowUpRight, Globe } from "lucide-react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
+/** Zest's support WhatsApp number, set on the server (NEXT_PUBLIC_SUPPORT_WHATSAPP). */
+const SUPPORT = process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP ?? null;
+
 const SAMPLES: { name: string; kind: Bi; dashboard: string; page: string }[] = [
   { name: "Meena's Kitchen", kind: { en: "Home kitchen · Green Park, Delhi", hi: "घर की रसोई · ग्रीन पार्क, दिल्ली" }, dashboard: "/demo/home", page: "/r/meenas-kitchen" },
   { name: "Rasoi 27", kind: { en: "Restaurant on Zomato and Swiggy · Bengaluru", hi: "Zomato और Swiggy पर रेस्टोरेंट · बेंगलुरु" }, dashboard: "/demo/restaurant", page: "/r/rasoi-27" },
@@ -50,6 +53,18 @@ export function SiteFooter({ credits = false }: { credits?: boolean }) {
             <a href="/" className="hover:text-[var(--lp-ink)] hover:underline">{pick({ en: "Home kitchens", hi: "घर की रसोई" })}</a>
             <span aria-hidden>·</span>
             <a href="/restaurants" className="hover:text-[var(--lp-ink)] hover:underline">{pick({ en: "Restaurants", hi: "रेस्टोरेंट" })}</a>
+            <span aria-hidden>·</span>
+            <a href="/privacy" className="hover:text-[var(--lp-ink)] hover:underline">{pick({ en: "Privacy", hi: "प्राइवेसी" })}</a>
+            <span aria-hidden>·</span>
+            <a href="/terms" className="hover:text-[var(--lp-ink)] hover:underline">{pick({ en: "Terms", hi: "शर्तें" })}</a>
+            {SUPPORT && (
+              <>
+                <span aria-hidden>·</span>
+                <a href={`https://wa.me/${SUPPORT.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="hover:text-[var(--lp-ink)] hover:underline">
+                  {pick({ en: "Help on WhatsApp", hi: "WhatsApp पर मदद" })}
+                </a>
+              </>
+            )}
           </p>
           {/* Language: both named in themselves, the current one in bold. */}
           <p className="flex items-center gap-1">

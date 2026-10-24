@@ -5,6 +5,7 @@ import { normalizePhone } from "../phone";
 import { HttpError } from "./approvals";
 import { signInByPhone } from "./auth";
 import { db } from "./db";
+import { sendSms, smsConfigured } from "./sms";
 import { checkRate } from "./rate-limit";
 import { otpCodes } from "./schema";
 
@@ -18,7 +19,9 @@ export const devSigninAllowed = () => process.env.VERCEL_ENV !== "production" &&
 const TTL_MS = 10 * 60 * 1000;
 const hash = (phone: string, code: string) => createHash("sha256").update(`${phone}:${code}:${process.env.ZEST_SECRET_KEY ?? "dev"}`).digest("hex");
 
-export const otpSenderConfigured = () => !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID && process.env.WHATSAPP_OTP_TEMPLATE);
+/** Codes go out on WhatsApp (an authentication template) and/or SMS (MSG91), whichever is set up. */
+const whatsappOtp = () => !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID && process.env.WHATSAPP_OTP_TEMPLATE);
+export const otpSenderConfigured = () => whatsappOtp() || smsConfigured("otp");
 export const phoneSigninAvailable = () => otpSenderConfigured() || devSigninAllowed();
 
 function parsePhone(raw: string) {
@@ -47,7 +50,13 @@ async function sendOnWhatsApp(phone: string, code: string) {
       },
     }),
   });
-  if (!res.ok) throw new HttpError(502, "Couldn't send the code on WhatsApp. Try again in a minute.");
+  return res.ok;
+}
+
+/** WhatsApp first; SMS when WhatsApp isn't set up or doesn't take it. */
+async function sendCode(phone: string, code: string) {
+  const sent = (whatsappOtp() && (await sendOnWhatsApp(phone, code).catch(() => false))) || (await sendSms(phone, "otp", { otp: code }));
+  if (!sent) throw new HttpError(502, "Couldn't send the code. Try again in a minute.");
 }
 
 /** Sends a code to this number. */
@@ -59,7 +68,7 @@ export async function startOtp(raw: string, ip: string) {
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
   const row = { phone, codeHash: hash(phone, code), expiresAt: new Date(Date.now() + TTL_MS).toISOString(), attempts: 0 };
   await db.insert(otpCodes).values(row).onConflictDoUpdate({ target: otpCodes.phone, set: row });
-  if (live) await sendOnWhatsApp(phone, code);
+  if (live) await sendCode(phone, code);
   return { sent: true, phone, ...(live ? {} : { devCode: code }) };
 }
 

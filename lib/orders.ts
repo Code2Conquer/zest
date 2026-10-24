@@ -20,7 +20,7 @@ export const LEGACY_STATUSES = ["preparing", "ready", "picked", "delivered", "de
 export type LegacyStatus = (typeof LEGACY_STATUSES)[number];
 
 /** Orders the kitchen still has to deal with. */
-export const ACTIVE_STATUSES: OrderStatus[] = ["new", "accepted", "preparing", "ready"];
+export const ACTIVE_STATUSES: OrderStatus[] = ["new", "accepted", "preparing", "ready", "out_for_delivery"];
 
 /** Orders that don't count towards sales. */
 export const VOID_STATUSES: OrderStatus[] = ["rejected", "cancelled"];

@@ -2,11 +2,12 @@
 
 import { Page } from "@/components/page";
 import { rupees } from "@/components/cards";
-import { useApi } from "@/lib/api";
+import { useState } from "react";
+import { api, useApi } from "@/lib/api";
 import { isHomeKitchen, NAV_GROUPS, navItem } from "@/lib/nav";
 import { useApp } from "@/lib/state";
 
-type Customer = { id: string; name: string; phone: string; orders: number; spent: number; firstOrderAt: string; lastOrderAt: string };
+type Customer = { id: string; name: string; phone: string; orders: number; spent: number; firstOrderAt: string; lastOrderAt: string; note: string; usual: string | null };
 
 /** People who ordered from the restaurant's own site: the start of a customer list the restaurant owns. */
 export default function Customers() {
@@ -58,7 +59,11 @@ export default function Customers() {
           <tbody>
             {data.map((c) => (
               <tr key={c.id} className="border-b border-line">
-                <td className="py-2.5 font-medium">{c.name}</td>
+                <td className="py-2.5">
+                  <span className="font-medium">{c.name}</span>
+                  {c.usual && <span className="block text-sm text-ink-2">{hi ? "अक्सर: " : "Usually: "}{c.usual}</span>}
+                  <Note id={c.id} initial={c.note} />
+                </td>
                 <td className="py-2.5 font-mono text-sm text-ink-2">{c.phone}</td>
                 <td className="py-2.5 text-right">{c.orders}</td>
                 <td className="hidden py-2.5 text-right sm:table-cell">{rupees(c.spent)}</td>
@@ -69,5 +74,23 @@ export default function Customers() {
         </table>
       )}
     </Page>
+  );
+}
+
+/** The kitchen's own note on a regular, saved when the field loses focus. */
+function Note({ id, initial }: { id: string; initial: string }) {
+  const { lang } = useApp();
+  const [v, setV] = useState(initial);
+  const [saved, setSaved] = useState(initial);
+  return (
+    <input
+      value={v}
+      onChange={(e) => setV(e.target.value)}
+      onBlur={() => v !== saved && api(`/api/customers/${id}`, { method: "PATCH", json: { note: v } }).then(() => setSaved(v), () => setV(saved))}
+      maxLength={200}
+      aria-label={lang === "hi" ? "नोट" : "Note"}
+      placeholder={lang === "hi" ? "+ नोट (कम मिर्च…)" : "+ Note (less spicy…)"}
+      className="mt-1 block w-full max-w-[28ch] rounded-md bg-transparent px-1 py-0.5 text-sm text-muted outline-none placeholder:text-muted/70 focus:bg-sunken focus:text-ink"
+    />
   );
 }

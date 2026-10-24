@@ -195,12 +195,16 @@ export default function Orders() {
   );
 }
 
-const NEXT_STEP: Partial<Record<OrderDTO["status"], { action: "accept" | "prepare" | "ready" | "complete"; en: string; hi: string }>> = {
+type Step = { action: "accept" | "prepare" | "ready" | "dispatch" | "complete"; en: string; hi: string };
+const NEXT_STEP: Partial<Record<OrderDTO["status"], Step>> = {
   new: { action: "accept", en: "Accept", hi: "स्वीकार करें" },
   accepted: { action: "prepare", en: "Start preparing", hi: "बनाना शुरू करें" },
   preparing: { action: "ready", en: "Mark ready", hi: "तैयार" },
   ready: { action: "complete", en: "Handed over", hi: "दे दिया" },
+  out_for_delivery: { action: "complete", en: "Delivered", hi: "पहुँच गया" },
 };
+/** A ready delivery leaves first ("Out for delivery"), then is marked delivered. */
+const nextStep = (o: OrderDTO): Step | undefined => (o.status === "ready" && o.fulfilment === "delivery" ? { action: "dispatch", en: "Out for delivery", hi: "डिलीवरी के लिए निकला" } : NEXT_STEP[o.status]);
 
 /** A website, WhatsApp or phone order: who it's for, how it's paid, and the next step. */
 function DirectOrder({ order: o, onChange }: { order: OrderDTO; onChange: (o: OrderDTO[]) => void }) {
@@ -208,7 +212,7 @@ function DirectOrder({ order: o, onChange }: { order: OrderDTO; onChange: (o: Or
   const hi = lang === "hi";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const next = NEXT_STEP[o.status];
+  const next = nextStep(o);
 
   async function act(action: string) {
     setBusy(true);
@@ -241,9 +245,20 @@ function DirectOrder({ order: o, onChange }: { order: OrderDTO; onChange: (o: Or
           {o.delivery?.km != null && ` · ${o.delivery.km} km`}
         </span>
         <span className={o.paymentStatus === "paid" ? "text-leaf" : "text-chilli"}>
-          {o.paymentStatus === "paid" ? (hi ? "भुगतान हो गया" : "Paid") : o.paymentMethod === "upi" ? (hi ? "UPI बाक़ी" : "UPI not confirmed") : hi ? "भुगतान बाक़ी" : "To pay at counter"}
+          {o.paymentStatus === "paid" ? (o.paymentMethod === "online" ? (hi ? "ऑनलाइन पेड" : "Paid online") : hi ? "भुगतान हो गया" : "Paid") : o.paymentMethod === "upi" ? (hi ? "UPI बाक़ी" : "UPI not confirmed") : hi ? "भुगतान बाक़ी" : "To pay at counter"}
         </span>
+        {o.refundStatus && <span className={o.refundStatus === "failed" ? "text-chilli" : "text-ink-2"}>{o.refundStatus === "refunded" ? (hi ? "रिफ़ंड हो गया" : "Refunded") : o.refundStatus === "failed" ? (hi ? "रिफ़ंड नहीं हुआ, सपोर्ट से बात करें" : "Refund failed, contact support") : hi ? "रिफ़ंड जारी" : "Refund pending"}</span>}
+        {o.fromPlan && <span className="rounded-full bg-turmeric-soft px-2 py-0.5 text-xs font-semibold text-ink">{hi ? "टिफ़िन प्लान" : "Tiffin plan"}</span>}
       </p>
+      {o.delivery?.rider && (
+        <p className="mt-1 text-ink-2">
+          {o.delivery.rider.status === "unavailable"
+            ? hi ? "Zomato राइडर बुक नहीं हो पाया, अपना हेल्पर भेजें।" : "Couldn't book a Zomato rider. Send your own helper."
+            : o.delivery.rider.name
+              ? `${hi ? "राइडर" : "Rider"}: ${o.delivery.rider.name}${o.delivery.rider.eta ? ` · ${hi ? "पहुँचेगा" : "arriving"} ${new Date(o.delivery.rider.eta).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}` : ""}`
+              : hi ? "राइडर ढूँढ रहे हैं…" : "Finding a rider…"}
+        </p>
+      )}
       {o.delivery?.address && <p className="mt-1 text-ink-2">{o.delivery.address}</p>}
       {o.note && <p className="mt-1 italic text-ink-2">“{o.note}”</p>}
       <div className="mt-2 flex flex-wrap gap-2">

@@ -1,4 +1,4 @@
-import { Armchair, BookOpen, Home, IndianRupee, ReceiptText, Settings, Star, TrendingUp, Users, type LucideIcon } from "lucide-react";
+import { Armchair, BookOpen, CalendarCheck, Home, IndianRupee, ReceiptText, Settings, Star, TrendingUp, Users, type LucideIcon } from "lucide-react";
 import type { Bi } from "./i18n";
 
 // The sidebar, ordered the way an owner's day runs: what's happening now, the customers,
@@ -29,6 +29,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/app/reviews", label: { en: "Reviews & complaints", hi: "रिव्यू और शिकायतें" }, hint: { en: "Every platform's reviews, with replies ready", hi: "हर प्लेटफ़ॉर्म के रिव्यू, जवाब तैयार" }, icon: Star },
       { href: "/app/customers", short: { en: "Customers", hi: "ग्राहक" }, label: { en: "Customer list", hi: "ग्राहक सूची" }, hint: { en: "People who ordered straight from your site", hi: "जिन्होंने आपकी साइट से सीधे ऑर्डर किया" }, icon: Users },
+      { href: "/app/plans", short: { en: "Plans", hi: "प्लान" }, label: { en: "Tiffin plans", hi: "टिफ़िन प्लान" }, hint: { en: "Regulars on weekly plans, paid for the week", hi: "हफ़्ते के प्लान वाले ग्राहक, पहले से पेड" }, icon: CalendarCheck },
     ],
   },
   {
@@ -55,7 +56,7 @@ export const NAV_GROUPS: NavGroup[] = [
 ];
 
 /** What a home kitchen, tiffin or stall needs: no tables, no Zomato or Swiggy payouts, reviews or ads. */
-const HOME_KITCHEN = new Set(["/app", "/app/orders", "/app/menu", "/app/customers", "/app/connections"]);
+const HOME_KITCHEN = new Set(["/app", "/app/orders", "/app/menu", "/app/customers", "/app/plans", "/app/connections"]);
 export const navGroupsFor = (homeKitchen: boolean): NavGroup[] =>
   homeKitchen ? NAV_GROUPS.map((g) => ({ ...g, items: g.items.filter((i) => HOME_KITCHEN.has(i.href)).map((i) => (i.href === "/app/orders" ? { ...i, label: { en: "Orders", hi: "ऑर्डर" }, hint: { en: "Orders from your page and WhatsApp", hi: "आपके पेज और WhatsApp के ऑर्डर" } } : i.href === "/app/connections" ? { ...i, hint: { en: "Your kitchen, hours, delivery and UPI", hi: "आपकी रसोई, समय, डिलीवरी और UPI" } } : i)) })).filter((g) => g.items.length) : NAV_GROUPS;
 

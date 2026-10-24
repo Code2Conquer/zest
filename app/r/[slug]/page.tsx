@@ -9,9 +9,10 @@ import { useApp } from "@/lib/state";
 
 // The restaurant's own ordering site. Phone first: browse, add dishes, give a name and number, then
 // have it delivered (by a Zomato rider or the restaurant's own staff, priced by distance), pick it up
-// or eat at the table, and pay by UPI to the restaurant or on collection.
+// or eat at the table. Pay online (when the gateway is set up), by UPI to the seller, or on collection.
+// Dishes can have a daily count ("only 3 left") and menu sections a daily cut-off ("lunch orders by 11").
 
-type Dish = { id: string; name: string; category: string; description: string; veg: boolean; bestseller: boolean; photo: string | null; price: number; rating: number | null; votes: number };
+type Dish = { id: string; name: string; category: string; description: string; veg: boolean; bestseller: boolean; photo: string | null; price: number; rating: number | null; votes: number; left: number | null };
 type Shop = {
   name: string;
   hero: string;
@@ -28,14 +29,52 @@ type Shop = {
   fssai: string | null;
   open: boolean;
   upi: boolean;
+  online: boolean;
+  cutoffs: Record<string, { at: string; closed: boolean }>;
   delivery: { zomatoRider: boolean; ownStaff: boolean; pickup: boolean; feePaidBy: "customer" | "restaurant"; freeAbove: number | null; maxKm: number; priced: boolean };
   menu: Dish[];
 };
-type Placed = { orderId: string; number: string; total: number; token: string; upiLink: string | null; deliveryFee?: number; deliveryBy?: "zomato_rider" | "own_staff" | null };
+type Checkout = { key: string; pgOrderId: string; amount: number; name: string };
+type Placed = { orderId: string; number: string; total: number; token: string; upiLink: string | null; checkout?: Checkout | null; paid?: boolean; deliveryFee?: number; deliveryBy?: "zomato_rider" | "own_staff" | null };
 type Status = { number: string; status: string; total: number; items: string; paymentStatus: "unpaid" | "paid" | null; fulfilment: string | null; table: string | null; upiLink: string | null; deliveryBy: "zomato_rider" | "own_staff" | null; deliveryFee: number | null; address: string | null };
 type Quote = { ok: true; by: "zomato_rider" | "own_staff"; km: number | null; fee: number | null; customerFee: number } | { ok: false; reason: "off" | "too_far" };
 
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+const clock = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return `${h % 12 || 12}${m ? `:${String(m).padStart(2, "0")}` : ""} ${h < 12 ? "am" : "pm"}`;
+};
+
+/** Opens the payment gateway's checkout over the page. Resolves with its proof of payment, or null if closed. */
+function payOnline(c: Checkout, prefill: { name: string; contact: string }): Promise<{ paymentId: string; signature: string } | null> {
+  type Rzp = new (o: Record<string, unknown>) => { open: () => void };
+  const load = () =>
+    new Promise<void>((ok, fail) => {
+      if ((window as unknown as { Razorpay?: Rzp }).Razorpay) return ok();
+      const s = document.createElement("script");
+      s.src = "https://checkout.razorpay.com/v1/checkout.js";
+      s.onload = () => ok();
+      s.onerror = () => fail(new Error("Couldn't open the payment page. Check your connection and try again."));
+      document.body.appendChild(s);
+    });
+  return load().then(
+    () =>
+      new Promise((resolve) => {
+        const R = (window as unknown as { Razorpay: Rzp }).Razorpay;
+        new R({
+          key: c.key,
+          order_id: c.pgOrderId,
+          amount: c.amount,
+          currency: "INR",
+          name: c.name,
+          prefill,
+          theme: { color: "#e9a31a" },
+          handler: (r: { razorpay_payment_id: string; razorpay_signature: string }) => resolve({ paymentId: r.razorpay_payment_id, signature: r.razorpay_signature }),
+          modal: { ondismiss: () => resolve(null) },
+        }).open();
+      }),
+  );
+}
 const PLATFORM = { zomato: "Zomato", swiggy: "Swiggy" } as const;
 
 const STEP: Record<string, { en: string; hi: string }> = {
@@ -79,7 +118,22 @@ function Storefront({ slug }: { slug: string }) {
   const categories = useMemo(() => [...new Set(shown.map((m) => m.category))], [shown]);
   const count = Object.values(cart).reduce((s, n) => s + n, 0);
   const total = shop ? Object.entries(cart).reduce((s, [id, n]) => s + (shop.menu.find((m) => m.id === id)?.price ?? 0) * n, 0) : 0;
-  const add = (id: string, d: number) => setCart((c) => ({ ...c, [id]: Math.max(0, Math.min(20, (c[id] ?? 0) + d)) }));
+  // A dish can be added up to what's left of it today, and not at all once its section's cut-off has passed.
+  const cap = (m: Dish) => (shop?.cutoffs[m.category]?.closed ? 0 : Math.min(20, m.left ?? 20));
+  const add = (id: string, d: number) =>
+    setCart((c) => {
+      const m = shop?.menu.find((x) => x.id === id);
+      return { ...c, [id]: Math.max(0, Math.min(m ? cap(m) : 20, (c[id] ?? 0) + d)) };
+    });
+  // The last order placed on this phone, to order it again in one tap.
+  const [usual, setUsual] = useState<Record<string, number> | null>(null);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`zest:usual:${slug}`);
+      if (saved) setUsual(JSON.parse(saved) as Record<string, number>);
+    } catch {}
+  }, [slug]);
+  const usualNow = shop && usual ? Object.fromEntries(Object.entries(usual).flatMap(([id, n]) => { const m = shop.menu.find((x) => x.id === id); return m ? [[id, Math.min(n, cap(m))]] : []; }).filter(([, n]) => (n as number) > 0)) : null;
 
   if (error) return <p className="mx-auto max-w-xl px-5 py-20 text-center text-ink-2">{error}</p>;
   if (!shop)
@@ -223,12 +277,30 @@ function Storefront({ slug }: { slug: string }) {
 
         {/* Menu */}
         <main>
+          {usualNow && Object.keys(usualNow).length > 0 && count === 0 && shop.open && (
+            <section className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-turmeric-soft p-4">
+              <div className="min-w-0">
+                <p className="font-semibold">{hi ? "पिछली बार वाला ऑर्डर?" : "Your usual?"}</p>
+                <p className="truncate text-sm text-ink-2">{Object.entries(usualNow).map(([id, n]) => `${n} × ${shop.menu.find((m) => m.id === id)!.name}`).join(", ")}</p>
+              </div>
+              <button type="button" onClick={() => setCart(usualNow as Record<string, number>)} className="shrink-0 rounded-full bg-ink px-4 py-2 text-sm font-semibold text-paper">
+                {hi ? "फिर से जोड़ें" : "Add it again"}
+              </button>
+            </section>
+          )}
           {shop.menu.length === 0 && <p className="py-16 text-center text-muted">{hi ? "मेन्यू अपडेट हो रहा है।" : "The menu is being updated."}</p>}
           {shop.menu.length > 0 && shown.length === 0 && <p className="py-16 text-center text-muted">{hi ? "कोई डिश नहीं मिली।" : "No dishes match."}</p>}
           {categories.map((c) => (
             <section key={c} id={encodeURIComponent(c)} className="scroll-mt-36 pt-6">
-              <h2 className="text-xl font-semibold tracking-[-0.01em]">
-                {c} <span className="text-base font-normal text-muted">({shown.filter((m) => m.category === c).length})</span>
+              <h2 className="flex flex-wrap items-baseline gap-x-3 text-xl font-semibold tracking-[-0.01em]">
+                <span>
+                  {c} <span className="text-base font-normal text-muted">({shown.filter((m) => m.category === c).length})</span>
+                </span>
+                {shop.cutoffs[c] && (
+                  <span className={`rounded-full px-2.5 py-0.5 text-sm font-medium ${shop.cutoffs[c].closed ? "bg-chilli-soft text-chilli" : "bg-turmeric-soft text-ink"}`}>
+                    {shop.cutoffs[c].closed ? (hi ? "आज के ऑर्डर बंद" : "Closed for today") : hi ? `${clock(shop.cutoffs[c].at)} तक ऑर्डर करें` : `Order by ${clock(shop.cutoffs[c].at)}`}
+                  </span>
+                )}
               </h2>
               <ul className="mt-2 divide-y divide-dashed divide-line">
                 {shown
@@ -242,6 +314,7 @@ function Storefront({ slug }: { slug: string }) {
                         </p>
                         <h3 className="mt-1.5 text-[1.05rem] font-semibold">{m.name}</h3>
                         <p className="mt-0.5 font-medium">{inr(m.price)}</p>
+                        {m.left != null && m.left <= 5 && <p className={`mt-1 text-sm font-semibold ${m.left ? "text-turmeric" : "text-chilli"}`}>{m.left ? (hi ? `सिर्फ़ ${m.left} बचे` : `Only ${m.left} left today`) : hi ? "आज का ख़त्म" : "Sold out today"}</p>}
                         {m.rating && (
                           <p className="mt-1 inline-flex items-center gap-1 text-sm text-ink-2">
                             <Star aria-hidden className="size-3.5 fill-turmeric text-turmeric" />
@@ -252,7 +325,7 @@ function Storefront({ slug }: { slug: string }) {
                       </div>
                       <div className="relative w-[132px] shrink-0 pb-4">
                         {m.photo ? <img src={m.photo} alt="" width={132} height={132} loading="lazy" className="size-[132px] rounded-2xl object-cover" /> : <div className="h-8" />}
-                        {shop.open && (
+                        {shop.open && cap(m) > 0 && (
                           <div className={`${m.photo ? "absolute inset-x-3 bottom-0" : ""}`}>
                             {cart[m.id] ? (
                               <span className="flex items-center justify-between rounded-lg bg-surface px-2 py-1.5 font-semibold text-leaf shadow-[0_0_0_1px_var(--line),0_6px_14px_-8px_rgb(0_0_0/0.4)]">
@@ -347,7 +420,7 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
   const [locating, setLocating] = useState(false);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [note, setNote] = useState("");
-  const [pay, setPay] = useState<"upi" | "counter">(shop.upi ? "upi" : "counter");
+  const [pay, setPay] = useState<"online" | "upi" | "counter">(shop.online ? "online" : shop.upi ? "upi" : "counter");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -395,7 +468,19 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
       });
       try {
         localStorage.setItem(`zest:order:${slug}`, JSON.stringify(placed));
+        localStorage.setItem(`zest:usual:${slug}`, JSON.stringify(Object.fromEntries(lines.map((l) => [l.itemId, l.qty]))));
       } catch {}
+      // Online: pay in the gateway's checkout now; the order counts once the payment is confirmed.
+      if (placed.checkout) {
+        const proof = await payOnline(placed.checkout, { name, contact: phone });
+        if (proof) {
+          await api(`/api/storefront/${slug}/orders/${placed.orderId}/paid`, { method: "POST", json: { token: placed.token, ...proof } });
+          placed.paid = true;
+          try {
+            localStorage.setItem(`zest:order:${slug}`, JSON.stringify(placed));
+          } catch {}
+        }
+      }
       onPlaced(placed);
     } catch (err) {
       setError((err as Error).message);
@@ -515,7 +600,13 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
         <fieldset className="mt-4">
           <legend className="text-sm text-ink-2">{hi ? "भुगतान" : "Payment"}</legend>
           <div className="mt-1 grid grid-cols-2 gap-2">
-            {shop.upi && (
+            {shop.online && (
+              <button type="button" aria-pressed={pay === "online"} onClick={() => setPay("online")} className={`rounded-xl px-4 py-3 text-left ${pay === "online" ? "bg-ink text-paper" : "bg-surface shadow-[0_0_0_1px_var(--line)]"}`}>
+                {hi ? "अभी भुगतान" : "Pay now"}
+                <span className="block text-sm opacity-70">{hi ? "UPI, कार्ड या वॉलेट" : "UPI, card or wallet"}</span>
+              </button>
+            )}
+            {shop.upi && !shop.online && (
               <button type="button" aria-pressed={pay === "upi"} onClick={() => setPay("upi")} className={`rounded-xl px-4 py-3 text-left ${pay === "upi" ? "bg-ink text-paper" : "bg-surface shadow-[0_0_0_1px_var(--line)]"}`}>
                 UPI
                 <span className="block text-sm opacity-70">{hi ? "अपने UPI ऐप से" : "From your UPI app"}</span>
@@ -581,6 +672,25 @@ function OrderPlaced({ slug, shopName, placed, onNew }: { slug: string; shopName
           </p>
         )}
         {status?.paymentStatus === "paid" && <p className="mt-2 text-sm text-leaf">{hi ? "भुगतान मिल गया" : "Payment received"}</p>}
+        {placed.checkout && status?.paymentStatus !== "paid" && !done && (
+          <div className="mt-6 rounded-2xl bg-surface p-5 shadow-[0_0_0_1px_var(--line)]">
+            <p className="font-medium">{hi ? "भुगतान बाक़ी है" : "Your payment didn't go through"}</p>
+            <p className="mt-1 text-sm text-muted">{hi ? "भुगतान होते ही ऑर्डर किचन में जाएगा।" : "The kitchen gets the order as soon as it's paid."}</p>
+            <button
+              type="button"
+              onClick={async () => {
+                const proof = await payOnline(placed.checkout!, { name: "", contact: "" }).catch(() => null);
+                if (proof) await api(`/api/storefront/${slug}/orders/${placed.orderId}/paid`, { method: "POST", json: { token: placed.token, ...proof } }).catch(() => {});
+              }}
+              className="mt-3 rounded-full bg-ink px-6 py-3 font-medium text-paper"
+            >
+              {hi ? `${inr(placed.total)} का भुगतान करें` : `Pay ${inr(placed.total)}`}
+            </button>
+          </div>
+        )}
+        <a href={`/t/${placed.token}`} className="mt-4 inline-block text-sm font-medium underline underline-offset-4">
+          {hi ? "ऑर्डर ट्रैक करें" : "Track your order"}
+        </a>
 
         {upi && status?.paymentStatus !== "paid" && (
           <div className="mt-6 rounded-2xl bg-surface p-5 shadow-[0_0_0_1px_var(--line)]">

@@ -42,8 +42,12 @@ function describeChanges(before: Item, after: Item, live: Platform[], hi: boolea
 
 export default function MenuPage() {
   const { state, pick } = useApp();
-  const { live, outlet } = useOutlet();
+  const { live: platforms, outlet } = useOutlet();
   const hi = state.lang === "hi";
+  // A home kitchen sells only on its own page. Its dishes keep one price and stock under both keys, so
+  // edits here move them together; the screen labels them "Your page".
+  const home = isHomeKitchen(outlet);
+  const live = useMemo<Platform[]>(() => (platforms.length ? platforms : ["zomato", "swiggy"]), [platforms]);
 
   const { data: menu, error: loadError } = useApi<Item[]>(outlet ? `/api/menu?o=${outlet.id}` : null);
   const published = useMemo(() => menu ?? [], [menu]);
@@ -157,7 +161,7 @@ export default function MenuPage() {
 
   function onDecided(a: ApprovalDTO) {
     if (a.status === "executed") {
-      setToast(hi ? `${live.map((p) => CHANNEL_NAME[p]).join(" और ")} पर पब्लिश हो गया` : `Published to ${live.map((p) => CHANNEL_NAME[p]).join(" and ")}`);
+      setToast(home ? (hi ? "आपका पेज अपडेट हो गया" : "Your page is updated") : hi ? `${live.map((p) => CHANNEL_NAME[p]).join(" और ")} पर पब्लिश हो गया` : `Published to ${live.map((p) => CHANNEL_NAME[p]).join(" and ")}`);
       setTimeout(() => setToast(null), 3200);
       setTimeout(() => setReviewOpen(false), 1400);
     }
@@ -185,7 +189,7 @@ export default function MenuPage() {
           {outlet?.area && <p className="text-sm text-muted">{outlet.area}</p>}
         </div>
         <div className="flex gap-4">
-          {live.map((p) => {
+          {platforms.map((p) => {
             const r = outlet?.ratings[p];
             return (
               <div key={p} className="text-center">
@@ -293,7 +297,10 @@ export default function MenuPage() {
           {categories.length === 0 && <p className="py-16 text-center text-muted">{hi ? `"${query}" से कोई डिश नहीं मिली` : `No dishes match "${query}"`}</p>}
           {categories.map((c) => (
             <section key={c} ref={(el) => void (sections.current[c] = el)} data-cat={c} className="scroll-mt-24 pb-6">
-              <h2 className="pb-1 text-[1.35rem] font-semibold">{c}</h2>
+              <h2 className="flex flex-wrap items-center gap-x-3 gap-y-1 pb-1 text-[1.35rem] font-semibold">
+                {c}
+                <Cutoff category={c} at={outlet?.cutoffs?.[c] ?? null} />
+              </h2>
               <ul className="divide-y divide-dashed divide-line">
                 {visible
                   .filter((m) => m.category === c)
@@ -377,7 +384,7 @@ export default function MenuPage() {
       </AnimatePresence>
 
       {/* Edit drawer */}
-      <AnimatePresence>{editItem && <EditDrawer key={editItem.id} item={editItem} live={live} onClose={() => setEditing(null)} onSave={(next) => (patch(next.id, () => next), setEditing(null))} />}</AnimatePresence>
+      <AnimatePresence>{editItem && <EditDrawer key={editItem.id} item={editItem} live={home ? [live[0]] : live} home={home} onClose={() => setEditing(null)} onSave={(next) => (patch(next.id, () => next), setEditing(null))} />}</AnimatePresence>
 
       <AnimatePresence>
         {toast && (
@@ -493,6 +500,11 @@ function DishRow({
           <span className={`food-mark ${item.veg ? "text-veg" : "nonveg text-nonveg"}`} aria-label={item.veg ? "Veg" : "Non-veg"} />
           {item.bestseller && <span className="rounded-md bg-chilli-soft px-1.5 py-0.5 text-[0.72rem] font-semibold text-chilli">{hi ? "बेस्टसेलर" : "Bestseller"}</span>}
           {changed && !preview && <span className="rounded-md bg-turmeric-soft px-1.5 py-0.5 text-[0.72rem] font-medium text-turmeric">{hi ? "बदला गया" : "Edited"}</span>}
+          {item.dailyLimit != null && (
+            <span className={`rounded-md px-1.5 py-0.5 text-[0.72rem] font-semibold ${item.leftToday === 0 ? "bg-chilli-soft text-chilli" : "bg-sunken text-ink-2"}`}>
+              {hi ? `आज ${item.leftToday ?? item.dailyLimit}/${item.dailyLimit} बचे` : `${item.leftToday ?? item.dailyLimit} of ${item.dailyLimit} left today`}
+            </span>
+          )}
         </div>
         <h3 className={`mt-1.5 text-[1.12rem] font-semibold ${unavailable ? "text-muted" : ""}`}>{item.name}</h3>
         <div className="mt-0.5">
@@ -553,7 +565,7 @@ function DishRow({
   );
 }
 
-function EditDrawer({ item, live, onClose, onSave }: { item: Item; live: Platform[]; onClose: () => void; onSave: (next: Item) => void }) {
+function EditDrawer({ item, live, home, onClose, onSave }: { item: Item; live: Platform[]; home: boolean; onClose: () => void; onSave: (next: Item) => void }) {
   const { state } = useApp();
   const hi = state.lang === "hi";
   const [d, setD] = useState<Item>(item);
@@ -567,7 +579,8 @@ function EditDrawer({ item, live, onClose, onSave }: { item: Item; live: Platfor
 
   function setPrice(p: Platform, v: number) {
     const price = { ...d.price };
-    if (samePrice) live.forEach((x) => (price[x] = v));
+    if (home) (["zomato", "swiggy"] as Platform[]).forEach((x) => (price[x] = v));
+    else if (samePrice) live.forEach((x) => (price[x] = v));
     else price[p] = v;
     setD({ ...d, price });
   }
@@ -672,6 +685,8 @@ function EditDrawer({ item, live, onClose, onSave }: { item: Item; live: Platfor
             </button>
           </div>
 
+          <DailyCount item={item} />
+
           <fieldset>
             <legend className="mb-2 text-sm text-ink-2">{hi ? "क़ीमत और स्टॉक" : "Price and stock"}</legend>
             {live.length > 1 && (
@@ -683,7 +698,7 @@ function EditDrawer({ item, live, onClose, onSave }: { item: Item; live: Platfor
             <div className="space-y-2">
               {live.map((p) => (
                 <div key={p} className="flex items-center gap-3 rounded-xl bg-surface px-4 py-3 shadow-[0_0_0_1px_var(--line)]">
-                  <ChannelTag channel={p} className="w-20" />
+                  {home ? <span className="w-20 text-sm font-medium">{hi ? "आपका पेज" : "Your page"}</span> : <ChannelTag channel={p} className="w-20" />}
                   <label className="relative">
                     <span className="sr-only">{CHANNEL_NAME[p]} price</span>
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted">₹</span>
@@ -696,7 +711,7 @@ function EditDrawer({ item, live, onClose, onSave }: { item: Item; live: Platfor
                     />
                   </label>
                   <label className="ml-auto inline-flex cursor-pointer items-center gap-2 text-sm">
-                    <input type="checkbox" checked={d.available[p]} onChange={(e) => setD({ ...d, available: { ...d.available, [p]: e.target.checked } })} className="peer sr-only" />
+                    <input type="checkbox" checked={d.available[p]} onChange={(e) => setD({ ...d, available: home ? { zomato: e.target.checked, swiggy: e.target.checked } : { ...d.available, [p]: e.target.checked } })} className="peer sr-only" />
                     <span aria-hidden className="relative h-5 w-9 rounded-full bg-line transition-colors peer-checked:bg-veg peer-focus-visible:outline-2 peer-focus-visible:outline-turmeric">
                       <span className={`absolute top-0.5 size-4 rounded-full bg-surface transition-all ${d.available[p] ? "left-[18px]" : "left-0.5"}`} />
                     </span>
@@ -718,5 +733,66 @@ function EditDrawer({ item, live, onClose, onSave }: { item: Item; live: Platfor
         </footer>
       </motion.aside>
     </motion.div>
+  );
+}
+
+/** "Make 15 a day": the ordering page counts down from it and shows the dish as sold out at zero. Saved at once. */
+function DailyCount({ item }: { item: Item }) {
+  const { state } = useApp();
+  const hi = state.lang === "hi";
+  const [value, setValue] = useState(item.dailyLimit == null ? "" : String(item.dailyLimit));
+  const [note, setNote] = useState<string | null>(null);
+  async function save() {
+    const n = value.trim() === "" ? null : Math.max(0, Math.round(Number(value)));
+    if (n === item.dailyLimit || Number.isNaN(n)) return;
+    try {
+      await api(`/api/menu/${item.id}`, { method: "PATCH", json: { dailyLimit: n } });
+      setNote(hi ? "सेव हो गया" : "Saved");
+      refreshAll();
+    } catch (e) {
+      setNote((e as Error).message);
+    }
+  }
+  return (
+    <label className="block">
+      <span className="mb-1 block text-sm text-ink-2">{hi ? "रोज़ कितने बनाते हैं" : "How many you make a day"}</span>
+      <span className="flex items-center gap-3">
+        <input type="number" min={0} inputMode="numeric" placeholder={hi ? "कोई सीमा नहीं" : "No limit"} value={value} onChange={(e) => setValue(e.target.value)} onBlur={save} className="w-32 rounded-lg bg-surface px-3 py-2.5 outline-none shadow-[inset_0_0_0_1px_var(--line)] focus:shadow-[inset_0_0_0_2px_var(--turmeric)]" />
+        <span className="text-sm text-muted">{note ?? (item.leftToday != null ? (hi ? `आज ${item.leftToday} बचे` : `${item.leftToday} left today`) : hi ? "आपके पेज पर \"सिर्फ़ 3 बचे\" दिखेगा" : "Your page shows \"only 3 left\"")}</span>
+      </span>
+    </label>
+  );
+}
+
+/** A menu section's daily cut-off, e.g. lunch orders close at 11:00. Saved at once; clearing it removes it. */
+function Cutoff({ category, at }: { category: string; at: string | null }) {
+  const { state } = useApp();
+  const hi = state.lang === "hi";
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(at ?? "11:00");
+  async function save(next: string | null) {
+    await api("/api/outlet", { method: "PATCH", json: { cutoffs: { [category]: next } } }).catch(() => {});
+    setOpen(false);
+    refreshAll();
+  }
+  if (!open)
+    return (
+      <button type="button" onClick={() => setOpen(true)} className={`rounded-full px-2.5 py-1 text-[0.8rem] font-medium ${at ? "bg-turmeric-soft text-ink" : "text-muted shadow-[inset_0_0_0_1px_var(--line)] hover:text-ink"}`}>
+        {at ? (hi ? `ऑर्डर ${at} तक` : `Orders close at ${at}`) : hi ? "+ ऑर्डर का आख़िरी समय" : "+ Order cut-off"}
+      </button>
+    );
+  return (
+    <span className="flex items-center gap-2 text-[0.85rem] font-normal">
+      <label className="sr-only" htmlFor={`cut-${category}`}>{hi ? "ऑर्डर का आख़िरी समय" : "Orders close at"}</label>
+      <input id={`cut-${category}`} type="time" value={value} onChange={(e) => setValue(e.target.value)} className="rounded-lg bg-surface px-2 py-1 shadow-[inset_0_0_0_1px_var(--line)]" />
+      <button type="button" onClick={() => save(value)} className="rounded-full bg-ink px-3 py-1 font-medium text-paper">
+        {hi ? "सेव" : "Save"}
+      </button>
+      {at && (
+        <button type="button" onClick={() => save(null)} className="text-muted underline underline-offset-2">
+          {hi ? "हटाएँ" : "Remove"}
+        </button>
+      )}
+    </span>
   );
 }

@@ -4,7 +4,7 @@ import { parseListing } from "@/lib/listing";
 import { audit, HttpError } from "@/lib/server/approvals";
 import { db } from "@/lib/server/db";
 import { applyListing, fetchListing } from "@/lib/server/listing-sync";
-import { handler, OWNER } from "@/lib/server/http";
+import { assertWritable, handler, OWNER } from "@/lib/server/http";
 import { outletDTO } from "@/lib/server/queries";
 import { ensureSlugs } from "@/lib/server/storefront";
 import { brands, outlets } from "@/lib/server/schema";
@@ -106,15 +106,21 @@ const Update = Profile.extend({
     freeAbove: z.number().int().min(0).max(100000).nullable(),
     maxKm: z.number().min(1).max(20),
   }),
+  // Daily order cut-offs by menu section, as "HH:MM" India time; null removes one.
+  cutoffs: z.record(z.string().max(60), z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use a time like 11:00").nullable()),
   // Where the kitchen is, from the owner's phone; prices delivery by distance.
   location: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).nullable(),
 }).partial();
 
 export const PATCH = handler({ roles: OWNER }, async (req, outlet) => {
-  const { live, listings, location, ...rest } = Update.parse(await req.json());
+  const body = Update.parse(await req.json());
+  // The public samples can try cut-offs (no free text reaches a page), nothing else.
+  assertWritable(outlet, { sample: Object.keys(body).every((k) => k === "cutoffs") });
+  const { live, listings, location, cutoffs, ...rest } = body;
+  const nextCutoffs = cutoffs ? Object.fromEntries(Object.entries({ ...outlet.cutoffs, ...cutoffs }).filter((e): e is [string, string] => !!e[1])) : undefined;
   const [row] = await db
     .update(outlets)
-    .set({ ...rest, ...(live ? { livePlatforms: live } : {}), ...(listings ? { listings: cleanListings(listings) } : {}), ...(location !== undefined ? { lat: location?.lat ?? null, lng: location?.lng ?? null } : {}) })
+    .set({ ...rest, ...(nextCutoffs ? { cutoffs: nextCutoffs } : {}), ...(live ? { livePlatforms: live } : {}), ...(listings ? { listings: cleanListings(listings) } : {}), ...(location !== undefined ? { lat: location?.lat ?? null, lng: location?.lng ?? null } : {}) })
     .where(eq(outlets.id, outlet.id))
     .returning();
   await audit(outlet.id, "owner", "outlet.updated", { fields: Object.keys({ ...rest, ...(live ? { live } : {}), ...(listings ? { listings } : {}) }) });

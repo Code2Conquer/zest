@@ -11,11 +11,15 @@ import { dinePrice } from "./dining";
 import { getHours } from "./hours";
 import { orderLineRows, summariseLines } from "./order-lines";
 import { checkRate } from "./rate-limit";
-import { customers, menuItems, orderLines, orders, outlets, type Outlet } from "./schema";
+import { updateCustomer, trackingLink } from "./customer-updates";
+import { createPayment, paymentsConfigured, paymentsKeyId, verifyCheckout } from "./payments";
+import { customers, menuItems, orderLines, orders, outlets, type OrderRow, type Outlet } from "./schema";
+import { leftToday, sectionClosed } from "./stock";
 
 // The restaurant's own ordering site at /r/{slug}: delivery (by a Zomato rider or the restaurant's own
-// staff, priced by distance), pickup or table orders, paid by UPI to the restaurant's own UPI ID or at
-// the counter. Staff confirm payment; nothing moves money through Zest.
+// staff, priced by distance), pickup or table orders. Paid online through the payment gateway when it's set
+// up (confirmed by the gateway; lib/server/payments.ts), else by UPI to the seller's own UPI ID or at the
+// counter, confirmed by staff. Dishes can have a daily count and menu sections a daily cut-off.
 
 /** "Dosa & Chai Point!" → "dosa-chai-point". Names with no Latin letters fall back to "restaurant". */
 export function slugify(name: string): string {
@@ -102,6 +106,7 @@ export async function getStorefront(slug: string) {
   const cuisines = (o.cuisines ? o.cuisines.split(",") : (pick((l) => l.cuisines) ?? [])).map((c) => c.trim()).filter(Boolean);
   const photos = [...(pick((l) => l.photos) ?? []), ...menu.filter((m) => m.photoUrl && m.bestseller).map((m) => m.photoUrl!), ...menu.filter((m) => m.photoUrl && !m.bestseller).map((m) => m.photoUrl!)];
   const pureVeg = menu.length > 0 && menu.every((m) => m.veg);
+  const left = await leftToday(o.id, menu);
   return {
     name: o.name,
     isDemo: o.isDemo,
@@ -121,9 +126,12 @@ export async function getStorefront(slug: string) {
     fssai: o.fssai,
     open: await openNow(o.id),
     upi: !!o.upiId,
+    online: paymentsConfigured(),
+    // Daily cut-offs by menu section ("Lunch" → "11:00"), and which have passed today.
+    cutoffs: Object.fromEntries(Object.entries(o.cutoffs ?? {}).map(([cat, at]) => [cat, { at, closed: sectionClosed(o.cutoffs, cat) }])),
     // How this page delivers; the kitchen's location stays on the server, which prices every trip.
     delivery: { ...(o.delivery ?? DEFAULT_DELIVERY), priced: o.lat != null && o.lng != null },
-    menu: menu.map((m) => ({ id: m.id, name: m.name, category: m.category, description: m.description, veg: m.veg, bestseller: m.bestseller, photo: m.photoUrl, price: dinePrice(m), rating: m.votes ? m.rating : null, votes: m.votes })),
+    menu: menu.map((m) => ({ id: m.id, name: m.name, category: m.category, description: m.description, veg: m.veg, bestseller: m.bestseller, photo: m.photoUrl, price: dinePrice(m), rating: m.votes ? m.rating : null, votes: m.votes, left: left.get(m.id) ?? null })),
   };
 }
 
@@ -135,7 +143,7 @@ export const OrderInput = z.object({
   address: z.string().trim().max(300).optional(),
   // The customer's location, if they shared it, to price delivery by distance.
   location: z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180) }).optional(),
-  pay: z.enum(["upi", "counter"]),
+  pay: z.enum(["online", "upi", "counter"]),
   note: z.string().trim().max(200).optional(),
   lines: z.array(z.object({ itemId: z.string(), qty: z.number().int().min(1).max(20) })).min(1, "Add a dish").max(30),
 });
@@ -151,6 +159,7 @@ export async function placeOrder(slug: string, raw: unknown, ip?: string) {
   if (input.fulfilment === "pickup" && !delivery.pickup) throw new HttpError(400, "This restaurant only delivers.");
   if (input.fulfilment === "delivery" && (!input.address || input.address.length < 8)) throw new HttpError(400, "Enter your delivery address.");
   if (input.pay === "upi" && !o.upiId) throw new HttpError(400, "This restaurant takes payment at the counter.");
+  if (input.pay === "online" && !paymentsConfigured()) throw new HttpError(400, "Online payment isn't available here. Choose UPI or pay on delivery.");
   let phone: string;
   try {
     phone = normalizePhone(input.phone);
@@ -159,9 +168,13 @@ export async function placeOrder(slug: string, raw: unknown, ip?: string) {
   }
 
   const menu = await db.select().from(menuItems).where(eq(menuItems.outletId, o.id));
+  const left = await leftToday(o.id, menu);
   const lines = input.lines.map((l) => {
     const m = menu.find((x) => x.id === l.itemId);
     if (!m || !Object.values(m.available).some(Boolean)) throw new HttpError(400, `${m?.name ?? "A dish"} isn't available right now.`);
+    if (sectionClosed(o.cutoffs, m.category)) throw new HttpError(409, `${m.category} orders closed at ${o.cutoffs[m.category]} today.`);
+    const n = left.get(m.id);
+    if (n != null && l.qty > n) throw new HttpError(409, n ? `Only ${n} ${m.name} left today.` : `${m.name} is sold out for today.`);
     return { itemId: m.id, name: m.name, qty: l.qty, unitPrice: dinePrice(m) };
   });
   const rows = orderLineRows("pending", lines);
@@ -204,7 +217,17 @@ export async function placeOrder(slug: string, raw: unknown, ip?: string) {
     db.insert(orderLines).values(rows.map((r) => ({ ...r, orderId }))),
   ]);
   await audit(o.id, "customer", "web.order", { orderId, number, total, ...(quote?.ok ? { deliveryBy: quote.by, deliveryFee } : {}) });
-  return { orderId, number, total, deliveryFee, deliveryBy: quote?.ok ? quote.by : null, token, upiLink: input.pay === "upi" && o.upiId ? upiLink(o.upiId, o.name, total, number) : null };
+  // Online: open a payment with the gateway; the kitchen sees the order once it's paid.
+  let checkout: { key: string; pgOrderId: string; amount: number; name: string } | null = null;
+  if (input.pay === "online") {
+    const pg = await createPayment(total, `${o.slug}-${number}`, { orderId, outlet: o.name });
+    await db.update(orders).set({ pgOrderId: pg.id }).where(eq(orders.id, orderId));
+    checkout = { key: paymentsKeyId()!, pgOrderId: pg.id, amount: pg.amount, name: o.name };
+  } else {
+    const [row] = await db.select().from(orders).where(eq(orders.id, orderId));
+    await updateCustomer(row, "placed");
+  }
+  return { orderId, number, total, deliveryFee, deliveryBy: quote?.ok ? quote.by : null, token, checkout, upiLink: input.pay === "upi" && o.upiId ? upiLink(o.upiId, o.name, total, number) : null };
 }
 
 const QuoteInput = z.object({
@@ -236,5 +259,52 @@ export async function orderStatus(slug: string, orderId: string, token: string) 
     deliveryFee: row.deliveryFee,
     address: row.deliveryAddress,
     upiLink: row.paymentMethod === "upi" && row.paymentStatus === "unpaid" && o.upiId ? upiLink(o.upiId, o.name, row.amount, row.externalId) : null,
+  };
+}
+
+/** Marks an online order paid. Called with the gateway's own record of the payment; checked, never trusted. */
+export async function markPaidOnline(row: OrderRow, paymentId: string) {
+  if (row.paymentStatus === "paid") return row;
+  const [paid] = await db.update(orders).set({ paymentStatus: "paid", pgPaymentId: paymentId, updatedAt: new Date().toISOString() }).where(eq(orders.id, row.id)).returning();
+  await audit(row.outletId, "customer", "web.paid", { orderId: row.id, number: row.externalId, paymentId });
+  await updateCustomer(paid, "placed");
+  return paid;
+}
+
+const PaidInput = z.object({ token: z.string().min(8), paymentId: z.string().min(4), signature: z.string().min(8) });
+
+/** The checkout's success callback from the customer's browser: verified against the gateway's signature. */
+export async function confirmPayment(slug: string, orderId: string, raw: unknown) {
+  const { token, paymentId, signature } = PaidInput.parse(raw);
+  const o = await shopBySlug(slug);
+  const [row] = await db.select().from(orders).where(and(eq(orders.id, orderId), eq(orders.outletId, o.id)));
+  if (!row || row.publicToken !== token || !row.pgOrderId) throw new HttpError(404, "Order not found.");
+  if (!verifyCheckout(row.pgOrderId, paymentId, signature)) throw new HttpError(400, "We couldn't confirm that payment. If money left your account, it will be refunded.");
+  const paid = await markPaidOnline(row, paymentId);
+  return { paid: paid.paymentStatus === "paid" };
+}
+
+/** One order for whoever holds its private link (/t/<token>): what it is, where it's got to, who's bringing it. */
+export async function trackOrder(token: string) {
+  const [row] = await db.select().from(orders).where(eq(orders.publicToken, token));
+  if (!row) return null;
+  const [shop] = await db.select().from(outlets).where(eq(outlets.id, row.outletId));
+  if (!shop) return null;
+  return {
+    shop: { name: shop.name, slug: shop.slug, phone: shop.ownerPhone, area: [shop.area, shop.city].filter(Boolean).join(", ") },
+    number: row.externalId,
+    status: row.status,
+    placedAt: row.placedAt,
+    updatedAt: row.updatedAt,
+    items: row.items,
+    total: row.amount,
+    fulfilment: row.fulfilment,
+    paymentStatus: row.paymentStatus,
+    paymentMethod: row.paymentMethod,
+    refundStatus: row.refundStatus,
+    address: row.deliveryAddress,
+    deliveryBy: row.deliveryBy,
+    rider: row.rider,
+    link: trackingLink(row),
   };
 }

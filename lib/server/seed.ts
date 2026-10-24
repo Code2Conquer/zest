@@ -6,7 +6,7 @@ import { createApproval } from "./approvals";
 import { db } from "./db";
 import { dinePrice, ensureTables } from "./dining";
 import { dayBounds } from "./queries";
-import { campaigns, connections, customers, diningTables, dineTabs, menuItems, orders, outlets, payouts, reservations, reviews, brands, outletHours, type TabLine } from "./schema";
+import { campaigns, connections, customers, plans, diningTables, dineTabs, menuItems, orders, outlets, payouts, reservations, reviews, brands, outletHours, type TabLine } from "./schema";
 
 export const DEMO_OUTLET_ID = "demo";
 export const MEENA_OUTLET_ID = "demo-meena";
@@ -345,6 +345,27 @@ export async function refreshMeenaDay() {
   const TODAY: [number, OrderStatus][] = [[290, "completed"], [250, "completed"], [210, "completed"], [170, "completed"], [140, "completed"], [100, "completed"], [55, "out_for_delivery"], [32, "preparing"], [18, "accepted"], [6, "new"], [2, "new"]];
   TODAY.forEach(([m, s], i) => rows.push(row(i, ago(m), s, `Mt${i + 1}`)));
   await db.insert(orders).values(rows);
+
+  // Cook to the count: lunch closes at 11, thali and rajma are made to a number.
+  await db.update(outlets).set({ cutoffs: { Lunch: "11:00" } }).where(eq(outlets.id, MEENA_OUTLET_ID));
+  for (const [name, n] of [["Thali", 30], ["Rajma chawal", 20]] as const) await db.update(menuItems).set({ dailyLimit: n }).where(and(eq(menuItems.outletId, MEENA_OUTLET_ID), eq(menuItems.name, name)));
+  // Notes on two regulars, and three of them on weekly tiffin plans.
+  await db.update(customers).set({ note: "Less spicy, no onion" }).where(eq(customers.id, people[2].id));
+  await db.update(customers).set({ note: "Leave with the guard if not home" }).where(eq(customers.id, people[5].id));
+  await db.delete(plans).where(eq(plans.outletId, MEENA_OUTLET_ID));
+  const dish = Object.fromEntries((await db.select().from(menuItems).where(eq(menuItems.outletId, MEENA_OUTLET_ID))).map((m) => [m.name, m]));
+  const monday = (() => {
+    const d = new Date(`${new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date())}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+    return d.toISOString().slice(0, 10);
+  })();
+  const sunday = new Date(new Date(`${monday}T00:00:00Z`).getTime() + 6 * day).toISOString().slice(0, 10);
+  if (dish.Thali && dish["Rajma chawal"])
+    await db.insert(plans).values([
+      { outletId: MEENA_OUTLET_ID, customerId: people[2].id, itemId: dish.Thali.id, qty: 1, days: [1, 2, 3, 4, 5], fulfilment: "delivery", address: "PG, Hauz Khas, 2nd floor", note: "Less spicy", startsOn: monday, endsOn: sunday, amount: 600, paymentStatus: "paid" },
+      { outletId: MEENA_OUTLET_ID, customerId: people[5].id, itemId: dish.Thali.id, qty: 4, days: [1, 2, 3, 4, 5], fulfilment: "delivery", address: "Office, Yusuf Sarai", note: "", startsOn: monday, endsOn: sunday, amount: 2400, paymentStatus: "paid" },
+      { outletId: MEENA_OUTLET_ID, customerId: people[7].id, itemId: dish["Rajma chawal"].id, qty: 1, days: [1, 3, 5], fulfilment: "pickup", address: "", note: "", startsOn: monday, endsOn: sunday, amount: 270, paymentStatus: "unpaid" },
+    ]);
 
   // A week of dish counts for "best sellers".
   for (const [name, n] of [["Thali", 52], ["Rajma chawal", 38], ["Aloo paratha", 31], ["Kadhi chawal", 24], ["Diwali sweets box", 6]] as const) {

@@ -1,5 +1,6 @@
 import "server-only";
-import { and, asc, desc, eq, gt, gte, inArray, lt, or } from "drizzle-orm";
+import { leftToday } from "./stock";
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, ne, or } from "drizzle-orm";
 import type { DishKind } from "@/components/dishes";
 import type { ApprovalDTO, ApprovalStep, MenuItemDTO, OrderDTO, OutletDTO, PayoutDTO, ReviewDTO, TodayDTO } from "../types";
 import { VOID_STATUSES } from "../orders";
@@ -24,6 +25,7 @@ export async function outletDTO(o: Outlet): Promise<OutletDTO> {
     upiId: o.upiId,
     ordering: o.ordering,
     delivery: o.delivery ?? DEFAULT_DELIVERY,
+    cutoffs: o.cutoffs ?? {},
     location: o.lat != null && o.lng != null ? { lat: o.lat, lng: o.lng } : null,
     name: o.name,
     area: o.area,
@@ -63,6 +65,7 @@ export const menuDTO = (m: MenuItemRow): MenuItemDTO => ({
   price: m.price,
   available: m.available,
   ordersLast7: m.ordersLast7,
+  dailyLimit: m.dailyLimit,
 });
 
 export const orderDTO = (o: OrderRow): OrderDTO => ({
@@ -76,8 +79,8 @@ export const orderDTO = (o: OrderRow): OrderDTO => ({
   delayed: o.delayed,
   promisedAt: o.promisedAt,
   prepMins: o.prepMins,
-  ...(o.fulfilment ? { fulfilment: o.fulfilment, tableLabel: o.tableLabel, paymentStatus: o.paymentStatus, paymentMethod: o.paymentMethod, note: o.note } : {}),
-  ...(o.fulfilment === "delivery" ? { delivery: { by: o.deliveryBy, address: o.deliveryAddress, fee: o.deliveryFee, km: o.deliveryKm } } : {}),
+  ...(o.fulfilment ? { fulfilment: o.fulfilment, tableLabel: o.tableLabel, paymentStatus: o.paymentStatus, paymentMethod: o.paymentMethod, refundStatus: o.refundStatus, note: o.note, fromPlan: !!o.planId } : {}),
+  ...(o.fulfilment === "delivery" ? { delivery: { by: o.deliveryBy, address: o.deliveryAddress, fee: o.deliveryFee, km: o.deliveryKm, rider: o.rider } } : {}),
 });
 
 /** Adds the customer's name and phone to direct orders, in one query. */
@@ -120,11 +123,16 @@ export const approvalDTO = (a: ApprovalRow): ApprovalDTO => ({
 });
 
 export async function getMenu(outletId: string) {
-  return (await db.select().from(menuItems).where(eq(menuItems.outletId, outletId)).orderBy(asc(menuItems.sort))).map(menuDTO);
+  const rows = await db.select().from(menuItems).where(eq(menuItems.outletId, outletId)).orderBy(asc(menuItems.sort));
+  const left = await leftToday(outletId, rows);
+  return rows.map((m) => ({ ...menuDTO(m), leftToday: left.get(m.id) ?? null }));
 }
 
+/** Online orders reach the kitchen only once they're paid; until then they're the customer's, not the cook's. */
+const notAwaitingPayment = or(isNull(orders.paymentMethod), ne(orders.paymentMethod, "online"), eq(orders.paymentStatus, "paid"));
+
 export async function getOrders(outletId: string, limit = 60) {
-  const raw = await db.select().from(orders).where(eq(orders.outletId, outletId)).orderBy(desc(orders.placedAt)).limit(limit);
+  const raw = await db.select().from(orders).where(and(eq(orders.outletId, outletId), notAwaitingPayment)).orderBy(desc(orders.placedAt)).limit(limit);
   const rows = await withCustomers(raw, raw.map(orderDTO));
   const lines = await linesFor(rows.map((o) => o.id));
   return rows.map((o) => (lines.has(o.id) ? { ...o, lines: lines.get(o.id) } : o));
@@ -138,7 +146,7 @@ export async function getOrders(outletId: string, limit = 60) {
 export async function ordersChangedSince(outletId: string, cursor: string | null, limit = 100): Promise<{ orders: OrderDTO[]; cursor: string | null }> {
   const [at, id] = cursor?.includes("|") ? cursor.split("|") : [null, null];
   const after = at && id ? or(gt(orders.updatedAt, at), and(eq(orders.updatedAt, at), gt(orders.id, id))) : gte(orders.updatedAt, dayBounds(0)[0]);
-  const rows = await db.select().from(orders).where(and(eq(orders.outletId, outletId), after)).orderBy(asc(orders.updatedAt), asc(orders.id)).limit(limit);
+  const rows = await db.select().from(orders).where(and(eq(orders.outletId, outletId), after, notAwaitingPayment)).orderBy(asc(orders.updatedAt), asc(orders.id)).limit(limit);
   const last = rows.at(-1);
   return { orders: await withCustomers(rows, rows.map(orderDTO)), cursor: last ? `${last.updatedAt}|${last.id}` : cursor };
 }
