@@ -7,6 +7,7 @@ import { ZestOrb } from "@/components/zest-orb";
 import { api } from "@/lib/api";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
+import { useScrollLock } from "@/lib/use-scroll-lock";
 import { track } from "@/lib/analytics";
 
 // Zest, the assistant on the website: an orb in the corner that speaks up beside itself about whatever
@@ -31,6 +32,7 @@ type Recognition = {
 export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }) {
   const { pick, lang } = useApp();
   const [open, setOpen] = useState(false);
+  useScrollLock(open);
   const [hello, setHello] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
@@ -243,7 +245,7 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
               </button>
             </div>
 
-            <div ref={list} className="flex-1 space-y-3 overflow-y-auto px-5 py-5" aria-live="polite">
+            <div ref={list} className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-5 py-5" aria-live="polite">
               {/* Before the first question: the orb, large. Tap it to speak; it shows when it's listening. */}
               {turns.length === 0 && (
                 <div className="flex flex-col items-center pb-2 pt-4 text-center">

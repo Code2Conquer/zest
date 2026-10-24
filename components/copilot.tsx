@@ -126,7 +126,7 @@ export function Copilot({ onClose, ask, voice = false, className = "bg-paper" }:
         </div>
       </header>
 
-      <div ref={scroller} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 py-4" aria-live="polite">
+      <div ref={scroller} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4" aria-live="polite">
         {/* Before the first question: the orb, large. Tap it to speak. */}
         {messages.length === 0 && (
           <div className="flex flex-col items-center pb-4 pt-2 text-center">

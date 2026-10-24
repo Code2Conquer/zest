@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { Bi } from "@/lib/i18n";
 import { isHomeKitchen } from "@/lib/nav";
 import { useApp } from "@/lib/state";
+import { useScrollLock } from "@/lib/use-scroll-lock";
 import { track } from "@/lib/analytics";
 import { Copilot } from "./copilot";
 import { ZestNudge } from "./zest-nudge";
@@ -29,6 +30,7 @@ const RESTAURANT: Record<string, Line> = {
 };
 
 export function AssistantDock({ open, setOpen }: { open: boolean; setOpen: (o: boolean) => void }) {
+  useScrollLock(open);
   const { pick, outlet, lang } = useApp();
   const path = usePathname();
   const lines = isHomeKitchen(outlet) ? HOME : RESTAURANT;
