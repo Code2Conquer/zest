@@ -31,6 +31,7 @@ export async function GET() {
     ai: aiProvider(),
     gmail: gmailConfigured(),
     analytics: { posthog: set("NEXT_PUBLIC_POSTHOG_KEY") },
+    errors: { server: set("SENTRY_DSN"), browser: set("NEXT_PUBLIC_SENTRY_DSN"), sourceMaps: set("SENTRY_AUTH_TOKEN", "SENTRY_ORG", "SENTRY_PROJECT") },
     support: { whatsapp: set("NEXT_PUBLIC_SUPPORT_WHATSAPP"), email: set("NEXT_PUBLIC_SUPPORT_EMAIL") },
     appUrl: set("APP_URL"),
   });

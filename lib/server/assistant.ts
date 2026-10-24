@@ -1,4 +1,5 @@
 import "server-only";
+import * as Sentry from "@sentry/nextjs";
 import { aiProvider, claude, MODEL } from "./claude";
 import { openChat } from "./open-llm";
 
@@ -65,7 +66,9 @@ export async function answer(history: Turn[]): Promise<string> {
     });
     const text = res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("").trim();
     return text || fallback(last);
-  } catch {
+  } catch (err) {
+    // The visitor still gets an answer; the team hears the AI failed.
+    Sentry.captureException(err, { tags: { feature: "website-assistant", ai } });
     return fallback(last);
   }
 }

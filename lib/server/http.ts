@@ -1,4 +1,5 @@
 import "server-only";
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { HttpError } from "./approvals";
@@ -48,6 +49,8 @@ export function handler<P = Record<string, string>>(a: Fn<P> | Opts, b?: Fn<P>) 
       if (err instanceof HttpError) return NextResponse.json({ error: err.message }, { status: err.status });
       if (err instanceof ZodError) return NextResponse.json({ error: err.issues[0]?.message ?? "Invalid request.", issues: err.issues }, { status: 400 });
       console.error(err);
+      // Unexpected failures go to Sentry (when set up); ordinary refusals above don't.
+      Sentry.captureException(err);
       return NextResponse.json({ error: (err as Error).message || "Something went wrong." }, { status: 500 });
     }
   };

@@ -32,5 +32,15 @@ describe("error reports", () => {
   });
   it("drops request bodies", () => {
     expect(scrubEvent({ message: "x", request: { data: '{"phone":"9876543210"}', url: "/api/x" } }).request).toEqual({ url: "/api/x" });
+    const e = scrubEvent({
+      message: "x",
+      request: { url: "https://zest.app/t/AbCdEfGh12345678?t=secret", cookies: { zest_session: "s" }, headers: { cookie: "a", authorization: "Bearer x", "user-agent": "ua" }, query_string: "t=secret" },
+      breadcrumbs: [{ message: "GET /api/storefront/x/orders/1?t=abcdefgh123 for 9876543210", data: { url: "/t/ZZZZZZZZZZZZ" } }],
+      user: { ip_address: "1.2.3.4", id: "u1" },
+    });
+    expect(e.request).toEqual({ url: "https://zest.app/t/[token]?t=[redacted]", headers: { "user-agent": "ua" } });
+    expect(e.breadcrumbs![0].message).toBe("GET /api/storefront/x/orders/1?t=[redacted] for [phone]");
+    expect(e.breadcrumbs![0].data).toEqual({ url: "/t/[token]" });
+    expect(e.user).toEqual({ id: "u1" });
   });
 });

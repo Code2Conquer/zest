@@ -1,4 +1,5 @@
 import "server-only";
+import * as Sentry from "@sentry/nextjs";
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
@@ -49,6 +50,7 @@ export async function runCopilot(outlet: Outlet, message: string, uiLang: Lang, 
       reply = await withAI(outlet, message, lang, history.reverse(), ai);
     } catch (err) {
       console.error(err);
+      Sentry.captureException(err, { tags: { feature: "dashboard-assistant", ai } });
       reply = { agent: "orchestrator", text: describeAIError(err), cards: [], suggestions: [], engine: ai };
     }
   } else {
