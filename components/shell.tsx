@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { BellRing, Loader2, Menu as MenuIcon, MessageSquareText, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { BellRing, Loader2, Menu as MenuIcon, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import { api, refreshAll, useApi } from "@/lib/api";
 import { signOutHere, useMe } from "@/lib/auth-client";
 import { isHomeKitchen, navGroupsFor, navItem, type NavItem } from "@/lib/nav";
@@ -11,7 +11,8 @@ import { useApp, useOutlet } from "@/lib/state";
 import { AssistantDock } from "./assistant-dock";
 import { LangToggle, Wordmark } from "./bits";
 
-const MOBILE_TABS = ["/app", "/app/orders", "copilot", "/app/money", "more"] as const;
+// Zest itself is the orb above the tabs (components/assistant-dock.tsx), so it has no tab of its own.
+const MOBILE_TABS = ["/app", "/app/orders", "/app/menu", "/app/money", "more"] as const;
 
 const ROLE_NAME = {
   owner: { en: "Owner", hi: "मालिक" },
@@ -205,7 +206,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-30 bg-ink/30 lg:hidden" onClick={() => setMoreOpen(false)}>
           <div className="absolute inset-x-0 bottom-[72px] max-h-[70dvh] overflow-y-auto rounded-t-2xl bg-surface p-3" onClick={(e) => e.stopPropagation()}>
             {groups.map((g) => {
-              const items = g.items.filter((n) => !["/app", "/app/orders", "/app/money"].includes(n.href));
+              const items = g.items.filter((n) => !(home ? ["/app", "/app/orders", "/app/menu", "/app/customers"] : ["/app", "/app/orders", "/app/menu", "/app/money"]).includes(n.href));
               if (!items.length) return null;
               return (
                 <div key={g.id} className="py-1">
@@ -232,17 +233,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
       {/* Bottom tabs, mobile */}
       <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 grid h-[72px] grid-cols-5 border-t border-line bg-surface lg:hidden">
-        {(home ? (["/app", "/app/orders", "copilot", "/app/menu", "more"] as const) : MOBILE_TABS).map((tab) => {
-          if (tab === "copilot") {
-            return (
-              <button key={tab} type="button" onClick={() => setCopilotOpen(true)} className="flex flex-col items-center justify-center gap-1">
-                <span className="grid size-11 place-items-center rounded-full bg-ink text-paper">
-                  <MessageSquareText aria-hidden className="size-5" />
-                </span>
-                <span className="sr-only">{t("nav.copilot")}</span>
-              </button>
-            );
-          }
+        {(home ? (["/app", "/app/orders", "/app/menu", "/app/customers", "more"] as const) : MOBILE_TABS).map((tab) => {
           if (tab === "more") {
             return (
               <button key={tab} type="button" onClick={() => setMoreOpen((o) => !o)} aria-expanded={moreOpen} className="flex flex-col items-center justify-center gap-1 text-[0.75rem] text-muted">

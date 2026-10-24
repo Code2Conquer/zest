@@ -34,8 +34,9 @@ export default function Today() {
     <Page eyebrow={dateLabel} title={`${greeting}${outlet?.ownerName ? `, ${outlet.ownerName}` : ""}`}>
 
       {home && outlet?.slug && (
-        <section className="mt-6 flex flex-wrap items-center gap-4 rounded-2xl bg-turmeric-soft p-5">
-          <div className="min-w-0 flex-1">
+        <section className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl bg-turmeric-soft p-5 sm:gap-4">
+          {/* The text takes the full row on a phone, with the two buttons under it */}
+          <div className="min-w-0 basis-full sm:basis-auto sm:flex-1">
             <p className="font-medium">{hi ? "आपका पेज लाइव है" : "Your page is live"}</p>
             <p className="mt-0.5 truncate text-ink-2">{typeof window !== "undefined" ? `${window.location.host}/r/${outlet.slug}` : `/r/${outlet.slug}`}</p>
           </div>

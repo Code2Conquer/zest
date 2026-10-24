@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Loader2, Mic, Square, Volume2, VolumeX, X } from "lucide-react";
-import { LottieIcon } from "@/components/landing/lottie-icon";
+import { ZestOrb } from "@/components/zest-orb";
 import { api } from "@/lib/api";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
-// Zest, the assistant on the website: one question at a time in a pill in the corner, with Zest's animated
-// (Lottie) button at its end; tapping the question asks it, tapping the button opens Zest. The conversation
+// Zest, the assistant on the website: an orb in the corner that speaks up beside itself about whatever
+// section is on screen (a line, its words arriving one by one); tapping the line asks its question,
+// tapping the orb opens Zest. The conversation
 // opens in an overlay with suggested questions. Type, or speak (Hindi or English, by the browser's own
 // speech recognition); answers spoken back when you spoke. Nothing is remembered after the tab closes.
 
@@ -41,18 +42,10 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
 
   const canListen = typeof window !== "undefined" && !!((window as unknown as { SpeechRecognition?: unknown }).SpeechRecognition || (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition);
 
-  // A few seconds in, questions float in beside the button, one after another, and keep rotating
-  // slowly until the visitor opens Zest or closes them.
-  const [chipAt, setChipAt] = useState(0);
   useEffect(() => {
-    const t = setTimeout(() => setHello(true), 2500);
+    const t = setTimeout(() => setHello(true), 1500);
     return () => clearTimeout(t);
   }, []);
-  useEffect(() => {
-    if (!hello || open || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const t = setInterval(() => setChipAt((k) => k + 1), 4200);
-    return () => clearInterval(t);
-  }, [hello, open]);
 
   useEffect(() => {
     list.current?.scrollTo({ top: list.current.scrollHeight, behavior: "smooth" });
@@ -125,21 +118,55 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
     r.start();
   }
 
-  const SUGGEST: Bi[] =
+  // What Zest says beside its orb, by the section on screen: a line, and the question tapping it asks.
+  const LINES: Record<string, { say: Bi; ask: Bi }> =
     audience === "home"
-      ? [
-          { en: "How does delivery work?", hi: "डिलीवरी कैसे होती है?" },
-          { en: "What does it cost?", hi: "इसका ख़र्च कितना है?" },
-          { en: "Do I need FSSAI?", hi: "क्या FSSAI ज़रूरी है?" },
-          { en: "How do I get paid?", hi: "मुझे पैसा कैसे मिलेगा?" },
-          { en: "Can I set a lunch cut-off?", hi: "क्या लंच के ऑर्डर का समय तय कर सकते हैं?" },
-        ]
-      : [
-          { en: "Do I have to leave Zomato or Swiggy?", hi: "क्या Zomato या Swiggy छोड़ना होगा?" },
-          { en: "Who delivers orders from my page?", hi: "मेरे पेज के ऑर्डर कौन पहुँचाता है?" },
-          { en: "What does the Soundbox do?", hi: "Soundbox क्या करता है?" },
-          { en: "What's in the morning summary?", hi: "सुबह की रिपोर्ट में क्या आता है?" },
-        ];
+      ? {
+          top: { say: { en: "Move the slider. I'll explain the maths.", hi: "स्लाइडर खिसकाइए। हिसाब मैं समझाऊँगा।" }, ask: { en: "How is this estimate worked out?", hi: "यह अंदाज़ा कैसे निकाला गया?" } },
+          why: { say: { en: "Want to know how far Zomato riders can take your food?", hi: "जानना है Zomato राइडर आपका खाना कितनी दूर ले जा सकते हैं?" }, ask: { en: "How does delivery work?", hi: "डिलीवरी कैसे होती है?" } },
+          covered: { say: { en: "Money lands in your bank before you cook. Ask me how.", hi: "पकाने से पहले पैसा आपके बैंक में। पूछिए कैसे।" }, ask: { en: "How do I get paid?", hi: "मुझे पैसा कैसे मिलेगा?" } },
+          looks: { say: { en: "Send me a photo of your menu. I'll do the rest.", hi: "मेन्यू की फ़ोटो भेजिए। बाक़ी मैं कर दूँगा।" }, ask: { en: "How do I add my menu?", hi: "मैं अपना मेन्यू कैसे जोड़ूँ?" } },
+        }
+      : {
+          top: { say: { en: "You keep Zomato and Swiggy. Ask me how this fits.", hi: "Zomato और Swiggy बने रहेंगे। पूछिए यह कैसे जुड़ता है।" }, ask: { en: "Do I have to leave Zomato or Swiggy?", hi: "क्या Zomato या Swiggy छोड़ना होगा?" } },
+          orders: { say: { en: "Lost a party order to a busy phone? I can catch those.", hi: "भीड़ में फ़ोन पर पार्टी ऑर्डर छूटा? मैं पकड़ लूँगा।" }, ask: { en: "How do I take phone and WhatsApp orders?", hi: "फ़ोन और WhatsApp ऑर्डर कैसे लूँ?" } },
+          delivery: { say: { en: "Who carries orders from your page? Ask me.", hi: "आपके पेज के ऑर्डर कौन पहुँचाता है? पूछिए।" }, ask: { en: "Who delivers orders from my page?", hi: "मेरे पेज के ऑर्डर कौन पहुँचाता है?" } },
+          soundbox: { say: { en: "Want to know what the Soundbox says, and when?", hi: "जानना है Soundbox क्या और कब बोलता है?" }, ask: { en: "What does the Soundbox do?", hi: "Soundbox क्या करता है?" } },
+          summary: { say: { en: "Your 7:30 summary comes from your emails. Curious?", hi: "सुबह 7:30 की रिपोर्ट आपके ईमेल से बनती है। जानना है?" }, ask: { en: "What's in the morning summary?", hi: "सुबह की रिपोर्ट में क्या आता है?" } },
+        };
+  // The same questions, offered inside Zest when it opens.
+  const SUGGEST: Bi[] = Object.values(LINES).map((l) => l.ask);
+  // The section on screen, watched as the page scrolls.
+  const [where, setWhere] = useState("top");
+  useEffect(() => {
+    const ids = Object.keys(LINES).filter((k) => k !== "top");
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) setWhere(e.target.id);
+        if (window.scrollY < 300) setWhere("top");
+      },
+      { rootMargin: "-40% 0px -40% 0px" },
+    );
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    }
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audience]);
+  // Each line shows once per section visit, for a few seconds; the visitor can wave it away.
+  const [said, setSaid] = useState<string | null>(null);
+  const [quiet, setQuiet] = useState(false);
+  useEffect(() => {
+    if (!hello || open || quiet) return;
+    setSaid(null);
+    const show = setTimeout(() => setSaid(where), 600);
+    const hide = setTimeout(() => setSaid(null), 9000);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
+  }, [where, hello, open, quiet]);
   // On a phone Zest is a round button (a FAB) that slides away while the page scrolls and comes back
   // once it rests. It steps aside for the closing call to action everywhere.
   const [moving, setMoving] = useState(false);
@@ -159,8 +186,7 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
       clearTimeout(rest);
     };
   }, []);
-  // One question at a time, taken in turn from the list.
-  const current = SUGGEST[chipAt % SUGGEST.length];
+  const line = said ? LINES[said] : null;
   const ask = (q: Bi) => {
     setOpen(true);
     void send(pick(q));
@@ -168,20 +194,37 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
 
   return (
     <>
-      {/* One question in a pill, bottom right, with Zest's animated button at its end; above the sticky start bar on a phone */}
-      <div className={`fixed bottom-4 right-4 z-50 transition-[opacity,transform] duration-300 sm:bottom-6 sm:right-6 ${atEnd ? "pointer-events-none opacity-0" : moving ? "max-sm:pointer-events-none max-sm:translate-y-6 max-sm:opacity-0" : ""}`}>
-        {!open && (
-          <div className={`za-pill relative flex items-center gap-1 rounded-full p-1 sm:p-1.5 sm:pl-5 transition-[opacity,transform] duration-500 ${hello ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"}`}>
-            <span aria-hidden className="za-dots pointer-events-none absolute inset-0 rounded-full" />
-            <button type="button" onClick={() => ask(current)} className="relative max-w-[300px] truncate py-2 pr-2 text-left text-[15px] font-semibold text-[#f1f1ec] max-sm:hidden">
-              <span key={chipAt} className="za-q inline-block">
-                {pick(current)}
+      {/* The orb, bottom right, and what Zest says beside it. On a phone it slides away while the page scrolls. */}
+      <div className={`fixed bottom-4 right-4 z-50 flex items-end gap-2.5 transition-[opacity,transform] duration-300 sm:bottom-6 sm:right-6 ${atEnd ? "pointer-events-none opacity-0" : moving ? "max-sm:pointer-events-none max-sm:translate-y-6 max-sm:opacity-0" : ""}`}>
+        {!open && line && (
+          <div key={`${said}-${lang}`} className="zb relative mb-1 flex max-w-[min(300px,calc(100vw-96px))] items-start gap-1 rounded-[20px] rounded-br-md p-1 pl-3.5">
+            <span aria-hidden className="zb-edge pointer-events-none absolute inset-x-4 bottom-0 h-px" />
+            <button type="button" onClick={() => ask(line.ask)} className="py-2 text-left text-[14px] font-medium leading-snug text-[#f1f1ec] sm:text-[15px]">
+              <span className="sr-only">{pick(line.ask)}</span>
+              <span aria-hidden>
+                {pick(line.say)
+                  .split(" ")
+                  .map((w, i) => (
+                    <span key={i} className="zb-word" style={{ animationDelay: `${120 + i * 55}ms` }}>
+                      {w}&nbsp;
+                    </span>
+                  ))}
               </span>
             </button>
-            <button type="button" onClick={() => setOpen(true)} aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })} className="relative grid size-11 shrink-0 place-items-center rounded-full bg-[var(--z-turmeric)] transition-transform hover:scale-105 active:scale-95">
-              <LottieIcon src="/lottie/zest-sparkle.json" className="size-10" />
+            <button type="button" onClick={() => setQuiet(true)} aria-label={pick({ en: "Hide", hi: "छिपाएँ" })} className="grid size-7 shrink-0 place-items-center rounded-full text-[#9aa0a6] hover:bg-white/10 hover:text-[#f1f1ec]">
+              <X aria-hidden size={14} />
             </button>
           </div>
+        )}
+        {!open && (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })}
+            className={`grid size-14 shrink-0 place-items-center rounded-full bg-[#121417]/90 shadow-[0_16px_36px_-12px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.09)] transition-[transform,opacity] duration-500 hover:scale-105 active:scale-95 ${hello ? "opacity-100" : "pointer-events-none scale-75 opacity-0"}`}
+          >
+            <ZestOrb size={36} />
+          </button>
         )}
       </div>
 
@@ -195,9 +238,7 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
             className={/* taste-skill-ignore: floating overlay */ "za-in flex h-[86dvh] w-full flex-col overflow-hidden rounded-t-[28px] bg-[#16191c] text-[var(--lp-ink)] shadow-[0_40px_120px_-20px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.08)] sm:h-[640px] sm:max-h-[calc(100dvh-120px)] sm:w-[400px] sm:rounded-[28px]"}
           >
             <div className="flex items-center gap-3 border-b border-white/[0.07] px-5 pb-4 pt-5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--z-turmeric)]">
-                <LottieIcon src="/lottie/zest-sparkle.json" className="size-7" />
-              </span>
+              <ZestOrb size={36} state={busy ? "thinking" : listening ? "listening" : "idle"} />
               <div className="min-w-0 flex-1">
                 <p className="text-[17px] font-semibold leading-tight">Zest</p>
                 <p className="text-[13px] text-[var(--lp-muted)]">{busy ? pick({ en: "thinking…", hi: "सोच रहा है…" }) : listening ? pick({ en: "listening…", hi: "सुन रहा है…" }) : pick({ en: "Ask in Hindi or English", hi: "हिंदी या अंग्रेज़ी में पूछिए" })}</p>

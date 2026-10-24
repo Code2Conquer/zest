@@ -20,7 +20,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/app/orders", short: { en: "Orders", hi: "ऑर्डर" }, label: { en: "Live orders", hi: "लाइव ऑर्डर" }, hint: { en: "Every platform and dine-in, as they come in", hi: "हर प्लेटफ़ॉर्म और डाइन-इन के ऑर्डर, आते ही" }, icon: ReceiptText },
       { href: "/app/dining", label: { en: "Tables & bookings", hi: "टेबल और बुकिंग" }, hint: { en: "Floor, bills, reservations and the waitlist", hi: "फ़्लोर, बिल, रिज़र्वेशन और वेटलिस्ट" }, icon: Armchair },
-      { href: "/app/menu", label: { en: "Menu & stock", hi: "मेन्यू और स्टॉक" }, hint: { en: "Dishes, prices and what's available, everywhere", hi: "डिश, क़ीमत और क्या उपलब्ध है, हर जगह" }, icon: BookOpen },
+      { href: "/app/menu", short: { en: "Menu", hi: "मेन्यू" }, label: { en: "Menu & stock", hi: "मेन्यू और स्टॉक" }, hint: { en: "Dishes, prices and what's available, everywhere", hi: "डिश, क़ीमत और क्या उपलब्ध है, हर जगह" }, icon: BookOpen },
     ],
   },
   {
@@ -28,7 +28,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: { en: "Customers", hi: "ग्राहक" },
     items: [
       { href: "/app/reviews", label: { en: "Reviews & complaints", hi: "रिव्यू और शिकायतें" }, hint: { en: "Every platform's reviews, with replies ready", hi: "हर प्लेटफ़ॉर्म के रिव्यू, जवाब तैयार" }, icon: Star },
-      { href: "/app/customers", label: { en: "Customer list", hi: "ग्राहक सूची" }, hint: { en: "People who ordered straight from your site", hi: "जिन्होंने आपकी साइट से सीधे ऑर्डर किया" }, icon: Users },
+      { href: "/app/customers", short: { en: "Customers", hi: "ग्राहक" }, label: { en: "Customer list", hi: "ग्राहक सूची" }, hint: { en: "People who ordered straight from your site", hi: "जिन्होंने आपकी साइट से सीधे ऑर्डर किया" }, icon: Users },
     ],
   },
   {
