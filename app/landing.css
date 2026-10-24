@@ -126,22 +126,6 @@
   0%, 60%, 100% { opacity: 0.35; transform: none; }
   30% { opacity: 1; transform: translateY(-2px); }
 }
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: none; }
-}
-
-/* Zest Soundbox: sound rings spreading from the speaker while it announces. */
-  from { transform: scale(1); opacity: 0.9; }
-  to { transform: scale(1.9); opacity: 0; }
-}
-
-/* Agent flow: dashes travelling along a connector, and the active arc drawing itself in. */
-  to { stroke-dashoffset: -26; }
-}
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 /* An order chip or bubble arriving. */
 .hs-chip {
   animation: hs-pop 400ms cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
@@ -150,7 +134,6 @@
   from { opacity: 0; transform: translateY(10px) scale(0.96); }
   to { opacity: 1; transform: none; }
 }
-
 
 /* The direct-order journey: the bar under the current step, each scene arriving, its parts popping in,
    the route drawing itself, the tracking bars filling. */
@@ -217,9 +200,6 @@
   background: #fafaf6;
   box-shadow: 0 0 0 4px var(--z-turmeric); /* taste-skill-ignore */
 }
-
-/* Zest's mark: a slow breathing ring at rest, a quicker one while it listens or thinks. */ /* taste-skill-ignore */
-
 
 /* The estimator thinking: three dots bouncing in turn, then the amount counts up. */
 .est-dots i { display: block; width: 0.16em; height: 0.16em; border-radius: 999px; background: currentColor; animation: est-dot 900ms ease-in-out infinite; }
