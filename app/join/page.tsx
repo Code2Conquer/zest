@@ -7,6 +7,7 @@ import { Bike, Camera, Check, ChevronLeft, Copy, ExternalLink, Loader2, LocateFi
 import { ChannelTag, Wordmark } from "@/components/bits";
 import { ListingPreview } from "@/components/listing-preview";
 import { MailboxCard } from "@/components/mailbox-card";
+import { GoogleButton } from "@/components/google-button";
 import { PhoneLogin } from "@/components/phone-login";
 import { FoodWall } from "@/components/food-wall";
 import { siteFonts } from "@/components/landing/site-fonts";
@@ -110,6 +111,7 @@ function JoinInner() {
           </p>
           <div className="mt-6">
             <PhoneLogin onDone={() => window.location.reload()} />
+            <GoogleButton returnTo={`/join?journey=${journey}`} error={params.get("error")} />
           </div>
         </div>
       </div>

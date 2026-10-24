@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/lib/state";
 
-// Log in or sign up with a mobile number, like Airbnb: the number first, then the 6-digit code sent on
+// Log in or sign up with a mobile number, like Airbnb: the number first, then the 4-digit code sent on
 // WhatsApp. Without a sender (local development) the server returns the code and it is filled in.
 
 export function PhoneLogin({ onDone }: { onDone: (hasRestaurant: boolean) => void }) {
@@ -15,6 +15,8 @@ export function PhoneLogin({ onDone }: { onDone: (hasRestaurant: boolean) => voi
   const [sent, setSent] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [hint, setHint] = useState<string | null>(null);
+  // Until WhatsApp or SMS is set up, the code is the number's last 4 digits; the screen says so.
+  const [last4, setLast4] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const codeBox = useRef<HTMLInputElement>(null);
@@ -27,7 +29,8 @@ export function PhoneLogin({ onDone }: { onDone: (hasRestaurant: boolean) => voi
     setBusy(true);
     setError(null);
     try {
-      const r = await api<{ phone: string; devCode?: string }>("/api/auth/otp/start", { method: "POST", json: { phone } });
+      const r = await api<{ phone: string; devCode?: string; mode?: "last4" }>("/api/auth/otp/start", { method: "POST", json: { phone } });
+      setLast4(r.mode === "last4");
       setSent(r.phone);
       if (r.devCode) {
         setHint(r.devCode);
@@ -91,7 +94,7 @@ export function PhoneLogin({ onDone }: { onDone: (hasRestaurant: boolean) => voi
         <p className={`mt-2.5 text-[13.5px] ${wrongStart ? "text-[#e2735f]" : "text-[#9aa0a6]"}`}>
           {wrongStart
             ? hi ? "मोबाइल नंबर 6, 7, 8 या 9 से शुरू होता है।" : "Mobile numbers start with 6, 7, 8 or 9."
-            : hi ? "हम SMS या WhatsApp पर 6 अंकों का कोड (OTP) भेजेंगे।" : "We'll send a 6-digit code (OTP) by SMS or WhatsApp."}
+            : hi ? "हम SMS या WhatsApp पर 4 अंकों का कोड (OTP) भेजेंगे।" : "We'll send a 4-digit code (OTP) by SMS or WhatsApp."}
         </p>
         {error && <p className="mt-3 text-[14px] text-[#e2735f]">{error}</p>}
         <button type="submit" disabled={busy || !valid} className={button}>
@@ -104,26 +107,28 @@ export function PhoneLogin({ onDone }: { onDone: (hasRestaurant: boolean) => voi
   return (
     <form onSubmit={verify}>
       <p className="text-[15px] text-[#b4b9be]">
-        {hi ? `${sent} पर भेजा गया कोड डालिए।` : `Enter the code sent to ${sent}.`}{" "}
+        {last4 ? (hi ? `${sent} के आख़िरी 4 अंक डालिए।` : `Enter the last 4 digits of ${sent}.`) : hi ? `${sent} पर भेजा गया कोड डालिए।` : `Enter the code sent to ${sent}.`}{" "}
         <button type="button" onClick={() => { setSent(null); setCode(""); setHint(null); }} className="font-medium text-[#f1f1ec] underline underline-offset-4">
           {hi ? "नंबर बदलें" : "Change number"}
         </button>
       </p>
       <div className={`${box} mt-4`}>
         <label htmlFor="code" className="block px-4 pt-3 text-[13px] font-medium text-[#9aa0a6]">
-          {hi ? "6 अंकों का कोड" : "6-digit code"}
+          {hi ? "4 अंकों का कोड" : "4-digit code"}
         </label>
-        <input ref={codeBox} id="code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="––––––" maxLength={6} className={`${input} px-4 pb-3.5 pt-1 text-[24px] font-semibold tracking-[0.4em] tabular-nums`} />
+        <input ref={codeBox} id="code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 4))} inputMode="numeric" autoComplete="one-time-code" placeholder="––––" maxLength={4} className={`${input} px-4 pb-3.5 pt-1 text-[24px] font-semibold tracking-[0.4em] tabular-nums`} />
       </div>
       {hint && <p className="mt-2 text-[13.5px] text-[#9aa0a6]">{hi ? `टेस्ट सर्वर: कोड ${hint} अपने-आप भर दिया।` : `Test server: code ${hint} filled in for you.`}</p>}
       {error && <p className="mt-3 text-[14px] text-[#e2735f]">{error}</p>}
-      <button type="submit" disabled={busy || code.length !== 6} className={button}>
+      <button type="submit" disabled={busy || code.length !== 4} className={button}>
         {busy && <Loader2 aria-hidden className="size-4 animate-spin" />}
         {hi ? "पुष्टि करें" : "Confirm"}
       </button>
-      <button type="button" onClick={() => send()} disabled={busy} className="mt-3 w-full text-center text-[14px] text-[#9aa0a6] hover:text-[#f1f1ec]">
+      {!last4 && (
+        <button type="button" onClick={() => send()} disabled={busy} className="mt-3 w-full text-center text-[14px] text-[#9aa0a6] hover:text-[#f1f1ec]">
         {hi ? "कोड फिर भेजें" : "Send the code again"}
       </button>
+      )}
     </form>
   );
 }

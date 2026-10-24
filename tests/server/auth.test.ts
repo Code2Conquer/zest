@@ -59,3 +59,28 @@ describe("decisions", () => {
     expect(row.decidedBy).toBe(`user:${s!.user.id}`);
   });
 });
+
+describe("Google sign-in", () => {
+  beforeEach(() => cookieJar.clear());
+
+  it("rejects a sign-in callback with a Gmail-purpose state", async () => {
+    const { GET: callback } = await import("@/app/api/auth/google/callback/route");
+    const { sign } = await import("@/lib/server/crypto");
+    const value = Buffer.from(JSON.stringify({ purpose: "gmail", outletId: "", nonce: "n1", returnTo: "/app" })).toString("base64url");
+    cookieJar.set("zest_oauth_signin", sign(value));
+    const res = await callback(new Request("http://x/api/auth/google/callback?state=n1&code=c"), { params: Promise.resolve({}) });
+    expect(res.status).toBe(400);
+  });
+
+  it("signs a Google user into the restaurant they own", async () => {
+    const { signIn, addOwner } = await import("@/lib/server/auth");
+    const o = await freshOutlet();
+    expect(await signIn({ email: "Owner.G@Example.in", name: "G" })).toBeNull();
+    const { users } = await import("@/lib/server/schema");
+    const { eq } = await import("drizzle-orm");
+    const [u] = await db.select().from(users).where(eq(users.email, "owner.g@example.in"));
+    await addOwner(u.id, o.brandId!);
+    const s = await signIn({ email: "owner.g@example.in", name: "G" });
+    expect(s?.outlet.id).toBe(o.id);
+  });
+});

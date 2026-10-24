@@ -12,9 +12,13 @@ import { otpCodes } from "./schema";
 /** Codes are shown on screen instead of sent, on local and preview servers only (never on Vercel production). */
 export const devSigninAllowed = () => process.env.VERCEL_ENV !== "production" && (process.env.NODE_ENV !== "production" || process.env.ZEST_DEV_SIGNIN === "1");
 
-// Sign-in by mobile number: a 6-digit code, valid for 10 minutes, five tries. Sent on WhatsApp through
-// Meta's authentication template (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_OTP_TEMPLATE). In
-// local development, with no sender, the code comes back in the response so the flow can be tried.
+// Sign-in by mobile number: a 4-digit code, valid for 10 minutes, five tries. Sent on WhatsApp through
+// Meta's authentication template (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_OTP_TEMPLATE) or by SMS
+// (MSG91). In local development, with no sender, the code comes back in the response.
+//
+// TEMPORARY, until WhatsApp or SMS is set up on production: the code is the number's last 4 digits.
+// Anyone who knows a seller's number can then log in as them, so this switches itself off the moment a
+// sender is configured, and can be refused earlier with ZEST_LAST4_OTP=off.
 
 const TTL_MS = 10 * 60 * 1000;
 const hash = (phone: string, code: string) => createHash("sha256").update(`${phone}:${code}:${process.env.ZEST_SECRET_KEY ?? "dev"}`).digest("hex");
@@ -22,7 +26,8 @@ const hash = (phone: string, code: string) => createHash("sha256").update(`${pho
 /** Codes go out on WhatsApp (an authentication template) and/or SMS (MSG91), whichever is set up. */
 const whatsappOtp = () => !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID && process.env.WHATSAPP_OTP_TEMPLATE);
 export const otpSenderConfigured = () => whatsappOtp() || smsConfigured("otp");
-export const phoneSigninAvailable = () => otpSenderConfigured() || devSigninAllowed();
+const last4Mode = () => !otpSenderConfigured() && !devSigninAllowed() && process.env.ZEST_LAST4_OTP !== "off";
+export const phoneSigninAvailable = () => otpSenderConfigured() || devSigninAllowed() || last4Mode();
 
 function parsePhone(raw: string) {
   try {
@@ -64,12 +69,13 @@ export async function startOtp(raw: string, ip: string) {
   const phone = parsePhone(raw);
   if (!(await checkRate(`otp:ip:${ip}`, 10, 3600)) || !(await checkRate(`otp:phone:${phone}`, 5, 3600))) throw new HttpError(429, "Too many codes asked for. Try again in an hour.");
   const live = otpSenderConfigured();
-  if (!live && !devSigninAllowed()) throw new HttpError(503, "Mobile sign-in isn't set up on this server yet.");
-  const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+  const last4 = last4Mode();
+  if (!live && !devSigninAllowed() && !last4) throw new HttpError(503, "Mobile sign-in isn't set up on this server yet.");
+  const code = last4 ? phone.slice(-4) : String(randomInt(0, 10_000)).padStart(4, "0");
   const row = { phone, codeHash: hash(phone, code), expiresAt: new Date(Date.now() + TTL_MS).toISOString(), attempts: 0 };
   await db.insert(otpCodes).values(row).onConflictDoUpdate({ target: otpCodes.phone, set: row });
   if (live) await sendCode(phone, code);
-  return { sent: true, phone, ...(live ? {} : { devCode: code }) };
+  return { sent: true, phone, ...(live ? {} : last4 ? { mode: "last4" as const } : { devCode: code }) };
 }
 
 /** Checks the code and signs the person in. */

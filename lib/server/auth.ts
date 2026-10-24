@@ -83,6 +83,19 @@ export async function addOwner(userId: string, brandId: string) {
   return m;
 }
 
+/** Signs in a person verified by Google. Returns null when they have no restaurant yet. */
+export async function signIn(identity: { email: string; name: string }): Promise<SessionUser | null> {
+  const email = identity.email.trim().toLowerCase();
+  let [user] = await db.select().from(users).where(eq(users.email, email));
+  if (!user) [user] = await db.insert(users).values({ email, name: identity.name }).returning();
+  const [membership] = await db.select().from(memberships).where(and(eq(memberships.userId, user.id), eq(memberships.active, true)));
+  if (!membership) {
+    await startUserSession(user);
+    return null;
+  }
+  return startSession(user, membership);
+}
+
 /** Signs in a person verified by a code sent to their mobile. Returns null when they have no restaurant yet. */
 export async function signInByPhone(phone: string): Promise<SessionUser | null> {
   let [user] = await db.select().from(users).where(eq(users.phone, phone));

@@ -3,10 +3,11 @@ import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { sign, unsign } from "./crypto";
 
-/** OAuth is only used to connect a Gmail inbox; each purpose gets its own cookie so states can't be replayed across. */
-export type OAuthPurpose = "gmail";
+/** Gmail connection and Google sign-in keep separate states, so one can never be replayed as the other. */
+export type OAuthPurpose = "gmail" | "signin";
 const COOKIE: Record<OAuthPurpose, { name: string; path: string }> = {
   gmail: { name: "zest_oauth", path: "/api/mail/google" },
+  signin: { name: "zest_oauth_signin", path: "/api/auth/google" },
 };
 
 /** Remembers which outlet started sign-in and where to return, bound to a one-time nonce. */
@@ -52,3 +53,4 @@ export function safeReturn(p: string | null): string {
 export const appUrl = (req: Request) =>
   process.env.APP_URL ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : new URL(req.url).origin);
 export const callbackUrl = (req: Request) => `${appUrl(req)}/api/mail/google/callback`;
+export const signinCallbackUrl = (req: Request) => `${appUrl(req)}/api/auth/google/callback`;
