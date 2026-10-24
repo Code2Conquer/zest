@@ -9,6 +9,7 @@ import { api, refreshAll, useApi } from "@/lib/api";
 import { useApp } from "@/lib/state";
 import type { ChatEntry, CopilotReply } from "@/lib/types";
 import { CopilotCardView } from "./cards";
+import { ZestOrb } from "./zest-orb";
 
 type SpeechRecognitionLike = {
   lang: string;
@@ -18,8 +19,11 @@ type SpeechRecognitionLike = {
   start: () => void;
 };
 
-/** The assistant panel. `ask` sends one question as soon as it opens (from the dock's pill). */
-export function Copilot({ onClose, ask }: { onClose?: () => void; ask?: string }) {
+/**
+ * The assistant panel. `ask` sends one question as soon as it opens (from a nudge); `voice` starts
+ * listening as it opens (voice first, on phones), and a spoken question is sent when the speaker stops.
+ */
+export function Copilot({ onClose, ask, voice = false, className = "bg-paper" }: { onClose?: () => void; ask?: string; voice?: boolean; className?: string }) {
   const { t, pick, lang, outlet } = useApp();
   const { data: history, setData: setHistory } = useApi<ChatEntry[]>(outlet ? `/api/copilot?o=${outlet.id}` : null);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
@@ -40,6 +44,9 @@ export function Copilot({ onClose, ask }: { onClose?: () => void; ask?: string }
     if (ask && history && !asked.current) {
       asked.current = true;
       void send(ask);
+    } else if (voice && history && !asked.current) {
+      asked.current = true;
+      listen();
     }
     // Only once, when the conversation has loaded.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -77,8 +84,15 @@ export function Copilot({ onClose, ask }: { onClose?: () => void; ask?: string }
     const rec = new Rec();
     rec.lang = lang === "hi" ? "hi-IN" : "en-IN";
     rec.interimResults = false;
-    rec.onresult = (e) => setInput(e.results[0][0].transcript);
-    rec.onend = () => setListening(false);
+    let said = "";
+    rec.onresult = (e) => {
+      said = e.results[0][0].transcript;
+      setInput(said);
+    };
+    rec.onend = () => {
+      setListening(false);
+      if (voice && said.trim()) void send(said);
+    };
     setListening(true);
     rec.start();
   }
@@ -87,9 +101,10 @@ export function Copilot({ onClose, ask }: { onClose?: () => void; ask?: string }
   const suggestions = last && last.role === "assistant" && last.reply.suggestions.length ? last.reply.suggestions : (isHomeKitchen(outlet) ? HOME_STARTER_SUGGESTIONS : STARTER_SUGGESTIONS).map((s) => pick(s));
 
   return (
-    <section aria-label={t("nav.copilot")} className="flex h-full min-h-0 flex-col bg-paper">
-      <header className="flex items-center justify-between border-b border-line px-5 py-3.5">
-        <div>
+    <section aria-label={t("nav.copilot")} className={`flex h-full min-h-0 flex-col ${className}`}>
+      <header className="flex items-center justify-between gap-3 border-b border-line/60 px-5 py-3.5">
+        <ZestOrb size={34} state={busy ? "thinking" : listening ? "listening" : "idle"} />
+        <div className="min-w-0 flex-1">
           <h2 className="text-base font-semibold">{t("nav.copilot")}</h2>
           <p className="text-[0.8rem] text-muted">
             {lang === "hi" ? "आपके सभी एजेंट, एक जगह" : "All your agents in one place"}
@@ -111,6 +126,21 @@ export function Copilot({ onClose, ask }: { onClose?: () => void; ask?: string }
       </header>
 
       <div ref={scroller} className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 py-4" aria-live="polite">
+        {/* Before the first question: the orb, large. Tap it to speak. */}
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center pb-4 pt-2 text-center">
+            <button type="button" onClick={listen} aria-label={lang === "hi" ? "बोलकर पूछिए" : "Speak your question"} className="rounded-full transition-transform active:scale-95">
+              <ZestOrb size={104} state={busy ? "thinking" : listening ? "listening" : "idle"} />
+            </button>
+            <div aria-hidden className={`zx-wave mt-4 flex h-9 items-center gap-1 transition-opacity ${listening ? "opacity-100" : "opacity-0"}`}>
+              {[14, 26, 36, 22, 32, 18, 28, 12].map((h, i) => (
+                <i key={i} style={{ height: h, animationDelay: `${-i * 0.13}s` }} />
+              ))}
+            </div>
+            <p className="mt-1 text-[1.05rem] font-semibold">{listening ? (lang === "hi" ? "सुन रहा हूँ…" : "Listening…") : lang === "hi" ? "दबाइए और बोलिए" : "Tap and speak"}</p>
+            <p className="text-sm text-muted">{lang === "hi" ? "हिंदी या अंग्रेज़ी में" : "In Hindi or English"}</p>
+          </div>
+        )}
         <p className="max-w-[46ch] text-[0.98rem] leading-relaxed text-ink-2">{isHomeKitchen(outlet) ? pick({ en: "Good morning. Ask me about your orders, menu or regulars, or pick one of these.", hi: "सुप्रभात। अपने ऑर्डर, मेन्यू या पुराने ग्राहकों के बारे में पूछिए, या इनमें से चुनिए।" }) : t("copilot.hello")}</p>
 
         {messages.map((m) =>
@@ -135,7 +165,7 @@ export function Copilot({ onClose, ask }: { onClose?: () => void; ask?: string }
         )}
       </div>
 
-      <div className="border-t border-line px-4 pb-4 pt-3">
+      <div className="border-t border-line/60 px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3">
         {suggestions.length > 0 && !busy && (
           <div className="scrollbar-thin -mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1">
             {suggestions.map((s) => (

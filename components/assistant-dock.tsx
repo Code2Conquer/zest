@@ -33,6 +33,8 @@ export function AssistantDock({ open, setOpen }: { open: boolean; setOpen: (o: b
   const lines = isHomeKitchen(outlet) ? HOME : RESTAURANT;
   const line = lines[path] ?? lines["/app"];
   const [ask, setAsk] = useState<string | undefined>();
+  // Opened from the orb on a phone: voice first. A nudge or a wide screen opens it ready to type.
+  const [voice, setVoice] = useState(false);
   // Zest says each screen's line a moment after it opens.
   const [said, setSaid] = useState(false);
   useEffect(() => {
@@ -50,6 +52,7 @@ export function AssistantDock({ open, setOpen }: { open: boolean; setOpen: (o: b
   const close = () => {
     setOpen(false);
     setAsk(undefined);
+    setVoice(false);
   };
 
   return (
@@ -68,22 +71,23 @@ export function AssistantDock({ open, setOpen }: { open: boolean; setOpen: (o: b
               }}
             />
           )}
-          <button type="button" onClick={() => setOpen(true)} aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })} className="grid size-14 shrink-0 place-items-center rounded-full transition-transform hover:scale-105 active:scale-95">
+          <button type="button" onClick={() => { setVoice(!window.matchMedia("(min-width: 1024px)").matches); setOpen(true); }} aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })} className="grid size-14 shrink-0 place-items-center rounded-full transition-transform hover:scale-105 active:scale-95">
             <ZestOrb size={50} />
           </button>
         </div>
       )}
 
       {open && (
-        <div className="za-scrim fixed inset-0 z-50 flex items-end justify-center bg-[#0b0d10]/60 backdrop-blur-[3px] sm:justify-end sm:p-6" onClick={close}>
+        <div className="za-scrim fixed inset-0 z-50 flex items-end justify-center bg-[#0b0d10]/60 backdrop-blur-[3px] lg:items-stretch lg:justify-end lg:bg-[#0b0d10]/40" onClick={close}>
           <div
             role="dialog"
             aria-modal="true"
             aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })}
             onClick={(e) => e.stopPropagation()}
-            className="za-in flex h-[86dvh] w-full flex-col overflow-hidden rounded-t-[28px] bg-paper shadow-[0_40px_120px_-20px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.08)] sm:h-[680px] sm:max-h-[calc(100dvh-48px)] sm:w-[440px] sm:rounded-[28px]"
+            className="zx-panel zx-sheet flex h-[88dvh] w-full flex-col overflow-hidden rounded-t-[28px] shadow-[0_-30px_80px_-20px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.08)] lg:h-full lg:w-[460px] lg:rounded-none lg:shadow-[-30px_0_80px_-20px_rgb(0_0_0/0.9),inset_1px_0_0_rgb(255_255_255/0.08)]"
           >
-            <Copilot onClose={close} ask={ask} />
+            <span aria-hidden className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-white/20 lg:hidden" />
+            <Copilot onClose={close} ask={ask} voice={voice && !ask} className="bg-transparent" />
           </div>
         </div>
       )}

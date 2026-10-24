@@ -9,13 +9,13 @@ import { useId } from "react";
 
 export type OrbState = "idle" | "thinking" | "listening";
 
-// Each band fits inside the sphere at its height, so they read as lenses of light, not stripes.
+// A lens of light: thin, short bands at the poles, the thickest and widest one across the middle.
 const BANDS = [
-  { y: 18.0, w: 41, h: 8, x: 19.5, from: "#ff9bb0", to: "#ff6f91" },
-  { y: 27.5, w: 49, h: 9, x: 15.5, from: "#ff9a5c", to: "#ff6f3c" },
-  { y: 37.0, w: 51, h: 10, x: 14.5, from: "#ffd36b", to: "#e9a31a" },
-  { y: 47.5, w: 47, h: 9, x: 16.5, from: "#ffe7a3", to: "#ffc65c" },
-  { y: 57.5, w: 37, h: 7, x: 21.5, from: "#fff6e0", to: "#ffd9a0" },
+  { y: 16.75, w: 28, h: 4.5, x: 26.0, from: "#ff9bb0", to: "#ff6f91" },
+  { y: 25.25, w: 46, h: 7.5, x: 17.0, from: "#ff9a5c", to: "#ff6f3c" },
+  { y: 34.5, w: 56, h: 11, x: 12.0, from: "#ffd36b", to: "#e9a31a" },
+  { y: 47.25, w: 46, h: 7.5, x: 17.0, from: "#ffe7a3", to: "#ffc65c" },
+  { y: 58.75, w: 28, h: 4.5, x: 26.0, from: "#fff6e0", to: "#ffd9a0" },
 ];
 
 export function ZestOrb({ size = 44, state = "idle", className = "" }: { size?: number; state?: OrbState; className?: string }) {

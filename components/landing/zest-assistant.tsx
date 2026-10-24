@@ -187,6 +187,12 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
     };
   }, []);
   const line = said ? LINES[said] : null;
+  // Opening Zest from its orb: on a phone it starts listening straight away (voice first); on a wide
+  // screen it opens the side panel ready to type.
+  const openZest = () => {
+    setOpen(true);
+    if (canListen && !window.matchMedia("(min-width: 1024px)").matches && !listening) listen();
+  };
   const ask = (q: Bi) => {
     setOpen(true);
     void send(pick(q));
@@ -200,7 +206,7 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
         {!open && (
           <button
             type="button"
-            onClick={() => setOpen(true)}
+            onClick={openZest}
             aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })}
             className={`grid size-14 shrink-0 place-items-center rounded-full transition-[transform,opacity] duration-500 hover:scale-105 active:scale-95 ${hello ? "opacity-100" : "pointer-events-none scale-75 opacity-0"}`}
           >
@@ -210,15 +216,17 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
       </div>
 
       {open && (
-        <div className="za-scrim fixed inset-0 z-50 flex items-end justify-center bg-[#0b0d10]/60 backdrop-blur-[3px] sm:items-end sm:justify-end sm:p-6" onClick={() => setOpen(false)}>
+        <div className="za-scrim fixed inset-0 z-50 flex items-end justify-center bg-[#0b0d10]/60 backdrop-blur-[3px] lg:items-stretch lg:justify-end lg:bg-[#0b0d10]/40" onClick={() => setOpen(false)}>
           <div
             role="dialog"
             aria-modal="true"
             aria-label={pick({ en: "Talk to Zest", hi: "Zest से बात कीजिए" })}
             onClick={(e) => e.stopPropagation()}
-            className={/* taste-skill-ignore: floating overlay */ "za-in flex h-[86dvh] w-full flex-col overflow-hidden rounded-t-[28px] bg-[#16191c] text-[var(--lp-ink)] shadow-[0_40px_120px_-20px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.08)] sm:h-[640px] sm:max-h-[calc(100dvh-120px)] sm:w-[400px] sm:rounded-[28px]"}
+            className={/* taste-skill-ignore: floating overlay */ "zx-panel zx-sheet flex h-[88dvh] w-full flex-col overflow-hidden rounded-t-[28px] text-[var(--lp-ink)] shadow-[0_-30px_80px_-20px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.08)] lg:h-full lg:w-[440px] lg:rounded-none lg:shadow-[-30px_0_80px_-20px_rgb(0_0_0/0.9),inset_1px_0_0_rgb(255_255_255/0.08)]"}
           >
-            <div className="flex items-center gap-3 border-b border-white/[0.07] px-5 pb-4 pt-5">
+            {/* Grab handle on the phone sheet */}
+            <span aria-hidden className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-white/20 lg:hidden" />
+            <div className="flex items-center gap-3 px-5 pb-3 pt-3 lg:pt-5">
               <ZestOrb size={36} state={busy ? "thinking" : listening ? "listening" : "idle"} />
               <div className="min-w-0 flex-1">
                 <p className="text-[17px] font-semibold leading-tight">Zest</p>
@@ -233,7 +241,24 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
             </div>
 
             <div ref={list} className="flex-1 space-y-3 overflow-y-auto px-5 py-5" aria-live="polite">
-              <p className="w-fit max-w-[88%] rounded-2xl rounded-tl-md bg-[#23272c] px-4 py-3 text-[15px] leading-relaxed">
+              {/* Before the first question: the orb, large. Tap it to speak; it shows when it's listening. */}
+              {turns.length === 0 && (
+                <div className="flex flex-col items-center pb-2 pt-4 text-center">
+                  <button type="button" onClick={canListen ? listen : () => input.current?.focus()} aria-label={listening ? pick({ en: "Stop listening", hi: "सुनना बंद करें" }) : pick({ en: "Speak your question", hi: "बोलकर पूछिए" })} className="rounded-full transition-transform active:scale-95">
+                    <ZestOrb size={112} state={busy ? "thinking" : listening ? "listening" : "idle"} />
+                  </button>
+                  <div aria-hidden className={`zx-wave mt-5 flex h-9 items-center gap-1 transition-opacity ${listening ? "opacity-100" : "opacity-0"}`}>
+                    {[14, 26, 36, 22, 32, 18, 28, 12].map((h, i) => (
+                      <i key={i} style={{ height: h, animationDelay: `${-i * 0.13}s` }} />
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[17px] font-semibold">
+                    {listening ? pick({ en: "Listening…", hi: "सुन रहा हूँ…" }) : canListen ? pick({ en: "Tap and speak", hi: "दबाइए और बोलिए" }) : pick({ en: "Ask me anything", hi: "कुछ भी पूछिए" })}
+                  </p>
+                  <p className="mt-0.5 text-[14px] text-[var(--lp-muted)]">{pick({ en: "In Hindi or English. Bol kar poochhiye.", hi: "हिंदी या अंग्रेज़ी में। बोलकर पूछिए।" })}</p>
+                </div>
+              )}
+              <p className="w-fit max-w-[88%] rounded-2xl rounded-tl-md bg-white/[0.07] px-4 py-3 text-[15px] leading-relaxed">
                 {audience === "home"
                   ? pick({ en: "Hi! I'm Zest. I can tell you how your kitchen can take online orders, get paid by UPI and deliver with Zomato riders. What would you like to know?", hi: "नमस्ते! मैं Zest हूँ। आपकी रसोई ऑनलाइन ऑर्डर कैसे ले, UPI से पैसा कैसे पाए और Zomato राइडर से कैसे पहुँचाए, यह बता सकता हूँ। क्या जानना चाहेंगे?" })
                   : pick({ en: "Hi! I'm Zest. I can tell you how your own page brings in the orders Zomato and Swiggy never see, and how they're delivered. What would you like to know?", hi: "नमस्ते! मैं Zest हूँ। आपका अपना पेज वे ऑर्डर कैसे लाता है जो Zomato और Swiggy तक नहीं पहुँचते, और वे कैसे पहुँचते हैं, यह बता सकता हूँ। क्या जानना चाहेंगे?" })}
@@ -253,13 +278,13 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
                     {t.text}
                   </p>
                 ) : (
-                  <p key={i} className="hs-chip w-fit max-w-[88%] rounded-2xl rounded-tl-md bg-[#23272c] px-4 py-3 text-[15px] leading-relaxed">
+                  <p key={i} className="hs-chip w-fit max-w-[88%] rounded-2xl rounded-tl-md bg-white/[0.07] px-4 py-3 text-[15px] leading-relaxed">
                     {t.text}
                   </p>
                 ),
               )}
               {busy && (
-                <p className="lp-typing flex w-fit gap-1.5 rounded-2xl rounded-tl-md bg-[#23272c] px-4 py-4">
+                <p className="lp-typing flex w-fit gap-1.5 rounded-2xl rounded-tl-md bg-white/[0.07] px-4 py-4">
                   <span className="sr-only">{pick({ en: "Zest is typing", hi: "Zest लिख रहा है" })}</span>
                   <i aria-hidden className="size-2 rounded-full bg-[var(--lp-muted)]" />
                   <i aria-hidden className="size-2 rounded-full bg-[var(--lp-muted)]" />
@@ -274,10 +299,10 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
                 e.preventDefault();
                 void send(draft);
               }}
-              className="border-t border-white/[0.07] px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3"
+              className="px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3"
             >
               {/* One composer, after Airbnb's fields: a quiet edge that turns white while typing, no second ring. */}
-              <div className="flex items-end gap-1.5 rounded-[26px] bg-[#0f1114] p-1.5 pl-4 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.14)] transition-shadow focus-within:shadow-[inset_0_0_0_1.5px_#f1f1ec]">
+              <div className="flex items-end gap-1.5 rounded-[26px] bg-[#0f1114]/85 p-1.5 pl-4 backdrop-blur shadow-[inset_0_0_0_1px_rgb(255_255_255/0.14)] transition-shadow focus-within:shadow-[inset_0_0_0_1.5px_#f1f1ec]">
               <label htmlFor="za-input" className="sr-only">
                 {pick({ en: "Your question", hi: "आपका सवाल" })}
               </label>
