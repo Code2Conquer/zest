@@ -23,6 +23,7 @@ assistant are built. The gaps below are what the pages promise but the product d
 | "Zomato riders pick up and deliver up to 7 km", "tracked to the door" | Distance, fee and 7 km limit work; no rider is booked. | Zomato delivery integration: book on ready, rider name and ETA, live tracking link, cancel. Needs Zomato's API. |
 | "Orders close at a time you set", "Cook to the count" | Not built (opening hours only). | Per-menu daily cut-off (lunch closes 11:00) and a count per dish (thali 15); ordering page shows "closed for today" and "only 3 left". |
 | "Regulars on weekly plans", "tiffins paid for the week" | Not built. | Weekly tiffin plans: days, meal, notes, prepay for the week, skip a day, daily orders created automatically. |
+| SMS fallback for OTP, order updates and the tracking link (the login and checkout copy now say "WhatsApp or SMS") | WhatsApp only. | An SMS provider (e.g. MSG91, Gupshup) with DLT-registered templates, used when WhatsApp fails or the number isn't on WhatsApp. |
 | Customer updates ("ready at 8:40", "Ravi is on the way", "delivered") | Owner messages exist; customer ones partial. | WhatsApp status messages at each step and a public order tracking page (`publicToken` already on orders). |
 | "Found on Google" | LocalBusiness structured data and a counter QR exist. | Google Business Profile listing with an "Order online" link (guided by hand first). |
 | "Your regulars and what they like" | Customer list with orders and spend. | Usual order and notes per customer, "order the usual". |
