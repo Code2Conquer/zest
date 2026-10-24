@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, gte, isNull, lt } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, like, lt, or } from "drizzle-orm";
 import { MEENA, MEENA_MENU, MENU, ORDERS, OUTLET, PAYOUTS, RATINGS, REVIEWS, SALES_YESTERDAY } from "../data";
 import { fromLegacyStatus, type OrderStatus } from "../orders";
 import { createApproval } from "./approvals";
@@ -34,6 +34,7 @@ export async function seedMeena() {
     ownerName: MEENA.ownerFirstName,
     journey: "new",
     isDemo: true,
+    cutoffs: { Lunch: "11:00" },
   });
   await db.insert(outletHours).values([0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ outletId: MEENA_OUTLET_ID, weekday, opens: "08:00", closes: "21:30" }))).onConflictDoNothing();
   await db.insert(menuItems).values(
@@ -51,6 +52,7 @@ export async function seedMeena() {
       price: { zomato: m.price, swiggy: m.price },
       available: { zomato: true, swiggy: true },
       ordersLast7: 0,
+      dailyLimit: m.name === "Thali" ? 30 : m.name === "Rajma chawal" ? 20 : null,
       sort: i,
     })),
   );
@@ -301,11 +303,13 @@ export async function refreshDemoGrowth(outletId: string) {
  */
 export async function refreshMeenaDay() {
   const [from, to] = dayBounds(0);
-  const [today] = await db.select({ id: orders.id }).from(orders).where(and(eq(orders.outletId, MEENA_OUTLET_ID), gte(orders.placedAt, from), lt(orders.placedAt, to))).limit(1);
+  // Seeded today already? Look for the day's own sample order, not any order: a visitor may have ordered first.
+  const [today] = await db.select({ id: orders.id }).from(orders).where(and(eq(orders.outletId, MEENA_OUTLET_ID), eq(orders.externalId, "Mt1"), gte(orders.placedAt, from), lt(orders.placedAt, to))).limit(1);
   if (today) return;
   const brandId = `${MEENA_OUTLET_ID}-brand`;
-  await db.delete(orders).where(eq(orders.outletId, MEENA_OUTLET_ID));
-  await db.delete(customers).where(eq(customers.brandId, brandId));
+  // Clear yesterday's sample rows only (sample order numbers start "My"/"Mt", sample regulars have these
+  // names), so an order a visitor just placed on the sample page stays where they can see it.
+  await db.delete(orders).where(and(eq(orders.outletId, MEENA_OUTLET_ID), or(like(orders.externalId, "My%"), like(orders.externalId, "Mt%"), like(orders.externalId, "P-%"))));
 
   // Her regulars: neighbours, an office, a hostel, a family two buildings away.
   const REGULARS = [
@@ -314,6 +318,7 @@ export async function refreshMeenaDay() {
     ["Mrs. Iyer · A-3", 6, 1170], ["Kabir (hostel)", 5, 450], ["Aditi · Safdarjung", 3, 390], ["Fatima · E-2", 2, 240],
   ] as const;
   const day = 86_400_000;
+  await db.delete(customers).where(and(eq(customers.brandId, brandId), inArray(customers.name, REGULARS.map((r) => r[0]))));
   const people = await db
     .insert(customers)
     .values(REGULARS.map(([name, n, spent], i) => ({ brandId, phone: `+91${["98", "99", "97", "88", "70", "81", "96", "90", "78", "93", "85", "62"][i]}${String(10234567 + i * 7130291).slice(-8)}`, name, orders: n, spent, firstOrderAt: new Date(Date.now() - (60 + i * 9) * day).toISOString(), lastOrderAt: new Date(Date.now() - (i < 6 ? 0 : i - 4) * day).toISOString() })))

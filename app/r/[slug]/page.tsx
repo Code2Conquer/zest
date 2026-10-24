@@ -688,7 +688,7 @@ function OrderPlaced({ slug, shopName, placed, onNew }: { slug: string; shopName
             </button>
           </div>
         )}
-        <a href={`/t/${placed.token}`} className="mt-4 inline-block text-sm font-medium underline underline-offset-4">
+        <a href={`/t/${placed.token}`} className="mt-4 block text-sm font-medium underline underline-offset-4">
           {hi ? "ऑर्डर ट्रैक करें" : "Track your order"}
         </a>
 

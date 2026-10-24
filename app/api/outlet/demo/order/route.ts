@@ -32,7 +32,7 @@ export const POST = handler(async (_req, outlet) => {
   const [row] = await db
     .insert(orders)
     .values({
-      outletId: outlet.id, channel: "web", externalId: `T${Date.now().toString(36).slice(-6)}`, items: lines.join(", "), amount: amount + 35, placedAt: new Date().toISOString(), status: "new", prepMins: 20,
+      outletId: outlet.id, channel: "web", externalId: `T-${String(Date.now()).slice(-4)}`, items: lines.join(", "), amount: amount + 35, placedAt: new Date().toISOString(), status: "new", prepMins: 20,
       customerId: person?.id ?? null, fulfilment: "delivery", paymentStatus: "paid", paymentMethod: "upi", deliveryBy: "zomato_rider", deliveryFee: 35, deliveryKm: 2.4,
     })
     .returning();
