@@ -27,6 +27,11 @@ export function StickyStart({ href, label, note, watch, hideAt }: { href: string
   }, [watch, hideAt]);
 
   const show = past && !atEnd;
+  // The animated button loads only once the bar has first appeared, so it costs the first screen nothing.
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    if (show) setSeen(true);
+  }, [show]);
   return (
     <div
       aria-hidden={!show}
@@ -37,7 +42,7 @@ export function StickyStart({ href, label, note, watch, hideAt }: { href: string
       <div className="flex items-center gap-3">
         <button type="button" tabIndex={show ? 0 : -1} onClick={() => window.dispatchEvent(new Event("zest:open"))} aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })} className="za-pill relative grid size-12 shrink-0 place-items-center rounded-full">
           <span className="grid size-10 place-items-center rounded-full bg-[var(--z-turmeric)]">
-            <LottieIcon src="/lottie/zest-sparkle.json" className="size-9" />
+            {seen && <LottieIcon src="/lottie/zest-sparkle.json" className="size-9" />}
           </span>
         </button>
         <p className="min-w-0 flex-1 text-[14px] leading-snug text-[var(--lp-muted)]">{pick(note)}</p>

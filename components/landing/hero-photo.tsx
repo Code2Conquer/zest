@@ -10,7 +10,7 @@ export function HeroPhoto({ photo, alt, order, ratio = "4 / 5" }: { photo: strin
   return (
     <div className="relative mx-auto w-full max-w-[340px] pb-8 pl-8 sm:max-w-[520px] sm:pl-14 lg:mr-0">
       <div className="hero-rise relative overflow-hidden rounded-[32px]" style={{ aspectRatio: ratio }}>
-        <Image src={photo} alt={alt} fill sizes="(min-width: 1024px) 460px, 90vw" preload className="object-cover" />
+        <Image src={photo} alt={alt} fill sizes="(min-width: 1024px) 460px, (min-width: 640px) 520px, 340px" preload fetchPriority="high" className="object-cover" />
       </div>
       <OrderNote order={order} />
     </div>

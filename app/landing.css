@@ -373,11 +373,12 @@
   gap: 16px;
   width: max-content;
   padding-inline: 8px;
-  animation: rail-drift 60s linear infinite;
+  animation: rail-drift 60s linear infinite paused;
 }
-.rail:hover .rail-track,
-.rail:active .rail-track,
-.rail:focus-within .rail-track { animation-play-state: paused; }
+.rail[data-run] .rail-track { animation-play-state: running; }
+.rail[data-run]:hover .rail-track,
+.rail[data-run]:active .rail-track,
+.rail[data-run]:focus-within .rail-track { animation-play-state: paused; }
 @keyframes rail-drift { from { transform: translateX(0); } to { transform: translateX(calc(-50% - 8px)); } }
 @media (prefers-reduced-motion: reduce) {
   .rail { overflow-x: auto; -webkit-mask-image: none; mask-image: none; scrollbar-width: none; }
