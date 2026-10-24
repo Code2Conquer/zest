@@ -1,58 +1,55 @@
-# What's left to build (as of 24 October 2026)
+# Before going live (as of 25 October 2026)
 
-Everything the homepage and /restaurants sell, checked against the code. Onboarding (mobile login, kind,
-details, menu, live page), both dashboards, the ordering page, delivery pricing by distance, menu from a
-photo, listing import from a Zomato/Swiggy link, email ingest of orders and payouts, review drafts and the
-assistant are built. The gaps below are what the pages promise but the product doesn't do yet.
+Everything the homepage and /restaurants sell is now built in code, except the Zomato and Swiggy partner
+integrations and the Soundbox device, which need outside access. What remains is mostly accounts, keys,
+approvals and paperwork, listed below by who has to get them.
 
-## 1. Setup on Vercel (accounts and keys, not code)
+## Built (branch release-candidate)
 
-| What | Why |
+| Promise | How it works |
 |---|---|
-| `DATABASE_URL` (+ `DATABASE_AUTH_TOKEN`, e.g. Turso) | Without it Vercel uses a temporary database that resets with the server: sign-ups, menus and orders vanish. Check it's set. |
-| WhatsApp Cloud API: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, approved templates `WHATSAPP_OTP_TEMPLATE` (login code), new order, order ready, morning summary (`WHATSAPP_TEMPLATE`) | Mobile login on production (503 until set) and every WhatsApp message. |
-| `ANTHROPIC_API_KEY` | Menu from a photo, the assistant, review reply drafts. |
-| Google OAuth for Gmail | Restaurants' "Connect your email" (Zomato/Swiggy order and payout emails). |
-| Privacy and Terms pages, a support WhatsApp number | Needed before taking payments; then link them in the footer's bottom bar. |
+| Mobile login | 6-digit code by WhatsApp or SMS. Owners and managers log in by mobile; kitchen staff by PIN. Google and email sign-in removed. |
+| Paid before you cook | Razorpay checkout on the ordering page; payment confirmed by signature and webhook (`/api/payments/webhook`); unpaid online orders stay out of the kitchen; rejected paid orders refunded automatically. Without keys, the seller's own UPI link stays. |
+| Cook to the count | Daily count per dish ("only 3 left", "sold out today") and a daily cut-off per menu section ("Lunch orders by 11 am"), checked again on the server. Set from Menu & stock. |
+| Tracked to the door | Public tracking page `/t/<token>`, sent with every update; refreshes itself. |
+| Customer updates | WhatsApp first, SMS fallback: placed, accepted, ready, out for delivery, delivered, rejected, refunded. |
+| Zomato riders deliver | One connection point (`lib/server/riders.ts`) books a rider when food is ready and records name, ETA and tracking link. Samples simulate a rider; real sellers are told to send their own helper until the API is connected. |
+| Weekly tiffin plans | Tiffin plans screen: days, dish, notes, weeks, price for the period, mark paid, skip a day, stop. The day's orders are created each morning (cron 7:00 IST) and when Orders opens. |
+| Regulars | Customer list shows each regular's usual order and the kitchen's note on them; the ordering page offers "Your usual?" to repeat the last order on that phone. |
+| Privacy and Terms | `/privacy`, `/terms`, linked in the footer with the support WhatsApp. Working drafts: need legal review. |
 
-## 2. Home kitchen promises not built yet
+## Pending on the Zest team (to source before launch)
 
-| Promise | Today | To build |
+**Accounts and keys (set in Vercel → Settings → Environment Variables)**
+
+| Variable(s) | What it turns on | Where to get it |
 |---|---|---|
-| "Get paid upfront", "money in your bank before the food is on the stove" | A UPI deep link with the amount; nothing confirms payment, the seller marks Paid by hand. | Payment gateway (Razorpay / Cashfree / PhonePe PG): auto-confirm by webhook, order reaches the kitchen only when paid, refund on reject. **Biggest gap.** |
-| "Zomato riders pick up and deliver up to 7 km", "tracked to the door" | Distance, fee and 7 km limit work; no rider is booked. | Zomato delivery integration: book on ready, rider name and ETA, live tracking link, cancel. Needs Zomato's API. |
-| "Orders close at a time you set", "Cook to the count" | Not built (opening hours only). | Per-menu daily cut-off (lunch closes 11:00) and a count per dish (thali 15); ordering page shows "closed for today" and "only 3 left". |
-| "Regulars on weekly plans", "tiffins paid for the week" | Not built. | Weekly tiffin plans: days, meal, notes, prepay for the week, skip a day, daily orders created automatically. |
-| SMS fallback for OTP, order updates and the tracking link (the login and checkout copy now say "WhatsApp or SMS") | WhatsApp only. | An SMS provider (e.g. MSG91, Gupshup) with DLT-registered templates, used when WhatsApp fails or the number isn't on WhatsApp. |
-| Customer updates ("ready at 8:40", "Ravi is on the way", "delivered") | Owner messages exist; customer ones partial. | WhatsApp status messages at each step and a public order tracking page (`publicToken` already on orders). |
-| "Found on Google" | LocalBusiness structured data and a counter QR exist. | Google Business Profile listing with an "Order online" link (guided by hand first). |
-| "Your regulars and what they like" | Customer list with orders and spend. | Usual order and notes per customer, "order the usual". |
+| `DATABASE_URL`, `DATABASE_AUTH_TOKEN` | A database that survives restarts (today Vercel resets it) | Turso (or any libSQL host) |
+| `ZEST_SECRET_KEY` | Signs sessions | 32 random bytes, base64 (`openssl rand -base64 32`) |
+| `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_OTP_TEMPLATE`, `WHATSAPP_TEMPLATE` | Login codes and all WhatsApp messages | Meta Business account, verified business, WhatsApp Cloud API number, two approved templates (authentication; utility with one text variable) |
+| `MSG91_AUTH_KEY`, `MSG91_OTP_TEMPLATE`, `MSG91_ORDER_TEMPLATE` | SMS fallback for codes and order updates | MSG91 account; DLT registration (entity, sender ID, templates) on a telecom DLT portal |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Online payments and refunds | Razorpay account with KYC; webhook to `/api/payments/webhook` for `payment.captured` |
+| `ZOMATO_DELIVERY_API_URL`, `ZOMATO_DELIVERY_API_KEY` | Real rider booking | Zomato's delivery-for-merchants API access |
+| `ANTHROPIC_API_KEY` | Menu from a photo, Zest assistant, review replies | Anthropic console |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Restaurants' "Connect your email" (Gmail) | Google Cloud OAuth client; Gmail read-only scope needs Google's verification |
+| `CRON_SECRET` | Daily 7:00 run (tiffins, inbox sync) | Any random string |
+| `NEXT_PUBLIC_SUPPORT_WHATSAPP`, `NEXT_PUBLIC_SUPPORT_EMAIL` | Help links in the footer and legal pages | Your support number and inbox |
+| `APP_URL` | Correct links in messages | The production domain |
 
-## 3. Restaurant promises not built yet
+**Business and legal**
 
-| Promise | Today | To build |
-|---|---|---|
-| Zest Soundbox: speaks every order, press to accept, louder then calls, ticket printer | Website demo and a waitlist. | Hardware, firmware, Hindi/English speech, device API, phone escalation (e.g. Exotel), ESC/POS printing. Accepting Zomato/Swiggy orders needs their partner API. |
-| Zomato and Swiggy orders in one list | Read from order emails (Gmail); `/api/webhooks/[platform]` exists but no partner feed. | Zomato and Swiggy partner integrations (API / MCP / POS): real-time orders, accept, reject. |
-| "Yesterday's sales, on WhatsApp by 7:30" | Built from emails; the daily cron runs ~7:00 IST. | WhatsApp template approval; check it arrives by 7:30 for every connected restaurant. |
-| "Bad reviews… one tap to post" | Drafts exist. | Posting needs the platforms' partner APIs; until then "copy reply". |
-| Payouts before they land, paste your link | Built. | — |
+- Money flow: collecting customers' money and paying sellers needs either a payment aggregator setup that pays sellers directly (Razorpay Route with linked accounts per seller) or Zest's own RBI payment-aggregator compliance. Decide with finance/legal; the code currently creates payments in one Razorpay account.
+- Lawyer review of Privacy and Terms (DPDP Act 2023), a refund policy, and the grievance officer details the IT Rules require.
+- A registered company name, GSTIN and address to show in the footer and on receipts.
+- Seller onboarding checks: FSSAI registration for every seller, PAN, bank/UPI verification. Decide whether Zest verifies these before a page goes live.
+- Zomato rider economics: per-trip price by distance, who pays, and the commercial agreement with Zomato delivery.
+- Zomato and Swiggy partner access (API, MCP or POS) for orders in one list, accepting orders, and posting review replies.
+- Soundbox: hardware partner, firmware, unit cost and pricing; Exotel (or similar) for the "it calls you" escalation.
 
-## 4. Product polish and safety
+**Content and launch**
 
-- Payments and refunds, a receipt page per order, a refund policy.
-- Seller verification (FSSAI, PAN, UPI) before going live.
-- Analytics and error monitoring (e.g. Sentry).
+- A domain (e.g. zest.link, which the copy already uses for tracking links) and branded email.
 - A native Hindi review of all copy.
-- Optional: a private copy of each sample per visitor, so samples can be edited without defacing the public ones.
-
-## Order of work
-
-1. Setup on Vercel (section 1).
-2. Payment gateway with automatic "paid".
-3. Order cut-off and dish counts.
-4. Customer WhatsApp updates and the order tracking page.
-5. Weekly tiffin plans.
-6. Start the Zomato rider and Zomato/Swiggy partner integrations; the Soundbox runs as its own hardware track.
-
-3–5 can be built without outside access; 1, 2 and 6 need accounts or partner APIs.
+- Real proof once pilots run: seller quotes, photos (with permission) and numbers.
+- Error monitoring (e.g. Sentry DSN) and analytics.
+- First pilot sellers and a support person on WhatsApp in Hindi and English.
