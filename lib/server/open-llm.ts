@@ -8,7 +8,7 @@ import { z } from "zod";
 //   LLM_VISION_MODEL   photos of menus and documents, default meta-llama/llama-4-scout-17b-16e-instruct
 // Open models can't read PDFs directly; photos only.
 
-const base = () => (process.env.LLM_BASE_URL ?? "https://api.groq.com/openai/v1").replace(/\/$/, "");
+export const openBase = () => (process.env.LLM_BASE_URL ?? "https://api.groq.com/openai/v1").replace(/\/$/, "");
 export const openModel = () => process.env.LLM_MODEL ?? "llama-3.3-70b-versatile";
 export const openVisionModel = () => process.env.LLM_VISION_MODEL ?? "meta-llama/llama-4-scout-17b-16e-instruct";
 
@@ -23,7 +23,7 @@ export type OpenTool = { type: "function"; function: { name: string; description
 type ChatResponse = { choices: { message: { content: string | null; tool_calls?: OpenToolCall[] }; finish_reason: string }[] };
 
 export async function openChat(body: { model?: string; messages: OpenMessage[]; max_tokens?: number; tools?: OpenTool[]; json?: boolean; temperature?: number }) {
-  const res = await fetch(`${base()}/chat/completions`, {
+  const res = await fetch(`${openBase()}/chat/completions`, {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.LLM_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -35,7 +35,12 @@ export async function openChat(body: { model?: string; messages: OpenMessage[]; 
       ...(body.json ? { response_format: { type: "json_object" } } : {}),
     }),
   });
-  if (!res.ok) throw new Error(`AI service returned ${res.status}`);
+  if (!res.ok) {
+    // Keep the provider's own reason (model not found, bad key, too large…) for the logs and the health check.
+    const why = (await res.text().catch(() => "")).slice(0, 300);
+    console.error(`AI service ${res.status}: ${why}`);
+    throw new Error(`AI service returned ${res.status}: ${why}`);
+  }
   const data = (await res.json()) as ChatResponse;
   return data.choices[0]?.message ?? { content: null };
 }
