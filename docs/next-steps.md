@@ -30,7 +30,7 @@ approvals and paperwork, listed below by who has to get them.
 | `MSG91_AUTH_KEY`, `MSG91_OTP_TEMPLATE`, `MSG91_ORDER_TEMPLATE` | SMS fallback for codes and order updates | MSG91 account; DLT registration (entity, sender ID, templates) on a telecom DLT portal |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | Online payments and refunds | Razorpay account with KYC; webhook to `/api/payments/webhook` for `payment.captured` |
 | `ZOMATO_DELIVERY_API_URL`, `ZOMATO_DELIVERY_API_KEY` | Real rider booking | Zomato's delivery-for-merchants API access |
-| `ANTHROPIC_API_KEY` | Menu from a photo, Zest assistant, review replies | Anthropic console |
+| ~~`ANTHROPIC_API_KEY`~~ | **Done another way:** `LLM_API_KEY` (Groq free tier) runs the assistants, menu and document photos, and payout emails. Check it any time at `/api/ai/health`. Add an Anthropic key later if handwritten/Hindi menus or PDFs need better reading. | — |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Restaurants' "Connect your email" (Gmail) | Google Cloud OAuth client; Gmail read-only scope needs Google's verification |
 | `CRON_SECRET` | Daily 7:00 run (tiffins, inbox sync) | Any random string |
 | `NEXT_PUBLIC_SUPPORT_WHATSAPP`, `NEXT_PUBLIC_SUPPORT_EMAIL` | Help links in the footer and legal pages | Your support number and inbox |
@@ -51,5 +51,5 @@ approvals and paperwork, listed below by who has to get them.
 - A domain (e.g. zest.link, which the copy already uses for tracking links) and branded email.
 - A native Hindi review of all copy.
 - Real proof once pilots run: seller quotes, photos (with permission) and numbers.
-- Error monitoring (e.g. Sentry DSN) and analytics.
+- Error monitoring (e.g. Sentry DSN). Analytics is done: PostHog dashboard "Zest launch" plus Vercel Analytics.
 - First pilot sellers and a support person on WhatsApp in Hindi and English.

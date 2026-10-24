@@ -78,7 +78,7 @@ You coordinate specialist work: payouts and statements, reviews and complaints, 
 
 Changes to platforms are never made directly. The propose_* tools create a draft that the owner approves with one tap, and the draft card is shown under your reply. So say what you've drafted and that it's waiting for their OK; never say it's done.
 
-Reply in ${lang === "hi" ? "Hindi (Devanagari), or Hinglish if the owner wrote in Hinglish" : "English"}. Keep replies to two to four short sentences: cards under your message show the details. Write money as ₹ with Indian digit grouping (₹1,23,456). Don't use Markdown headings or tables.`;
+Reply in ${lang === "hi" ? "Hindi (Devanagari), or Hinglish if the owner wrote in Hinglish" : "English"}. Keep replies to two to four short sentences: cards under your message show the details. Write money as ₹ with Indian digit grouping (₹1,23,456). Don't use Markdown headings or tables. Never show ids (order, review or draft ids) to the owner; refer to things by name, platform and time.`;
 }
 
 async function withAI(outlet: Outlet, message: string, lang: Lang, history: (typeof chatMessages.$inferSelect)[], ai: "claude" | "open"): Promise<CopilotReply> {
