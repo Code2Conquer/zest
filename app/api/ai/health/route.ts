@@ -11,7 +11,7 @@ import { checkRate } from "@/lib/server/rate-limit";
  */
 export async function GET(req: Request) {
   await ready();
-  if (!(await checkRate(`ai-health:${clientIp(req)}`, 5, 3600))) return NextResponse.json({ error: "Checked too often. Try again later." }, { status: 429 });
+  if (!(await checkRate(`ai-health:${process.env.VERCEL_GIT_COMMIT_SHA ?? "local"}:${clientIp(req)}`, 5, 3600))) return NextResponse.json({ error: "Checked too often. Try again later." }, { status: 429 });
   const provider = aiProvider();
   if (provider !== "open") return NextResponse.json({ provider, model: provider === "claude" ? MODEL : null });
   const info = { provider, host: new URL(openBase()).host, model: openModel(), visionModel: openVisionModel() };
