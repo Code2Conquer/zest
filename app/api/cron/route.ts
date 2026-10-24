@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { db, ready } from "@/lib/server/db";
+import { client, db, ready } from "@/lib/server/db";
 import "@/lib/server/job-handlers";
 import { enqueue, runDueJobs } from "@/lib/server/jobs";
 import { ordersFromPlans } from "@/lib/server/plans";
@@ -26,5 +26,9 @@ export async function GET(req: Request) {
   // The day's tiffin orders from weekly plans.
   const tiffins = await ordersFromPlans();
   const result = await runDueJobs({ limit: 25, deadlineMs: 50_000 });
-  return NextResponse.json({ mailboxes: boxes.length, campaigns: live.length, tiffins, ...result });
+  const summary = { mailboxes: boxes.length, campaigns: live.length, tiffins, ...result };
+  // Remembered for /api/status, so anyone can see the daily run is happening.
+  const at = new Date().toISOString();
+  await client().execute({ sql: "INSERT INTO app_state (key, value, updated_at) VALUES ('last_cron', ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at", args: [JSON.stringify(summary), at] });
+  return NextResponse.json(summary);
 }

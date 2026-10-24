@@ -139,6 +139,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS customers_brand_phone ON customers (brand_id, 
 CREATE TABLE IF NOT EXISTS plans (id TEXT PRIMARY KEY, outlet_id TEXT NOT NULL, customer_id TEXT NOT NULL, item_id TEXT NOT NULL, qty INTEGER NOT NULL DEFAULT 1, days TEXT NOT NULL, fulfilment TEXT NOT NULL DEFAULT 'delivery', address TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '', starts_on TEXT NOT NULL, ends_on TEXT NOT NULL, amount INTEGER NOT NULL, payment_status TEXT NOT NULL DEFAULT 'unpaid', skips TEXT NOT NULL DEFAULT '[]', active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS plans_outlet ON plans (outlet_id);
 CREATE TABLE IF NOT EXISTS otp_codes (phone TEXT PRIMARY KEY, code_hash TEXT NOT NULL, expires_at TEXT NOT NULL, attempts INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS app_state (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS rate_limits (key TEXT NOT NULL, window_start INTEGER NOT NULL, count INTEGER NOT NULL, PRIMARY KEY (key, window_start));
 CREATE TABLE IF NOT EXISTS order_lines (
   id TEXT PRIMARY KEY, order_id TEXT NOT NULL, item_id TEXT, name TEXT NOT NULL, qty INTEGER NOT NULL,
