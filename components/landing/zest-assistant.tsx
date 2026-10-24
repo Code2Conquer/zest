@@ -28,6 +28,12 @@ type Recognition = {
 export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }) {
   const { pick, lang } = useApp();
   const [open, setOpen] = useState(false);
+  // On a phone Zest is opened from the sticky bottom bar (components/landing/sticky-start.tsx).
+  useEffect(() => {
+    const o = () => setOpen(true);
+    window.addEventListener("zest:open", o);
+    return () => window.removeEventListener("zest:open", o);
+  }, []);
   const [hello, setHello] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
@@ -167,11 +173,11 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
   return (
     <>
       {/* One question in a pill, bottom right, with Zest's animated button at its end; above the sticky start bar on a phone */}
-      <div className={`fixed bottom-[86px] right-3 z-50 transition-opacity sm:bottom-6 sm:right-6 ${atEnd ? "pointer-events-none opacity-0" : scrolled ? "" : "max-sm:pointer-events-none max-sm:opacity-0"}`}>
+      <div className={`fixed bottom-6 right-6 z-50 transition-opacity max-sm:hidden ${atEnd ? "pointer-events-none opacity-0" : scrolled ? "" : "max-sm:pointer-events-none max-sm:opacity-0"}`}>
         {!open && (
-          <div className={`za-pill relative flex items-center gap-1 rounded-full p-1.5 pl-5 transition-[opacity,transform] duration-500 ${hello ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"}`}>
+          <div className={`za-pill relative flex items-center gap-1 rounded-full p-1.5 sm:pl-5 transition-[opacity,transform] duration-500 ${hello ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"}`}>
             <span aria-hidden className="za-dots pointer-events-none absolute inset-0 rounded-full" />
-            <button type="button" onClick={() => ask(current)} className="relative max-w-[210px] truncate py-2 pr-2 text-left text-[15px] font-semibold text-[#f1f1ec] sm:max-w-[300px]">
+            <button type="button" onClick={() => ask(current)} className="relative max-w-[300px] truncate py-2 pr-2 text-left text-[15px] font-semibold text-[#f1f1ec] max-sm:hidden">
               <span key={chipAt} className="za-q inline-block">
                 {pick(current)}
               </span>

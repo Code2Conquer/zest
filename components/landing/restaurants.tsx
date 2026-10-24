@@ -101,10 +101,11 @@ export function MorningSummary({ intro, cta }: { intro: React.ReactNode; cta: Re
   const bubble = "max-w-[90%] rounded-lg rounded-tl-none bg-white px-2.5 py-2 shadow-[0_1px_0.5px_rgb(0_0_0/0.13)]"; // WhatsApp bubble, taste-skill-ignore
 
   return (
-    <div ref={box} className="grid items-center gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-12">
-      <div>
-        {intro}
-        <ol className="mt-7 grid gap-1.5">
+    <div ref={box} className="grid items-center gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-12 lg:gap-y-0">
+      {/* Phones: the heading, then the phone, then the points. Wide screens: text left, phone right. */}
+      <div className="lg:col-start-1 lg:row-start-1 lg:self-end">{intro}</div>
+      <div className="lg:col-start-1 lg:row-start-2 lg:self-start">
+        <ol className="grid gap-1.5 lg:mt-7">
           {POINTS.map((x, k) => {
             const on = beat === k || (beat === 2 && k === 2);
             const lit = beat >= k;
@@ -113,19 +114,19 @@ export function MorningSummary({ intro, cta }: { intro: React.ReactNode; cta: Re
                 <button type="button" onClick={() => show(k)} className={`relative flex w-full items-start gap-3.5 rounded-2xl px-4 py-3 text-left transition-colors ${on ? "bg-[var(--lp-paper)] before:absolute before:inset-y-3 before:left-0 before:w-[3px] before:rounded-full before:bg-[var(--z-turmeric)]" : "hover:bg-[var(--lp-paper)]/60"}`}>
                   <x.icon aria-hidden size={20} className={`mt-0.5 shrink-0 transition-colors ${lit ? "text-[var(--z-turmeric)]" : "text-[var(--lp-faint)]"}`} />
                   <span>
-                    <span className={`block text-[17px] font-semibold leading-snug ${lit ? "" : "text-[var(--lp-muted)]"}`}>{pick(x.title)}</span>
-                    <span className="mt-0.5 block text-[15px] leading-snug text-[var(--lp-muted)]">{pick(x.text)}</span>
+                    <span className={`block text-[16px] font-semibold leading-snug lg:text-[17px] ${lit ? "" : "text-[var(--lp-muted)]"}`}>{pick(x.title)}</span>
+                    <span className="mt-0.5 block text-[14px] leading-snug text-[var(--lp-muted)] lg:text-[15px]">{pick(x.text)}</span>
                   </span>
                 </button>
               </li>
             );
           })}
         </ol>
-        <div className="mt-7">{cta}</div>
+        <div className="mt-6 lg:mt-7">{cta}</div>
       </div>
 
-      <div data-ui className="mx-auto w-[290px] shrink-0 rounded-[44px] bg-[#1c1f23] p-[9px] shadow-[0_40px_80px_-40px_rgb(0_0_0/0.6)] sm:w-[310px]">
-        <div className="relative flex h-[600px] flex-col overflow-hidden rounded-[36px] bg-[#efeae2] text-[#111b21]">
+      <div data-ui className="mx-auto w-[270px] shrink-0 rounded-[44px] bg-[#1c1f23] p-[9px] shadow-[0_40px_80px_-40px_rgb(0_0_0/0.6)] max-lg:row-start-2 sm:w-[310px] lg:col-start-2 lg:row-span-2 lg:row-start-1">
+        <div className="relative flex h-[520px] flex-col sm:h-[600px] overflow-hidden rounded-[36px] bg-[#efeae2] text-[#111b21]">
           <div className="flex items-center justify-between bg-[#f6f6f6] px-6 pb-1 pt-3 text-[12px] font-semibold">
             <span>7:30</span>
             <span aria-hidden className="absolute left-1/2 top-2.5 h-[22px] w-[84px] -translate-x-1/2 rounded-full bg-[#1c1f23]" />

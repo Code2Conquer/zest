@@ -34,8 +34,9 @@ const PAINS: { icon: typeof Plus; pain: Bi; fix: Bi }[] = [
   { icon: PhoneCall, pain: { en: "Nobody hears it in the rush", hi: "भीड़ में कोई सुनता नहीं" }, fix: { en: "It gets louder, then calls you", hi: "आवाज़ तेज़ होती है, फिर आपको फ़ोन" } },
 ];
 
-const H2 = "lp-display text-[clamp(30px,3.6vw,52px)] leading-[1.04] [text-wrap:balance]";
-const LEAD = "max-w-[36em] text-[18px] leading-relaxed text-[var(--lp-muted)] sm:text-[18px]";
+// Section titles: compact on a phone (ixigo-sized), full display size from laptops up.
+const H2 = "lp-display text-[26px] leading-[1.1] lg:text-[clamp(30px,3.6vw,52px)] lg:leading-[1.04] [text-wrap:balance]";
+const LEAD = "max-w-[36em] text-[16px] leading-relaxed text-[var(--lp-muted)] lg:text-[18px]";
 
 /** A Zomato or Swiggy link goes to sign-up with the listing filled in. */
 function joinUrl(raw: string) {
@@ -131,7 +132,7 @@ export default function Restaurants() {
       />
 
       {/* Why: the orders a restaurant already gets outside Zomato and Swiggy, and loses */}
-      <section id="orders" aria-labelledby="orders-h" className="scroll-mt-4 py-16 lg:py-20">
+      <section id="orders" aria-labelledby="orders-h" className="scroll-mt-4 py-10 lg:py-20">
         <div className="lp-wrap">
           <div className="grid gap-3 lg:grid-cols-2 lg:items-end lg:gap-12">
             <h2 id="orders-h" className={`rv max-w-[20ch] ${H2}`}>
@@ -141,19 +142,19 @@ export default function Restaurants() {
               {pick({ en: "Calls, WhatsApps and party orders never reach Zomato or Swiggy. Today they get lost in the rush.", hi: "कॉल, WhatsApp और पार्टी के ऑर्डर Zomato या Swiggy तक नहीं पहुँचते। आज वे भीड़ में खो जाते हैं।" })}
             </p>
           </div>
-          <div className="rv d2 mt-10">
+          <div className="rv d2 mt-6 lg:mt-10">
             <LostOrders />
           </div>
         </div>
       </section>
 
       {/* How a direct order is delivered, played step by step */}
-      <section id="delivery" aria-labelledby="delivery-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-20">
+      <section id="delivery" aria-labelledby="delivery-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-10 lg:py-20">
         <div className="lp-wrap">
           <h2 id="delivery-h" className={`rv max-w-[22ch] ${H2}`}>
             {pick({ en: "From your page to their plate.", hi: "आपके पेज से उनकी थाली तक।" })}
           </h2>
-          <div className="rv d1 mt-10">
+          <div className="rv d1 mt-6 lg:mt-10">
             <DirectOrderJourney />
           </div>
         </div>
@@ -173,9 +174,10 @@ export default function Restaurants() {
       />
 
       {/* The Soundbox: the problem in a busy kitchen, and the one box that solves it */}
-      <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-16 lg:py-20">
-        <div className="lp-wrap grid items-start gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-16">
-          <div>
+      <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-10 lg:py-20">
+        {/* Phones: the heading, then the box itself, then the list. Wide screens: text left, box right. */}
+        <div className="lp-wrap grid items-start gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-16 lg:gap-y-8">
+          <div className="lg:col-start-1 lg:row-start-1">
             <h2 id="soundbox-h" className={`rv ${H2}`}>
               {pick({ en: "Three tablets. One rush. No missed orders.", hi: "तीन टैबलेट। एक भीड़। कोई ऑर्डर नहीं छूटता।" })}
             </h2>
@@ -185,21 +187,26 @@ export default function Restaurants() {
                 hi: "Zest Soundbox आपके काउंटर पर रहता है और Zomato, Swiggy और आपके पेज का हर ऑर्डर हिंदी या अंग्रेज़ी में बोलकर बताता है।",
               })}
             </p>
-            <ul className="mt-8 grid gap-2">
+          </div>
+          <div className="flex flex-col items-center rounded-[28px] bg-[var(--lp-sunken)] px-4 py-6 lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:py-8">
+            <RestaurantVoice />
+          </div>
+          <div className="lg:col-start-1 lg:row-start-2">
+            <ul className="grid gap-2">
               {PAINS.map((p) => (
-                <li key={p.pain.en} className="grid gap-1 rounded-2xl bg-[var(--lp-sunken)] px-4 py-3.5 sm:grid-cols-2 sm:gap-6 sm:px-5">
-                  <p className="flex items-start gap-2.5 text-[16px] text-[var(--lp-muted)]">
+                <li key={p.pain.en} className="grid gap-0.5 rounded-2xl bg-[var(--lp-sunken)] px-4 py-3 sm:grid-cols-2 sm:gap-6 sm:px-5 sm:py-3.5">
+                  <p className="flex items-start gap-2.5 text-[14px] text-[var(--lp-muted)] sm:text-[16px]">
                     <X aria-hidden size={18} strokeWidth={2.5} className="mt-0.5 shrink-0 text-[var(--lp-bad)]" />
                     {pick(p.pain)}
                   </p>
-                  <p className="flex items-start gap-2.5 text-[16px] font-semibold">
+                  <p className="flex items-start gap-2.5 text-[15px] font-semibold sm:text-[16px]">
                     <p.icon aria-hidden size={18} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
                     {pick(p.fix)}
                   </p>
                 </li>
               ))}
             </ul>
-            <div className="mt-8">
+            <div className="mt-6 lg:mt-8">
               {asking ? (
                 <Waitlist page="/restaurants" section="restaurants-soundbox" defaultType="restaurant" />
               ) : (
@@ -209,14 +216,11 @@ export default function Restaurants() {
               )}
             </div>
           </div>
-          <div className="flex flex-col items-center rounded-[28px] bg-[var(--lp-sunken)] px-4 py-8 lg:sticky lg:top-6">
-            <RestaurantVoice />
-          </div>
         </div>
       </section>
 
       {/* Morning summary, played on the owner's phone */}
-      <section id="summary" aria-labelledby="summary-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-20">
+      <section id="summary" aria-labelledby="summary-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-10 lg:py-20">
         <div className="lp-wrap">
           <MorningSummary
             intro={
@@ -238,7 +242,7 @@ export default function Restaurants() {
       </section>
 
       {/* Closing call to action */}
-      <section id="final-start" aria-labelledby="start-h" className="bg-[var(--z-turmeric)] py-14 text-[#1c1f23] lg:py-20">
+      <section id="final-start" aria-labelledby="start-h" className="bg-[var(--z-turmeric)] py-10 text-[#1c1f23] lg:py-20">
         <div className="lp-wrap grid items-center gap-7 lg:grid-cols-2 lg:gap-12">
           <h2 id="start-h" className={H2}>
             {pick({ en: "Keep Zomato and Swiggy. Add your own.", hi: "Zomato और Swiggy रखिए। अपने ऑर्डर जोड़िए।" })}

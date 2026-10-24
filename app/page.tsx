@@ -34,8 +34,9 @@ const COVERED: { title: Bi; text: Bi }[] = [
   { title: { en: "Help on WhatsApp", hi: "WhatsApp पर मदद" }, text: { en: "A person to ask, every day, in Hindi or English.", hi: "हर दिन, हिंदी या अंग्रेज़ी में, पूछने के लिए एक इंसान।" } },
 ];
 
-const H2 = "lp-display text-[clamp(30px,3.6vw,52px)] leading-[1.04] [text-wrap:balance]";
-const LEAD = "max-w-[36em] text-[18px] leading-relaxed text-[var(--lp-muted)] sm:text-[18px]";
+// Section titles: compact on a phone (ixigo-sized), full display size from laptops up.
+const H2 = "lp-display text-[26px] leading-[1.1] lg:text-[clamp(30px,3.6vw,52px)] lg:leading-[1.04] [text-wrap:balance]";
+const LEAD = "max-w-[36em] text-[16px] leading-relaxed text-[var(--lp-muted)] lg:text-[18px]";
 
 export default function Home() {
   const { pick } = useApp();
@@ -90,7 +91,7 @@ export default function Home() {
       />
 
       {/* Why go online: the business case, with the one figure we can stand behind */}
-      <section id="why" aria-labelledby="why-h" className="scroll-mt-4 py-16 lg:py-20">
+      <section id="why" aria-labelledby="why-h" className="scroll-mt-4 py-10 lg:py-20">
         <div className="lp-wrap">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-12">
             <div>
@@ -102,9 +103,9 @@ export default function Home() {
               </p>
             </div>
             {/* The one figure, in the section's own two type styles (headline and lead), set beside the headline. */}
-            <figure className="rv d2 border-white/10 lg:border-l lg:pl-12">
-              <p className={`${H2} text-[var(--z-turmeric)]`}>{pick({ en: "Nearly 2× sales", hi: "लगभग 2× बिक्री" })}</p>
-              <figcaption className={`mt-4 ${LEAD}`}>{pick({ en: "Small food sellers who went online almost doubled what they sell.", hi: "ऑनलाइन आए छोटे खाना बेचने वालों की बिक्री लगभग दोगुनी हो गई।" })}</figcaption>
+            <figure className="rv d2 border-[var(--z-turmeric)] max-lg:border-l-2 max-lg:pl-4 lg:border-l lg:border-white/10 lg:pl-12">
+              <p className={`${H2} text-[var(--z-turmeric)] max-lg:text-[22px]`}>{pick({ en: "Nearly 2× sales", hi: "लगभग 2× बिक्री" })}</p>
+              <figcaption className={`mt-1 lg:mt-4 ${LEAD}`}>{pick({ en: "Small food sellers who went online almost doubled what they sell.", hi: "ऑनलाइन आए छोटे खाना बेचने वालों की बिक्री लगभग दोगुनी हो गई।" })}</figcaption>
             </figure>
           </div>
           <div className="rv mt-10">
@@ -128,7 +129,7 @@ export default function Home() {
       />
 
       {/* You're covered: delivery and money, the parts sellers worry about */}
-      <section id="covered" aria-labelledby="covered-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-24">
+      <section id="covered" aria-labelledby="covered-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-10 lg:py-24">
         <div className="lp-wrap">
           <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
             <div className="rv relative aspect-[16/10] overflow-hidden rounded-[28px] lg:aspect-[4/5]">
@@ -138,13 +139,13 @@ export default function Home() {
               <h2 id="covered-h" className={`rv max-w-[18ch] ${H2}`}>
                 {pick({ en: "Cook with peace of mind.", hi: "बेफ़िक्र होकर पकाइए।" })}
               </h2>
-              <ul className="rv d1 mt-6 grid gap-x-10 gap-y-5 sm:grid-cols-2 lg:mt-10 lg:gap-y-8">
+              <ul className="rv d1 mt-6 grid grid-cols-2 gap-x-4 gap-y-5 lg:mt-10 lg:gap-x-10 lg:gap-y-8">
                 {COVERED.map((c) => (
-                  <li key={c.title.en} className="flex gap-3">
+                  <li key={c.title.en} className="flex flex-col gap-1.5 lg:flex-row lg:gap-3">
                     <Check aria-hidden size={22} strokeWidth={3} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
                     <div>
-                      <h3 className="text-[18px] font-semibold leading-snug">{pick(c.title)}</h3>
-                      <p className="mt-1 text-[16px] leading-relaxed text-[var(--lp-muted)]">{pick(c.text)}</p>
+                      <h3 className="text-[16px] font-semibold leading-snug lg:text-[18px]">{pick(c.title)}</h3>
+                      <p className="mt-1 text-[14px] leading-snug text-[var(--lp-muted)] lg:text-[16px] lg:leading-relaxed">{pick(c.text)}</p>
                     </div>
                   </li>
                 ))}
@@ -158,7 +159,7 @@ export default function Home() {
       </section>
 
       {/* How your kitchen looks on Zest: the page, search, and the Soundbox */}
-      <section id="looks" aria-labelledby="looks-h" className="scroll-mt-4 py-16 lg:py-20">
+      <section id="looks" aria-labelledby="looks-h" className="scroll-mt-4 py-10 lg:py-20">
         <div className="lp-wrap">
           <h2 id="looks-h" className={`rv ${H2}`}>
             {pick({ en: "Looks good enough to order.", hi: "देखते ही ऑर्डर करने का मन करे।" })}

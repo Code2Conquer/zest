@@ -15,17 +15,17 @@ export type StripOrder = { photo: string; when: Bi; what: Bi; who: Bi; paid?: Bi
 export function PhotoStrip({ line, sub, orders }: { line: Bi; sub?: Bi; orders: StripOrder[] }) {
   const { pick } = useApp();
   return (
-    <section aria-label={pick(line)} className="overflow-hidden py-14 lg:py-20">
+    <section aria-label={pick(line)} className="overflow-hidden py-10 lg:py-20">
       <div className="lp-wrap">
-        <h2 className="lp-display rv max-w-[22ch] text-[clamp(26px,3vw,40px)] leading-[1.1] [text-wrap:balance]">{pick(line)}</h2>
-        {sub && <p className="rv d1 mt-3 max-w-[48ch] text-[18px] leading-relaxed text-[var(--lp-muted)]">{pick(sub)}</p>}
+        <h2 className="lp-display rv max-w-[22ch] text-[22px] leading-[1.15] lg:text-[clamp(26px,3vw,40px)] lg:leading-[1.1] [text-wrap:balance]">{pick(line)}</h2>
+        {sub && <p className="rv d1 mt-2 max-w-[48ch] text-[16px] leading-relaxed text-[var(--lp-muted)] lg:mt-3 lg:text-[18px]">{pick(sub)}</p>}
       </div>
-      <div className="rail mt-8">
+      <div className="rail mt-6 lg:mt-8">
         {/* The list twice, so the drift loops without a seam; the copy is hidden from screen readers. */}
         <ul className="rail-track">
           {[0, 1].map((copy) =>
             orders.map((o, i) => (
-              <li key={`${copy}-${i}`} aria-hidden={copy === 1 || undefined} className="relative w-[200px] shrink-0 sm:w-[240px]">
+              <li key={`${copy}-${i}`} aria-hidden={copy === 1 || undefined} className="relative w-[170px] shrink-0 sm:w-[240px]">
                 <div className="relative overflow-hidden rounded-[22px]" style={{ aspectRatio: "3 / 4" }}>
                   <Image src={o.photo} alt="" fill sizes="240px" className="object-cover" />
                 </div>
