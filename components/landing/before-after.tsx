@@ -55,8 +55,8 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
 
   return (
     <div ref={box} className="grid gap-4 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-6">
-      {/* The reasons: a list on wide screens; on a phone one row of chips to swipe, after Airbnb's categories */}
-      <div role="tablist" aria-label={pick(label)} className="lp-swipe !gap-2 lg:grid lg:gap-1.5">
+      {/* The reasons: a list on wide screens; on a phone chips that wrap, so every reason is in view */}
+      <div role="tablist" aria-label={pick(label)} className="flex flex-wrap gap-2 lg:grid lg:gap-1.5">
         {items.map((x, i) => {
           const on = i === k;
           return (
@@ -66,7 +66,7 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
               role="tab"
               aria-selected={on}
               onClick={() => choose(i)}
-              className={`relative flex items-center gap-2.5 text-left transition-colors max-lg:min-h-11 max-lg:rounded-full max-lg:px-4 max-lg:text-[15px] lg:gap-3 lg:rounded-2xl lg:px-4 lg:py-4 ${
+              className={`relative flex items-center gap-2.5 text-left transition-colors max-lg:min-h-10 max-lg:rounded-full max-lg:px-3.5 max-lg:text-[14px] lg:gap-3 lg:rounded-2xl lg:px-4 lg:py-4 ${
                 on
                   ? "max-lg:bg-[var(--lp-ink)] max-lg:text-[var(--lp-on-ink)] lg:bg-[var(--lp-paper)] lg:before:absolute lg:before:inset-y-3 lg:before:left-0 lg:before:w-[3px] lg:before:rounded-full lg:before:bg-[var(--z-turmeric)]"
                   : "max-lg:bg-[var(--lp-paper)] max-lg:text-[var(--lp-muted)] lg:hover:bg-[var(--lp-paper)]/60"

@@ -10,22 +10,21 @@ import { useApp } from "@/lib/state";
 
 // The two Zests as tabs, after Airbnb's Homes / Experiences: a 3D icon (Microsoft Fluent emoji, MIT)
 // beside the name, and a bar under the one you're on.
-const PAGES: { id: "home" | "restaurants"; href: string; label: Bi; short: Bi; icon: string }[] = [
-  { id: "home", href: "/", label: { en: "Home kitchens", hi: "घर की रसोई" }, short: { en: "Kitchens", hi: "रसोई" }, icon: "/icons/pot_of_food_3d.png" },
-  { id: "restaurants", href: "/restaurants", label: { en: "Restaurants", hi: "रेस्टोरेंट" }, short: { en: "Restaurants", hi: "रेस्टोरेंट" }, icon: "/icons/fork_and_knife_with_plate_3d.png" },
+const PAGES: { id: "home" | "restaurants"; href: string; label: Bi; icon: string }[] = [
+  { id: "home", href: "/", label: { en: "Home kitchens", hi: "घर की रसोई" }, icon: "/icons/pot_of_food_3d.png" },
+  { id: "restaurants", href: "/restaurants", label: { en: "Restaurants", hi: "रेस्टोरेंट" }, icon: "/icons/fork_and_knife_with_plate_3d.png" },
 ];
 
 function Tabs({ current }: { current: "home" | "restaurants" }) {
   const { pick } = useApp();
   return (
-    <nav aria-label={pick({ en: "Which Zest", hi: "कौन-सा Zest" })} className="flex items-stretch gap-4 lg:justify-center lg:gap-10">
+    <nav aria-label={pick({ en: "Which Zest", hi: "कौन-सा Zest" })} className="flex items-stretch justify-center gap-8 lg:gap-10">
       {PAGES.map((p) => {
         const here = p.id === current;
         return (
           <a key={p.id} href={p.href} aria-current={here ? "page" : undefined} className={`group relative flex items-center gap-1.5 pb-2.5 pt-1.5 text-[14px] font-semibold transition-colors lg:gap-2.5 lg:pb-3 lg:pt-2 lg:text-[16px] ${here ? "text-[var(--lp-ink)]" : "text-[var(--lp-muted)] hover:text-[var(--lp-ink)]"}`}>
             <img src={p.icon} alt="" width={44} height={44} className={`size-7 transition-transform duration-300 group-hover:scale-110 lg:size-11 ${here ? "" : "opacity-80 saturate-[0.85] group-hover:opacity-100 group-hover:saturate-100"}`} />
-            <span className="sm:hidden">{pick(p.short)}</span>
-            <span className="max-sm:hidden">{pick(p.label)}</span>
+            {pick(p.label)}
             <span aria-hidden className={`absolute inset-x-0 bottom-0 h-[3px] rounded-full bg-[var(--lp-ink)] transition-opacity ${here ? "opacity-100" : "opacity-0 group-hover:opacity-30"}`} />
           </a>
         );
@@ -39,7 +38,7 @@ export function SiteHeader({ current, start }: { current: "home" | "restaurants"
   return (
     <header className="relative z-30 lg:border-b lg:border-[var(--lp-line)] max-lg:sticky max-lg:top-[-56px] max-lg:bg-[var(--lp-ground)]">
       {/* On a phone the whole header is sticky with its logo row (56px) allowed to scroll away, so the
-          tabs and Get started stay pinned under the top edge, as ixigo's categories do. */}
+          tabs stay pinned under the top edge, as ixigo's categories do. */}
       <div className="lp-wrap relative flex h-[56px] items-center justify-between gap-3 lg:h-[84px]">
         <a href="/" aria-label={pick({ en: "Zest home", hi: "Zest होम" })} className="shrink-0">
           <Wordmark className="text-[28px] lg:text-[38px]" />
@@ -54,11 +53,9 @@ export function SiteHeader({ current, start }: { current: "home" | "restaurants"
           </a>
         </div>
       </div>
-      <div className="lp-wrap flex items-center justify-between gap-2 border-b border-[var(--lp-line)] lg:hidden">
+      {/* On a phone the pinned row is the two tabs only; Get started is in the hero and the closing band. */}
+      <div className="lp-wrap border-b border-[var(--lp-line)] lg:hidden">
         <Tabs current={current} />
-        <a href={start.href} className="lp-btn haldi shrink-0 whitespace-nowrap !min-h-9 !px-3.5 !text-[14px]">
-          {pick(start.label)}
-        </a>
       </div>
     </header>
   );

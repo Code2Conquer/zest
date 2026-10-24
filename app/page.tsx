@@ -102,7 +102,7 @@ export default function Home() {
               </p>
             </div>
             {/* The one figure, in the section's own two type styles (headline and lead), set beside the headline. */}
-            <figure className="rv d2 border-[var(--z-turmeric)] max-lg:border-l-2 max-lg:pl-4 lg:border-l lg:border-white/10 lg:pl-12">
+            <figure className="rv d2 max-lg:hidden border-[var(--z-turmeric)] max-lg:border-l-2 max-lg:pl-4 lg:border-l lg:border-white/10 lg:pl-12">
               <p className={`${H2} text-[var(--z-turmeric)] max-lg:text-[22px]`}>{pick({ en: "Nearly 2× sales", hi: "लगभग 2× बिक्री" })}</p>
               <figcaption className={`mt-1 lg:mt-4 ${LEAD}`}>{pick({ en: "Small food sellers who went online almost doubled what they sell.", hi: "ऑनलाइन आए छोटे खाना बेचने वालों की बिक्री लगभग दोगुनी हो गई।" })}</figcaption>
             </figure>
@@ -110,6 +110,11 @@ export default function Home() {
           <div className="rv mt-10">
             <WhyOnline />
           </div>
+          {/* On a phone the figure comes after the reasons, as their payoff. */}
+          <figure className="mt-6 border-l-2 border-[var(--z-turmeric)] pl-4 lg:hidden">
+            <p className="lp-display text-[22px] leading-[1.1] text-[var(--z-turmeric)]">{pick({ en: "Nearly 2× sales", hi: "लगभग 2× बिक्री" })}</p>
+            <figcaption className="mt-1 text-[16px] leading-relaxed text-[var(--lp-muted)]">{pick({ en: "Small food sellers who went online almost doubled what they sell.", hi: "ऑनलाइन आए छोटे खाना बेचने वालों की बिक्री लगभग दोगुनी हो गई।" })}</figcaption>
+          </figure>
         </div>
       </section>
 
