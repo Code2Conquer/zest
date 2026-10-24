@@ -1,11 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { POST as copilot } from "@/app/api/copilot/route";
 import { POST as preview } from "@/app/api/listing/preview/route";
-import { signIn } from "@/lib/server/auth";
-import { sign } from "@/lib/server/crypto";
 import { scrubEvent } from "@/sentry.server.config";
 import { cookieJar } from "../cookies";
-import { freshOutlet } from "../helpers";
+import { freshOutlet, signInAsOwner } from "../helpers";
 
 const ctx = { params: Promise.resolve({}) };
 
@@ -14,8 +12,7 @@ describe("rate limits", () => {
 
   it("allows 20 copilot messages a minute and refuses the 21st", async () => {
     const o = await freshOutlet();
-    cookieJar.set("zest_outlet", sign(o.id));
-    await signIn({ email: `rl-${o.id}@example.in`, name: "R" });
+    await signInAsOwner(o);
     const send = () => copilot(new Request("http://x/api/copilot", { method: "POST", body: JSON.stringify({ message: "How did we do yesterday?", lang: "en" }) }), ctx);
     for (let i = 0; i < 20; i++) expect((await send()).status).toBe(200);
     expect((await send()).status).toBe(429);

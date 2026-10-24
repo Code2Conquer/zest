@@ -209,7 +209,7 @@ export default function MenuPage() {
       {menu && menu.length === 0 && (
         <p className="mt-6 rounded-xl bg-sunken px-4 py-6 text-center text-muted">
           {hi ? "मेन्यू खाली है। ऑनबोर्डिंग में अपने पेपर मेन्यू की फ़ोटो से डिश जोड़ें।" : "Your menu is empty. Add dishes from a photo of your paper menu in onboarding."}{" "}
-          <a href="/start?track=notlive" className="text-ink underline underline-offset-2">
+          <a href="/join?journey=new" className="text-ink underline underline-offset-2">
             {hi ? "फ़ोटो से जोड़ें" : "Add from a photo"}
           </a>
         </p>

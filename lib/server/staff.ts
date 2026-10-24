@@ -1,4 +1,5 @@
 import "server-only";
+import { normalizePhone } from "../phone";
 import { and, eq, isNull } from "drizzle-orm";
 import { HttpError } from "./approvals";
 import { startSession, type SessionUser } from "./auth";
@@ -37,11 +38,16 @@ export async function addStaff(brandId: string, input: StaffInput): Promise<Memb
 }
 
 /** Adds a manager who signs in with their own Google account instead of a PIN. */
-export async function addManagerByEmail(brandId: string, input: { name: string; email: string; outletIds: string[] | null }): Promise<MembershipRow> {
-  const email = input.email.trim().toLowerCase();
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new HttpError(400, "Enter the manager's Google email address.");
-  let [user] = await db.select().from(users).where(eq(users.email, email));
-  if (!user) [user] = await db.insert(users).values({ email, name: input.name.trim() }).returning();
+/** Gives a manager access by their mobile number; they log in with a code sent to it. */
+export async function addManagerByPhone(brandId: string, input: { name: string; phone: string; outletIds: string[] | null }): Promise<MembershipRow> {
+  let phone: string;
+  try {
+    phone = normalizePhone(input.phone);
+  } catch {
+    throw new HttpError(400, "Enter the manager's 10-digit mobile number.");
+  }
+  let [user] = await db.select().from(users).where(eq(users.phone, phone));
+  if (!user) [user] = await db.insert(users).values({ phone, name: input.name.trim() }).returning();
   const [already] = await db.select().from(memberships).where(and(eq(memberships.userId, user.id), eq(memberships.brandId, brandId), eq(memberships.active, true)));
   if (already) throw new HttpError(400, "That person already has access to this restaurant.");
   const [m] = await db.insert(memberships).values({ userId: user.id, brandId, role: "manager", outletIds: input.outletIds }).returning();
@@ -55,7 +61,7 @@ export async function removeStaff(membershipId: string) {
 
 export async function listStaff(brandId: string) {
   const rows = await db
-    .select({ id: memberships.id, role: memberships.role, outletIds: memberships.outletIds, name: users.name, email: users.email, hasPin: memberships.pinHash })
+    .select({ id: memberships.id, role: memberships.role, outletIds: memberships.outletIds, name: users.name, phone: users.phone, hasPin: memberships.pinHash })
     .from(memberships)
     .innerJoin(users, eq(users.id, memberships.userId))
     .where(and(eq(memberships.brandId, brandId), eq(memberships.active, true)));

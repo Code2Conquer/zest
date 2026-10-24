@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { POST as createOutlet } from "@/app/api/outlet/route";
-import { signIn } from "@/lib/server/auth";
 import { brandOutlets, ensureBrands } from "@/lib/server/brands";
 import { client, db } from "@/lib/server/db";
 import { brands, outlets } from "@/lib/server/schema";
@@ -32,7 +31,8 @@ describe("brands", () => {
   });
 
   it("creates a brand with a new restaurant", async () => {
-    await signIn({ email: "new-owner@example.in", name: "Ravi" });
+    const { signInByPhone } = await import("@/lib/server/auth");
+    await signInByPhone("+919811100011");
     const res = await createOutlet(
       new Request("http://x/api/outlet", { method: "POST", body: JSON.stringify({ journey: "live", live: ["zomato"], name: "Chaat Corner", ownerName: "Ravi" }) }),
       ctx,

@@ -1,5 +1,4 @@
 import { currentUser } from "@/lib/server/auth";
-import { devSigninAllowed, googleSigninConfigured } from "@/lib/server/google-signin";
 import { handler } from "@/lib/server/http";
 import { phoneSigninAvailable } from "@/lib/server/otp";
 
@@ -11,6 +10,6 @@ export const GET = handler({ staff: true }, async (_req, outlet, _params, sessio
     role: session?.membership.role ?? null,
     outletId: session ? outlet.id : null,
     staffCode: session?.membership.role === "owner" ? outlet.staffCode : null,
-    methods: { google: googleSigninConfigured(), dev: devSigninAllowed(), phone: phoneSigninAvailable() },
+    methods: { phone: phoneSigninAvailable() },
   };
 });

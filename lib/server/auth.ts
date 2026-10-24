@@ -1,17 +1,15 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { HttpError } from "./approvals";
 import { sign, unsign } from "./crypto";
 import { db } from "./db";
-import { mailboxes, memberships, outlets, users, type MembershipRow, type Outlet, type Role, type UserRow } from "./schema";
+import { memberships, outlets, users, type MembershipRow, type Outlet, type Role, type UserRow } from "./schema";
 
 export type { Role } from "./schema";
 export type SessionUser = { user: UserRow; membership: MembershipRow; outlet: Outlet };
 
 const COOKIE = "zest_session";
-/** The pre-login cookie that pointed a browser at one outlet. Still read so pilots keep their view until they sign in. */
-export const LEGACY_COOKIE = "zest_outlet";
 const MAX_AGE = 60 * 60 * 24 * 30;
 
 type Payload = { u: string; m: string | null; o: string | null };
@@ -38,11 +36,6 @@ async function writePayload(p: Payload) {
 
 export async function signOut() {
   (await cookies()).delete(COOKIE);
-}
-
-/** The outlet a browser pointed at before sign-in existed, if any. */
-export async function legacyOutletId(): Promise<string | null> {
-  return unsign((await cookies()).get(LEGACY_COOKIE)?.value);
 }
 
 /** The signed-in person, even before they belong to a restaurant. */
@@ -85,58 +78,9 @@ export async function startUserSession(user: UserRow) {
   await writePayload({ u: user.id, m: null, o: null });
 }
 
-async function ownerOf(brandId: string) {
-  const [m] = await db.select().from(memberships).where(and(eq(memberships.brandId, brandId), eq(memberships.role, "owner"), eq(memberships.active, true)));
-  return m ?? null;
-}
-
 export async function addOwner(userId: string, brandId: string) {
   const [m] = await db.insert(memberships).values({ userId, brandId, role: "owner" }).returning();
   return m;
-}
-
-/**
- * Signs in a person verified by Google. Links an existing pilot outlet when this browser held its old cookie
- * or its connected Gmail address is this email. Returns null when the person has no restaurant yet.
- */
-export async function signIn(identity: { email: string; name: string }): Promise<SessionUser | null> {
-  const email = identity.email.trim().toLowerCase();
-  let [user] = await db.select().from(users).where(eq(users.email, email));
-  if (!user) [user] = await db.insert(users).values({ email, name: identity.name }).returning();
-
-  const mine = await db.select().from(memberships).where(and(eq(memberships.userId, user.id), eq(memberships.active, true)));
-  let membership: MembershipRow | undefined;
-  let preferred: string | null = null;
-
-  // A restaurant started before sign-in existed: this browser's old cookie, or a mailbox connected with this email.
-  // Claimed whatever restaurants the person already belongs to.
-  const legacy = await legacyOutletId();
-  const [fromCookie] = legacy ? await db.select().from(outlets).where(eq(outlets.id, legacy)) : [];
-  const [box] = await db.select().from(mailboxes).where(sql`lower(${mailboxes.address}) = ${email}`);
-  const [fromMail] = box ? await db.select().from(outlets).where(eq(outlets.id, box.outletId)) : [];
-  const claim = [fromCookie, fromMail].find((o) => o && !o.isDemo && o.brandId);
-  if (claim) {
-    const existing = mine.find((m) => m.brandId === claim.brandId);
-    const owner = await ownerOf(claim.brandId!);
-    if (existing) {
-      membership = existing;
-      preferred = claim.id;
-    } else if (!owner) {
-      membership = await addOwner(user.id, claim.brandId!);
-      preferred = claim.id;
-      const { audit } = await import("./approvals");
-      await audit(claim.id, `user:${user.id}`, "owner.linked", { via: claim === fromCookie ? "browser" : "gmail" });
-    }
-  }
-  // Forget the old cookie once it has done its job: claimed, already owned by someone, or pointing nowhere useful.
-  if (!fromCookie || fromCookie.isDemo || (claim === fromCookie && (preferred || (await ownerOf(fromCookie.brandId!))))) (await cookies()).delete(LEGACY_COOKIE);
-  // Otherwise the first of their restaurants. TODO(Phase B): let people with several pick.
-  membership ??= mine[0];
-  if (!membership) {
-    await startUserSession(user);
-    return null;
-  }
-  return startSession(user, membership, preferred);
 }
 
 /** Signs in a person verified by a code sent to their mobile. Returns null when they have no restaurant yet. */

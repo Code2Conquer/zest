@@ -7,7 +7,7 @@ import { customers, menuItems, orders, outlets } from "@/lib/server/schema";
 import { ensureSlugs, getStorefront, orderStatus, placeOrder, slugify, upiLink } from "@/lib/server/storefront";
 import { linesFor } from "@/lib/server/order-lines";
 import { cookieJar } from "../cookies";
-import { freshOutlet } from "../helpers";
+import { freshOutlet, signInAsOwner } from "../helpers";
 
 async function shop(overrides: Partial<typeof outlets.$inferInsert> = {}) {
   const o = await freshOutlet({ ordering: true, upiId: "testkitchen@okhdfc", ...overrides });
@@ -134,27 +134,23 @@ describe("ordering routes", () => {
 
   it("masks customer phones for managers and shows them to the owner", async () => {
     const { GET } = await import("@/app/api/customers/route");
-    const { signIn } = await import("@/lib/server/auth");
-    const { addManagerByEmail } = await import("@/lib/server/staff");
-    const { sign } = await import("@/lib/server/crypto");
+    const { signInByPhone } = await import("@/lib/server/auth");
+    const { addManagerByPhone } = await import("@/lib/server/staff");
     const { outlet, naan } = await shop();
     await placeOrder(outlet.slug!, order([{ itemId: naan.id, qty: 1 }]));
-    cookieJar.set("zest_outlet", sign(outlet.id));
-    await signIn({ email: `own-${outlet.id}@example.in`, name: "O" });
+    await signInAsOwner(outlet);
     expect(((await (await GET(new Request("http://x"), ctx())).json()) as { phone: string }[])[0].phone).toBe("+919845012345");
-    await addManagerByEmail(outlet.brandId!, { name: "M", email: `mgr-${outlet.id}@example.in`, outletIds: null });
+    const mgr = `+9197${String(Math.floor(Math.random() * 1e8)).padStart(8, "0")}`;
+    await addManagerByPhone(outlet.brandId!, { name: "M", phone: mgr, outletIds: null });
     cookieJar.clear();
-    await signIn({ email: `mgr-${outlet.id}@example.in`, name: "M" });
+    await signInByPhone(mgr);
     expect(((await (await GET(new Request("http://x"), ctx())).json()) as { phone: string }[])[0].phone).toBe("+91 ••••• 12345");
   });
 
   it("refuses a UPI ID that isn't one", async () => {
     const { PATCH } = await import("@/app/api/outlet/route");
-    const { signIn } = await import("@/lib/server/auth");
-    const { sign } = await import("@/lib/server/crypto");
     const o = await freshOutlet();
-    cookieJar.set("zest_outlet", sign(o.id));
-    await signIn({ email: `upi-${o.id}@example.in`, name: "U" });
+    await signInAsOwner(o);
     const bad = await PATCH(new Request("http://x", { method: "PATCH", body: JSON.stringify({ upiId: "not a upi" }) }), ctx());
     expect(bad.status).toBe(400);
     const good = await PATCH(new Request("http://x", { method: "PATCH", body: JSON.stringify({ upiId: "Rasoi27@OKHDFC", ordering: true }) }), ctx());

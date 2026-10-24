@@ -5,9 +5,11 @@ import { normalizePhone } from "../phone";
 import { HttpError } from "./approvals";
 import { signInByPhone } from "./auth";
 import { db } from "./db";
-import { devSigninAllowed } from "./google-signin";
 import { checkRate } from "./rate-limit";
 import { otpCodes } from "./schema";
+
+/** Codes are shown on screen instead of sent, on local and preview servers only (never on Vercel production). */
+export const devSigninAllowed = () => process.env.VERCEL_ENV !== "production" && (process.env.NODE_ENV !== "production" || process.env.ZEST_DEV_SIGNIN === "1");
 
 // Sign-in by mobile number: a 6-digit code, valid for 10 minutes, five tries. Sent on WhatsApp through
 // Meta's authentication template (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_OTP_TEMPLATE). In

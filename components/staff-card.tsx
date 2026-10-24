@@ -6,7 +6,7 @@ import { api, refreshAll, useApi } from "@/lib/api";
 import { useMe } from "@/lib/auth-client";
 import { useApp } from "@/lib/state";
 
-type StaffRow = { id: string; name: string; email: string | null; role: "owner" | "manager" | "kitchen" | "cashier" | "rider"; hasPin: boolean };
+type StaffRow = { id: string; name: string; phone: string | null; role: "owner" | "manager" | "kitchen" | "cashier" | "rider"; hasPin: boolean };
 
 const ROLE: Record<StaffRow["role"], { en: string; hi: string }> = {
   owner: { en: "Owner", hi: "मालिक" },
@@ -26,7 +26,7 @@ export function StaffCard() {
   const [name, setName] = useState("");
   const [role, setRole] = useState<"manager" | "kitchen" | "cashier" | "rider">("kitchen");
   const [pin, setPin] = useState("");
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,10 +37,10 @@ export function StaffCard() {
     setBusy(true);
     setError(null);
     try {
-      await api("/api/staff", { method: "POST", json: role === "manager" ? { name, role, email } : { name, role, pin } });
+      await api("/api/staff", { method: "POST", json: role === "manager" ? { name, role, phone } : { name, role, pin } });
       setName("");
       setPin("");
-      setEmail("");
+      setPhone("");
       refreshAll();
     } catch (err) {
       setError((err as Error).message);
@@ -73,10 +73,10 @@ export function StaffCard() {
         {(data?.staff ?? []).map((s) => (
           <li key={s.id} className="flex items-center gap-3 px-4 py-3">
             <span className="min-w-0 flex-1">
-              <span className="block font-medium">{s.name || s.email}</span>
+              <span className="block font-medium">{s.name || s.phone}</span>
               <span className="text-sm text-muted">
                 {pick(ROLE[s.role])}
-                {s.hasPin ? (hi ? " · PIN से" : " · signs in with PIN") : s.email ? ` · ${s.email}` : ""}
+                {s.hasPin ? (hi ? " · PIN से" : " · signs in with PIN") : s.phone ? ` · ${s.phone}` : ""}
               </span>
             </span>
             {s.role !== "owner" && (
@@ -104,8 +104,8 @@ export function StaffCard() {
         </label>
         {role === "manager" ? (
           <label className="min-w-48 flex-1">
-            <span className="text-sm text-muted">{hi ? "Google ईमेल (वे इसी से साइन इन करेंगे)" : "Google email (they sign in with it)"}</span>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={`mt-1 w-full ${field}`} />
+            <span className="text-sm text-muted">{hi ? "मोबाइल नंबर (वे इसी पर कोड से लॉग इन करेंगे)" : "Mobile number (they log in with a code sent to it)"}</span>
+            <input type="tel" inputMode="numeric" value={phone} onChange={(e) => setPhone(e.target.value)} required className={`mt-1 w-full ${field}`} />
           </label>
         ) : (
           <label className="w-28">

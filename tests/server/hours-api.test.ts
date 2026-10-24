@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { GET, PUT } from "@/app/api/hours/route";
-import { signIn } from "@/lib/server/auth";
-import { sign } from "@/lib/server/crypto";
 import { cookieJar } from "../cookies";
-import { freshOutlet } from "../helpers";
+import { freshOutlet, signInAsOwner } from "../helpers";
 
 const ctx = { params: Promise.resolve({}) };
 const put = (body: unknown) => PUT(new Request("http://x/api/hours", { method: "PUT", body: JSON.stringify(body) }), ctx);
@@ -12,8 +10,7 @@ describe("hours API", () => {
   beforeEach(async () => {
     cookieJar.clear();
     const o = await freshOutlet();
-    cookieJar.set("zest_outlet", sign(o.id));
-    await signIn({ email: `hours-${o.id}@example.in`, name: "H" });
+    await signInAsOwner(o);
   });
 
   it("saves and reads back the week and special dates", async () => {

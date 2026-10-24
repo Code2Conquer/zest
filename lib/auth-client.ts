@@ -7,7 +7,7 @@ export type Me = {
   role: "owner" | "manager" | "kitchen" | "cashier" | "rider" | null;
   outletId: string | null;
   staffCode: string | null;
-  methods: { google: boolean; dev: boolean; phone: boolean };
+  methods: { phone: boolean };
 };
 
 /** Who is signed in on this browser. */

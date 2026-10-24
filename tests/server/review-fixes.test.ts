@@ -3,8 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { GET as payoutsGet } from "@/app/api/payouts/route";
 import { GET as ordersGet } from "@/app/api/orders/route";
 import { POST as staffPost } from "@/app/api/staff/route";
-import { addOwner, signIn } from "@/lib/server/auth";
-import { sign } from "@/lib/server/crypto";
+import { addOwner } from "@/lib/server/auth";
 import { client, db } from "@/lib/server/db";
 import { enqueue, registerHandler, runDueJobs } from "@/lib/server/jobs";
 import { safeReturn } from "@/lib/server/oauth-state";
@@ -12,7 +11,7 @@ import { campaigns, jobs, mailboxes, memberships } from "@/lib/server/schema";
 import { addStaff, pinSignIn } from "@/lib/server/staff";
 import { shouldPoll } from "@/lib/use-order-stream";
 import { cookieJar } from "../cookies";
-import { freshOutlet } from "../helpers";
+import { freshOutlet, signInAsOwner } from "../helpers";
 
 const ctx = { params: Promise.resolve({}) };
 const statusOf = async (p: Promise<unknown>) => {
@@ -48,22 +47,6 @@ describe("review fixes", () => {
     const results: number[] = [];
     for (let i = 0; i < 21; i++) results.push(await statusOf(pinSignIn(codes[i % 5], "0000", ip)));
     expect(results.at(-1)).toBe(429);
-  });
-
-  it("claims a pilot outlet for someone who already owns another restaurant", async () => {
-    const other = await freshOutlet();
-    const first = await signIn({ email: "two-places@example.in", name: "T" });
-    expect(first).toBeNull();
-    const [{ id: userId }] = await client()
-      .execute({ sql: "SELECT id FROM users WHERE email = ?", args: ["two-places@example.in"] })
-      .then((r) => r.rows as unknown as { id: string }[]);
-    await addOwner(userId, other.brandId!);
-    const pilot = await freshOutlet();
-    cookieJar.set("zest_outlet", sign(pilot.id));
-    const s = await signIn({ email: "two-places@example.in", name: "T" });
-    expect(s?.outlet.id).toBe(pilot.id);
-    expect(s?.membership.role).toBe("owner");
-    expect(cookieJar.get("zest_outlet")).toBeUndefined();
   });
 
   it("refuses return paths that leave the site", () => {
@@ -124,14 +107,14 @@ describe("review fixes", () => {
     expect((await ordersGet(new Request("http://x/api/orders"), ctx)).status).toBe(200);
   });
 
-  it("lets the owner add a manager who signs in with Google", async () => {
+  it("lets the owner add a manager who logs in with their mobile", async () => {
     const o = await freshOutlet();
-    cookieJar.set("zest_outlet", sign(o.id));
-    await signIn({ email: `owner-${o.id}@example.in`, name: "O" });
-    const res = await staffPost(new Request("http://x/api/staff", { method: "POST", body: JSON.stringify({ name: "Meena", role: "manager", email: "Meena.M@Example.in" }) }), ctx);
+    await signInAsOwner(o);
+    const res = await staffPost(new Request("http://x/api/staff", { method: "POST", body: JSON.stringify({ name: "Meena", role: "manager", phone: "98110 22233" }) }), ctx);
     expect(res.status).toBe(200);
     cookieJar.clear();
-    const s = await signIn({ email: "meena.m@example.in", name: "Meena" });
+    const { signInByPhone } = await import("@/lib/server/auth");
+    const s = await signInByPhone("+919811022233");
     expect(s?.membership.role).toBe("manager");
     expect(s?.outlet.id).toBe(o.id);
     const [m] = await db.select().from(memberships).where(eq(memberships.id, s!.membership.id));
