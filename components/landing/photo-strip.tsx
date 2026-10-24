@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Check } from "lucide-react";
+import { Bike, Footprints, Store } from "lucide-react";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
 
@@ -11,7 +11,15 @@ import { useApp } from "@/lib/state";
 // orders; on /restaurants, the orders that never reach Zomato or Swiggy. It drifts slowly and stops
 // while a pointer or finger is on it; with reduced motion it's a still row to swipe.
 
-export type StripOrder = { photo: string; when: Bi; what: Bi; who: Bi; paid?: Bi };
+// Every card has the same slots: when, where it came from, the dish and its detail, how it reaches the
+// customer, the amount and how it was paid, and a PAID stamp.
+export type StripOrder = { photo: string; when: Bi; source: Bi; dish: Bi; detail: Bi; delivery: "rider" | "pickup" | "own"; deliveryNote?: Bi; amount: number; method: "UPI" | "Card" };
+
+const DELIVERY = {
+  rider: { icon: Bike, label: { en: "Zomato rider", hi: "Zomato राइडर" } },
+  pickup: { icon: Store, label: { en: "Pickup", hi: "पिकअप" } },
+  own: { icon: Footprints, label: { en: "Own delivery", hi: "अपनी डिलीवरी" } },
+} as const;
 
 export function PhotoStrip({ line, sub, orders }: { line: Bi; sub?: Bi; orders: StripOrder[] }) {
   const { pick } = useApp();
@@ -34,31 +42,51 @@ export function PhotoStrip({ line, sub, orders }: { line: Bi; sub?: Bi; orders: 
         <ul className="rail-track">
           {[0, 1].map((copy) =>
             orders.map((o, i) => (
-              <li key={`${copy}-${i}`} aria-hidden={copy === 1 || undefined} className="relative w-[170px] shrink-0 sm:w-[240px]">
+              <li key={`${copy}-${i}`} aria-hidden={copy === 1 || undefined} className="relative w-[228px] shrink-0 sm:w-[250px]">
                 <div className="relative overflow-hidden rounded-[22px]" style={{ aspectRatio: "3 / 4" }}>
                   <Image src={o.photo} alt="" fill sizes="240px" className="object-cover" />
                 </div>
-                <div className="relative z-10 mx-3 -mt-14 rounded-2xl bg-white p-3 text-[#1c1f23] shadow-[0_14px_30px_-14px_rgb(0_0_0/0.7)]">
-                  <p className="flex items-center gap-1.5 text-[12px] font-semibold text-[#1f6b3a]">
-                    <span aria-hidden className="size-1.5 rounded-full bg-[#2f7a4c]" />
-                    {pick(o.when)}
-                  </p>
-                  <p className="mt-0.5 text-[14.5px] font-semibold leading-snug">{pick(o.what)}</p>
-                  <p className="mt-0.5 flex items-center justify-between gap-2 text-[12.5px] text-[#545a61]">
-                    <span className="truncate">{pick(o.who)}</span>
-                    {o.paid && (
-                      <span className="inline-flex shrink-0 items-center gap-1 font-semibold text-[#1f6b3a]">
-                        <Check aria-hidden size={12} strokeWidth={3} />
-                        {pick(o.paid)}
-                      </span>
-                    )}
-                  </p>
-                </div>
+                <OrderCard o={o} />
               </li>
             )),
           )}
         </ul>
       </div>
     </section>
+  );
+}
+
+function OrderCard({ o }: { o: StripOrder }) {
+  const { pick } = useApp();
+  const d = DELIVERY[o.delivery];
+  return (
+    <div className="relative z-10 mx-2.5 -mt-16 rounded-2xl bg-white p-3 pt-3.5 text-[#1c1f23] shadow-[0_14px_30px_-14px_rgb(0_0_0/0.7)]">
+      {/* PAID stamp */}
+      <span aria-label={pick({ en: "Paid", hi: "भुगतान हो गया" })} className="absolute -top-3.5 left-3 -rotate-[6deg] rounded-md border-2 border-[#2f7a4c] bg-white px-1.5 py-0.5 text-[10.5px] font-extrabold tracking-[0.12em] text-[#2f7a4c]">
+        {pick({ en: "PAID", hi: "पेड" })}
+      </span>
+      {/* when · source */}
+      <p className="flex items-center justify-between gap-2 text-[11.5px] text-[#545a61]">
+        <span className="whitespace-nowrap tabular-nums">{pick(o.when)}</span>
+        <span className="min-w-0 truncate rounded-full bg-[#f1f3f4] px-2 py-0.5 text-[11px] font-semibold text-[#3d4349]">{pick(o.source)}</span>
+      </p>
+      {/* dish and detail */}
+      <p className="mt-1.5 line-clamp-2 min-h-[2.5em] text-[14.5px] font-semibold leading-snug">{pick(o.dish)}</p>
+      <p className="truncate text-[12px] text-[#545a61]">{pick(o.detail)}</p>
+      {/* delivery · amount and method */}
+      <div className="mt-2.5 flex items-end justify-between gap-2 border-t border-dashed border-[#d9dde1] pt-2">
+        <p className="min-w-0 text-[11.5px] leading-tight text-[#545a61]">
+          <span className="flex items-center gap-1 font-semibold text-[#1c1f23]">
+            <d.icon aria-hidden size={13} />
+            {pick(d.label)}
+          </span>
+          {o.deliveryNote && <span className="block truncate">{pick(o.deliveryNote)}</span>}
+        </p>
+        <p className="shrink-0 text-right leading-tight">
+          <span className="block text-[14.5px] font-bold tabular-nums">₹{o.amount.toLocaleString("en-IN")}</span>
+          <span className="block text-[11px] text-[#545a61]">{o.method}</span>
+        </p>
+      </div>
+    </div>
   );
 }
