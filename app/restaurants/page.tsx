@@ -160,8 +160,16 @@ export default function Restaurants() {
       </section>
 
       <PhotoStrip
-        line={{ en: "Biryani for the office. Thali for the family. Your page takes both.", hi: "ऑफ़िस के लिए बिरयानी। परिवार के लिए थाली। आपका पेज दोनों लेता है।" }}
-        photos={["w02", "w15", "w29", "w30", "w26", "w32", "w06"].map((n) => `/photos/wall/${n}.webp`)}
+        line={{ en: "The orders Zomato and Swiggy never see.", hi: "वो ऑर्डर जो Zomato और Swiggy तक कभी नहीं पहुँचते।" }}
+        sub={{ en: "Office lunches, party trays, a regular's usual. Now they come through your page, paid and on the list.", hi: "ऑफ़िस लंच, पार्टी ट्रे, किसी पुराने ग्राहक का रोज़ का ऑर्डर। अब ये आपके पेज से आते हैं, पेड और लिस्ट में।" }}
+        orders={[
+          { photo: "/photos/wall/w05.webp", when: { en: "12:30 pm · office lunch", hi: "दोपहर 12:30 · ऑफ़िस लंच" }, what: { en: "12 chicken curry, 24 naan", hi: "12 चिकन करी, 24 नान" }, who: { en: "Rider · 4.2 km", hi: "राइडर · 4.2 किमी" }, paid: { en: "₹4,560 UPI", hi: "₹4,560 UPI" } },
+          { photo: "/photos/wall/w29.webp", when: { en: "8:05 pm · WhatsApp", hi: "रात 8:05 · WhatsApp" }, what: { en: "Rahul’s usual: 2 dal makhani", hi: "राहुल का रोज़ का: 2 दाल मखनी" }, who: { en: "14th order", hi: "14वाँ ऑर्डर" }, paid: { en: "₹734 UPI", hi: "₹734 UPI" } },
+          { photo: "/photos/wall/w06.webp", when: { en: "Saturday · party tray", hi: "शनिवार · पार्टी ट्रे" }, what: { en: "3 kg tandoori chicken", hi: "3 किलो तंदूरी चिकन" }, who: { en: "Advance paid", hi: "एडवांस मिल गया" }, paid: { en: "₹3,900 UPI", hi: "₹3,900 UPI" } },
+          { photo: "/photos/wall/w30.webp", when: { en: "9:15 am · phone order", hi: "सुबह 9:15 · फ़ोन ऑर्डर" }, what: { en: "6 poori bhaji", hi: "6 पूरी भाजी" }, who: { en: "Counter pickup", hi: "काउंटर पिकअप" }, paid: { en: "₹540 UPI", hi: "₹540 UPI" } },
+          { photo: "/photos/wall/w26.webp", when: { en: "Sunday · family dinner", hi: "रविवार · परिवार का डिनर" }, what: { en: "2 paneer butter masala, rice", hi: "2 पनीर बटर मसाला, चावल" }, who: { en: "Guest from table 4", hi: "टेबल 4 के मेहमान" }, paid: { en: "₹860 UPI", hi: "₹860 UPI" } },
+          { photo: "/photos/wall/w01.webp", when: { en: "1:40 pm · hostel group", hi: "दोपहर 1:40 · हॉस्टल ग्रुप" }, what: { en: "8 curry and rice", hi: "8 करी चावल" }, who: { en: "Rider · 2.6 km", hi: "राइडर · 2.6 किमी" }, paid: { en: "₹1,520 UPI", hi: "₹1,520 UPI" } },
+        ]}
       />
 
       {/* The Soundbox: the problem in a busy kitchen, and the one box that solves it */}

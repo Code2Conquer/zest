@@ -360,3 +360,27 @@
   .lp-swipe::-webkit-scrollbar { display: none; }
   .lp-swipe > * { flex: 0 0 auto; scroll-snap-align: start; }
 }
+
+/* The order rail: drifts left on a loop (the list is there twice), stops under a pointer or a finger,
+   fades at both edges. With reduced motion it stands still and scrolls by hand, one copy only. */
+.rail {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); /* taste-skill-ignore: edge fade */
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); /* taste-skill-ignore: edge fade */
+}
+.rail-track {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  padding-inline: 8px;
+  animation: rail-drift 60s linear infinite;
+}
+.rail:hover .rail-track,
+.rail:active .rail-track,
+.rail:focus-within .rail-track { animation-play-state: paused; }
+@keyframes rail-drift { from { transform: translateX(0); } to { transform: translateX(calc(-50% - 8px)); } }
+@media (prefers-reduced-motion: reduce) {
+  .rail { overflow-x: auto; -webkit-mask-image: none; mask-image: none; scrollbar-width: none; }
+  .rail-track { animation: none; padding-inline: var(--lp-m); }
+  .rail-track > li[aria-hidden] { display: none; }
+}

@@ -114,8 +114,17 @@ export default function Home() {
       </section>
 
       <PhotoStrip
-        line={{ en: "Dosa at 8. Thali at 1. Chaat at 6. All on your own page.", hi: "8 बजे डोसा। 1 बजे थाली। 6 बजे चाट। सब आपके अपने पेज पर।" }}
-        photos={["w07", "w03", "w14", "w20", "w25", "w27", "w23"].map((n) => `/photos/wall/${n}.webp`)}
+        line={{ en: "Dosa at 8. Thali at 1. Chaat at 6.", hi: "8 बजे डोसा। 1 बजे थाली। 6 बजे चाट।" }}
+        sub={{ en: "A day on your own page: orders from breakfast to dinner, each one paid before you cook.", hi: "आपके अपने पेज पर एक दिन: नाश्ते से डिनर तक ऑर्डर, हर एक पकाने से पहले पेड।" }}
+        orders={[
+          { photo: "/photos/wall/w07.webp", when: { en: "8:10 am · your page", hi: "सुबह 8:10 · आपका पेज" }, what: { en: "2 masala dosa", hi: "2 मसाला डोसा" }, who: { en: "Flat 302", hi: "फ़्लैट 302" }, paid: { en: "₹180 UPI", hi: "₹180 UPI" } },
+          { photo: "/photos/wall/w27.webp", when: { en: "11:00 am · orders closed", hi: "सुबह 11:00 · ऑर्डर बंद" }, what: { en: "Lunch: 24 thalis to cook", hi: "लंच: 24 थाली बनानी हैं" }, who: { en: "Cooked to the count", hi: "गिनकर पकाइए" } },
+          { photo: "/photos/wall/w03.webp", when: { en: "1:05 pm · WhatsApp", hi: "दोपहर 1:05 · WhatsApp" }, what: { en: "3 veg thali", hi: "3 वेज थाली" }, who: { en: "Sharma ji · B-14", hi: "शर्मा जी · B-14" }, paid: { en: "₹360 UPI", hi: "₹360 UPI" } },
+          { photo: "/photos/wall/w25.webp", when: { en: "4:30 pm · your page", hi: "शाम 4:30 · आपका पेज" }, what: { en: "20 samosa for office tea", hi: "ऑफ़िस की चाय के लिए 20 समोसे" }, who: { en: "Rider · 3.1 km", hi: "राइडर · 3.1 किमी" }, paid: { en: "₹400 UPI", hi: "₹400 UPI" } },
+          { photo: "/photos/wall/w14.webp", when: { en: "5:45 pm · your page", hi: "शाम 5:45 · आपका पेज" }, what: { en: "2 pav bhaji", hi: "2 पाव भाजी" }, who: { en: "Rohan · PG, Hauz Khas", hi: "रोहन · PG, हौज़ ख़ास" }, paid: { en: "₹180 UPI", hi: "₹180 UPI" } },
+          { photo: "/photos/wall/w20.webp", when: { en: "6:20 pm · pickup", hi: "शाम 6:20 · पिकअप" }, what: { en: "Chana chaat", hi: "चना चाट" }, who: { en: "Priya · same lane", hi: "प्रिया · उसी गली" }, paid: { en: "₹70 UPI", hi: "₹70 UPI" } },
+          { photo: "/photos/wall/w23.webp", when: { en: "8:40 pm · weekly plan", hi: "रात 8:40 · हफ़्ते का प्लान" }, what: { en: "1 kg gulab jamun, birthday", hi: "1 किलो गुलाब जामुन, जन्मदिन" }, who: { en: "Kapoor family · C-7", hi: "कपूर परिवार · C-7" }, paid: { en: "₹450 UPI", hi: "₹450 UPI" } },
+        ]}
       />
 
       {/* You're covered: delivery and money, the parts sellers worry about */}
