@@ -32,6 +32,8 @@ export function initAnalytics() {
       person_profiles: "identified_only",
       mask_all_text: true,
     });
+    // The PostHog project is shared with other apps; every Zest event carries app=zest so charts can filter on it.
+    posthog.register({ app: "zest" });
     ph = posthog as unknown as PH;
     for (const [e, p] of queue.splice(0)) ph.capture(e, p, NOW);
     return ph;
