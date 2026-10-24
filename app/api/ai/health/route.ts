@@ -5,6 +5,9 @@ import { clientIp } from "@/lib/server/http";
 import { openBase, openChat, openModel, openVisionModel } from "@/lib/server/open-llm";
 import { checkRate } from "@/lib/server/rate-limit";
 
+// A 16×16 red PNG.
+const RED_PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAF0lEQVR4nGP4z8BAEiJN9aiGUQ1DSgMAkPn/Afnh+ngAAAAASUVORK5CYII=";
+
 /**
  * Is the AI working? Names the provider, endpoint host and models (never the key), and makes one tiny call.
  * Limited to a few checks an hour per connection, so it can't be used to spend the AI quota.
@@ -16,8 +19,13 @@ export async function GET(req: Request) {
   if (provider !== "open") return NextResponse.json({ provider, model: provider === "claude" ? MODEL : null });
   const info = { provider, host: new URL(openBase()).host, model: openModel(), visionModel: openVisionModel() };
   try {
-    const msg = await openChat({ messages: [{ role: "user", content: "Reply with the single word: ok" }], max_tokens: 5 });
-    return NextResponse.json({ ...info, ok: true, reply: msg.content });
+    const msg = await openChat({ messages: [{ role: "user", content: "Reply with the single word: ok" }], max_tokens: 50 });
+    // And a photo: a small red square, which the vision model should name.
+    const vision = await openChat({ model: openVisionModel(), max_tokens: 50, messages: [{ role: "user", content: [{ type: "image_url", image_url: { url: RED_PNG } }, { type: "text", text: "What colour is this image? One word." }] }] }).then(
+      (m) => ({ ok: true, reply: m.content }),
+      (e: Error) => ({ ok: false, error: e.message.slice(0, 300) }),
+    );
+    return NextResponse.json({ ...info, ok: true, reply: msg.content, vision });
   } catch (err) {
     // When a model is missing, list what this key can use.
     const models = await fetch(`${openBase()}/models`, { headers: { Authorization: `Bearer ${process.env.LLM_API_KEY}` } })

@@ -4,13 +4,14 @@ import { z } from "zod";
 // Open models through any OpenAI-compatible chat API. Defaults to Groq's free tier:
 //   LLM_API_KEY        required (from console.groq.com)
 //   LLM_BASE_URL       default https://api.groq.com/openai/v1 (OpenRouter, Together, Cloudflare, Ollama… also work)
-//   LLM_MODEL          text and tool use, default llama-3.3-70b-versatile
-//   LLM_VISION_MODEL   photos of menus and documents, default meta-llama/llama-4-scout-17b-16e-instruct
+//   LLM_MODEL          text and tool use, default openai/gpt-oss-120b (open weights)
+//   LLM_VISION_MODEL   photos of menus and documents, default qwen/qwen3.8-27b
+// Groq retires models over time; /api/ai/health shows what the key can use.
 // Open models can't read PDFs directly; photos only.
 
 export const openBase = () => (process.env.LLM_BASE_URL ?? "https://api.groq.com/openai/v1").replace(/\/$/, "");
-export const openModel = () => process.env.LLM_MODEL ?? "llama-3.3-70b-versatile";
-export const openVisionModel = () => process.env.LLM_VISION_MODEL ?? "meta-llama/llama-4-scout-17b-16e-instruct";
+export const openModel = () => process.env.LLM_MODEL ?? "openai/gpt-oss-120b";
+export const openVisionModel = () => process.env.LLM_VISION_MODEL ?? "qwen/qwen3.8-27b";
 
 export type OpenPart = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
 export type OpenMessage =
