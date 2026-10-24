@@ -14,9 +14,9 @@ const NEXT_MS = 6000;
 export type BeforeAfterItem = { id: string; icon: typeof Check; title: Bi; line: Bi; today: React.ReactNode; zest: React.ReactNode };
 
 /**
- * Reasons as tabs, and a stage showing the chosen one as it goes today, then a moment later with Zest.
- * While on screen it walks through them; picking one, or the Today / With Zest switch, takes over.
- * Reduced motion shows "With Zest", still.
+ * Reasons as tabs, and a stage showing the chosen one as it goes today and with Zest: side by side on wide
+ * screens, flipping from one to the other on a phone. While on screen it walks through the reasons;
+ * picking one, or the Today / With Zest switch, takes over. Reduced motion shows "With Zest", still.
  */
 export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label: Bi }) {
   const { pick } = useApp();
@@ -54,9 +54,9 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
   const item = items[k];
 
   return (
-    <div ref={box} className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-6">
-      {/* The reasons: a list on wide screens, a two-column grid on a phone */}
-      <div role="tablist" aria-label={pick(label)} className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:gap-1.5">
+    <div ref={box} className="grid gap-4 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-6">
+      {/* The reasons: a list on wide screens; on a phone one row of chips to swipe, after Airbnb's categories */}
+      <div role="tablist" aria-label={pick(label)} className="lp-swipe !gap-2 lg:grid lg:gap-1.5">
         {items.map((x, i) => {
           const on = i === k;
           return (
@@ -66,13 +66,17 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
               role="tab"
               aria-selected={on}
               onClick={() => choose(i)}
-              className={`relative flex items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors sm:px-4 lg:py-4 ${on ? "bg-[var(--lp-paper)] before:absolute before:inset-y-3 before:left-0 before:w-[3px] before:rounded-full before:bg-[var(--z-turmeric)]" : "hover:bg-[var(--lp-paper)]/60"}`}
+              className={`relative flex items-center gap-2.5 text-left transition-colors max-lg:min-h-11 max-lg:rounded-full max-lg:px-4 max-lg:text-[15px] lg:gap-3 lg:rounded-2xl lg:px-4 lg:py-4 ${
+                on
+                  ? "max-lg:bg-[var(--lp-ink)] max-lg:text-[var(--lp-on-ink)] lg:bg-[var(--lp-paper)] lg:before:absolute lg:before:inset-y-3 lg:before:left-0 lg:before:w-[3px] lg:before:rounded-full lg:before:bg-[var(--z-turmeric)]"
+                  : "max-lg:bg-[var(--lp-paper)] max-lg:text-[var(--lp-muted)] lg:hover:bg-[var(--lp-paper)]/60"
+              }`}
             >
-              <span className={`hidden size-10 shrink-0 place-items-center rounded-full transition-colors sm:grid ${on ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : "bg-[var(--lp-sunken)] text-[var(--lp-muted)]"}`}>
+              <span className={`grid shrink-0 place-items-center rounded-full transition-colors max-lg:size-auto max-lg:bg-transparent lg:size-10 ${on ? "lg:bg-[var(--z-turmeric)] lg:text-[#1c1f23]" : "lg:bg-[var(--lp-sunken)] lg:text-[var(--lp-muted)]"}`}>
                 <x.icon aria-hidden size={18} />
               </span>
               <span className="min-w-0">
-                <span className={`block text-[16px] font-semibold leading-snug sm:text-[16px] ${on ? "" : "text-[var(--lp-muted)]"}`}>{pick(x.title)}</span>
+                <span className={`block whitespace-nowrap font-semibold leading-snug lg:whitespace-normal lg:text-[16px] ${on ? "" : "lg:text-[var(--lp-muted)]"}`}>{pick(x.title)}</span>
                 <span className="hidden text-[14px] leading-snug text-[var(--lp-muted)] lg:block">{pick(x.line)}</span>
               </span>
             </button>
@@ -80,9 +84,10 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
         })}
       </div>
 
-      {/* The stage: today, then with Zest */}
-      <div role="tabpanel" className="flex flex-col rounded-[24px] bg-[var(--lp-paper)] p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-3">
+      {/* The stage. Wide screens: today and with Zest side by side, so the panel is full and the change
+          is seen at a glance. Phones: one at a time, with the switch. */}
+      <div role="tabpanel" className="rounded-[24px] bg-[var(--lp-paper)] p-3 sm:p-4">
+        <div className="flex items-center justify-between gap-3 lg:hidden">
           <div role="radiogroup" aria-label={pick({ en: "Today or with Zest", hi: "आज या Zest के साथ" })} className="inline-flex rounded-full bg-[var(--lp-sunken)] p-1 text-[14px] font-semibold">
             {[false, true].map((z) => (
               <button
@@ -100,10 +105,19 @@ export function BeforeAfter({ items, label }: { items: BeforeAfterItem[]; label:
               </button>
             ))}
           </div>
-          <p className="hidden truncate text-[14px] text-[var(--lp-muted)] sm:block lg:hidden">{pick(items[k].line)}</p>
+          <p className="truncate text-[14px] text-[var(--lp-muted)] max-sm:hidden">{pick(item.line)}</p>
         </div>
-        <div key={`${item.id}-${zest}`} className="jr-in mt-4 grid h-[260px] place-items-center rounded-[18px] bg-[var(--lp-sunken)] sm:h-[280px]">
-          {zest ? item.zest : item.today}
+        <div className="mt-3 grid gap-3 lg:mt-0 lg:grid-cols-2">
+          {([false, true] as const).map((z) => (
+            <div key={String(z)} className={`relative rounded-[18px] bg-[var(--lp-sunken)] ${zest === z ? "" : "max-lg:hidden"}`}>
+              <p className={`absolute left-3 top-3 z-10 hidden rounded-full px-3 py-1 text-[13px] font-semibold lg:block ${z ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : "bg-[var(--lp-paper)] text-[var(--lp-muted)]"}`}>
+                {z ? pick({ en: "With Zest", hi: "Zest के साथ" }) : pick({ en: "Today", hi: "आज" })}
+              </p>
+              <div key={item.id} className={`jr-in grid h-[230px] place-items-center overflow-hidden sm:h-[260px] lg:h-[320px] lg:pt-8 ${z ? "" : "lg:opacity-70 lg:grayscale-[0.35]"}`}>
+                <div className="max-sm:scale-[0.9]">{z ? item.zest : item.today}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -13,7 +13,8 @@ import { siteFonts } from "@/components/landing/site-fonts";
 import { SiteHeader } from "@/components/landing/site-header";
 import { StickyStart } from "@/components/landing/sticky-start";
 import { ZestAssistant } from "@/components/landing/zest-assistant";
-import { ReachZest, WhyOnline } from "@/components/landing/why-online";
+import { WhyOnline } from "@/components/landing/why-online";
+import { PhotoStrip } from "@/components/landing/photo-strip";
 import { Soundbox } from "@/components/soundbox/soundbox";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
@@ -112,18 +113,23 @@ export default function Home() {
         </div>
       </section>
 
+      <PhotoStrip
+        line={{ en: "Dosa at 8. Thali at 1. Chaat at 6. All on your own page.", hi: "8 बजे डोसा। 1 बजे थाली। 6 बजे चाट। सब आपके अपने पेज पर।" }}
+        photos={["w07", "w03", "w14", "w20", "w25", "w27", "w23"].map((n) => `/photos/wall/${n}.webp`)}
+      />
+
       {/* You're covered: delivery and money, the parts sellers worry about */}
       <section id="covered" aria-labelledby="covered-h" className="scroll-mt-4 bg-[var(--lp-sunken)] py-16 lg:py-24">
         <div className="lp-wrap">
           <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-            <div className="rv relative aspect-[4/5] overflow-hidden rounded-[28px]">
+            <div className="rv relative aspect-[16/10] overflow-hidden rounded-[28px] lg:aspect-[4/5]">
               <Image src="/photos/in/rider-zomato.webp" alt={pick({ en: "A Zomato rider on a motorbike in city traffic", hi: "शहर के ट्रैफ़िक में बाइक पर Zomato राइडर" })} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
             </div>
             <div>
               <h2 id="covered-h" className={`rv max-w-[18ch] ${H2}`}>
                 {pick({ en: "Cook with peace of mind.", hi: "बेफ़िक्र होकर पकाइए।" })}
               </h2>
-              <ul className="rv d1 mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2">
+              <ul className="rv d1 mt-6 grid gap-x-10 gap-y-5 sm:grid-cols-2 lg:mt-10 lg:gap-y-8">
                 {COVERED.map((c) => (
                   <li key={c.title.en} className="flex gap-3">
                     <Check aria-hidden size={22} strokeWidth={3} className="mt-0.5 shrink-0 text-[var(--z-turmeric)]" />
@@ -136,7 +142,7 @@ export default function Home() {
               </ul>
             </div>
           </div>
-          <div className="rv d2 mt-16">
+          <div className="rv d2 mt-10 lg:mt-16">
             <DeliveryMap />
           </div>
         </div>
@@ -148,13 +154,13 @@ export default function Home() {
           <h2 id="looks-h" className={`rv ${H2}`}>
             {pick({ en: "Looks good enough to order.", hi: "देखते ही ऑर्डर करने का मन करे।" })}
           </h2>
-          <ul className="mt-10 grid gap-5 lg:grid-cols-3">
+          <ul className="lp-swipe mt-8 lg:mt-10 lg:grid lg:grid-cols-3 lg:gap-5">
             <Showcase
               className="rv"
               title={{ en: "One photo in. A full menu out.", hi: "एक फ़ोटो दीजिए, पूरा मेन्यू पाइए।" }}
               text={{ en: "Your dishes, prices and photos, laid out the way customers like to order.", hi: "आपकी डिश, दाम और फ़ोटो, वैसे जैसे ग्राहक ऑर्डर करना पसंद करते हैं।" }}
             >
-              <div className="h-[300px] origin-top scale-[0.62]">
+              <div className="h-[240px] origin-top scale-[0.5] lg:h-[300px] lg:scale-[0.62]">
                 <HeroPhone
                   cover="/photos/in/thali.webp"
                   name={{ en: "Meena's Kitchen", hi: "मीना की रसोई" }}
@@ -172,7 +178,7 @@ export default function Home() {
               title={{ en: "Found on Google. Shared on WhatsApp.", hi: "Google पर मिलिए, WhatsApp पर छाइए।" }}
               text={{ en: "On Google, in your society's WhatsApp groups, and as a QR on your counter.", hi: "Google पर, सोसाइटी के WhatsApp ग्रुप में, और काउंटर पर QR के रूप में।" }}
             >
-              <ReachZest />
+              <SharePreview />
             </Showcase>
             <Showcase
               className="rv d2"
@@ -180,7 +186,8 @@ export default function Home() {
               text={{ en: "The Zest Soundbox speaks each order out loud on your counter.", hi: "Zest Soundbox हर ऑर्डर काउंटर पर बोलकर बताता है।" }}
               dark
             >
-              <Soundbox size="md" state="speaking" bare />
+              <Soundbox size="sm" state="speaking" bare className="lg:hidden" />
+              <Soundbox size="md" state="speaking" bare className="max-lg:hidden" />
             </Showcase>
           </ul>
         </div>
@@ -216,13 +223,33 @@ export default function Home() {
 }
 
 /** One of the three product pictures: a screen of it, then what it does for you. */
+/** Meena's link as it lands in a society WhatsApp group: the chat bubble with its preview card. */
+function SharePreview() {
+  const { pick } = useApp();
+  return (
+    <div data-ui className="w-[280px] rounded-2xl bg-[#0b141a] p-3 text-[#e9edef]">
+      <p className="text-[12px] font-semibold text-[#8696a0]">{pick({ en: "Green Park Residents · 214", hi: "ग्रीन पार्क रेज़िडेंट्स · 214" })}</p>
+      <div className="mt-2 w-[240px] rounded-lg rounded-tl-none bg-[#005c4b] p-1.5">
+        <div className="overflow-hidden rounded-md bg-[#025144]">
+          <Image src="/photos/in/thali.webp" alt="" width={240} height={110} className="h-[96px] w-full object-cover" />
+          <div className="px-2 py-1.5">
+            <p className="text-[13px] font-semibold">{pick({ en: "Meena's Kitchen · Order online", hi: "मीना की रसोई · ऑनलाइन ऑर्डर" })}</p>
+            <p className="text-[11.5px] text-[#a8c5bd]">zest.link/meenas-kitchen</p>
+          </div>
+        </div>
+        <p className="px-1 pb-0.5 pt-1.5 text-[13px]">{pick({ en: "Lunch menu is up, order by 11! 🍛", hi: "लंच मेन्यू तैयार है, 11 बजे तक ऑर्डर करें! 🍛" })}</p>
+      </div>
+    </div>
+  );
+}
+
 function Showcase({ title, text, dark, className = "", children }: { title: Bi; text: Bi; dark?: boolean; className?: string; children: React.ReactNode }) {
   const { pick } = useApp();
   return (
-    <li className={`flex flex-col overflow-hidden rounded-[28px] bg-[var(--lp-paper)] ${className}`}>
-      <div className={`grid h-[340px] place-items-center overflow-hidden px-6 pt-8 ${dark ? "bg-[#15181b]" : "bg-[var(--lp-sunken)]"}`}>{children}</div>
-      <div className="px-6 pb-7 pt-6">
-        <h3 className="text-[22px] font-semibold leading-snug">{pick(title)}</h3>
+    <li className={`flex flex-col overflow-hidden rounded-[28px] bg-[var(--lp-paper)] max-lg:w-[78%] max-lg:max-w-[340px] ${className}`}>
+      <div className={`grid h-[260px] place-items-center overflow-hidden px-6 pt-6 lg:h-[340px] lg:pt-8 ${dark ? "bg-[#15181b]" : "bg-[var(--lp-sunken)]"}`}>{children}</div>
+      <div className="px-5 pb-6 pt-5 lg:px-6 lg:pb-7 lg:pt-6">
+        <h3 className="text-[20px] font-semibold leading-snug lg:text-[22px]">{pick(title)}</h3>
         <p className="mt-1.5 text-[16px] leading-relaxed text-[var(--lp-muted)]">{pick(text)}</p>
       </div>
     </li>

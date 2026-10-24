@@ -11,6 +11,7 @@ import { DirectOrderJourney } from "@/components/landing/journey";
 import { LostOrders } from "@/components/landing/lost-orders";
 import { MorningSummary, RestaurantVoice } from "@/components/landing/restaurants";
 import { SiteFooter } from "@/components/landing/site-footer";
+import { PhotoStrip } from "@/components/landing/photo-strip";
 import { siteFonts } from "@/components/landing/site-fonts";
 import { SiteHeader } from "@/components/landing/site-header";
 import { StickyStart } from "@/components/landing/sticky-start";
@@ -157,6 +158,11 @@ export default function Restaurants() {
           </div>
         </div>
       </section>
+
+      <PhotoStrip
+        line={{ en: "Biryani for the office. Thali for the family. Your page takes both.", hi: "ऑफ़िस के लिए बिरयानी। परिवार के लिए थाली। आपका पेज दोनों लेता है।" }}
+        photos={["w02", "w15", "w29", "w30", "w26", "w32", "w06"].map((n) => `/photos/wall/${n}.webp`)}
+      />
 
       {/* The Soundbox: the problem in a busy kitchen, and the one box that solves it */}
       <section id="soundbox" aria-labelledby="soundbox-h" className="scroll-mt-4 py-16 lg:py-20">

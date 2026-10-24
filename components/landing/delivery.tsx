@@ -73,9 +73,10 @@ export function DeliveryMap() {
           ))}
         </svg>
       </div>
-      <ol className="space-y-3">
+      {/* Phones: the three choices as a row to swipe, under the map */}
+      <ol className="lp-swipe lg:block lg:space-y-3">
         {CASES.map((c, k) => (
-          <li key={c.id} className={`rounded-2xl bg-[var(--lp-paper)] p-4 transition-shadow duration-500 ${k <= lit ? "shadow-[inset_0_0_0_2px_var(--z-turmeric)]" : ""}`}>{/* the ring marks the chosen way: a state, not decoration. taste-skill-ignore */}
+          <li key={c.id} className={`rounded-2xl bg-[var(--lp-paper)] p-4 transition-shadow duration-500 max-lg:w-[78%] max-lg:max-w-[300px] ${k <= lit ? "shadow-[inset_0_0_0_2px_var(--z-turmeric)]" : ""}`}>{/* the ring marks the chosen way: a state, not decoration. taste-skill-ignore */}
             <p className="flex items-center justify-between gap-3 text-[16px]">
               <span className="font-semibold">{pick(c.who)}</span>
               <span className={`rounded-full px-2.5 py-0.5 text-[13px] font-semibold ${k <= lit ? "bg-[var(--z-turmeric)] text-[#1c1f23]" : "bg-[var(--lp-sunken)]"}`}>{pick(c.how)}</span>

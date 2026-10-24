@@ -25,8 +25,8 @@ export function LostOrders() {
 
 function RegularToday() {
   return (
-    <div className="flex items-center gap-4">
-      <div data-ui className={`${card} w-[200px] max-sm:hidden`}>
+    <div className="flex flex-col items-center">
+      <div data-ui className={`${card} relative z-10 w-[220px] max-sm:hidden`}>
         {["Rahul", "Rahul", "Unknown"].map((n, i) => (
           <p key={i} className="flex items-center gap-2 py-1 text-[13px]">
             <PhoneMissed aria-hidden size={14} className="text-[#c23a22]" />
@@ -35,7 +35,9 @@ function RegularToday() {
           </p>
         ))}
       </div>
-      <Slip lines={["Rahul - 2 dal makhani", "4 naan, 9 pm??"]} note="sent?" />
+      <div className="sm:-mt-3 sm:ml-20">
+        <Slip lines={["Rahul - 2 dal makhani", "4 naan, 9 pm??"]} note="sent?" />
+      </div>
     </div>
   );
 }

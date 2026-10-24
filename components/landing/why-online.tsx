@@ -1,6 +1,6 @@
 "use client";
 
-import { Bike, CalendarCheck, Check, Clock, IndianRupee, PhoneMissed, Search, Star, Users } from "lucide-react";
+import { Bike, CalendarCheck, Check, Clock, IndianRupee, Search, Star, Users } from "lucide-react";
 import { BeforeAfter, card, Slip } from "@/components/landing/before-after";
 import { useApp } from "@/lib/state";
 
@@ -104,18 +104,9 @@ function PaidZest() {
 function PlanToday() {
   const { pick } = useApp();
   return (
-    <div className="flex items-center gap-4">
-      <div data-ui className={`${card} w-[190px] max-sm:hidden`}>
-        {["10:42", "10:51", "11:05", "11:20"].map((t) => (
-          <p key={t} className="flex items-center gap-2 py-0.5 text-[13px]">
-            <PhoneMissed aria-hidden size={13} className="text-[#c23a22]" />
-            <span className="flex-1 font-medium">{pick({ en: "Missed call", hi: "मिस्ड कॉल" })}</span>
-            <span className="text-[#6f757c]">{t}</span>
-          </p>
-        ))}
-      </div>
+    <>
       <Slip lines={[pick({ en: "lunch today -", hi: "आज लंच -" }), pick({ en: "thali 15? 20?", hi: "थाली 15? 20?" }), pick({ en: "bhaji ??", hi: "भाजी ??" })]} />
-    </div>
+    </>
   );
 }
 function PlanZest() {

@@ -208,7 +208,9 @@
 .hero-in { animation: hero-in 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 .hero-in.d1 { animation-delay: 90ms; }
 .hero-in.d2 { animation-delay: 180ms; }
-.hero-rise { animation: hero-in 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 150ms both; }
+/* The hero picture slides up without fading, so it counts as painted the moment it loads (LCP). */
+.hero-rise { animation: hero-up 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+@keyframes hero-up { from { transform: translateY(18px); } to { transform: none; } }
 .hero-note { animation: hero-note 650ms cubic-bezier(0.2, 0.8, 0.3, 1.15) 1000ms both; }
 .hero-ping { animation: hero-ping 1.6s cubic-bezier(0, 0, 0.2, 1) 1.6s 3; }
 @keyframes hero-in { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
@@ -339,4 +341,22 @@
 .lp:lang(hi) .lp-display {
   line-height: 1.3;
   letter-spacing: 0;
+}
+
+/* Phones and tablets: a row you swipe, after Airbnb's and ixigo's card rows. It runs to the screen's
+   edges, snaps to each card, and lets the next card peek in so it's clear there's more. */
+@media (max-width: 1023.98px) {
+  .lp-swipe {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin-inline: calc(-1 * var(--lp-m));
+    padding-inline: var(--lp-m);
+    scroll-padding-inline: var(--lp-m);
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .lp-swipe::-webkit-scrollbar { display: none; }
+  .lp-swipe > * { flex: 0 0 auto; scroll-snap-align: start; }
 }
