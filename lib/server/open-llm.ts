@@ -23,7 +23,7 @@ export type OpenTool = { type: "function"; function: { name: string; description
 
 type ChatResponse = { choices: { message: { content: string | null; tool_calls?: OpenToolCall[] }; finish_reason: string }[] };
 
-export async function openChat(body: { model?: string; messages: OpenMessage[]; max_tokens?: number; tools?: OpenTool[]; json?: boolean; temperature?: number }) {
+export async function openChat(body: { model?: string; messages: OpenMessage[]; max_tokens?: number; tools?: OpenTool[]; json?: boolean; temperature?: number }, retries = 2): Promise<ChatResponse["choices"][number]["message"]> {
   const res = await fetch(`${openBase()}/chat/completions`, {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.LLM_API_KEY}`, "Content-Type": "application/json" },
@@ -36,6 +36,12 @@ export async function openChat(body: { model?: string; messages: OpenMessage[]; 
       ...(body.json ? { response_format: { type: "json_object" } } : {}),
     }),
   });
+  // Free tiers cap tokens per minute: wait as long as the service asks (up to 10 s) and try again.
+  if (res.status === 429 && retries > 0) {
+    const wait = Math.min(10, Number(res.headers.get("retry-after")) || 3);
+    await new Promise((r) => setTimeout(r, wait * 1000));
+    return openChat(body, retries - 1);
+  }
   if (!res.ok) {
     // Keep the provider's own reason (model not found, bad key, too large…) for the logs and the health check.
     const why = (await res.text().catch(() => "")).slice(0, 300);

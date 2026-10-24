@@ -5,8 +5,8 @@ import { clientIp } from "@/lib/server/http";
 import { openBase, openChat, openModel, openVisionModel } from "@/lib/server/open-llm";
 import { checkRate } from "@/lib/server/rate-limit";
 
-// A 16×16 red PNG.
-const RED_PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAF0lEQVR4nGP4z8BAEiJN9aiGUQ1DSgMAkPn/Afnh+ngAAAAASUVORK5CYII=";
+// A 64×64 red PNG (vision models want at least 32 pixels a side).
+const RED_PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAAb0lEQVR4nO3PAQkAAAyEwO9feoshgnABdLep8QUNyPEFDcjxBQ3I8QUNyPEFDcjxBQ3I8QUNyPEFDcjxBQ3I8QUNyPEFDcjxBQ3I8QUNyPEFDcjxBQ3I8QUNyPEFDcjxBQ3I8QUNyPEFDcjxBQ3IPanc8OLDQitxAAAAAElFTkSuQmCC";
 
 /**
  * Is the AI working? Names the provider, endpoint host and models (never the key), and makes one tiny call.
