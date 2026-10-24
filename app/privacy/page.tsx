@@ -20,6 +20,8 @@ export default function Privacy() {
         <li>Payments go through our payment partner; we never see or keep your card or UPI PIN.</li>
         <li>When a Zomato rider delivers your order, your address and number are shared with them for that delivery.</li>
       </ul>
+      <h2>Analytics</h2>
+      <p>We count how people use the website and ordering pages (pages visited, buttons used, steps completed) with PostHog and Vercel Analytics, to see where people get stuck. These counts don&apos;t include your name, number, address or anything you type, and we don&apos;t record your screen.</p>
       <h2>What we don&apos;t do</h2>
       <ul>
         <li>We don&apos;t sell your data or share it for advertising.</li>

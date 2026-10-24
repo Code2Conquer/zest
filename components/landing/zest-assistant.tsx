@@ -7,6 +7,7 @@ import { ZestOrb } from "@/components/zest-orb";
 import { api } from "@/lib/api";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
+import { track } from "@/lib/analytics";
 
 // Zest, the assistant on the website: an orb in the corner that speaks up beside itself about whatever
 // section is on screen (a line, its words arriving one by one); tapping the line asks its question,
@@ -190,10 +191,12 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
   // Opening Zest from its orb: on a phone it starts listening straight away (voice first); on a wide
   // screen it opens the side panel ready to type.
   const openZest = () => {
+    track("assistant_opened", { from: "orb", audience });
     setOpen(true);
     if (canListen && !window.matchMedia("(min-width: 1024px)").matches && !listening) listen();
   };
   const ask = (q: Bi) => {
+    track("assistant_opened", { from: "nudge", audience, question: q.en });
     setOpen(true);
     void send(pick(q));
   };

@@ -7,7 +7,8 @@ import type { Lang } from "../i18n";
 import type { Channel, Platform } from "../platforms";
 import type { CopilotCard, CopilotReply } from "../types";
 import { createApproval, type MenuChange } from "./approvals";
-import { claude, describeClaudeError, hasClaude, MODEL } from "./claude";
+import { aiProvider, claude, describeAIError, MODEL } from "./claude";
+import { openChat, type OpenMessage } from "./open-llm";
 import { db } from "./db";
 import { approvalDTO, getMenu, getOrders, getPayouts, getReviews, salesForDay } from "./queries";
 import { approvals, chatMessages, menuItems, reviews, type Outlet } from "./schema";
@@ -35,19 +36,20 @@ const platformName = (p: Platform) => (p === "zomato" ? "Zomato" : "Swiggy");
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
 /** Runs one owner message through the copilot and stores both sides of the exchange. */
-/** `engine` forces Claude or the keyword rules (evals use it); by default Claude runs when configured. */
+/** `engine` forces an engine (evals use it); by default the configured AI runs, else the keyword rules. */
 export async function runCopilot(outlet: Outlet, message: string, uiLang: Lang, engine?: CopilotReply["engine"]): Promise<CopilotReply> {
   const lang = replyLang(message, uiLang);
   const history = await db.select().from(chatMessages).where(eq(chatMessages.outletId, outlet.id)).orderBy(desc(chatMessages.createdAt)).limit(16);
   await db.insert(chatMessages).values({ outletId: outlet.id, role: "user", content: { text: message } });
 
   let reply: CopilotReply;
-  if (engine ? engine === "claude" : hasClaude()) {
+  const ai = engine ? (engine === "rules" ? null : engine) : aiProvider();
+  if (ai) {
     try {
-      reply = await withClaude(outlet, message, lang, history.reverse());
+      reply = await withAI(outlet, message, lang, history.reverse(), ai);
     } catch (err) {
       console.error(err);
-      reply = { agent: "orchestrator", text: describeClaudeError(err), cards: [], suggestions: [], engine: "claude" };
+      reply = { agent: "orchestrator", text: describeAIError(err), cards: [], suggestions: [], engine: ai };
     }
   } else {
     reply = await withRules(outlet, message, lang);
@@ -62,7 +64,11 @@ export async function chatHistory(outletId: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Claude
+// The AI: Claude, or an open model through an OpenAI-compatible API (lib/server/open-llm.ts).
+// One set of tools serves both.
+
+type ToolDef = { name: string; description: string; inputSchema: z.ZodType; run: (input: never) => Promise<string> | string };
+const tool = <S extends z.ZodType>(t: { name: string; description: string; inputSchema: S; run: (input: z.infer<S>) => Promise<string> | string }) => t as unknown as ToolDef;
 
 function systemPrompt(outlet: Outlet, lang: Lang) {
   const live = outlet.livePlatforms.map(platformName).join(" and ") || "no delivery platform yet";
@@ -75,15 +81,15 @@ Changes to platforms are never made directly. The propose_* tools create a draft
 Reply in ${lang === "hi" ? "Hindi (Devanagari), or Hinglish if the owner wrote in Hinglish" : "English"}. Keep replies to two to four short sentences: cards under your message show the details. Write money as ₹ with Indian digit grouping (₹1,23,456). Don't use Markdown headings or tables.`;
 }
 
-async function withClaude(outlet: Outlet, message: string, lang: Lang, history: (typeof chatMessages.$inferSelect)[]): Promise<CopilotReply> {
+async function withAI(outlet: Outlet, message: string, lang: Lang, history: (typeof chatMessages.$inferSelect)[], ai: "claude" | "open"): Promise<CopilotReply> {
   const cards: CopilotCard[] = [];
   const used = new Map<Agent, number>();
   const mark = (a: Agent) => used.set(a, (used.get(a) ?? 0) + 1);
   const live = outlet.livePlatforms;
   const Platform = z.enum(["zomato", "swiggy"]);
 
-  const tools = [
-    betaZodTool({
+  const defs: ToolDef[] = [
+    tool({
       name: "get_sales",
       description: "Sales and order counts by channel (zomato, swiggy, dine) for today or yesterday, excluding cancelled orders.",
       inputSchema: z.object({ day: z.enum(["today", "yesterday"]) }),
@@ -94,7 +100,7 @@ async function withClaude(outlet: Outlet, message: string, lang: Lang, history: 
         return JSON.stringify({ day, sales, cancelled });
       },
     }),
-    betaZodTool({
+    tool({
       name: "get_orders",
       description: "Recent orders, newest first. Filter by status (e.g. delayed, preparing, cancelled) or channel.",
       inputSchema: z.object({ status: z.enum(["preparing", "ready", "picked", "delivered", "delayed", "cancelled"]).optional(), channel: z.enum(["zomato", "swiggy", "dine"]).optional() }),
@@ -104,7 +110,7 @@ async function withClaude(outlet: Outlet, message: string, lang: Lang, history: 
         return JSON.stringify(rows.map(({ id: _id, ...o }) => o));
       },
     }),
-    betaZodTool({
+    tool({
       name: "get_payouts",
       description: "Payouts per platform with sales, commission, ads, deductions and net, newest first. Use to explain why a payout changed.",
       inputSchema: z.object({ platform: Platform.optional() }),
@@ -115,7 +121,7 @@ async function withClaude(outlet: Outlet, message: string, lang: Lang, history: 
         return JSON.stringify(rows.slice(0, 8).map(({ id: _id, ...p }) => p));
       },
     }),
-    betaZodTool({
+    tool({
       name: "get_reviews",
       description: "Customer reviews with stars, text and whether they've been replied to. Each has an id to use with propose_review_reply.",
       inputSchema: z.object({ unreplied_only: z.boolean() }),
@@ -125,7 +131,7 @@ async function withClaude(outlet: Outlet, message: string, lang: Lang, history: 
         return JSON.stringify(rows.slice(0, 20).map((r) => ({ id: r.id, platform: r.platform, author: r.author, stars: r.stars, text: r.text, postedAt: r.postedAt, replied: !!r.reply })));
       },
     }),
-    betaZodTool({
+    tool({
       name: "get_menu",
       description: "Menu dishes with id, category, price and availability per platform. Optionally filter by a word in the name.",
       inputSchema: z.object({ search: z.string().optional() }),
@@ -136,7 +142,7 @@ async function withClaude(outlet: Outlet, message: string, lang: Lang, history: 
         return JSON.stringify(rows.map((m) => ({ id: m.id, name: m.name, category: m.category, veg: m.veg, price: m.price, available: m.available, has_description: !!m.description, orders_last_7_days: m.ordersLast7 })));
       },
     }),
-    betaZodTool({
+    tool({
       name: "propose_menu_change",
       description: "Draft a change to dishes on the owner's platforms: mark in or out of stock and/or set a price. Get item ids from get_menu first. Creates a draft for the owner to approve.",
       inputSchema: z.object({
@@ -160,7 +166,7 @@ async function withClaude(outlet: Outlet, message: string, lang: Lang, history: 
         return `Draft created (${row.id}) for ${targets.map(platformName).join(" and ")}. Waiting for the owner's approval.`;
       },
     }),
-    betaZodTool({
+    tool({
       name: "propose_review_reply",
       description: "Draft a reply to a review in the owner's warm, specific voice. For complaints, apologise once, say what will change, and offer a fix only if it fits. Creates a draft for approval.",
       inputSchema: z.object({ review_id: z.string(), reply: z.string().min(10).max(900) }),
@@ -180,7 +186,7 @@ async function withClaude(outlet: Outlet, message: string, lang: Lang, history: 
         return `Draft reply created (${row.id}).`;
       },
     }),
-    betaZodTool({
+    tool({
       name: "propose_dispute",
       description: "Draft a dispute with a platform over a wrong charge or deduction on an order. Creates a draft for approval.",
       inputSchema: z.object({ platform: Platform, order_id: z.string(), amount: z.number().positive(), reason: z.string() }),
@@ -191,7 +197,7 @@ async function withClaude(outlet: Outlet, message: string, lang: Lang, history: 
         return `Dispute drafted (${row.id}).`;
       },
     }),
-    betaZodTool({
+    tool({
       name: "propose_promo",
       description: "Draft a time-boxed promo on one platform with a hard spend cap in rupees. Creates a draft for approval.",
       inputSchema: z.object({ platform: Platform, offer: z.string(), window: z.string(), spend_cap: z.number().int().positive(), expected_orders: z.number().int().min(0) }),
@@ -209,12 +215,18 @@ async function withClaude(outlet: Outlet, message: string, lang: Lang, history: 
     }),
   ];
 
-  const messages: Anthropic.Beta.BetaMessageParam[] = history
-    .map((h): Anthropic.Beta.BetaMessageParam => ({ role: h.role, content: String(h.role === "user" ? h.content.text : (h.content as { text?: string }).text ?? "") || "…" }))
-    .concat([{ role: "user", content: message }]);
+  const past = history.map((h) => ({ role: h.role, text: String(h.role === "user" ? h.content.text : (h.content as { text?: string }).text ?? "") || "…" }));
+  const text = ai === "claude" ? await runClaude(outlet, lang, defs, past, message) : await runOpen(outlet, lang, defs, past, message);
+  const agent = ([...used.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "orchestrator") as Agent;
+  return { agent, text, cards, suggestions: SUGGESTIONS[agent][lang], engine: ai };
+}
+
+type Past = { role: "user" | "assistant"; text: string };
+
+async function runClaude(outlet: Outlet, lang: Lang, defs: ToolDef[], past: Past[], message: string) {
+  const messages: Anthropic.Beta.BetaMessageParam[] = past.map((h) => ({ role: h.role, content: h.text })).concat([{ role: "user", content: message }]);
   // The API needs alternating turns starting with the owner.
   while (messages.length && messages[0].role !== "user") messages.shift();
-
   const final = await claude().beta.messages.toolRunner({
     model: MODEL,
     max_tokens: 16000,
@@ -223,23 +235,38 @@ async function withClaude(outlet: Outlet, message: string, lang: Lang, history: 
     output_config: { effort: "medium" },
     betas: ["server-side-fallback-2026-07-01"],
     fallbacks: "default",
-    tools,
+    tools: defs.map((d) => betaZodTool(d as never)),
     messages,
   });
+  if (final.stop_reason === "refusal") return lang === "hi" ? "माफ़ कीजिए, मैं इसमें मदद नहीं कर सकता।" : "Sorry, I can't help with that one.";
+  return final.content
+    .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("\n")
+    .trim();
+}
 
-  const text =
-    final.stop_reason === "refusal"
-      ? lang === "hi"
-        ? "माफ़ कीजिए, मैं इसमें मदद नहीं कर सकता।"
-        : "Sorry, I can't help with that one."
-      : final.content
-          .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text")
-          .map((b) => b.text)
-          .join("\n")
-          .trim();
-
-  const agent = ([...used.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "orchestrator") as Agent;
-  return { agent, text, cards, suggestions: SUGGESTIONS[agent][lang], engine: "claude" };
+/** The same tool loop for an open model: call, run the tools it asks for, feed the results back, up to 8 rounds. */
+async function runOpen(outlet: Outlet, lang: Lang, defs: ToolDef[], past: Past[], message: string) {
+  const tools = defs.map((d) => ({ type: "function" as const, function: { name: d.name, description: d.description, parameters: z.toJSONSchema(d.inputSchema) } }));
+  const messages: OpenMessage[] = [{ role: "system", content: systemPrompt(outlet, lang) }, ...past.map((h) => ({ role: h.role, content: h.text }) as OpenMessage), { role: "user", content: message }];
+  for (let round = 0; round < 8; round++) {
+    const msg = await openChat({ messages, tools, max_tokens: 1500 });
+    if (!msg.tool_calls?.length) return (msg.content ?? "").trim();
+    messages.push({ role: "assistant", content: msg.content ?? null, tool_calls: msg.tool_calls });
+    for (const call of msg.tool_calls) {
+      const d = defs.find((x) => x.name === call.function.name);
+      let result: string;
+      try {
+        const input = d?.inputSchema.safeParse(JSON.parse(call.function.arguments || "{}"));
+        result = !d ? `Error: no tool called ${call.function.name}.` : !input?.success ? `Error: ${input?.error.issues[0]?.message ?? "bad input"}` : await d.run(input.data as never);
+      } catch (err) {
+        result = `Error: ${(err as Error).message}`;
+      }
+      messages.push({ role: "tool", tool_call_id: call.id, content: result });
+    }
+  }
+  return lang === "hi" ? "मैं अभी यह पूरा नहीं कर पाया। थोड़ा आसान करके पूछिए।" : "I couldn't finish that one. Try asking it a simpler way.";
 }
 
 // ---------------------------------------------------------------------------

@@ -60,7 +60,7 @@ export default function Home() {
               />
             </div>
             <div id="hero-start" className="hero-in d2 mt-6 sm:mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <a href={START} className="lp-btn haldi min-h-12 px-8 text-[17px] max-sm:w-full sm:min-h-14 sm:text-[18px]">
+              <a href={START} data-track="get_started_clicked" data-track-page="home" data-track-place="hero" className="lp-btn haldi min-h-12 px-8 text-[17px] max-sm:w-full sm:min-h-14 sm:text-[18px]">
                 {pick({ en: "Get started free", hi: "मुफ़्त शुरू करें" })}
               </a>
             </div>
@@ -221,7 +221,7 @@ export default function Home() {
             </h2>
             <p className="mt-3 text-[18px]">{pick({ en: "Free to start. Set up in a few minutes.", hi: "शुरुआत मुफ़्त। कुछ ही मिनट में तैयार।" })}</p>
           </div>
-          <a href={START} className="lp-btn shrink-0 !bg-[#1c1f23] !text-[#fafaf6] max-sm:w-full">
+          <a href={START} data-track="get_started_clicked" data-track-page="home" data-track-place="final" className="lp-btn shrink-0 !bg-[#1c1f23] !text-[#fafaf6] max-sm:w-full">
             {pick({ en: "Get started free", hi: "मुफ़्त शुरू करें" })}
           </a>
         </div>

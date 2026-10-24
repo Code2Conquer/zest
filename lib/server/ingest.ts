@@ -4,7 +4,8 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import type { Platform } from "../platforms";
 import { audit } from "./approvals";
-import { claude, hasClaude, MODEL } from "./claude";
+import { aiProvider, claude, MODEL } from "./claude";
+import { openStructured } from "./open-llm";
 import { db } from "./db";
 import { and, eq } from "drizzle-orm";
 import { emails, payouts, type MailKind } from "./schema";
@@ -72,11 +73,18 @@ export function parsePayoutWithRules(mail: InboundEmail): ParsedPayout | null {
   };
 }
 
-// Attachments Claude can read directly: PDFs as documents, CSV and plain text inline.
+// Attachments the AI can read: PDFs as documents (Claude only), CSV and plain text inline.
 const readable = (a: InboundAttachment) => a.mimeType === "application/pdf" || a.mimeType === "text/csv" || a.mimeType === "text/plain" || /\.csv$/i.test(a.filename);
 
-async function parsePayoutWithClaude(mail: InboundEmail): Promise<ParsedPayout | null> {
-  const files = (mail.attachments ?? []).filter(readable).slice(0, 3);
+async function parsePayoutWithAI(mail: InboundEmail): Promise<ParsedPayout | null> {
+  const open = aiProvider() === "open";
+  // Open models take text only: CSV and plain-text attachments are inlined, PDFs are skipped.
+  const files = (mail.attachments ?? []).filter(readable).filter((f) => !open || f.mimeType !== "application/pdf").slice(0, 3);
+  if (open) {
+    const parts = files.map((f) => `<attachment name="${f.filename}">\n${Buffer.from(f.data, "base64").toString("utf8").slice(0, 30000)}\n</attachment>`);
+    const ask = `Extract the payout details from this email to an Indian restaurant${files.length ? " and its attachments" : ""}. Amounts are rupees as plain numbers. If it isn't a payout or settlement, set is_payout to false.\n\n${parts.join("\n")}\n<email>\nFrom: ${mail.from}\nSubject: ${mail.subject}\n\n${mail.text.slice(0, 20000)}\n</email>`;
+    return openStructured(PayoutSchema, ask, undefined, 1500);
+  }
   const content: Anthropic.ContentBlockParam[] = [];
   for (const f of files) {
     if (f.mimeType === "application/pdf") {
@@ -120,9 +128,10 @@ export async function ingestEmail(outletId: string, mail: InboundEmail) {
   let via = "rules";
   if (mailKind === "payout") {
     parsed = parsePayoutWithRules(mail);
-    if (!parsed && hasClaude()) {
-      parsed = await parsePayoutWithClaude(mail);
-      via = "claude";
+    const ai = aiProvider();
+    if (!parsed && ai) {
+      parsed = await parsePayoutWithAI(mail);
+      via = ai;
     }
   }
   const isPayout = !!parsed?.is_payout && parsed.platform !== "other";

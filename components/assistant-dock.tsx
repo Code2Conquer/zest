@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { Bi } from "@/lib/i18n";
 import { isHomeKitchen } from "@/lib/nav";
 import { useApp } from "@/lib/state";
+import { track } from "@/lib/analytics";
 import { Copilot } from "./copilot";
 import { ZestNudge } from "./zest-nudge";
 import { ZestOrb } from "./zest-orb";
@@ -66,12 +67,13 @@ export function AssistantDock({ open, setOpen }: { open: boolean; setOpen: (o: b
               say={pick(line.say)}
               ask={pick(line.ask)}
               onAsk={() => {
+                track("dashboard_assistant_opened", { from: "nudge", path, question: line.ask.en });
                 setAsk(pick(line.ask));
                 setOpen(true);
               }}
             />
           )}
-          <button type="button" onClick={() => { setVoice(!window.matchMedia("(min-width: 1024px)").matches); setOpen(true); }} aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })} className="grid size-14 shrink-0 place-items-center rounded-full transition-transform hover:scale-105 active:scale-95">
+          <button type="button" onClick={() => { setVoice(!window.matchMedia("(min-width: 1024px)").matches); setOpen(true); track("dashboard_assistant_opened", { from: "orb", path }); }} aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })} className="grid size-14 shrink-0 place-items-center rounded-full transition-transform hover:scale-105 active:scale-95">
             <ZestOrb size={50} />
           </button>
         </div>

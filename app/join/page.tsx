@@ -16,6 +16,7 @@ import { signOutHere, useMe } from "@/lib/auth-client";
 import { cityName, parseListing } from "@/lib/listing";
 import { CHANNEL_NAME, PLATFORMS, type Platform } from "@/lib/platforms";
 import { useApp } from "@/lib/state";
+import { track } from "@/lib/analytics";
 import type { OutletDTO, PlatformListing } from "@/lib/types";
 
 // Onboarding, kept short, ending with the seller's own ordering page live.
@@ -156,9 +157,11 @@ function Wizard({ journey, initial, start }: { journey: Journey; initial: Detail
   const NEW: StepId[] = ["kind", "details", "menu", "live"];
   const steps: StepId[] = journey === "new" ? NEW : needsMenu ? ["details", "menu", "email", "live"] : ["details", "email", "live"];
   const [step, setStep] = useState<StepId>(start);
+  useEffect(() => track("signup_step", { step: start, journey }), [start, journey]);
   const at = Math.max(0, steps.indexOf(step));
   const go = (s: StepId) => {
     setStep(s);
+    track("signup_step", { step: s, journey });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const next = (list = steps) => go(list[Math.min(list.indexOf(step) + 1, list.length - 1)]);

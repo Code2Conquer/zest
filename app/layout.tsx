@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Kalam } from "next/font/google";
+import { Analytics } from "@/components/analytics";
 import { AppStateProvider } from "@/lib/state";
 import { siteFonts } from "@/components/landing/site-fonts";
 import "./globals.css";
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" data-theme="dark" className={`${siteFonts} ${kot.variable} ${hand.variable}`} suppressHydrationWarning>
       <body>
         <AppStateProvider>{children}</AppStateProvider>
+        <Analytics />
       </body>
     </html>
   );

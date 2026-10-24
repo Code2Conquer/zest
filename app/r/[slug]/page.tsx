@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import { Bike, Check, Clock, IndianRupee, Loader2, LocateFixed, Minus, Plus, Search, ShoppingBag, Star, Utensils, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/lib/state";
+import { amountBand, track } from "@/lib/analytics";
 
 // The restaurant's own ordering site. Phone first: browse, add dishes, give a name and number, then
 // have it delivered (by a Zomato rider or the restaurant's own staff, priced by distance), pick it up
@@ -30,6 +31,7 @@ type Shop = {
   open: boolean;
   upi: boolean;
   online: boolean;
+  isDemo?: boolean;
   cutoffs: Record<string, { at: string; closed: boolean }>;
   delivery: { zomatoRider: boolean; ownStaff: boolean; pickup: boolean; feePaidBy: "customer" | "restaurant"; freeAbove: number | null; maxKm: number; priced: boolean };
   menu: Dish[];
@@ -103,7 +105,13 @@ function Storefront({ slug }: { slug: string }) {
   const [vegOnly, setVegOnly] = useState(false);
 
   useEffect(() => {
-    api<Shop>(`/api/storefront/${slug}`).then(setShop, (e: Error) => setError(e.message));
+    api<Shop>(`/api/storefront/${slug}`).then(
+      (s) => {
+        setShop(s);
+        track("store_viewed", { store: slug, sample: s.isDemo ?? false, open: s.open });
+      },
+      (e: Error) => setError(e.message),
+    );
     // Come back to an order placed earlier on this phone.
     try {
       const saved = localStorage.getItem(`zest:order:${slug}`);
@@ -120,9 +128,14 @@ function Storefront({ slug }: { slug: string }) {
   const total = shop ? Object.entries(cart).reduce((s, [id, n]) => s + (shop.menu.find((m) => m.id === id)?.price ?? 0) * n, 0) : 0;
   // A dish can be added up to what's left of it today, and not at all once its section's cut-off has passed.
   const cap = (m: Dish) => (shop?.cutoffs[m.category]?.closed ? 0 : Math.min(20, m.left ?? 20));
+  const openCheckout = () => {
+    setCheckout(true);
+    track("checkout_opened", { store: slug, items: count });
+  };
   const add = (id: string, d: number) =>
     setCart((c) => {
       const m = shop?.menu.find((x) => x.id === id);
+      if (d > 0 && !Object.values(c).some(Boolean)) track("cart_started", { store: slug });
       return { ...c, [id]: Math.max(0, Math.min(m ? cap(m) : 20, (c[id] ?? 0) + d)) };
     });
   // The last order placed on this phone, to order it again in one tap.
@@ -385,7 +398,7 @@ function Storefront({ slug }: { slug: string }) {
                   <span>{hi ? "कुल" : "Total"}</span>
                   <span>{inr(total)}</span>
                 </p>
-                <button type="button" onClick={() => setCheckout(true)} className="mt-4 w-full rounded-xl bg-ink py-3 font-medium text-paper">
+                <button type="button" onClick={openCheckout} className="mt-4 w-full rounded-xl bg-ink py-3 font-medium text-paper">
                   {hi ? "आगे बढ़ें" : "Checkout"}
                 </button>
               </>
@@ -395,7 +408,7 @@ function Storefront({ slug }: { slug: string }) {
       </div>
 
       {count > 0 && !checkout && (
-        <button type="button" onClick={() => setCheckout(true)} className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-xl items-center justify-between rounded-2xl bg-ink px-5 py-4 text-paper shadow-xl lg:hidden">
+        <button type="button" onClick={openCheckout} className="fixed inset-x-4 bottom-4 z-30 mx-auto flex max-w-xl items-center justify-between rounded-2xl bg-ink px-5 py-4 text-paper shadow-xl lg:hidden">
           <span className="inline-flex items-center gap-2">
             <ShoppingBag aria-hidden className="size-5" />
             {count} {hi ? "आइटम" : count === 1 ? "item" : "items"} · {inr(total)}
@@ -470,12 +483,14 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
         localStorage.setItem(`zest:order:${slug}`, JSON.stringify(placed));
         localStorage.setItem(`zest:usual:${slug}`, JSON.stringify(Object.fromEntries(lines.map((l) => [l.itemId, l.qty]))));
       } catch {}
+      track("order_placed", { store: slug, pay, fulfilment, amount: amountBand(placed.total), sample: shop.isDemo ?? false });
       // Online: pay in the gateway's checkout now; the order counts once the payment is confirmed.
       if (placed.checkout) {
         const proof = await payOnline(placed.checkout, { name, contact: phone });
         if (proof) {
           await api(`/api/storefront/${slug}/orders/${placed.orderId}/paid`, { method: "POST", json: { token: placed.token, ...proof } });
           placed.paid = true;
+          track("order_paid", { store: slug, amount: amountBand(placed.total) });
           try {
             localStorage.setItem(`zest:order:${slug}`, JSON.stringify(placed));
           } catch {}

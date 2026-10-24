@@ -48,7 +48,7 @@ export function SiteHeader({ current, start }: { current: "home" | "restaurants"
           <Tabs current={current} />
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-          <a href={start.href} className="lp-btn haldi min-h-11 whitespace-nowrap px-5 text-[16px] max-lg:!hidden">
+          <a href={start.href} data-track="get_started_clicked" data-track-place="header" className="lp-btn haldi min-h-11 whitespace-nowrap px-5 text-[16px] max-lg:!hidden">
             {pick(start.label)}
           </a>
         </div>

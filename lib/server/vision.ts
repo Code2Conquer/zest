@@ -1,7 +1,8 @@
 import "server-only";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { claude, MODEL } from "./claude";
+import { aiProvider, claude, MODEL } from "./claude";
+import { openStructured } from "./open-llm";
 
 export const DOC_KINDS = ["fssai", "pan", "bank", "gst"] as const;
 export type DocKind = (typeof DOC_KINDS)[number];
@@ -34,6 +35,8 @@ function sourceFor(base64: string, mediaType: string) {
 
 /** Reads and checks one onboarding document. */
 export async function readDocument(kind: DocKind, base64: string, mediaType: string): Promise<DocResult | null> {
+  const ask = `An Indian restaurant owner uploaded this as ${DOC_LABEL[kind]}. Read it and check it's the right document and legible.`;
+  if (aiProvider() === "open") return openStructured(DocSchema, ask, { base64, mediaType }, 1500);
   const res = await claude().messages.parse({
     model: MODEL,
     max_tokens: 2000,
@@ -43,7 +46,7 @@ export async function readDocument(kind: DocKind, base64: string, mediaType: str
         role: "user",
         content: [
           sourceFor(base64, mediaType),
-          { type: "text", text: `An Indian restaurant owner uploaded this as ${DOC_LABEL[kind]}. Read it and check it's the right document and legible.` },
+          { type: "text", text: ask },
         ],
       },
     ],
@@ -66,7 +69,10 @@ const MenuSchema = z.object({
 export type MenuResult = z.infer<typeof MenuSchema>;
 
 /** Turns a photo of a paper menu or menu board into structured dishes. */
+const MENU_ASK = "This is a photo of an Indian restaurant's menu. List every dish with its section, price and whether it's vegetarian. Keep names as printed, fixing only obvious spelling slips.";
+
 export async function readMenu(base64: string, mediaType: string): Promise<MenuResult | null> {
+  if (aiProvider() === "open") return openStructured(MenuSchema, MENU_ASK, { base64, mediaType }, 8000);
   const stream = claude().messages.stream({
     model: MODEL,
     max_tokens: 32000,
@@ -76,7 +82,7 @@ export async function readMenu(base64: string, mediaType: string): Promise<MenuR
         role: "user",
         content: [
           sourceFor(base64, mediaType),
-          { type: "text", text: "This is a photo of an Indian restaurant's menu. List every dish with its section, price and whether it's vegetarian. Keep names as printed, fixing only obvious spelling slips." },
+          { type: "text", text: MENU_ASK },
         ],
       },
     ],

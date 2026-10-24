@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Bi } from "@/lib/i18n";
+import { track } from "@/lib/analytics";
 import { useApp } from "@/lib/state";
 
 // The first screen's live thing, after Airbnb's earnings estimate: set orders a day and see what that
@@ -17,6 +18,7 @@ export function Estimator({ presets, orders: [oMin, oMax], per, ordersLabel }: {
   const { pick } = useApp();
   const [kind, setKind] = useState(presets[0].id);
   const [orders, setOrders] = useState(presets[0].orders);
+  const moved = useRef(false);
   const avg = presets.find((p) => p.id === kind)?.avg ?? presets[0].avg;
   const target = orders * avg * DAYS;
   const shown = useCountUp(target);
@@ -58,7 +60,11 @@ export function Estimator({ presets, orders: [oMin, oMax], per, ordersLabel }: {
             </button>
           ))}
         </div>}
-        <Slider label={pick(ordersLabel)} value={orders} display={String(orders)} min={oMin} max={oMax} step={1} onChange={setOrders} />
+        <Slider label={pick(ordersLabel)} value={orders} display={String(orders)} min={oMin} max={oMax} step={1} onChange={(v) => {
+            setOrders(v);
+            if (!moved.current) track("estimator_used", { page: kind });
+            moved.current = true;
+          }} />
         <p className="mt-3 text-[13px] leading-snug text-[var(--lp-muted)] sm:mt-4 sm:text-[14px]">
           {pick({
             en: `${orders} orders a day × ${inr(avg)} average order × ${DAYS} days. An estimate; what you earn depends on your food, prices and area.`,

@@ -34,7 +34,7 @@ export function SiteFooter({ credits = false }: { credits?: boolean }) {
                   { href: x.dashboard, label: { en: "Dashboard", hi: "डैशबोर्ड" } },
                   { href: x.page, label: { en: "Ordering page", hi: "ऑर्डर पेज" } },
                 ].map((l) => (
-                  <a key={l.href} href={l.href} className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[var(--lp-sunken)] px-4 text-[14px] font-semibold hover:bg-[var(--lp-line)]">
+                  <a key={l.href} href={l.href} data-track="sample_opened" data-track-target={l.href} className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[var(--lp-sunken)] px-4 text-[14px] font-semibold hover:bg-[var(--lp-line)]">
                     {pick(l.label)}
                     <ArrowUpRight aria-hidden size={16} />
                   </a>

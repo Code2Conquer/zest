@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useApp } from "@/lib/state";
+import { track } from "@/lib/analytics";
 
 // Log in or sign up with a mobile number, like Airbnb: the number first, then the 4-digit code sent on
 // WhatsApp. Without a sender (local development) the server returns the code and it is filled in.
@@ -31,6 +32,7 @@ export function PhoneLogin({ onDone }: { onDone: (hasRestaurant: boolean) => voi
     try {
       const r = await api<{ phone: string; devCode?: string; mode?: "last4" }>("/api/auth/otp/start", { method: "POST", json: { phone } });
       setLast4(r.mode === "last4");
+      track("login_code_requested", { mode: r.mode ?? (r.devCode ? "dev" : "sent") });
       setSent(r.phone);
       if (r.devCode) {
         setHint(r.devCode);
@@ -49,6 +51,7 @@ export function PhoneLogin({ onDone }: { onDone: (hasRestaurant: boolean) => voi
     setError(null);
     try {
       const r = await api<{ hasRestaurant: boolean }>("/api/auth/otp/verify", { method: "POST", json: { phone: sent, code } });
+      track("login_succeeded", { method: "phone", hasRestaurant: r.hasRestaurant });
       onDone(r.hasRestaurant);
     } catch (err) {
       setError((err as Error).message);

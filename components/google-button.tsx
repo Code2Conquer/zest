@@ -26,6 +26,7 @@ export function GoogleButton({ returnTo, error }: { returnTo: string; error?: st
       </p>
       <a
         href={`/api/auth/google/start?returnTo=${encodeURIComponent(returnTo)}`}
+        data-track="login_google_clicked"
         className="mt-4 flex min-h-14 w-full items-center justify-center gap-3 rounded-2xl text-[16px] font-semibold text-[#f1f1ec] shadow-[inset_0_0_0_1px_rgb(255_255_255/0.2)] hover:bg-white/[0.05]"
       >
         <svg aria-hidden viewBox="0 0 24 24" className="size-5">

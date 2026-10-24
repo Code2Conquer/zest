@@ -45,6 +45,7 @@ export type OutletDTO = {
   ratings: Partial<Record<Platform, { value: number; count: number; change: number }>>;
   isDemo: boolean;
   connections: ConnectionDTO[];
+  /** An AI is set up (Claude or an open model); without one the assistant runs on its own rules. */
   claude: boolean;
 };
 
@@ -161,7 +162,7 @@ export type CopilotReply = {
   text: string;
   cards: CopilotCard[];
   suggestions: string[];
-  engine: "claude" | "rules";
+  engine: "claude" | "open" | "rules";
 };
 
 export type ChatEntry = { id: string; role: "user"; text: string } | { id: string; role: "assistant"; reply: CopilotReply };

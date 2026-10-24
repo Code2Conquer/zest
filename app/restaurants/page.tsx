@@ -70,7 +70,7 @@ function LinkStart({ id, tone = "light" }: { id?: string; tone?: "light" | "turm
         placeholder={pick({ en: "Paste your Zomato or Swiggy link", hi: "अपना Zomato या Swiggy लिंक डालिए" })}
         className="min-h-12 min-w-0 flex-1 rounded-full bg-transparent px-4 text-[18px] outline-none placeholder:text-[#6f757c]"
       />
-      <button type="submit" className={`lp-btn shrink-0 ${tone === "light" ? "haldi" : "!bg-[#1c1f23] !text-[#fafaf6]"}`}>
+      <button type="submit" data-track="get_started_clicked" data-track-page="restaurants" data-track-place={`link-${tone}`} className={`lp-btn shrink-0 ${tone === "light" ? "haldi" : "!bg-[#1c1f23] !text-[#fafaf6]"}`}>
         {pick({ en: "Get your page free", hi: "अपना पेज मुफ़्त पाइए" })}
       </button>
     </form>
@@ -101,7 +101,7 @@ export default function Restaurants() {
               />
             </div>
             <div id="hero-start" className="hero-in d2 mt-6 sm:mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <a href={START} className="lp-btn haldi min-h-12 px-8 text-[17px] max-sm:w-full sm:min-h-14 sm:text-[18px]">
+              <a href={START} data-track="get_started_clicked" data-track-page="restaurants" data-track-place="hero" className="lp-btn haldi min-h-12 px-8 text-[17px] max-sm:w-full sm:min-h-14 sm:text-[18px]">
                 {pick({ en: "Get your page free", hi: "अपना पेज मुफ़्त पाइए" })}
               </a>
             </div>
@@ -214,7 +214,7 @@ export default function Restaurants() {
               {asking ? (
                 <Waitlist page="/restaurants" section="restaurants-soundbox" defaultType="restaurant" />
               ) : (
-                <button id="waitlist" type="button" onClick={() => setAsking(true)} className="lp-btn haldi scroll-mt-6">
+                <button id="waitlist" type="button" data-track="soundbox_interest" onClick={() => setAsking(true)} className="lp-btn haldi scroll-mt-6">
                   {pick({ en: "Ask for a Soundbox", hi: "Soundbox मँगवाइए" })}
                 </button>
               )}
@@ -236,7 +236,7 @@ export default function Restaurants() {
               </>
             }
             cta={
-              <a href={START} className="lp-btn haldi">
+              <a href={START} data-track="get_started_clicked" data-track-page="restaurants" data-track-place="summary" className="lp-btn haldi">
                 <Mail aria-hidden size={18} />
                 {pick({ en: "Connect your email", hi: "अपना ईमेल जोड़िए" })}
               </a>

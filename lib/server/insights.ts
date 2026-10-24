@@ -94,7 +94,7 @@ export async function mailInsights(outletId: string): Promise<MailInsightsDTO> {
     }
   }
   if (unreadPayouts > 0) {
-    const fix = hasClaude() ? "" : " Switching on Claude lets Zest read PDF statements.";
+    const fix = hasClaude() ? "" : " Connecting Claude lets Zest read PDF statements.";
     const fixHi = hasClaude() ? "" : " Claude चालू करने पर Zest PDF स्टेटमेंट पढ़ पाएगा।";
     say(
       "warn",

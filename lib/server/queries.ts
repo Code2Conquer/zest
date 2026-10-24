@@ -7,7 +7,7 @@ import { VOID_STATUSES } from "../orders";
 import { CHANNELS, DIRECT_CHANNELS, type Channel } from "../platforms";
 import { listApprovals } from "./approvals";
 import { linesFor } from "./order-lines";
-import { hasClaude } from "./claude";
+import { hasAI } from "./claude";
 import { db } from "./db";
 import { customers, connections, menuItems, orders, payouts, reviews, type ApprovalRow, type Connection, type MenuItemRow, type OrderRow, type Outlet, type PayoutRow, type ReviewRow } from "./schema";
 import { DEFAULT_DELIVERY } from "../delivery";
@@ -47,7 +47,7 @@ export async function outletDTO(o: Outlet): Promise<OutletDTO> {
     ratings: o.ratings,
     isDemo: o.isDemo,
     connections: conns.map(connectionDTO),
-    claude: hasClaude(),
+    claude: hasAI(),
   };
 }
 

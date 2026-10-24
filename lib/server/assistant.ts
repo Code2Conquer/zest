@@ -1,5 +1,6 @@
 import "server-only";
-import { claude, hasClaude, MODEL } from "./claude";
+import { aiProvider, claude, MODEL } from "./claude";
+import { openChat } from "./open-llm";
 
 // Zest on the website: answers sellers' questions about getting online, in their language. Claude with
 // what Zest does written into the prompt; without Claude, short answers matched by keyword.
@@ -49,8 +50,13 @@ function fallback(text: string): string {
 
 export async function answer(history: Turn[]): Promise<string> {
   const last = history[history.length - 1]?.text ?? "";
-  if (!hasClaude()) return fallback(last);
+  const ai = aiProvider();
+  if (!ai) return fallback(last);
   try {
+    if (ai === "open") {
+      const msg = await openChat({ max_tokens: 400, messages: [{ role: "system", content: SYSTEM }, ...history.slice(-12).map((t) => ({ role: t.role, content: t.text }))] });
+      return msg.content?.trim() || fallback(last);
+    }
     const res = await claude().messages.create({
       model: MODEL,
       max_tokens: 400,
