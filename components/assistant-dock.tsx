@@ -69,7 +69,7 @@ export function AssistantDock({ open, setOpen }: { open: boolean; setOpen: (o: b
             />
           )}
           <button type="button" onClick={() => setOpen(true)} aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })} className="grid size-14 shrink-0 place-items-center rounded-full transition-transform hover:scale-105 active:scale-95">
-            <ZestOrb size={40} />
+            <ZestOrb size={50} />
           </button>
         </div>
       )}

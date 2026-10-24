@@ -387,33 +387,22 @@ body {
   .za-in, .za-scrim, .za-pulse, .za-dots, .za-q, .za-chip::after { animation: none; }
 }
 
-/* Zest's orb (components/zest-orb.tsx): two blobs that morph and flow, and a sparkle that twinkles. */
-.zo-blob {
-  background: linear-gradient(130deg, #ffc65c, #e9a31a 30%, #ff7a45 60%, #ff5f8f 85%, #ffc65c); /* taste-skill-ignore: the orb */
-  background-size: 260% 260%;
-  border-radius: 42% 58% 61% 39% / 45% 41% 59% 55%;
-  box-shadow: 0 10px 26px -8px rgb(255 122 69 / 0.6), inset 0 0 12px rgb(255 255 255 / 0.35); /* taste-skill-ignore */
-  animation: zo-morph 7s ease-in-out infinite, zo-flow 6s ease-in-out infinite;
-}
-.zo-blob-2 {
-  mix-blend-mode: screen;
-  opacity: 0.55;
-  filter: blur(2px);
-  animation: zo-morph 5s ease-in-out infinite reverse, zo-flow 4.5s ease-in-out infinite reverse;
-}
-.zo-spark { filter: drop-shadow(0 0 4px rgb(255 255 255 / 0.8)); animation: zo-twinkle 4s ease-in-out infinite; }
-.zo[data-state="thinking"] .zo-blob { animation-duration: 1.8s, 1.4s; }
-.zo[data-state="thinking"] .zo-spark { animation: zo-spin 1.6s linear infinite; }
-.zo[data-state="listening"] .zo-blob { animation: zo-morph 1.6s ease-in-out infinite, zo-swell 1.2s ease-in-out infinite; }
-@keyframes zo-morph {
-  0%, 100% { border-radius: 42% 58% 61% 39% / 45% 41% 59% 55%; transform: rotate(0deg); }
-  33% { border-radius: 58% 42% 38% 62% / 55% 60% 40% 45%; transform: rotate(60deg); }
-  66% { border-radius: 50% 50% 45% 55% / 38% 55% 45% 62%; transform: rotate(-30deg); }
-}
-@keyframes zo-flow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-@keyframes zo-twinkle { 0%, 70%, 100% { transform: scale(1) rotate(0deg); opacity: 1; } 80% { transform: scale(0.7) rotate(45deg); opacity: 0.8; } 88% { transform: scale(1.12) rotate(90deg); opacity: 1; } }
-@keyframes zo-spin { to { transform: rotate(360deg); } }
-@keyframes zo-swell { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+/* Zest's orb (components/zest-orb.tsx): bands of light drifting inside a glass sphere, after Tara. */
+.zo-glow { fill: rgb(255 140 80 / 0.35); filter: blur(6px); transform-origin: 40px 40px; animation: zo-breathe 3.4s ease-in-out infinite; }
+.zo-band { filter: drop-shadow(0 0 2px rgb(255 190 120 / 0.6)); transform-box: fill-box; transform-origin: center; animation: zo-drift 4.2s ease-in-out infinite; }
+.zo-band-0 { animation-duration: 3.6s; animation-delay: -0.4s; }
+.zo-band-1 { animation-duration: 4.6s; animation-delay: -1.6s; animation-direction: reverse; }
+.zo-band-2 { animation-duration: 5.2s; animation-delay: -2.2s; }
+.zo-band-3 { animation-duration: 4s; animation-delay: -0.9s; animation-direction: reverse; }
+.zo-band-4 { animation-duration: 3.2s; animation-delay: -1.2s; }
+.zo-bands { animation: zo-tilt 9s ease-in-out infinite; transform-box: view-box; transform-origin: 40px 40px; }
+.zo[data-state="thinking"] .zo-band { animation-duration: 0.9s; }
+.zo[data-state="listening"] .zo-band { animation: zo-pulse 1s ease-in-out infinite; }
+.zo { transition: transform 300ms ease; }
+@keyframes zo-drift { 0%, 100% { transform: translateX(-3px) scaleX(0.94); } 50% { transform: translateX(3px) scaleX(1.04); } }
+@keyframes zo-pulse { 0%, 100% { transform: scaleX(0.85); } 50% { transform: scaleX(1.15); } }
+@keyframes zo-tilt { 0%, 100% { transform: rotate(-20deg); } 50% { transform: rotate(-8deg); } }
+@keyframes zo-breathe { 0%, 100% { opacity: 0.6; transform: scale(0.96); } 50% { opacity: 1; transform: scale(1.08); } }
 
 /* Zest speaking up beside its orb: a speech bubble that grows out of the orb (its tail points at it),
    shows Zest typing for a beat, then its words arrive one by one. */
@@ -448,6 +437,6 @@ body {
 @keyframes zb-dot { 0%, 80%, 100% { transform: translateY(0); opacity: 0.4; } 40% { transform: translateY(-4px); opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .zo-blob, .zo-spark, .zb, .zb-dots i { animation: none !important; }
+  .zo-glow, .zo-band, .zo-bands, .zb, .zb-dots i { animation: none !important; }
   .zb-word { animation: none; opacity: 1; }
 }

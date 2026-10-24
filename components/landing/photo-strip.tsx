@@ -56,11 +56,12 @@ export function PhotoStrip({ line, sub, orders }: { line: Bi; sub?: Bi; orders: 
   );
 }
 
-function OrderCard({ o }: { o: StripOrder }) {
+/** The order card: the rail's cards and the hero's. `className` places it; the rail tucks it under the photo. */
+export function OrderCard({ o, className = "relative z-10 mx-2.5 -mt-16" }: { o: StripOrder; className?: string }) {
   const { pick } = useApp();
   const d = DELIVERY[o.delivery];
   return (
-    <div className="relative z-10 mx-2.5 -mt-16 rounded-2xl bg-white p-3 pt-3.5 text-[#1c1f23] shadow-[0_14px_30px_-14px_rgb(0_0_0/0.7)]">
+    <div className={`${className} rounded-2xl bg-white p-3 pt-3.5 text-[#1c1f23] shadow-[0_14px_30px_-14px_rgb(0_0_0/0.7)]`}>
       {/* PAID stamp */}
       <span aria-label={pick({ en: "Paid", hi: "भुगतान हो गया" })} className="absolute -top-3.5 left-3 -rotate-[6deg] rounded-md border-2 border-[#2f7a4c] bg-white px-1.5 py-0.5 text-[10.5px] font-extrabold tracking-[0.12em] text-[#2f7a4c]">
         {pick({ en: "PAID", hi: "पेड" })}

@@ -111,10 +111,15 @@ export default function Restaurants() {
             ratio="736 / 895"
             alt={pick({ en: "A restaurant spread: fried rice and noodles with veg balls, chilli chicken, gravy, crispy noodles, soup and a cold drink", hi: "रेस्टोरेंट की थाली: फ़्राइड राइस, नूडल्स, चिली चिकन, क्रिस्पी नूडल्स और सूप" })}
             order={{
-              from: { en: "New order · your page", hi: "नया ऑर्डर · आपका पेज" },
-              items: { en: "Office party: 12 chicken biryani", hi: "ऑफ़िस पार्टी: 12 चिकन बिरयानी" },
-              paid: { en: "Paid ₹4,188 · UPI", hi: "₹4,188 मिले · UPI" },
-              rider: { en: "Zomato rider · 1:40", hi: "Zomato राइडर · 1:40" },
+              photo: "",
+              when: { en: "Just now · 12:40 pm", hi: "अभी · दोपहर 12:40" },
+              source: { en: "Your page", hi: "आपका पेज" },
+              dish: { en: "Chinese combo for 12", hi: "12 लोगों का चाइनीज़ कॉम्बो" },
+              detail: { en: "Office party · fried rice, chilli chicken", hi: "ऑफ़िस पार्टी · फ़्राइड राइस, चिली चिकन" },
+              delivery: "rider",
+              deliveryNote: { en: "3.8 km", hi: "3.8 किमी" },
+              amount: 4188,
+              method: "UPI",
             }}
           />
         </div>

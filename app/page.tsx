@@ -70,10 +70,15 @@ export default function Home() {
             ratio="736 / 781"
             alt={pick({ en: "Vada pav with fried green chillies and red chutney on a steel plate", hi: "स्टील की प्लेट पर तली हरी मिर्च और लाल चटनी के साथ वड़ा पाव" })}
             order={{
-              from: { en: "New order · Flat 302", hi: "नया ऑर्डर · फ़्लैट 302" },
-              items: { en: "2 veg thali, 1 pav bhaji", hi: "2 वेज थाली, 1 पाव भाजी" },
-              paid: { en: "Paid ₹330 · UPI", hi: "₹330 मिले · UPI" },
-              rider: { en: "Zomato rider · 1:05", hi: "Zomato राइडर · 1:05" },
+              photo: "",
+              when: { en: "Just now · 1:05 pm", hi: "अभी · दोपहर 1:05" },
+              source: { en: "Your page", hi: "आपका पेज" },
+              dish: { en: "4 vada pav", hi: "4 वड़ा पाव" },
+              detail: { en: "Extra chutney · Flat 302", hi: "एक्स्ट्रा चटनी · फ़्लैट 302" },
+              delivery: "rider",
+              deliveryNote: { en: "1.2 km", hi: "1.2 किमी" },
+              amount: 120,
+              method: "UPI",
             }}
           />
         </div>
@@ -137,7 +142,7 @@ export default function Home() {
         <div className="lp-wrap">
           <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
             <div className="rv relative aspect-[16/10] overflow-hidden rounded-[28px] lg:aspect-[4/5]">
-              <Image src="/photos/in/rider-zomato.webp" alt={pick({ en: "A Zomato rider on a motorbike in city traffic", hi: "शहर के ट्रैफ़िक में बाइक पर Zomato राइडर" })} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
+              <Image src="/photos/in/zomato-rider-scooter.jpg" alt={pick({ en: "A Zomato rider on a red scooter with a Zomato food delivery bag", hi: "Zomato फ़ूड डिलीवरी बैग के साथ लाल स्कूटर पर Zomato राइडर" })} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover object-[50%_40%]" />
             </div>
             <div>
               <h2 id="covered-h" className={`rv max-w-[18ch] ${H2}`}>
