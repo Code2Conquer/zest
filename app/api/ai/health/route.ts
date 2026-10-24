@@ -19,6 +19,11 @@ export async function GET(req: Request) {
     const msg = await openChat({ messages: [{ role: "user", content: "Reply with the single word: ok" }], max_tokens: 5 });
     return NextResponse.json({ ...info, ok: true, reply: msg.content });
   } catch (err) {
-    return NextResponse.json({ ...info, ok: false, error: (err as Error).message.replace(/(sk|gsk|key)[-_][A-Za-z0-9]{8,}/g, "[key]") });
+    // When a model is missing, list what this key can use.
+    const models = await fetch(`${openBase()}/models`, { headers: { Authorization: `Bearer ${process.env.LLM_API_KEY}` } })
+      .then((r) => r.json() as Promise<{ data?: { id: string; active?: boolean }[] }>)
+      .then((d) => (d.data ?? []).filter((m) => m.active !== false).map((m) => m.id).sort())
+      .catch(() => []);
+    return NextResponse.json({ ...info, ok: false, available: models, error: (err as Error).message.replace(/(sk|gsk|key)[-_][A-Za-z0-9]{8,}/g, "[key]") });
   }
 }
