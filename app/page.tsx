@@ -11,7 +11,6 @@ import { Promises } from "@/components/landing/promises";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { siteFonts } from "@/components/landing/site-fonts";
 import { SiteHeader } from "@/components/landing/site-header";
-import { StickyStart } from "@/components/landing/sticky-start";
 import { ZestAssistant } from "@/components/landing/zest-assistant";
 import { WhyOnline } from "@/components/landing/why-online";
 import { PhotoStrip } from "@/components/landing/photo-strip";
@@ -46,10 +45,10 @@ export default function Home() {
       <SiteHeader current="home" start={{ href: START, label: { en: "Get started", hi: "शुरू करें" } }} />
 
       {/* First screen: what your kitchen could earn */}
-      <section aria-labelledby="hero-h" className="lp-wrap flex items-center pb-14 pt-6 lg:min-h-[min(820px,calc(100svh-76px))] lg:pb-12 lg:pt-0">
-        <div className="grid w-full grid-cols-[minmax(0,1fr)] items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
+      <section aria-labelledby="hero-h" className="lp-wrap flex items-center pb-8 pt-5 lg:min-h-[min(820px,calc(100svh-76px))] lg:pb-12 lg:pt-0">
+        <div className="grid w-full grid-cols-[minmax(0,1fr)] items-center gap-6 sm:gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
           <div>
-            <h1 id="hero-h" className="lp-display hero-in min-h-[2.08em] text-[36px] leading-[1.04] [text-wrap:balance] sm:min-h-0 sm:text-[52px] xl:text-[60px]">
+            <h1 id="hero-h" className="lp-display hero-in text-[30px] leading-[1.06] [text-wrap:balance] sm:min-h-0 sm:text-[52px] xl:text-[60px]">
               {pick({ en: "Your kitchen could earn", hi: "आपकी रसोई कमा सकती है" })}
             </h1>
             <div className="mt-3">
@@ -60,8 +59,8 @@ export default function Home() {
                 ordersLabel={{ en: "Orders a day", hi: "रोज़ के ऑर्डर" }}
               />
             </div>
-            <div id="hero-start" className="hero-in d2 mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <a href={START} className="lp-btn haldi min-h-14 px-8 text-[18px] max-sm:w-full">
+            <div id="hero-start" className="hero-in d2 mt-6 sm:mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+              <a href={START} className="lp-btn haldi min-h-12 px-8 text-[17px] max-sm:w-full sm:min-h-14 sm:text-[18px]">
                 {pick({ en: "Get started free", hi: "मुफ़्त शुरू करें" })}
               </a>
             </div>
@@ -170,7 +169,7 @@ export default function Home() {
               title={{ en: "One photo in. A full menu out.", hi: "एक फ़ोटो दीजिए, पूरा मेन्यू पाइए।" }}
               text={{ en: "Your dishes, prices and photos, laid out the way customers like to order.", hi: "आपकी डिश, दाम और फ़ोटो, वैसे जैसे ग्राहक ऑर्डर करना पसंद करते हैं।" }}
             >
-              <div className="h-[240px] origin-top scale-[0.5] lg:h-[300px] lg:scale-[0.62]">
+              <div className="h-[190px] origin-top scale-[0.42] lg:h-[300px] lg:scale-[0.62]">
                 <HeroPhone
                   cover="/photos/in/thali.webp"
                   name={{ en: "Meena's Kitchen", hi: "मीना की रसोई" }}
@@ -196,7 +195,7 @@ export default function Home() {
               text={{ en: "The Zest Soundbox speaks each order out loud on your counter.", hi: "Zest Soundbox हर ऑर्डर काउंटर पर बोलकर बताता है।" }}
               dark
             >
-              <Soundbox size="sm" state="speaking" bare className="lg:hidden" />
+              <Soundbox size="xs" state="speaking" bare className="lg:hidden" />
               <Soundbox size="md" state="speaking" bare className="max-lg:hidden" />
             </Showcase>
           </ul>
@@ -220,13 +219,6 @@ export default function Home() {
 
       <SiteFooter />
 
-      <StickyStart
-        href={START}
-        label={{ en: "Get started", hi: "शुरू करें" }}
-        note={{ en: "Online orders, delivered by you or Zomato.", hi: "ऑनलाइन ऑर्डर, आप पहुँचाएँ या Zomato।" }}
-        watch="hero-start"
-        hideAt="final-start"
-      />
       <ZestAssistant audience="home" />
     </div>
   );
@@ -257,7 +249,7 @@ function Showcase({ title, text, dark, className = "", children }: { title: Bi; 
   const { pick } = useApp();
   return (
     <li className={`flex flex-col overflow-hidden rounded-[28px] bg-[var(--lp-paper)] max-lg:w-[78%] max-lg:max-w-[340px] ${className}`}>
-      <div className={`grid h-[260px] place-items-center overflow-hidden px-6 pt-6 lg:h-[340px] lg:pt-8 ${dark ? "bg-[#15181b]" : "bg-[var(--lp-sunken)]"}`}>{children}</div>
+      <div className={`grid h-[200px] place-items-center overflow-hidden px-6 pt-5 lg:h-[340px] lg:pt-8 ${dark ? "bg-[#15181b]" : "bg-[var(--lp-sunken)]"}`}>{children}</div>
       <div className="px-5 pb-6 pt-5 lg:px-6 lg:pb-7 lg:pt-6">
         <h3 className="text-[20px] font-semibold leading-snug lg:text-[22px]">{pick(title)}</h3>
         <p className="mt-1.5 text-[16px] leading-relaxed text-[var(--lp-muted)]">{pick(text)}</p>

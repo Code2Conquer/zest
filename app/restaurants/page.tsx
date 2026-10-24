@@ -14,7 +14,6 @@ import { SiteFooter } from "@/components/landing/site-footer";
 import { PhotoStrip } from "@/components/landing/photo-strip";
 import { siteFonts } from "@/components/landing/site-fonts";
 import { SiteHeader } from "@/components/landing/site-header";
-import { StickyStart } from "@/components/landing/sticky-start";
 import { Waitlist } from "@/components/landing/waitlist";
 import type { Bi } from "@/lib/i18n";
 import { useApp } from "@/lib/state";
@@ -84,13 +83,13 @@ export default function Restaurants() {
 
   return (
     <div className={`lp min-h-dvh overflow-x-clip ${siteFonts}`}>
-      <SiteHeader current="restaurants" start={{ href: START, label: { en: "Get started free", hi: "मुफ़्त शुरू करें" } }} />
+      <SiteHeader current="restaurants" start={{ href: START, label: { en: "Get started", hi: "शुरू करें" } }} />
 
       {/* First screen: what your own page could add */}
-      <section aria-labelledby="hero-h" className="lp-wrap flex items-center pb-14 pt-6 lg:min-h-[min(820px,calc(100svh-76px))] lg:pb-12 lg:pt-0">
-        <div className="grid w-full grid-cols-[minmax(0,1fr)] items-center gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
+      <section aria-labelledby="hero-h" className="lp-wrap flex items-center pb-8 pt-5 lg:min-h-[min(820px,calc(100svh-76px))] lg:pb-12 lg:pt-0">
+        <div className="grid w-full grid-cols-[minmax(0,1fr)] items-center gap-6 sm:gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
           <div>
-            <h1 id="hero-h" className="lp-display hero-in text-[36px] leading-[1.04] [text-wrap:balance] sm:text-[52px] xl:text-[60px]">
+            <h1 id="hero-h" className="lp-display hero-in text-[30px] leading-[1.06] [text-wrap:balance] sm:text-[52px] xl:text-[60px]">
               {pick({ en: "Your restaurant could earn", hi: "आपका रेस्टोरेंट कमा सकता है" })}
             </h1>
             <div className="mt-3">
@@ -101,8 +100,8 @@ export default function Restaurants() {
                 ordersLabel={{ en: "Direct orders a day", hi: "रोज़ के सीधे ऑर्डर" }}
               />
             </div>
-            <div id="hero-start" className="hero-in d2 mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
-              <a href={START} className="lp-btn haldi min-h-14 px-8 text-[18px] max-sm:w-full">
+            <div id="hero-start" className="hero-in d2 mt-6 sm:mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+              <a href={START} className="lp-btn haldi min-h-12 px-8 text-[17px] max-sm:w-full sm:min-h-14 sm:text-[18px]">
                 {pick({ en: "Get your page free", hi: "अपना पेज मुफ़्त पाइए" })}
               </a>
             </div>
@@ -253,13 +252,6 @@ export default function Restaurants() {
 
       <SiteFooter />
 
-      <StickyStart
-        href={START}
-        label={{ en: "Get started", hi: "शुरू करें" }}
-        note={{ en: "More orders, on top of Zomato and Swiggy.", hi: "Zomato और Swiggy के ऊपर, और ऑर्डर।" }}
-        watch="hero-start"
-        hideAt="final-start"
-      />
       <ZestAssistant audience="restaurants" />
     </div>
   );

@@ -28,7 +28,7 @@ export function Estimator({ presets, orders: [oMin, oMax], per, ordersLabel }: {
   return (
     <div>
       <p className="hero-in d1 flex flex-wrap items-baseline gap-x-3">
-        <span className="lp-display relative inline-block text-[56px] leading-none tabular-nums text-[var(--z-turmeric)] sm:text-[80px] xl:text-[96px]" aria-live="polite">
+        <span className="lp-display relative inline-block text-[46px] leading-none tabular-nums text-[var(--z-turmeric)] sm:text-[80px] xl:text-[96px]" aria-live="polite">
           {/* The final amount always holds the space, and the counting figure is drawn over it, so the line never reflows. */}
           <span className="invisible">{inr(target)}</span>
           {shown != null && <span className="absolute inset-y-0 left-0">{inr(shown)}</span>}
@@ -40,10 +40,10 @@ export function Estimator({ presets, orders: [oMin, oMax], per, ordersLabel }: {
             </span>
           )}
         </span>
-        <span className="text-[22px] font-medium text-[var(--lp-muted)] sm:text-[28px]">{pick(per)}</span>
+        <span className="text-[18px] font-medium text-[var(--lp-muted)] sm:text-[28px]">{pick(per)}</span>
       </p>
 
-      <div className="hero-in d2 mt-7 max-w-[560px]">
+      <div className="hero-in d2 mt-5 max-w-[560px] sm:mt-7">
         {presets.length > 1 && <div role="radiogroup" aria-label={pick({ en: "Your kind of kitchen", hi: "आपकी रसोई किस तरह की है" })} className="flex flex-wrap gap-2">
           {presets.map((p) => (
             <button
@@ -59,7 +59,7 @@ export function Estimator({ presets, orders: [oMin, oMax], per, ordersLabel }: {
           ))}
         </div>}
         <Slider label={pick(ordersLabel)} value={orders} display={String(orders)} min={oMin} max={oMax} step={1} onChange={setOrders} />
-        <p className="mt-4 text-[14px] leading-snug text-[var(--lp-muted)]">
+        <p className="mt-3 text-[13px] leading-snug text-[var(--lp-muted)] sm:mt-4 sm:text-[14px]">
           {pick({
             en: `${orders} orders a day × ${inr(avg)} average order × ${DAYS} days. An estimate; what you earn depends on your food, prices and area.`,
             hi: `रोज़ ${orders} ऑर्डर × ${inr(avg)} औसत ऑर्डर × ${DAYS} दिन। एक अंदाज़ा; असली कमाई आपके खाने, दाम और इलाक़े पर निर्भर है।`,
@@ -111,7 +111,7 @@ function useCountUp(target: number): number | null {
 function Slider({ label, value, display, min, max, step, onChange }: { label: string; value: number; display: string; min: number; max: number; step: number; onChange: (v: number) => void }) {
   const fill = ((value - min) / (max - min)) * 100;
   return (
-    <label className="mt-6 block">
+    <label className="mt-4 block sm:mt-6">
       <span className="flex items-baseline justify-between text-[16px]">
         <span className="text-[var(--lp-muted)]">{label}</span>
         <span className="font-semibold tabular-nums">{display}</span>

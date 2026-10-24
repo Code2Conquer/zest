@@ -28,12 +28,6 @@ type Recognition = {
 export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }) {
   const { pick, lang } = useApp();
   const [open, setOpen] = useState(false);
-  // On a phone Zest is opened from the sticky bottom bar (components/landing/sticky-start.tsx).
-  useEffect(() => {
-    const o = () => setOpen(true);
-    window.addEventListener("zest:open", o);
-    return () => window.removeEventListener("zest:open", o);
-  }, []);
   const [hello, setHello] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
@@ -146,22 +140,24 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
           { en: "What does the Soundbox do?", hi: "Soundbox क्या करता है?" },
           { en: "What's in the morning summary?", hi: "सुबह की रिपोर्ट में क्या आता है?" },
         ];
-  // On a phone the pill waits until the visitor scrolls past the hero's own buttons; it steps aside for
-  // the closing call to action everywhere.
-  const [scrolled, setScrolled] = useState(false);
+  // On a phone Zest is a round button (a FAB) that slides away while the page scrolls and comes back
+  // once it rests. It steps aside for the closing call to action everywhere.
+  const [moving, setMoving] = useState(false);
   const [atEnd, setAtEnd] = useState(false);
   useEffect(() => {
-    const end = () => document.getElementById("final-start");
+    let rest: ReturnType<typeof setTimeout> | undefined;
     const on = () => {
-      const e = end();
-      // hidden at the very top on a phone, and everywhere once the closing band is in view
-      const atEnd = !!e && e.getBoundingClientRect().top < window.innerHeight - 40;
-      setScrolled(window.scrollY > 420 && !atEnd);
-      setAtEnd(atEnd);
+      const e = document.getElementById("final-start");
+      setAtEnd(!!e && e.getBoundingClientRect().top < window.innerHeight - 40);
+      setMoving(true);
+      clearTimeout(rest);
+      rest = setTimeout(() => setMoving(false), 500);
     };
-    on();
     window.addEventListener("scroll", on, { passive: true });
-    return () => window.removeEventListener("scroll", on);
+    return () => {
+      window.removeEventListener("scroll", on);
+      clearTimeout(rest);
+    };
   }, []);
   // One question at a time, taken in turn from the list.
   const current = SUGGEST[chipAt % SUGGEST.length];
@@ -173,9 +169,9 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
   return (
     <>
       {/* One question in a pill, bottom right, with Zest's animated button at its end; above the sticky start bar on a phone */}
-      <div className={`fixed bottom-6 right-6 z-50 transition-opacity max-sm:hidden ${atEnd ? "pointer-events-none opacity-0" : scrolled ? "" : "max-sm:pointer-events-none max-sm:opacity-0"}`}>
+      <div className={`fixed bottom-4 right-4 z-50 transition-[opacity,transform] duration-300 sm:bottom-6 sm:right-6 ${atEnd ? "pointer-events-none opacity-0" : moving ? "max-sm:pointer-events-none max-sm:translate-y-6 max-sm:opacity-0" : ""}`}>
         {!open && (
-          <div className={`za-pill relative flex items-center gap-1 rounded-full p-1.5 sm:pl-5 transition-[opacity,transform] duration-500 ${hello ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"}`}>
+          <div className={`za-pill relative flex items-center gap-1 rounded-full p-1 sm:p-1.5 sm:pl-5 transition-[opacity,transform] duration-500 ${hello ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"}`}>
             <span aria-hidden className="za-dots pointer-events-none absolute inset-0 rounded-full" />
             <button type="button" onClick={() => ask(current)} className="relative max-w-[300px] truncate py-2 pr-2 text-left text-[15px] font-semibold text-[#f1f1ec] max-sm:hidden">
               <span key={chipAt} className="za-q inline-block">
