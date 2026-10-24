@@ -91,7 +91,7 @@ export function PhoneLogin({ onDone }: { onDone: (hasRestaurant: boolean) => voi
         <p className={`mt-2.5 text-[13.5px] ${wrongStart ? "text-[#e2735f]" : "text-[#9aa0a6]"}`}>
           {wrongStart
             ? hi ? "मोबाइल नंबर 6, 7, 8 या 9 से शुरू होता है।" : "Mobile numbers start with 6, 7, 8 or 9."
-            : hi ? "हम WhatsApp पर एक कोड भेजेंगे।" : "We'll send a code on WhatsApp."}
+            : hi ? "हम SMS या WhatsApp पर 6 अंकों का कोड (OTP) भेजेंगे।" : "We'll send a 6-digit code (OTP) by SMS or WhatsApp."}
         </p>
         {error && <p className="mt-3 text-[14px] text-[#e2735f]">{error}</p>}
         <button type="submit" disabled={busy || !valid} className={button}>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, Loader2, Mic, Square, Volume2, VolumeX, X } from "lucide-react";
+import { ZestNudge } from "@/components/zest-nudge";
 import { ZestOrb } from "@/components/zest-orb";
 import { api } from "@/lib/api";
 import type { Bi } from "@/lib/i18n";
@@ -154,19 +155,18 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
     return () => io.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audience]);
-  // Each line shows once per section visit, for a few seconds; the visitor can wave it away.
+  // Zest says each section's line once per visit, a moment after the section arrives.
   const [said, setSaid] = useState<string | null>(null);
-  const [quiet, setQuiet] = useState(false);
+  const [heard, setHeard] = useState<Set<string>>(new Set());
   useEffect(() => {
-    if (!hello || open || quiet) return;
+    if (!hello || open || heard.has(where)) return;
     setSaid(null);
-    const show = setTimeout(() => setSaid(where), 600);
-    const hide = setTimeout(() => setSaid(null), 9000);
-    return () => {
-      clearTimeout(show);
-      clearTimeout(hide);
-    };
-  }, [where, hello, open, quiet]);
+    const show = setTimeout(() => {
+      setSaid(where);
+      setHeard((h) => new Set(h).add(where));
+    }, 700);
+    return () => clearTimeout(show);
+  }, [where, hello, open, heard]);
   // On a phone Zest is a round button (a FAB) that slides away while the page scrolls and comes back
   // once it rests. It steps aside for the closing call to action everywhere.
   const [moving, setMoving] = useState(false);
@@ -196,34 +196,15 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
     <>
       {/* The orb, bottom right, and what Zest says beside it. On a phone it slides away while the page scrolls. */}
       <div className={`fixed bottom-4 right-4 z-50 flex items-end gap-2.5 transition-[opacity,transform] duration-300 sm:bottom-6 sm:right-6 ${atEnd ? "pointer-events-none opacity-0" : moving ? "max-sm:pointer-events-none max-sm:translate-y-6 max-sm:opacity-0" : ""}`}>
-        {!open && line && (
-          <div key={`${said}-${lang}`} className="zb relative mb-1 flex max-w-[min(300px,calc(100vw-96px))] items-start gap-1 rounded-[20px] rounded-br-md p-1 pl-3.5">
-            <span aria-hidden className="zb-edge pointer-events-none absolute inset-x-4 bottom-0 h-px" />
-            <button type="button" onClick={() => ask(line.ask)} className="py-2 text-left text-[14px] font-medium leading-snug text-[#f1f1ec] sm:text-[15px]">
-              <span className="sr-only">{pick(line.ask)}</span>
-              <span aria-hidden>
-                {pick(line.say)
-                  .split(" ")
-                  .map((w, i) => (
-                    <span key={i} className="zb-word" style={{ animationDelay: `${120 + i * 55}ms` }}>
-                      {w}&nbsp;
-                    </span>
-                  ))}
-              </span>
-            </button>
-            <button type="button" onClick={() => setQuiet(true)} aria-label={pick({ en: "Hide", hi: "छिपाएँ" })} className="grid size-7 shrink-0 place-items-center rounded-full text-[#9aa0a6] hover:bg-white/10 hover:text-[#f1f1ec]">
-              <X aria-hidden size={14} />
-            </button>
-          </div>
-        )}
+        {!open && line && <ZestNudge key={`${said}-${lang}`} say={pick(line.say)} ask={pick(line.ask)} onAsk={() => ask(line.ask)} />}
         {!open && (
           <button
             type="button"
             onClick={() => setOpen(true)}
             aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })}
-            className={`grid size-14 shrink-0 place-items-center rounded-full bg-[#121417]/90 shadow-[0_16px_36px_-12px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.09)] transition-[transform,opacity] duration-500 hover:scale-105 active:scale-95 ${hello ? "opacity-100" : "pointer-events-none scale-75 opacity-0"}`}
+            className={`grid size-14 shrink-0 place-items-center rounded-full transition-[transform,opacity] duration-500 hover:scale-105 active:scale-95 ${hello ? "opacity-100" : "pointer-events-none scale-75 opacity-0"}`}
           >
-            <ZestOrb size={36} />
+            <ZestOrb size={40} />
           </button>
         )}
       </div>

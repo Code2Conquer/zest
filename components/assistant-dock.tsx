@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
 import type { Bi } from "@/lib/i18n";
 import { isHomeKitchen } from "@/lib/nav";
 import { useApp } from "@/lib/state";
 import { Copilot } from "./copilot";
+import { ZestNudge } from "./zest-nudge";
 import { ZestOrb } from "./zest-orb";
 
 // Zest in the dashboard, the same as on the website: an orb in the corner that speaks up beside itself
@@ -33,19 +33,14 @@ export function AssistantDock({ open, setOpen }: { open: boolean; setOpen: (o: b
   const lines = isHomeKitchen(outlet) ? HOME : RESTAURANT;
   const line = lines[path] ?? lines["/app"];
   const [ask, setAsk] = useState<string | undefined>();
-  // The line shows a moment after a screen opens, for a few seconds; it can be waved away for the visit.
+  // Zest says each screen's line a moment after it opens.
   const [said, setSaid] = useState(false);
-  const [quiet, setQuiet] = useState(false);
   useEffect(() => {
-    if (open || quiet) return;
+    if (open) return;
     setSaid(false);
     const show = setTimeout(() => setSaid(true), 1200);
-    const hide = setTimeout(() => setSaid(false), 10000);
-    return () => {
-      clearTimeout(show);
-      clearTimeout(hide);
-    };
-  }, [path, open, quiet]);
+    return () => clearTimeout(show);
+  }, [path, open]);
   useEffect(() => {
     if (!open) return;
     const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
@@ -63,34 +58,18 @@ export function AssistantDock({ open, setOpen }: { open: boolean; setOpen: (o: b
       {!open && (
         <div className="fixed bottom-[88px] right-4 z-40 flex items-end gap-2.5 lg:bottom-6 lg:right-6">
           {said && (
-            <div key={`${path}-${lang}`} className="zb relative mb-1 flex max-w-[min(300px,calc(100vw-96px))] items-start gap-1 rounded-[20px] rounded-br-md p-1 pl-3.5">
-              <span aria-hidden className="zb-edge pointer-events-none absolute inset-x-4 bottom-0 h-px" />
-              <button
-                type="button"
-                onClick={() => {
-                  setAsk(pick(line.ask));
-                  setOpen(true);
-                }}
-                className="py-2 text-left text-[14px] font-medium leading-snug text-ink"
-              >
-                <span className="sr-only">{pick(line.ask)}</span>
-                <span aria-hidden>
-                  {pick(line.say)
-                    .split(" ")
-                    .map((w, i) => (
-                      <span key={i} className="zb-word" style={{ animationDelay: `${120 + i * 55}ms` }}>
-                        {w}&nbsp;
-                      </span>
-                    ))}
-                </span>
-              </button>
-              <button type="button" onClick={() => setQuiet(true)} aria-label={pick({ en: "Hide", hi: "छिपाएँ" })} className="grid size-7 shrink-0 place-items-center rounded-full text-muted hover:bg-white/10 hover:text-ink">
-                <X aria-hidden size={14} />
-              </button>
-            </div>
+            <ZestNudge
+              key={`${path}-${lang}`}
+              say={pick(line.say)}
+              ask={pick(line.ask)}
+              onAsk={() => {
+                setAsk(pick(line.ask));
+                setOpen(true);
+              }}
+            />
           )}
-          <button type="button" onClick={() => setOpen(true)} aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })} className="grid size-14 shrink-0 place-items-center rounded-full bg-[#121417]/90 shadow-[0_16px_36px_-12px_rgb(0_0_0/0.9),inset_0_0_0_1px_rgb(255_255_255/0.09)] transition-transform hover:scale-105 active:scale-95">
-            <ZestOrb size={36} />
+          <button type="button" onClick={() => setOpen(true)} aria-label={pick({ en: "Ask Zest", hi: "Zest से पूछिए" })} className="grid size-14 shrink-0 place-items-center rounded-full transition-transform hover:scale-105 active:scale-95">
+            <ZestOrb size={40} />
           </button>
         </div>
       )}

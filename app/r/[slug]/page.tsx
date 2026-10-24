@@ -484,6 +484,16 @@ function Checkout(props: { slug: string; shop: Shop; cart: Record<string, number
           {hi ? "मोबाइल नंबर" : "Mobile number"}
           <input value={phone} onChange={(e) => setPhone(e.target.value)} required inputMode="tel" autoComplete="tel" placeholder="98xxxxxx21" className={field} />
         </label>
+        {/* What this number is for, said up front */}
+        <p className="mt-1.5 text-[0.8rem] leading-snug text-muted">
+          {fulfilment === "delivery"
+            ? hi
+              ? "ऑर्डर अपडेट और डिलीवरी का ट्रैकिंग लिंक इसी नंबर पर WhatsApp या SMS से आएगा। OTP जैसे कोड भी यहीं आएँगे।"
+              : "Order updates and the delivery tracking link will come to this number on WhatsApp or SMS. Any OTP or code comes here too."
+            : hi
+              ? "ऑर्डर अपडेट इसी नंबर पर WhatsApp या SMS से आएँगे। OTP जैसे कोड भी यहीं आएँगे।"
+              : "Order updates will come to this number on WhatsApp or SMS. Any OTP or code comes here too."}
+        </p>
         {fulfilment === "delivery" && (
           <div className="mt-3">
             <label className="block text-sm text-ink-2">
