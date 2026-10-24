@@ -444,12 +444,27 @@ body {
 /* Zest's panel: warm light pooling from the top over the charcoal. A sheet from the bottom on phones,
    a side panel on wide screens. */
 .zx-panel {
-  background:
-    radial-gradient(120% 55% at 50% -5%, rgb(255 122 69 / 0.32), transparent 62%),
-    radial-gradient(70% 45% at -10% 25%, rgb(255 111 145 / 0.2), transparent 60%),
-    radial-gradient(80% 45% at 110% 30%, rgb(233 163 26 / 0.24), transparent 62%),
-    #15181b; /* taste-skill-ignore: the panel's glow */
+  position: relative;
+  isolation: isolate;
+  background: rgb(21 24 27 / 0.9);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  backdrop-filter: blur(28px) saturate(1.4);
 }
+/* The glow: soft coral, rose and turmeric light that drifts slowly behind the content. */
+.zx-panel::before {
+  content: "";
+  position: absolute;
+  inset: -20% -20% 30%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(45% 40% at 50% 20%, rgb(255 122 69 / 0.45), transparent 70%),
+    radial-gradient(40% 35% at 15% 40%, rgb(255 111 145 / 0.32), transparent 70%),
+    radial-gradient(40% 35% at 85% 38%, rgb(233 163 26 / 0.38), transparent 70%); /* taste-skill-ignore: the panel's glow */
+  filter: blur(10px);
+  animation: zx-glow 12s ease-in-out infinite alternate;
+}
+@keyframes zx-glow { from { transform: translate(-4%, -2%) scale(1); } to { transform: translate(4%, 3%) scale(1.08); } }
 .zx-sheet { animation: zx-up 380ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
 .zx-side { animation: zx-left 380ms cubic-bezier(0.2, 0.8, 0.3, 1) both; }
 @keyframes zx-up { from { transform: translateY(100%); } to { transform: none; } }
@@ -460,4 +475,4 @@ body {
 .zx-wave i:nth-child(3n) { animation-duration: 1.1s; }
 @keyframes zx-eq { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
 @media (min-width: 1024px) { .zx-sheet { animation: zx-left 380ms cubic-bezier(0.2, 0.8, 0.3, 1) both; } }
-@media (prefers-reduced-motion: reduce) { .zx-sheet, .zx-side, .zx-wave i { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .zx-sheet, .zx-side, .zx-wave i, .zx-panel::before { animation: none !important; } }

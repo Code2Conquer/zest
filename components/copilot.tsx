@@ -103,7 +103,8 @@ export function Copilot({ onClose, ask, voice = false, className = "bg-paper" }:
   return (
     <section aria-label={t("nav.copilot")} className={`flex h-full min-h-0 flex-col ${className}`}>
       <header className="flex items-center justify-between gap-3 border-b border-line/60 px-5 py-3.5">
-        <ZestOrb size={34} state={busy ? "thinking" : listening ? "listening" : "idle"} />
+        {/* One orb at a time: the large one leads an empty chat, the small one takes over once it starts */}
+        {messages.length > 0 && <ZestOrb size={34} state={busy ? "thinking" : listening ? "listening" : "idle"} />}
         <div className="min-w-0 flex-1">
           <h2 className="text-base font-semibold">{t("nav.copilot")}</h2>
           <p className="text-[0.8rem] text-muted">
@@ -167,7 +168,7 @@ export function Copilot({ onClose, ask, voice = false, className = "bg-paper" }:
 
       <div className="border-t border-line/60 px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3">
         {suggestions.length > 0 && !busy && (
-          <div className="scrollbar-thin -mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1">
+          <div className="scrollbar-thin -mx-1 -mt-1 mb-2 flex gap-2 overflow-x-auto p-1 pb-2">
             {suggestions.map((s) => (
               <button
                 key={s}

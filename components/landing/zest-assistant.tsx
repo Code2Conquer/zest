@@ -216,7 +216,7 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
       </div>
 
       {open && (
-        <div className="za-scrim fixed inset-0 z-50 flex items-end justify-center bg-[#0b0d10]/60 backdrop-blur-[3px] lg:items-stretch lg:justify-end lg:bg-[#0b0d10]/40" onClick={() => setOpen(false)}>
+        <div className="za-scrim fixed inset-0 z-50 flex items-end justify-center bg-[#0b0d10]/35 backdrop-blur-[2px] lg:items-stretch lg:justify-end lg:bg-[#0b0d10]/40" onClick={() => setOpen(false)}>
           <div
             role="dialog"
             aria-modal="true"
@@ -227,7 +227,7 @@ export function ZestAssistant({ audience }: { audience: "home" | "restaurants" }
             {/* Grab handle on the phone sheet */}
             <span aria-hidden className="mx-auto mt-2.5 h-1 w-10 shrink-0 rounded-full bg-white/20 lg:hidden" />
             <div className="flex items-center gap-3 px-5 pb-3 pt-3 lg:pt-5">
-              <ZestOrb size={36} state={busy ? "thinking" : listening ? "listening" : "idle"} />
+              {turns.length > 0 && <ZestOrb size={36} state={busy ? "thinking" : listening ? "listening" : "idle"} />}
               <div className="min-w-0 flex-1">
                 <p className="text-[17px] font-semibold leading-tight">Zest</p>
                 <p className="text-[13px] text-[var(--lp-muted)]">{busy ? pick({ en: "thinking…", hi: "सोच रहा है…" }) : listening ? pick({ en: "listening…", hi: "सुन रहा है…" }) : pick({ en: "Ask in Hindi or English", hi: "हिंदी या अंग्रेज़ी में पूछिए" })}</p>

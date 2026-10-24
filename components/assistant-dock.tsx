@@ -78,7 +78,7 @@ export function AssistantDock({ open, setOpen }: { open: boolean; setOpen: (o: b
       )}
 
       {open && (
-        <div className="za-scrim fixed inset-0 z-50 flex items-end justify-center bg-[#0b0d10]/60 backdrop-blur-[3px] lg:items-stretch lg:justify-end lg:bg-[#0b0d10]/40" onClick={close}>
+        <div className="za-scrim fixed inset-0 z-50 flex items-end justify-center bg-[#0b0d10]/35 backdrop-blur-[2px] lg:items-stretch lg:justify-end lg:bg-[#0b0d10]/40" onClick={close}>
           <div
             role="dialog"
             aria-modal="true"
